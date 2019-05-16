@@ -2,9 +2,13 @@ import { pathnameToDirname } from "@jsenv/module-resolution"
 import { firstOperationMatching } from "@dmail/helper"
 import { readPackageData } from "./readPackageData.js"
 
-export const resolveNodeModule = async ({ rootFolder, importerFilename, nodeModuleName }) => {
+export const resolveNodeModule = async ({
+  rootFolderFilename,
+  importerFilename,
+  nodeModuleName,
+}) => {
   const importerFolder = pathnameToDirname(importerFilename)
-  const relativeFolder = importerFolder.slice(rootFolder.length)
+  const relativeFolder = importerFolder.slice(rootFolderFilename.length)
   const relativeFolderNameArray = relativeFolder
     .split("/")
     .filter((value) => value !== "node_modules")
@@ -17,8 +21,8 @@ export const resolveNodeModule = async ({ rootFolder, importerFilename, nodeModu
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
       const packageFilename = nodeModuleCandidate
-        ? `${rootFolder}/node_modules/${nodeModuleCandidate}/node_modules/${nodeModuleName}/package.json`
-        : `${rootFolder}/node_modules/${nodeModuleName}/package.json`
+        ? `${rootFolderFilename}/node_modules/${nodeModuleCandidate}/node_modules/${nodeModuleName}/package.json`
+        : `${rootFolderFilename}/node_modules/${nodeModuleName}/package.json`
 
       const packageData = await readPackageData({
         filename: packageFilename,

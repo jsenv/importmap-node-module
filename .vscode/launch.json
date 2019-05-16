@@ -57,22 +57,6 @@
         // https://github.com/Microsoft/vscode-react-native/issues/620
         "<node_internals>/**/*.js"
       ]
-    },
-    {
-      "name": "jsenv-node-attach-child",
-      "type": "node",
-      "request": "attach",
-      "port": 40000,
-      "smartStep": true,
-      "sourceMaps": true,
-      "sourceMapPathOverrides": {
-        "/*": "${workspaceRoot}/*"
-      },
-      "skipFiles": [
-        "node_modules/**",
-        // https://github.com/Microsoft/vscode-react-native/issues/620
-        "<node_internals>/**/*.js"
-      ]
     }
   ]
 }

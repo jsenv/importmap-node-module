@@ -1,6 +1,6 @@
 import { basename } from "path"
 import { normalizePathname, pathnameToDirname } from "@jsenv/module-resolution"
-import { fileWrite } from "@dmail/helper"
+import { fileWrite, pathnameToFilename } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "./catchAsyncFunctionCancellation.js"
 import { readPackageData } from "./readPackageData.js"
 import { resolveNodeModule } from "./resolveNodeModule.js"
@@ -22,8 +22,10 @@ export const generateImportMapForProjectNodeModules = async ({
 }) =>
   catchAsyncFunctionCancellation(async () => {
     projectFolder = normalizePathname(projectFolder)
-    const topLevelPackageFilename = `${projectFolder}/package.json`
-    const topLevelImporterName = basename(pathnameToDirname(topLevelPackageFilename))
+    const projectFolderFilename = pathnameToFilename(projectFolder)
+    const topLevelPackagePathname = `${projectFolder}/package.json`
+    const topLevelPackageFilename = pathnameToFilename(topLevelPackagePathname)
+    const topLevelImporterName = basename(pathnameToDirname(topLevelPackagePathname))
 
     const dependenciesCache = {}
     const findDependency = ({ importerFilename, nodeModuleName }) => {
@@ -35,7 +37,7 @@ export const generateImportMapForProjectNodeModules = async ({
       }
 
       const dependencyPromise = resolveNodeModule({
-        rootFolder: projectFolder,
+        rootFolderFilename: projectFolderFilename,
         importerFilename,
         nodeModuleName,
       })
@@ -72,7 +74,7 @@ export const generateImportMapForProjectNodeModules = async ({
 
       const importerName = isTopLevel
         ? topLevelImporterName
-        : pathnameToDirname(packageFilename.slice(`${projectFolder}/`.length))
+        : pathnameToDirname(packageFilename.slice(`${projectFolderFilename}/`.length))
       const { dependencies = {}, devDependencies = {} } = packageData
 
       const arrayOfDependencyToRemap = Object.keys({
@@ -109,11 +111,15 @@ export const generateImportMapForProjectNodeModules = async ({
           } = dependency
 
           const dependencyActualFolder = pathnameToDirname(dependencyPackageFilename)
-          const dependencyActualPathname = dependencyActualFolder.slice(projectFolder.length)
+          const dependencyActualPathname = filenameToPathname(
+            dependencyActualFolder.slice(projectFolderFilename.length),
+          )
           const dependencyExpectedFolder = `${pathnameToDirname(
             packageFilename,
           )}/node_modules/${dependencyName}`
-          const dependencyExpectedPathname = dependencyExpectedFolder.slice(projectFolder.length)
+          const dependencyExpectedPathname = filenameToPathname(
+            dependencyExpectedFolder.slice(projectFolderFilename.length),
+          )
           const moved = dependencyActualPathname !== dependencyExpectedPathname
 
           if (remapFolder) {
@@ -182,7 +188,9 @@ export const generateImportMapForProjectNodeModules = async ({
       })
       const importMap = sortImportMap({ imports, scopes })
       if (writeImportMapFile) {
-        const importMapFilename = `${projectFolder}/${importMapFilenameRelative}`
+        const importMapFilename = pathnameToFilename(
+          `${projectFolder}/${importMapFilenameRelative}`,
+        )
         await fileWrite(importMapFilename, JSON.stringify(importMap, null, "  "))
         if (logImportMapFilePath) {
           console.log(`-> ${importMapFilename}`)
@@ -266,3 +274,12 @@ const createNodeModuleNotFoundMessage = ({
 projectFolder : ${projectFolder}
 importerFilename: ${importerFilename}
 nodeModuleName: ${nodeModuleName}`
+
+// on windows a filename is C:/Users/file.js
+// on mac/lunix it is /Users/file.js
+// a windows filename can be considered as an url pathname
+// "just" by prepending "/". (Assuming \ already comverted to /)
+const filenameToPathname = (filename) => {
+  if (filename[0] === "/") return filename
+  return `/${filename}`
+}
