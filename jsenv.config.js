@@ -1,7 +1,7 @@
 const { launchNode } = require("@jsenv/core")
 
-const projectFolder = __dirname
-exports.projectFolder = projectFolder
+const projectPath = __dirname
+exports.projectPath = projectPath
 
 const testDescription = {
   "/test/**/*.test.js": {

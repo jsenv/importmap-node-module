@@ -1,7 +1,7 @@
 const { test } = require("@jsenv/core")
-const { projectFolder, testDescription } = require("../../jsenv.config.js")
+const { projectPath, testDescription } = require("../../jsenv.config.js")
 
 test({
-  projectFolder,
+  projectFolder: projectPath,
   executeDescription: testDescription,
 })

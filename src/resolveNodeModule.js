@@ -1,15 +1,18 @@
 import { pathnameToDirname } from "@jsenv/module-resolution"
 import { firstOperationMatching } from "@dmail/helper"
 import { readPackageData } from "./readPackageData.js"
+import {
+  pathnameToOperatingSystemPath,
+  pathnameToRelativePathname,
+} from "./operating-system-path.js"
 
-export const resolveNodeModule = async ({
-  rootFolderFilename,
-  importerFilename,
-  nodeModuleName,
-}) => {
-  const importerFolder = pathnameToDirname(importerFilename)
-  const relativeFolder = importerFolder.slice(rootFolderFilename.length)
-  const relativeFolderNameArray = relativeFolder
+export const resolveNodeModule = async ({ rootPathname, importerPathname, nodeModuleName }) => {
+  const importerFolderPathname = pathnameToDirname(importerPathname)
+  const importerFolderRelativePath = pathnameToRelativePathname(
+    importerFolderPathname,
+    rootPathname,
+  )
+  const relativeFolderNameArray = importerFolderRelativePath
     .split("/")
     .filter((value) => value !== "node_modules")
   const nodeModuleCandidateArray = relativeFolderNameArray
@@ -20,16 +23,16 @@ export const resolveNodeModule = async ({
   return firstOperationMatching({
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
-      const packageFilename = nodeModuleCandidate
-        ? `${rootFolderFilename}/node_modules/${nodeModuleCandidate}/node_modules/${nodeModuleName}/package.json`
-        : `${rootFolderFilename}/node_modules/${nodeModuleName}/package.json`
+      const packagePathname = nodeModuleCandidate
+        ? `${rootPathname}/node_modules/${nodeModuleCandidate}/node_modules/${nodeModuleName}/package.json`
+        : `${rootPathname}/node_modules/${nodeModuleName}/package.json`
 
       const packageData = await readPackageData({
-        filename: packageFilename,
+        filename: pathnameToOperatingSystemPath(packagePathname),
         returnNullWhenNotFound: true,
       })
 
-      return { packageData, packageFilename }
+      return { packagePathname, packageData }
     },
     predicate: ({ packageData }) => Boolean(packageData),
   })

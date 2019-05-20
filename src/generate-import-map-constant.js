@@ -1,1 +1,1 @@
-export const GENERATE_IMPORT_MAP_DEFAULT_IMPORT_MAP_FILENAME_RELATIVE = "importMap.json"
+export const DEFAULT_IMPORT_MAP_RELATIVE_PATH = "/importMap.json"

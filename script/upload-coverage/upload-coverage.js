@@ -1,6 +1,6 @@
 const { uploadCoverage } = require("@jsenv/codecov-upload")
-const { projectFolder } = require("../../jsenv.config.js")
+const { projectPath } = require("../../jsenv.config.js")
 
 uploadCoverage({
-  projectFolder,
+  projectFolder: projectPath,
 })
