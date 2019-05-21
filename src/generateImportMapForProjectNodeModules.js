@@ -1,4 +1,9 @@
 import { basename } from "path"
+import {
+  operatingSystemPathToPathname,
+  pathnameToRelativePathname,
+  pathnameToOperatingSystemPath,
+} from "@jsenv/operating-system-path"
 import { pathnameToDirname } from "@jsenv/module-resolution"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "./catchAsyncFunctionCancellation.js"
@@ -7,11 +12,6 @@ import { resolveNodeModule } from "./resolveNodeModule.js"
 import { packageDataToMain } from "./packageDataToMain.js"
 import { packageMayNeedRemapping } from "./packageMayNeedRemapping.js"
 import { DEFAULT_IMPORT_MAP_RELATIVE_PATH } from "./generate-import-map-constant.js"
-import {
-  operatingSystemPathToPathname,
-  pathnameToRelativePathname,
-  pathnameToOperatingSystemPath,
-} from "./operating-system-path.js"
 
 export const generateImportMapForProjectNodeModules = async ({
   projectPath,

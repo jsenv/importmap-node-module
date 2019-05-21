@@ -1,5 +1,5 @@
+import { importMetaURLToFolderPath } from "@jsenv/operating-system-path"
 import { assert } from "@dmail/assert"
-import { importMetaURLToFolderPath } from "../import-meta-url-to-folder-path.js"
 import { generateImportMapForProjectNodeModules } from "../../index.js"
 
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
