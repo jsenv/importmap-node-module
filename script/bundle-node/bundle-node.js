@@ -2,5 +2,5 @@ const { bundleNode } = require("@jsenv/core")
 const { projectPath } = require("../../jsenv.config.js")
 
 bundleNode({
-  projectFolder: projectPath,
+  projectPath,
 })
