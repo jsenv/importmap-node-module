@@ -1,10 +1,11 @@
-import { pathnameToDirname, hrefToPathname, remapResolvedImport } from "@jsenv/module-resolution"
+import { remapResolvedImport } from "@jsenv/module-resolution"
 import { assert } from "@dmail/assert"
+import { importMetaURLToFolderPath } from "../import-meta-url-to-folder-path.js"
 import { generateImportMapForProjectNodeModules } from "../../index.js"
 
-const testFolder = pathnameToDirname(hrefToPathname(import.meta.url))
+const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const importMap = await generateImportMapForProjectNodeModules({
-  projectPath: testFolder,
+  projectPath: testFolderPath,
   writeImportMapFile: false,
 })
 
