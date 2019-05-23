@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "@jsenv/module-resolution": "2.4.0",
-    "@jsenv/operating-system-path": "1.0.0",
+    "@jsenv/operating-system-path": "2.1.0",
     "@dmail/cancellation": "2.1.0",
     "@dmail/helper": "2.2.0"
   },
@@ -29,7 +29,7 @@
     "@jsenv/eslint-import-resolver": "4.6.0",
     "@jsenv/prettier-config": "1.0.0",
     "@jsenv/prettier-check-project": "2.0.0",
-    "@jsenv/node-module-import-map": "1.2.0",
+    "@jsenv/node-module-import-map": "1.4.0",
     "@dmail/assert": "3.4.0",
     "babel-eslint": "11.0.0-beta.0",
     "prettier": "1.16.3",

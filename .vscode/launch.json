@@ -15,12 +15,10 @@
       "smartStep": true,
       // https://github.com/Microsoft/vscode-chrome-debug-core/commit/eb552d621f1f6fbebcfca5d2390020dc7d8877e0#diff-b4f13aa3c326d081dea7875f9c0fe84aR31
       "skipFiles": [
+        // force-multipline
         "node_modules/**",
-        // "node_modules/@babel/**",
-        // https://github.com/Microsoft/vscode-react-native/issues/620
         "<node_internals>/**/*.js"
       ]
-      // "trace": true,
     },
     {
       "name": "jsenv-node",
@@ -34,27 +32,10 @@
       "sourceMapPathOverrides": {
         "/*": "${workspaceRoot}/*"
       },
-      // "smartStep": true,
-      "skipFiles": [
-        "node_modules/**",
-        // https://github.com/Microsoft/vscode-react-native/issues/620
-        "<node_internals>/**/*.js"
-      ]
-    },
-    {
-      "name": "jsenv-chrome",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://127.0.0.1:3456/${relativeFile}",
-      "runtimeArgs": ["--allow-file-access-from-files", "--disable-web-security"],
-      "sourceMaps": true,
-      "sourceMapPathOverrides": {
-        "/*": "${workspaceRoot}/*"
-      },
       "smartStep": true,
       "skipFiles": [
+        // force-multiline
         "node_modules/**",
-        // https://github.com/Microsoft/vscode-react-native/issues/620
         "<node_internals>/**/*.js"
       ]
     }

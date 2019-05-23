@@ -42,7 +42,9 @@ export const generateImportMapForProjectNodeModules = async ({
       })
       const importMap = sortImportMap({ imports, scopes })
       if (writeImportMapFile) {
-        const importMapPath = `${projectPath}${importMapRelativePath}`
+        const importMapPath = pathnameToOperatingSystemPath(
+          `${projectPathname}${importMapRelativePath}`,
+        )
         await fileWrite(importMapPath, JSON.stringify(importMap, null, "  "))
         if (logImportMapFilePath) {
           console.log(`-> ${importMapPath}`)
