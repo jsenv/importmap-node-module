@@ -5,7 +5,3 @@
 [![codecov](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
 
 > convert node_modules into importMap
-
-## Licensing
-
-MIT
