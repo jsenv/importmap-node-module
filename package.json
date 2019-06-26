@@ -19,7 +19,7 @@
   "dependencies": {
     "@jsenv/module-resolution": "2.4.0",
     "@jsenv/operating-system-path": "2.1.0",
-    "@dmail/cancellation": "2.1.0",
+    "@dmail/cancellation": "2.3.0",
     "@dmail/helper": "2.2.0"
   },
   "devDependencies": {

@@ -6,18 +6,17 @@ import {
 } from "@jsenv/operating-system-path"
 import { pathnameToDirname } from "@jsenv/module-resolution"
 import { fileWrite } from "@dmail/helper"
-import { catchAsyncFunctionCancellation } from "./catchAsyncFunctionCancellation.js"
+import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
 import {
   resolveNodeModule,
   readPackageData,
   resolvePackageMain,
 } from "./node-module-resolution/index.js"
-import { DEFAULT_IMPORT_MAP_RELATIVE_PATH } from "./generate-import-map-constant.js"
-import { sortImportMap } from "./sort.js"
+import { sortImportMap } from "./sort-import-map.js"
 
 export const generateImportMapForProjectNodeModules = async ({
   projectPath,
-  importMapRelativePath = DEFAULT_IMPORT_MAP_RELATIVE_PATH,
+  importMapRelativePath = "/importMap.json",
   scopeOriginRelativePerModule = true, // import '/folder/file.js' is scoped per node_module
   remapMain = true, // import 'lodash' remapped to '/node_modules/lodash/index.js'
   remapFolder = true, // import 'lodash/src/file.js' remapped to '/node_modules/lodash/src/file.js'
