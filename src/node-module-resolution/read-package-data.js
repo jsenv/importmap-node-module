@@ -13,7 +13,7 @@ export const readPackageData = async ({ filename, returnNullWhenNotFound = false
       throw new Error(createMissingPackageMessage({ filename }))
     }
     if (e && e.name === "SyntaxError") {
-      throw new Error(createMalformedPackageMessage({ filename }))
+      throw new Error(createMalformedPackageMessage({ filename, syntaxError: e }))
     }
     throw e
   }
@@ -28,4 +28,4 @@ const createMalformedPackageMessage = ({
   syntaxError,
 }) => `error while parsing package.json.
 filename: ${filename}
-syntaxError: ${syntaxError}`
+syntax error message: ${syntaxError.message}`
