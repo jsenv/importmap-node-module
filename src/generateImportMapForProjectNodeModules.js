@@ -9,7 +9,7 @@ import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "./catchAsyncFunctionCancellation.js"
 import { readPackageData } from "./readPackageData.js"
 import { resolveNodeModule } from "./resolveNodeModule.js"
-import { packageDataToMain } from "./packageDataToMain.js"
+import { resolvePackageMain } from "./package-main.js"
 import { packageMayNeedRemapping } from "./packageMayNeedRemapping.js"
 import { DEFAULT_IMPORT_MAP_RELATIVE_PATH } from "./generate-import-map-constant.js"
 
@@ -121,7 +121,7 @@ export const generateImportMapForProjectNodeModules = async ({
           }
 
           if (remapMain) {
-            const dependencyMain = packageDataToMain(
+            const dependencyMain = resolvePackageMain(
               dependencyPackageData,
               dependencyPackagePathname,
             )
