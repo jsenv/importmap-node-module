@@ -7,9 +7,11 @@ import {
 import { pathnameToDirname } from "@jsenv/module-resolution"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "./catchAsyncFunctionCancellation.js"
-import { readPackageData } from "./readPackageData.js"
-import { resolveNodeModule } from "./resolveNodeModule.js"
-import { resolvePackageMain } from "./package-main.js"
+import {
+  resolveNodeModule,
+  readPackageData,
+  resolvePackageMain,
+} from "./node-module-resolution/index.js"
 import { DEFAULT_IMPORT_MAP_RELATIVE_PATH } from "./generate-import-map-constant.js"
 import { sortImportMap } from "./sort.js"
 
