@@ -115,7 +115,10 @@ But `"/node_modules/lib/index.js"` is easier to read than `"../lib/index.js"` fo
 Most importantly relative notation can contains enough `../` to remap an import outside your project root.<br />
 
 Inside a browser, it would fail to find the file.<br />
-Inside node.js your having a dependency to a file outside your project root folder, it can and must be avoided.
+Inside node.js your having a dependency to a file outside your project root folder, it can and must be avoided.<br />
+
+It means we will consider a node module outside projectPath as not found.
+However, a symbolic link inside projectPath targeting the outside node module location is ok. It means we support `npm link` or other scenario using symbolic links as yarn does.
 
 ## `generateImportMapForProjectNodeModules`
 
