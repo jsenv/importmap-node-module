@@ -58,6 +58,65 @@ node generate-import-map.js
 
 `importMap.json` file will be created in your folder.<br />
 
+## Implementation details
+
+##### Scope keys surrounded with `/`
+
+```json
+{
+  "scopes": {
+    "/node_modules/pkg/": {
+      "lib": "/node_modules/lib/index.js"
+    }
+  }
+}
+```
+
+Could also be written
+
+```json
+{
+  "scopes": {
+    "node_modules/pkg": {
+      "lib": "/node_modules/lib/index.js"
+    }
+  }
+}
+```
+
+But it's important to use `/node_modules/pkg/` because only one url pathname can match it while `node_modules/pkg` is too permissive.<br />
+For instance `http://domain.com/foo/node_modules/pkg` or `http://domain.com/node_modules/pkg2` would match `node_modules/pkg` which is certainly not what you want.
+
+##### Imports values starts with `/`
+
+```json
+{
+  "scopes": {
+    "/node_modules/pkg/": {
+      "lib": "/node_modules/lib/index.js"
+    }
+  }
+}
+```
+
+Could be written
+
+```json
+{
+  "scopes": {
+    "/node_modules/pkg/": {
+      "lib": "../lib/index.js"
+    }
+  }
+}
+```
+
+But `"/node_modules/lib/index.js"` is easier to read than `"../lib/index.js"` for a human or a machine.<br/>
+Most importantly relative notation can contains enough `../` to remap an import outside your project root.<br />
+
+Inside a browser, it would fail to find the file.<br />
+Inside node.js your having a dependency to a file outside your project root folder, it can and must be avoided.
+
 ## `generateImportMapForProjectNodeModules`
 
 An async function returning an importMap object.
