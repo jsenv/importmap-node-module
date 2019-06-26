@@ -60,65 +60,24 @@ node generate-import-map.js
 
 ## Implementation details
 
-##### Scope keys surrounded with `/`
+##### A custom node module resolution
 
-```json
-{
-  "scopes": {
-    "/node_modules/pkg/": {
-      "lib": "/node_modules/lib/index.js"
-    }
-  }
-}
+This project uses a custom node module resolution.<br />
+It behaves as the official one used by node.js `require` with one big change:
+
+> A node module will not be found if it is outside your project folder.
+
+We do this because importMap will be used by browsers. Inside a browser you would be unable to find a file external to your root because you would end up doing this:
+
+```js
+new URL("../node_modules/pkg/index.js", "https://example.com/file.js")
 ```
 
-Could also be written
+The url resolution would just ignore `../` and `node_modules/pkg/index.js` would result in a 404 or an unexpected version of that node module.
 
-```json
-{
-  "scopes": {
-    "node_modules/pkg": {
-      "lib": "/node_modules/lib/index.js"
-    }
-  }
-}
-```
-
-But it's important to use `/node_modules/pkg/` because only one url pathname can match it while `node_modules/pkg` is too permissive.<br />
-For instance `http://domain.com/foo/node_modules/pkg` or `http://domain.com/node_modules/pkg2` would match `node_modules/pkg` which is certainly not what you want.
-
-##### Imports values starts with `/`
-
-```json
-{
-  "scopes": {
-    "/node_modules/pkg/": {
-      "lib": "/node_modules/lib/index.js"
-    }
-  }
-}
-```
-
-Could be written
-
-```json
-{
-  "scopes": {
-    "/node_modules/pkg/": {
-      "lib": "../lib/index.js"
-    }
-  }
-}
-```
-
-But `"/node_modules/lib/index.js"` is easier to read than `"../lib/index.js"` for a human or a machine.<br/>
-Most importantly relative notation can contains enough `../` to remap an import outside your project root.<br />
-
-Inside a browser, it would fail to find the file.<br />
-Inside node.js your having a dependency to a file outside your project root folder, it can and must be avoided.<br />
-
-It means we will consider a node module outside projectPath as not found.
 However, a symbolic link inside projectPath targeting the outside node module location is ok. It means we support `npm link` or other scenario using symbolic links as yarn does.
+
+The thing we don't support is a globally installed node module that is not symlinked in your folder, which should be avoided 99.99% of the time anyway.
 
 ## `generateImportMapForProjectNodeModules`
 
