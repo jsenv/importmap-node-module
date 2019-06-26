@@ -73,7 +73,7 @@ It accepts several options documented below. Each option can be passed like writ
 
 ### projectPath option
 
-Path leading to a folder with a package.json.
+> Path leading to a folder with a package.json.
 
 ```js
 const projectPath = "/Users/dmail/folder"
@@ -81,37 +81,42 @@ const projectPath = "/Users/dmail/folder"
 
 - This option is **required**.
 - On windows you would pass `C:\Users\dmail\folder`, that's fine.
-- You can use `__dirname` to provide this option value.
+- You can use `__dirname` to provide this option value.<br />
   — see [\_\_dirname documentation on node.js](https://nodejs.org/docs/latest/api/modules.html#modules_dirname)
 
 ### importMapRelativePath option
 
-Controls where the importMap file will be written.<br />
+> Relative path where the importMap file is written.
 
-- If you don't pass this option, default value is
-  ```js
-  "/importMap.json"
-  ```
+If you don't pass this option, default value is
+
+```js
+"/importMap.json"
+```
 
 ### writeImportMapFile option
 
-When true, an importMap file is written at
+> When true, importMap will be written to a file.
+
+The import map file is written to
 
 <!-- prettier-ignore -->
 ```js
 `${projectPath}/${importMapRelativePath}`
 ```
 
-- If you don't pass this option, default value is
-  ```js
-  true
-  ```
+If you don't pass this option, default value is
+
+```js
+true
+```
 
 ### logImportMapFilePath option
 
-When both `writeImportMapFile` and `logImportMapFilePath` are true, the function will log path to the written importMap file in the terminal.
+> When both `writeImportMapFile` and `logImportMapFilePath` are true, the function will log path to the written importMap file in the terminal.
 
-- If you don't pass this option, default value is
-  ```js
-  true
-  ```
+If you don't pass this option, default value is
+
+```js
+true
+```
