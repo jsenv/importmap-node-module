@@ -10,7 +10,6 @@ import { catchAsyncFunctionCancellation } from "./catchAsyncFunctionCancellation
 import { readPackageData } from "./readPackageData.js"
 import { resolveNodeModule } from "./resolveNodeModule.js"
 import { resolvePackageMain } from "./package-main.js"
-import { packageMayNeedRemapping } from "./packageMayNeedRemapping.js"
 import { DEFAULT_IMPORT_MAP_RELATIVE_PATH } from "./generate-import-map-constant.js"
 
 export const generateImportMapForProjectNodeModules = async ({
@@ -20,7 +19,14 @@ export const generateImportMapForProjectNodeModules = async ({
   remapMain = true, // import 'lodash' remapped to '/node_modules/lodash/index.js'
   remapFolder = true, // import 'lodash/src/file.js' remapped to '/node_modules/lodash/src/file.js'
   remapDevDependencies = true,
-  remapPredicate = () => true,
+  remapPredicate = ({ isTopLevel, packageData }) => {
+    if (isTopLevel) return true
+
+    // do not remap modules without import/export that would be useless
+    if ("module" in packageData) return true
+    if ("jsnext:main" in packageData) return true
+    return false
+  },
   writeImportMapFile = true,
   logImportMapFilePath = true,
   throwUnhandled = true,
@@ -56,8 +62,6 @@ export const generateImportMapForProjectNodeModules = async ({
     const visit = async ({ packagePathname, packageData }) => {
       const isTopLevel = packagePathname === topLevelPackagePathname
 
-      if (!isTopLevel && !packageMayNeedRemapping(packageData)) return
-
       const importerName = isTopLevel
         ? topLevelImporterName
         : pathnameToDirname(pathnameToRelativePathname(packagePathname, projectPathname)).slice(1)
@@ -72,6 +76,7 @@ export const generateImportMapForProjectNodeModules = async ({
           isTopLevel,
           dependencyName,
           isDev: dependencyName in devDependencies,
+          packageData,
         }),
       )
 
