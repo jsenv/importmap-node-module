@@ -1,0 +1,6 @@
+{
+  "name": "whatever",
+  "dependencies": {
+    "main-undefined": "*"
+  }
+}
