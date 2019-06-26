@@ -45,7 +45,7 @@ export const generateImportMapForProjectNodeModules = async ({
 
     const start = async () => {
       const topLevelPackageData = await readPackageData({
-        filename: pathnameToOperatingSystemPath(topLevelPackagePathname),
+        path: pathnameToOperatingSystemPath(topLevelPackagePathname),
       })
       await visit({
         packagePathname: topLevelPackagePathname,

@@ -1,8 +1,8 @@
 import { fileRead } from "@dmail/helper"
 
-export const readPackageData = async ({ filename, returnNullWhenNotFound = false }) => {
+export const readPackageData = async ({ path, returnNullWhenNotFound = false }) => {
   try {
-    const packageString = await fileRead(filename)
+    const packageString = await fileRead(path)
     const packageData = JSON.parse(packageString)
     return packageData
   } catch (e) {
@@ -10,22 +10,18 @@ export const readPackageData = async ({ filename, returnNullWhenNotFound = false
       if (returnNullWhenNotFound) {
         return null
       }
-      throw new Error(createMissingPackageMessage({ filename }))
+      throw new Error(createMissingPackageMessage({ path }))
     }
     if (e && e.name === "SyntaxError") {
-      throw new Error(createMalformedPackageMessage({ filename, syntaxError: e }))
+      throw new Error(createMalformedPackageMessage({ path, syntaxError: e }))
     }
     throw e
   }
 }
 
-const createMissingPackageMessage = ({ filename }) =>
-  new Error(`missing package.json.
-filename: ${filename}`)
+const createMissingPackageMessage = ({ path }) => `missing package.json.
+path: ${path}`
 
-const createMalformedPackageMessage = ({
-  filename,
-  syntaxError,
-}) => `error while parsing package.json.
-filename: ${filename}
-syntax error message: ${syntaxError.message}`
+const createMalformedPackageMessage = ({ path, syntaxError }) => `error while parsing package.json.
+syntax error message: ${syntaxError.message}
+path: ${path}`

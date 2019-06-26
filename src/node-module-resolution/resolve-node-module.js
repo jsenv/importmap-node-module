@@ -28,7 +28,7 @@ export const resolveNodeModule = async ({ rootPathname, importerPathname, nodeMo
         : `${rootPathname}/node_modules/${nodeModuleName}/package.json`
 
       const packageData = await readPackageData({
-        filename: pathnameToOperatingSystemPath(packagePathname),
+        path: pathnameToOperatingSystemPath(packagePathname),
         returnNullWhenNotFound: true,
       })
 

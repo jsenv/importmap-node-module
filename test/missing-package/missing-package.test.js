@@ -10,8 +10,7 @@ try {
   })
   throw new Error("should throw")
 } catch (actual) {
-  const expected = new Error(`error while parsing package.json.
-syntax error message: Unexpected end of JSON input
-path: ${testFolderPath}/node_modules/malformed/package.json`)
+  const expected = new Error(`missing package.json.
+path: ${testFolderPath}/package.json`)
   assert({ actual, expected })
 }
