@@ -1,6 +1,6 @@
 {
   "name": "whatever",
   "dependencies": {
-    "not-found": "*"
+    "main-undefined": "*"
   }
 }
