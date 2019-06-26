@@ -132,7 +132,7 @@ export const generateImportMapForProjectNodeModules = async ({
           }
 
           if (remapMain) {
-            const dependencyMain = resolvePackageMain(
+            const dependencyMain = await resolvePackageMain(
               dependencyPackageData,
               dependencyPackagePathname,
             )

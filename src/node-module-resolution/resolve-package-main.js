@@ -36,7 +36,7 @@ const resolveMainFile = async (main, packagePathname) => {
     return `${main}.js`
   }
 
-  return `${main}.js`
+  return main
 }
 
 const pathLeadsToAFile = (path) => {
