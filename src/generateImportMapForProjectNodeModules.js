@@ -25,7 +25,10 @@ export const generateImportMapForProjectNodeModules = async ({
   remapPredicate = ({ isTopLevel, packageData }) => {
     if (isTopLevel) return true
 
-    // do not remap modules without import/export that would be useless
+    // jsenv do not remap modules without import/export
+    // this is just a perf optimization.
+    // other tools than jsenv might want the full import map
+    // and would have to remove this logic
     if ("module" in packageData) return true
     if ("jsnext:main" in packageData) return true
     return false
