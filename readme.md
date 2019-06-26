@@ -88,6 +88,13 @@ const projectPath = "/Users/dmail/folder"
 
 > Relative path where the importMap file is written.
 
+When written, import map file will be at
+
+<!-- prettier-ignore -->
+```js
+`${projectPath}${importMapRelativePath}`
+```
+
 If you don't pass this option, default value is
 
 ```js
@@ -97,13 +104,6 @@ If you don't pass this option, default value is
 ### writeImportMapFile option
 
 > When true, importMap will be written to a file.
-
-The import map file is written to
-
-<!-- prettier-ignore -->
-```js
-`${projectPath}/${importMapRelativePath}`
-```
 
 If you don't pass this option, default value is
 
