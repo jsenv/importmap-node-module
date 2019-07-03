@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -23,7 +23,8 @@
     "@dmail/helper": "2.2.0"
   },
   "devDependencies": {
-    "@jsenv/core": "5.55.0",
+    "@jsenv/core": "5.67.0",
+    "@jsenv/node-launcher": "1.0.0",
     "@jsenv/codecov-upload": "1.6.0",
     "@jsenv/eslint-config": "8.0.0",
     "@jsenv/eslint-import-resolver": "4.6.0",

@@ -70,10 +70,11 @@ export const generateImportMapForProjectNodeModules = async ({
       const importerName = isTopLevel
         ? topLevelImporterName
         : pathnameToDirname(pathnameToRelativePathname(packagePathname, projectPathname)).slice(1)
-      const { dependencies = {}, devDependencies = {} } = packageData
+      const { dependencies = {}, peerDependencies = {}, devDependencies = {} } = packageData
 
       const arrayOfDependencyToRemap = Object.keys({
         ...dependencies,
+        ...peerDependencies,
         ...(remapDevDependencies && isTopLevel ? devDependencies : {}),
       }).filter((dependencyName) =>
         remapPredicate({
@@ -81,6 +82,7 @@ export const generateImportMapForProjectNodeModules = async ({
           isTopLevel,
           dependencyName,
           isDev: dependencyName in devDependencies,
+          isPeer: dependencyName in peerDependencies,
           packageData,
         }),
       )

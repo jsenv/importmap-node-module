@@ -1,4 +1,4 @@
-const { launchNode } = require("@jsenv/core")
+const { launchNode } = require("@jsenv/node-launcher")
 
 const projectPath = __dirname
 exports.projectPath = projectPath
