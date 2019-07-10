@@ -64,7 +64,11 @@ export const generateImportMapForProjectNodeModules = async ({
       return importMap
     }
 
+    const seen = {}
     const visit = async ({ packagePathname, packageData }) => {
+      if (packagePathname in seen) return
+      seen[packagePathname] = true
+
       const isTopLevel = packagePathname === topLevelPackagePathname
 
       const importerName = isTopLevel

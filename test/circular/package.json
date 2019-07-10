@@ -1,0 +1,7 @@
+{
+  "name": "circular-name",
+  "dependencies": {
+    "bar": "",
+    "foo": ""
+  }
+}
