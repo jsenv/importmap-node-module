@@ -14,8 +14,8 @@ try {
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(`node module not found.
-project path : ${testFolderPath}
+node module name: not-found
 importer path: ${testFolderPath}/package.json
-node module name: not-found`)
+project path : ${testFolderPath}`)
   assert({ actual, expected })
 }
