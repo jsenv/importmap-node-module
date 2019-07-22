@@ -23,5 +23,5 @@ const createMissingPackageMessage = ({ path }) => `missing package.json.
 path: ${path}`
 
 const createMalformedPackageMessage = ({ path, syntaxError }) => `error while parsing package.json.
-syntax error message: ${syntaxError.message}
-path: ${path}`
+path: ${path}
+syntax error message: ${syntaxError.message}`

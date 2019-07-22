@@ -259,6 +259,6 @@ const createNodeModuleNotFoundMessage = ({
   importerPath,
   nodeModuleName,
 }) => `node module not found.
-project path : ${projectPath}
+node module name: ${nodeModuleName}
 importer path: ${importerPath}
-node module name: ${nodeModuleName}`
+project path : ${projectPath}`
