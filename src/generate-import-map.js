@@ -157,13 +157,13 @@ export const generateImportMapForProjectNodeModules = async ({
 
           if (scopeOriginRelativePerModule) {
             addScopedImportMapping({
-              scope: `${dependencyExpectedRelativePath}/`,
-              from: `${dependencyExpectedRelativePath}/`,
+              scope: `${dependencyActualRelativePath}/`,
+              from: `/`,
               to: `${dependencyActualRelativePath}/`,
             })
             addScopedImportMapping({
-              scope: `${dependencyExpectedRelativePath}/`,
-              from: `/`,
+              scope: `${dependencyActualRelativePath}/`,
+              from: `${dependencyActualRelativePath}/`,
               to: `${dependencyActualRelativePath}/`,
             })
 
@@ -178,26 +178,18 @@ export const generateImportMapForProjectNodeModules = async ({
                 from: `${dependencyActualRelativePath}/`,
                 to: `${dependencyActualRelativePath}/`,
               })
-
+            } else {
               addScopedImportMapping({
-                scope: `${dependencyActualRelativePath}/`,
+                scope: `${dependencyExpectedRelativePath}/`,
                 from: `/`,
                 to: `${dependencyActualRelativePath}/`,
               })
               addScopedImportMapping({
-                scope: `${dependencyActualRelativePath}/`,
-                from: `${dependencyActualRelativePath}/`,
+                scope: `${dependencyExpectedRelativePath}/`,
+                from: `${dependencyExpectedRelativePath}/`,
                 to: `${dependencyActualRelativePath}/`,
               })
             }
-          }
-
-          if (moved) {
-            addScopedImportMapping({
-              scope: `${dependencyActualRelativePath}/`,
-              from: `${dependencyActualRelativePath}/`,
-              to: `${dependencyActualRelativePath}/`,
-            })
           }
 
           return visit({

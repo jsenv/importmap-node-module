@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
     "/dist/"
   ],
   "dependencies": {
-    "@jsenv/module-resolution": "2.4.0",
+    "@jsenv/module-resolution": "3.1.0",
     "@jsenv/operating-system-path": "2.1.0",
     "@dmail/cancellation": "2.3.0",
     "@dmail/helper": "2.2.0"
