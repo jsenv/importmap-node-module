@@ -13,10 +13,13 @@ import {
   resolvePackageMain,
 } from "./node-module-resolution/index.js"
 import { sortImportMap } from "./sort-import-map.js"
+import { mergeTwoImportMap } from "./mergeTwoImportMap.js"
 
+// add option to update jsconfig.json
 export const generateImportMapForProjectNodeModules = async ({
   projectPath,
   importMapRelativePath = "/importMap.json",
+  inputImportMap = {},
   scopeOriginRelativePerModule = true, // import '/folder/file.js' is scoped per node_module
   remapMain = true, // import 'lodash' remapped to '/node_modules/lodash/index.js'
   remapFolder = true, // import 'lodash/src/file.js' remapped to '/node_modules/lodash/src/file.js'
@@ -51,17 +54,20 @@ export const generateImportMapForProjectNodeModules = async ({
         packagePathname: topLevelPackagePathname,
         packageData: topLevelPackageData,
       })
-      const importMap = sortImportMap({ imports, scopes })
+      const nodeModuleImportMap = { imports, scopes }
+      const importMap = mergeTwoImportMap(inputImportMap, nodeModuleImportMap)
+      const sortedImportMap = sortImportMap(importMap)
+
       if (writeImportMapFile) {
         const importMapPath = pathnameToOperatingSystemPath(
           `${projectPathname}${importMapRelativePath}`,
         )
-        await fileWrite(importMapPath, JSON.stringify(importMap, null, "  "))
+        await fileWrite(importMapPath, JSON.stringify(sortedImportMap, null, "  "))
         if (logImportMapFilePath) {
           console.log(`-> ${importMapPath}`)
         }
       }
-      return importMap
+      return sortedImportMap
     }
 
     const seen = {}
