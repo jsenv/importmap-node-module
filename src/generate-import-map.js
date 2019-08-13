@@ -14,8 +14,8 @@ import {
 } from "./node-module-resolution/index.js"
 import { sortImportMap } from "./sort-import-map.js"
 import { mergeTwoImportMap } from "./mergeTwoImportMap.js"
+import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
-// add option to update jsconfig.json
 export const generateImportMapForProjectNodeModules = async ({
   projectPath,
   importMapRelativePath = "/importMap.json",
@@ -38,6 +38,8 @@ export const generateImportMapForProjectNodeModules = async ({
   writeImportMapFile = true,
   logImportMapFilePath = true,
   throwUnhandled = true,
+  writeJsconfigFile = true,
+  logJsConfigFilePath = true,
 }) =>
   catchAsyncFunctionCancellation(async () => {
     const projectPathname = operatingSystemPathToPathname(projectPath)
@@ -67,6 +69,29 @@ export const generateImportMapForProjectNodeModules = async ({
           console.log(`-> ${importMapPath}`)
         }
       }
+      if (writeJsconfigFile) {
+        const jsConfigPath = pathnameToOperatingSystemPath(`${projectPathname}/jsconfig.json`)
+        try {
+          const jsConfig = {
+            compilerOptions: {
+              baseUrl: ".",
+              paths: {
+                "/*": ["./*"],
+                ...importMapToVsCodeConfigPaths(importMap),
+              },
+            },
+          }
+          await fileWrite(jsConfigPath, JSON.stringify(jsConfig, null, "  "))
+          if (logJsConfigFilePath) {
+            console.log(`-> ${jsConfigPath}`)
+          }
+        } catch (e) {
+          if (e.code !== "ENOENT") {
+            throw e
+          }
+        }
+      }
+
       return sortedImportMap
     }
 
