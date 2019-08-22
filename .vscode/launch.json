@@ -38,6 +38,18 @@
         "node_modules/**",
         "<node_internals>/**/*.js"
       ]
+    },
+    {
+      "name": "jsenv-node-attach-child",
+      "type": "node",
+      "request": "attach",
+      "port": 40000,
+      "smartStep": true,
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "/*": "${workspaceFolder}/*"
+      },
+      "skipFiles": ["node_modules/**", "<node_internals>/**/*.js"]
     }
   ]
 }

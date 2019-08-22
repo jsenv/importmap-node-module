@@ -12,9 +12,7 @@ export const resolveNodeModule = async ({ rootPathname, importerPathname, nodeMo
     importerFolderPathname,
     rootPathname,
   )
-  const relativeFolderNameArray = importerFolderRelativePath
-    .split("/")
-    .filter((value) => value !== "node_modules")
+  const relativeFolderNameArray = importerFolderRelativePath.split("/")
   const nodeModuleCandidateArray = relativeFolderNameArray
     .map((_, index) => `${relativeFolderNameArray.slice(1, index + 1).join("/")}`)
     // reverse to handle deepest (most scoped) folder fist
@@ -24,7 +22,7 @@ export const resolveNodeModule = async ({ rootPathname, importerPathname, nodeMo
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
       const packagePathname = nodeModuleCandidate
-        ? `${rootPathname}/node_modules/${nodeModuleCandidate}/node_modules/${nodeModuleName}/package.json`
+        ? `${rootPathname}/${nodeModuleCandidate}/node_modules/${nodeModuleName}/package.json`
         : `${rootPathname}/node_modules/${nodeModuleName}/package.json`
 
       const packageData = await readPackageData({

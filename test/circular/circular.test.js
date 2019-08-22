@@ -6,6 +6,7 @@ const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const actual = await generateImportMapForProjectNodeModules({
   projectPath: testFolderPath,
   writeImportMapFile: false,
+  writeJsconfigFile: false,
   remapFolder: false,
   scopeOriginRelativePerModule: false,
 })

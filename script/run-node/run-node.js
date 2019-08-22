@@ -4,6 +4,6 @@ const { projectPath } = require("../../jsenv.config.js")
 
 execute({
   projectPath,
-  launch: launchNode,
+  launch: (options) => launchNode({ ...options, debugPort: 40000 }),
   fileRelativePath: `/${process.argv[2]}`,
 })

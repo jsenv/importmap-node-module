@@ -1,0 +1,6 @@
+{
+  "name": "complex-name",
+  "devDependencies": {
+    "@jsenv/bundling": "*"
+  }
+}

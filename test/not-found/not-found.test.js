@@ -7,6 +7,7 @@ try {
   await generateImportMapForProjectNodeModules({
     projectPath: testFolderPath,
     writeImportMapFile: false,
+    writeJsconfigFile: false,
     scopeOriginRelativePerModule: false,
     remapFolder: false,
     throwUnhandled: false,
