@@ -12,19 +12,16 @@ export const resolveNodeModule = async ({ rootPathname, importerPathname, nodeMo
     importerFolderPathname,
     rootPathname,
   )
-  const relativeFolderNameArray = importerFolderRelativePath.split("/")
-  const nodeModuleCandidateArray = relativeFolderNameArray
-    .map((_, index) => `${relativeFolderNameArray.slice(1, index + 1).join("/")}`)
-    // reverse to handle deepest (most scoped) folder fist
-    .reverse()
+
+  const nodeModuleCandidateArray = [
+    ...getCandidateArrayFromImporter(importerFolderRelativePath),
+    `node_modules`,
+  ]
 
   return firstOperationMatching({
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
-      const packagePathname = nodeModuleCandidate
-        ? `${rootPathname}/${nodeModuleCandidate}/node_modules/${nodeModuleName}/package.json`
-        : `${rootPathname}/node_modules/${nodeModuleName}/package.json`
-
+      const packagePathname = `${rootPathname}/${nodeModuleCandidate}/${nodeModuleName}/package.json`
       const packageData = await readPackageData({
         path: pathnameToOperatingSystemPath(packagePathname),
         returnNullWhenNotFound: true,
@@ -34,4 +31,22 @@ export const resolveNodeModule = async ({ rootPathname, importerPathname, nodeMo
     },
     predicate: ({ packageData }) => Boolean(packageData),
   })
+}
+
+const getCandidateArrayFromImporter = (importerRelativePath) => {
+  if (importerRelativePath === "") return []
+
+  const candidateArray = []
+  const relativeFolderNameArray = importerRelativePath.split("/node_modules/")
+  // remove the first empty string
+  relativeFolderNameArray.shift()
+
+  let i = relativeFolderNameArray.length
+  while (i--) {
+    candidateArray.push(
+      `node_modules/${relativeFolderNameArray.slice(0, i + 1).join("/node_modules/")}/node_modules`,
+    )
+  }
+
+  return candidateArray
 }
