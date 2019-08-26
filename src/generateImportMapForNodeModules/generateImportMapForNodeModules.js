@@ -155,9 +155,11 @@ export const generateImportMapForNodeModules = async ({
           const dependencyData = await findDependency({
             packagePathname,
             packageData,
-            dependency,
+            dependencyName,
+            dependencyType: dependency.type,
+            dependencyVersionPatter: dependency.versionPattern,
           })
-          if (!dependency) {
+          if (!dependencyData) {
             return
           }
 
@@ -275,11 +277,16 @@ export const generateImportMapForNodeModules = async ({
     }
 
     const dependenciesCache = {}
-    const findDependency = ({ packagePathname, packageData, dependency }) => {
+    const findDependency = ({
+      packagePathname,
+      packageData,
+      dependencyName,
+      dependencyType,
+      dependencyVersionPattern,
+    }) => {
       if (packagePathname in dependenciesCache === false) {
         dependenciesCache[packagePathname] = {}
       }
-      const dependencyName = dependency.name
       if (dependencyName in dependenciesCache[packagePathname]) {
         return dependenciesCache[packagePathname][dependencyName]
       }
@@ -287,9 +294,9 @@ export const generateImportMapForNodeModules = async ({
         rootPathname: projectPathname,
         packagePathname,
         packageData,
-        dependencyType: dependency.type,
         dependencyName,
-        dependencyVersionPattern: dependency.versionPattern,
+        dependencyType,
+        dependencyVersionPattern,
         onWarn,
       })
       dependenciesCache[packagePathname][dependencyName] = dependencyPromise

@@ -23,36 +23,51 @@ export const resolveNodeModule = async ({
     `node_modules`,
   ]
 
-  const dependency = await firstOperationMatching({
+  const result = await firstOperationMatching({
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
       const packagePathname = `${rootPathname}/${nodeModuleCandidate}/${dependencyName}/package.json`
-      const packageData = await readPackageData({
-        path: pathnameToOperatingSystemPath(packagePathname),
-        returnNullWhenNotFound: true,
-        onWarn,
-      })
+      try {
+        const packageData = await readPackageData({
+          path: pathnameToOperatingSystemPath(packagePathname),
+        })
+        return { packagePathname, packageData }
+      } catch (e) {
+        if (e.code === "ENOENT") {
+          return null
+        }
 
-      return { packagePathname, packageData }
+        if (e.name === "SyntaxError") {
+          throw createDependencyPackageParsingError({
+            parsingError: e,
+            packagePathname,
+          })
+        }
+
+        throw e
+      }
     },
     predicate: ({ packageData }) => Boolean(packageData),
   })
 
-  if (!dependency) {
-    onWarn({
-      code: "DEPENDENCY_NOT_FOUND",
-      message: createDendencyNotFoundMessage({
-        dependencyName,
-        dependencyType,
-        dependencyVersionPattern,
-        packagePathname,
-        packageData,
-      }),
-      data: { packagePathname, packageData, dependencyName, dependencyType },
-    })
+  const { packageData: dependencyPackageData } = result
+
+  if (dependencyPackageData) {
+    return result
   }
 
-  return dependency
+  onWarn({
+    code: "DEPENDENCY_NOT_FOUND",
+    message: createDendencyNotFoundMessage({
+      dependencyName,
+      dependencyType,
+      dependencyVersionPattern,
+      packagePathname,
+      packageData,
+    }),
+    data: { packagePathname, packageData, dependencyName, dependencyType },
+  })
+  return null
 }
 
 const getCandidateArrayFromPackageFolder = (packageFolderRelativePath) => {
@@ -72,6 +87,13 @@ const getCandidateArrayFromPackageFolder = (packageFolderRelativePath) => {
 
   return candidateArray
 }
+
+const createDependencyPackageParsingError = ({ parsingError, packagePathname }) =>
+  new SyntaxError(`error while parsing dependency package.json.
+--- parsing error message ---
+${parsingError.message}
+--- package.json path ---
+${pathnameToOperatingSystemPath(packagePathname)}`)
 
 const createDendencyNotFoundMessage = ({
   dependencyName,

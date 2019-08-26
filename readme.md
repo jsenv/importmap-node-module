@@ -79,14 +79,13 @@ However, a symbolic link inside projectPath targeting the outside node module lo
 
 The thing we don't support is a globally installed node module that is not symlinked in your folder, which should be avoided 99.99% of the time anyway.
 
-## `generateImportMapForProjectNodeModules`
+## `generateImportMapForNodeModules`
 
 An async function returning an importMap object.
 
 ```js
-const importMap = await generateImportMapForProjectNodeModules({
+const importMap = await generateImportMapForNodeModules({
   projectPath: __dirname,
-  writeImportMapFile: false,
 })
 ```
 
@@ -129,7 +128,7 @@ If you don't pass this option, default value is
 If you don't pass this option, default value is
 
 ```js
-true
+false
 ```
 
 ### logImportMapFilePath option
