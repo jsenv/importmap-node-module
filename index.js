@@ -1,1 +1,3 @@
-export { generateImportMapForProjectNodeModules } from "./src/generate-import-map.js"
+export {
+  generateImportMapForNodeModules,
+} from "./src/generateImportMapForNodeModules/generateImportMapForNodeModules.js"

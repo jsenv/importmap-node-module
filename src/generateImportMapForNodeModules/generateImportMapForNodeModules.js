@@ -12,15 +12,15 @@ import {
   readPackageData,
   resolvePackageMain,
 } from "./node-module-resolution/index.js"
-import { sortImportMap } from "./sort-import-map.js"
+import { sortImportMap } from "./sortImportMap.js"
 import { mergeTwoImportMap } from "./mergeTwoImportMap.js"
 import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
-export const generateImportMapForProjectNodeModules = async ({
+export const generateImportMapForNodeModules = async ({
   projectPath,
   importMapRelativePath = "/importMap.json",
   inputImportMap = {},
-  scopeOriginRelativePerModule = true, // import '/folder/file.js' is scoped per node_module
+  scopeOriginRelativePerModule = false, // import '/folder/file.js' is scoped per node_module
   remapMain = true, // import 'lodash' remapped to '/node_modules/lodash/index.js'
   remapFolder = true, // import 'lodash/src/file.js' remapped to '/node_modules/lodash/src/file.js'
   remapDevDependencies = true,
@@ -35,10 +35,10 @@ export const generateImportMapForProjectNodeModules = async ({
     if ("jsnext:main" in packageData) return true
     return false
   },
-  writeImportMapFile = true,
+  writeImportMapFile = false,
   logImportMapFilePath = true,
   throwUnhandled = true,
-  writeJsconfigFile = true,
+  writeJsconfigFile = false,
   logJsConfigFilePath = true,
 }) =>
   catchAsyncFunctionCancellation(async () => {
