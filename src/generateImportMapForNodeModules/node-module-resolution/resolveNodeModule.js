@@ -6,38 +6,60 @@ import { pathnameToDirname } from "@jsenv/module-resolution"
 import { firstOperationMatching } from "@dmail/helper"
 import { readPackageData } from "./readPackageData.js"
 
-export const resolveNodeModule = async ({ rootPathname, importerPathname, nodeModuleName }) => {
-  const importerFolderPathname = pathnameToDirname(importerPathname)
-  const importerFolderRelativePath = pathnameToRelativePathname(
-    importerFolderPathname,
-    rootPathname,
-  )
+export const resolveNodeModule = async ({
+  rootPathname,
+  packagePathname,
+  packageData,
+  dependencyName,
+  dependencyVersionPattern,
+  dependencyType,
+  onWarn,
+}) => {
+  const packageFolderPathname = pathnameToDirname(packagePathname)
+  const packageFolderRelativePath = pathnameToRelativePathname(packageFolderPathname, rootPathname)
 
   const nodeModuleCandidateArray = [
-    ...getCandidateArrayFromImporter(importerFolderRelativePath),
+    ...getCandidateArrayFromPackageFolder(packageFolderRelativePath),
     `node_modules`,
   ]
 
-  return firstOperationMatching({
+  const dependency = await firstOperationMatching({
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
-      const packagePathname = `${rootPathname}/${nodeModuleCandidate}/${nodeModuleName}/package.json`
+      const packagePathname = `${rootPathname}/${nodeModuleCandidate}/${dependencyName}/package.json`
       const packageData = await readPackageData({
         path: pathnameToOperatingSystemPath(packagePathname),
         returnNullWhenNotFound: true,
+        onWarn,
       })
 
       return { packagePathname, packageData }
     },
     predicate: ({ packageData }) => Boolean(packageData),
   })
+
+  if (!dependency) {
+    onWarn({
+      code: "DEPENDENCY_NOT_FOUND",
+      message: createDendencyNotFoundMessage({
+        dependencyName,
+        dependencyType,
+        dependencyVersionPattern,
+        packagePathname,
+        packageData,
+      }),
+      data: { packagePathname, packageData, dependencyName, dependencyType },
+    })
+  }
+
+  return dependency
 }
 
-const getCandidateArrayFromImporter = (importerRelativePath) => {
-  if (importerRelativePath === "") return []
+const getCandidateArrayFromPackageFolder = (packageFolderRelativePath) => {
+  if (packageFolderRelativePath === "") return []
 
   const candidateArray = []
-  const relativeFolderNameArray = importerRelativePath.split("/node_modules/")
+  const relativeFolderNameArray = packageFolderRelativePath.split("/node_modules/")
   // remove the first empty string
   relativeFolderNameArray.shift()
 
@@ -50,3 +72,17 @@ const getCandidateArrayFromImporter = (importerRelativePath) => {
 
   return candidateArray
 }
+
+const createDendencyNotFoundMessage = ({
+  dependencyName,
+  dependencyType,
+  dependencyVersionPattern,
+  packageData,
+  packagePathname,
+}) => `cannot find a ${dependencyType}.
+--- ${dependencyType} ---
+${dependencyName}@${dependencyVersionPattern}
+--- required by ---
+${packageData.name}@${packageData.version}
+--- package.json path ---
+${pathnameToOperatingSystemPath(packagePathname)}`

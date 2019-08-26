@@ -54,6 +54,7 @@ export const generateImportMapForNodeModules = async ({
     const start = async () => {
       const topLevelPackageData = await readPackageData({
         path: pathnameToOperatingSystemPath(topLevelPackagePathname),
+        onWarn,
       })
       await visit({
         packagePathname: topLevelPackagePathname,
@@ -110,41 +111,60 @@ export const generateImportMapForNodeModules = async ({
         : pathnameToDirname(pathnameToRelativePathname(packagePathname, projectPathname)).slice(1)
       const { dependencies = {}, peerDependencies = {}, devDependencies = {} } = packageData
 
-      const arrayOfDependencyToRemap = Object.keys({
-        ...dependencies,
-        ...peerDependencies,
-        ...(remapDevDependencies && isTopLevel ? devDependencies : {}),
-      }).filter((dependencyName) =>
-        remapPredicate({
-          importerName,
-          isTopLevel,
-          dependencyName,
-          isDev: dependencyName in devDependencies,
-          isPeer: dependencyName in peerDependencies,
-          packageData,
-        }),
-      )
+      const dependencyMap = {}
+      Object.keys(dependencies).forEach((dependencyName) => {
+        dependencyMap[dependencyName] = {
+          type: "dependency",
+          versionPattern: dependencies[dependencyName],
+        }
+      })
+      Object.keys(peerDependencies).forEach((dependencyName) => {
+        dependencyMap[dependencyName] = {
+          type: "peerDependency",
+          versionPattern: peerDependencies[dependencyName],
+        }
+      })
+      if (remapDevDependencies && isTopLevel) {
+        Object.keys(devDependencies).forEach((dependencyName) => {
+          if (!dependencyMap.hasOwnProperty(dependencyName)) {
+            dependencyMap[dependencyName] = {
+              type: "devDependency",
+              versionPattern: devDependencies[dependencyName],
+            }
+          }
+        })
+      }
 
       await Promise.all(
-        arrayOfDependencyToRemap.map(async (dependencyName) => {
-          const dependency = await findDependency({
-            importerPathname: packagePathname,
-            nodeModuleName: dependencyName,
+        Object.keys(dependencyMap).map(async (dependencyName) => {
+          const dependency = dependencyMap[dependencyName]
+
+          if (
+            !remapPredicate({
+              importerName,
+              isTopLevel,
+              dependencyName,
+              dependencyType: dependency.type,
+              dependencyVersionPattern: dependency.versionPattern,
+              packageData,
+            })
+          ) {
+            return
+          }
+
+          const dependencyData = await findDependency({
+            packagePathname,
+            packageData,
+            dependency,
           })
           if (!dependency) {
-            throw new Error(
-              createNodeModuleNotFoundMessage({
-                projectPath,
-                importerPath: pathnameToOperatingSystemPath(packagePathname),
-                nodeModuleName: dependencyName,
-              }),
-            )
+            return
           }
 
           const {
             packagePathname: dependencyPackagePathname,
             packageData: dependencyPackageData,
-          } = dependency
+          } = dependencyData
 
           const dependencyActualPathname = pathnameToDirname(dependencyPackagePathname)
           const dependencyActualRelativePath = pathnameToRelativePathname(
@@ -227,7 +247,7 @@ export const generateImportMapForNodeModules = async ({
             }
           }
 
-          return visit({
+          await visit({
             packagePathname: dependencyPackagePathname,
             packageData: dependencyPackageData,
           })
@@ -255,20 +275,24 @@ export const generateImportMapForNodeModules = async ({
     }
 
     const dependenciesCache = {}
-    const findDependency = ({ importerPathname, nodeModuleName }) => {
-      if (importerPathname in dependenciesCache === false) {
-        dependenciesCache[importerPathname] = {}
+    const findDependency = ({ packagePathname, packageData, dependency }) => {
+      if (packagePathname in dependenciesCache === false) {
+        dependenciesCache[packagePathname] = {}
       }
-      if (nodeModuleName in dependenciesCache[importerPathname]) {
-        return dependenciesCache[importerPathname][nodeModuleName]
+      const dependencyName = dependency.name
+      if (dependencyName in dependenciesCache[packagePathname]) {
+        return dependenciesCache[packagePathname][dependencyName]
       }
-
       const dependencyPromise = resolveNodeModule({
         rootPathname: projectPathname,
-        importerPathname,
-        nodeModuleName,
+        packagePathname,
+        packageData,
+        dependencyType: dependency.type,
+        dependencyName,
+        dependencyVersionPattern: dependency.versionPattern,
+        onWarn,
       })
-      dependenciesCache[importerPathname][nodeModuleName] = dependencyPromise
+      dependenciesCache[packagePathname][dependencyName] = dependencyPromise
       return dependencyPromise
     }
 
@@ -280,12 +304,3 @@ export const generateImportMapForNodeModules = async ({
       })
     })
   })
-
-const createNodeModuleNotFoundMessage = ({
-  projectPath,
-  importerPath,
-  nodeModuleName,
-}) => `node module not found.
-node module name: ${nodeModuleName}
-importer path: ${importerPath}
-project path : ${projectPath}`
