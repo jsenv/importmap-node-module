@@ -1,4 +1,5 @@
 /.dist/
 /coverage/
 /dist/
+/test/malformed-package/node_modules/malformed/
 /node_modules/
