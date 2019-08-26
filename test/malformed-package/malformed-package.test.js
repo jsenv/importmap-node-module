@@ -14,6 +14,7 @@ try {
 --- parsing error message ---
 Unexpected end of JSON input
 --- package.json path ---
-${testFolderPath}/node_modules/malformed/package.json`)
+${testFolderPath}/node_modules/malformed/package.json
+`)
   assert({ actual, expected })
 }

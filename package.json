@@ -26,6 +26,7 @@
     "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
     "dist": "npm run clean && npm run generate-commonjs-bundle",
     "clean": "rimraf dist && rimraf coverage",
+    "postinstall": "npm run generate-import-map",
     "reinstall": "npm run clean && rimraf node_modules && npm install",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
@@ -45,7 +46,7 @@
     "@jsenv/eslint-config": "9.9.0",
     "@jsenv/prettier-config": "1.0.0",
     "@jsenv/prettier-check-project": "3.3.0",
-    "@jsenv/node-module-import-map": "3.2.0",
+    "@jsenv/node-module-import-map": "4.0.0",
     "@dmail/assert": "3.14.0",
     "babel-eslint": "11.0.0-beta.0",
     "prettier": "1.18.2",

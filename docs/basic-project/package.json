@@ -1,0 +1,7 @@
+{
+  "name": "whatever",
+  "version": "0.0.1",
+  "devDependencies": {
+    "@jsenv/node-module-import-map": "4.0.0"
+  }
+}

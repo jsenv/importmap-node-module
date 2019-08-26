@@ -43,6 +43,10 @@ export const resolvePackageMain = ({ packageData, packagePathname, onWarn }) => 
 const extensionCandidateArray = ["js", "json", "node"]
 
 const resolveMainFile = async ({ main, packagePathname, onWarn }) => {
+  // main is explicitely empty meaning
+  // it is assumed that we should not find a file
+  if (main === "") return ""
+
   if (main.slice(0, 2) === "./") main = main.slice(2)
   if (main[0] === "/") main = main.slice(1)
 

@@ -90,7 +90,8 @@ const createDependencyPackageParsingError = ({ parsingError, packagePathname }) 
 --- parsing error message ---
 ${parsingError.message}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`)
+${pathnameToOperatingSystemPath(packagePathname)}
+`)
 
 const createDendencyNotFoundMessage = ({
   dependencyName,
@@ -104,4 +105,5 @@ ${dependencyName}@${dependencyVersionPattern}
 --- required by ---
 ${packageData.name}@${packageData.version}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`

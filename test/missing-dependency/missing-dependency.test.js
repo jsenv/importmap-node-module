@@ -19,7 +19,8 @@ not-found@*
 --- required by ---
 whatever@0.0.1
 --- package.json path ---
-${testFolderPath}/package.json`,
+${testFolderPath}/package.json
+`,
   data: {
     packagePathname: `${testFolderPath}/package.json`,
     packageData: {

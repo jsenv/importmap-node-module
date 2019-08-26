@@ -201,8 +201,9 @@ export const generateImportMapForNodeModules = async ({
             const dependencyMain = await resolvePackageMain({
               packageData: dependencyPackageData,
               packagePathname: dependencyPackagePathname,
-              onWarn,
+              onWarn: () => {},
             })
+            if (!dependencyMain) return
             const from = dependencyName
             const to = `${dependencyActualRelativePath}/${dependencyMain}`
 

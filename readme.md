@@ -27,36 +27,28 @@ It must happen once node modules are on your machine, because it searches depend
 
 ## How to use
 
-This section assumes you have a folder with a `package.json` file and you want to generate the corresponding importMap.<br />
-This example assumes folder path is `/Users/dmail`. Don't forget to replace it by the actual path on your machine.
+To understand how to use this repository let's use it on a "real" project.<br />
+We will setup a basic project and generate an importMap.json file for it.
 
-1. go to `/Users/dmail/folder/`
+### Basic project setup
 
-```shell
-cd /Users/dmail/folder/
-```
+1. Create basic project file structure
 
-2. install `@jsenv/node-module-import-map`
+   — see [./docs/basic-project](./docs/basic-project)
 
-```shell
-npm install --save-dev @jsenv/node-module-import-map
-```
+2. Install dependencies
 
-2. create `generate-import-map.js`
+   ```console
+   npm install
+   ```
 
-```js
-const { generateImportMapForProjectNodeModules } = require("@jsenv/node-module-import-map")
+3. Generate `basic-project/importMap.json`
 
-generateImportMapForProjectNodeModules({ projectPath: __dirname })
-```
+   ```console
+   node ./generate-import-map.js
+   ```
 
-3. execute `generate-import-map.js`
-
-```shell
-node generate-import-map.js
-```
-
-`importMap.json` file will be created in your folder.<br />
+   `basic-project/importMap.json` file will be created.
 
 ## Implementation details
 
@@ -104,6 +96,16 @@ const projectPath = "/Users/dmail/folder"
 - You can use `__dirname` to provide this option value.<br />
   — see [\_\_dirname documentation on node.js](https://nodejs.org/docs/latest/api/modules.html#modules_dirname)
 
+### writeImportMapFile option
+
+> When true, importMap will be written to a file.
+
+If you don't pass this option, default value is
+
+```js
+false
+```
+
 ### importMapRelativePath option
 
 > Relative path where the importMap file is written.
@@ -119,16 +121,6 @@ If you don't pass this option, default value is
 
 ```js
 "/importMap.json"
-```
-
-### writeImportMapFile option
-
-> When true, importMap will be written to a file.
-
-If you don't pass this option, default value is
-
-```js
-false
 ```
 
 ### logImportMapFilePath option
