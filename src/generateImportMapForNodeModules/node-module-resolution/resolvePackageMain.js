@@ -4,28 +4,59 @@ import { firstOperationMatching } from "@dmail/helper"
 import { pathnameToOperatingSystemPath } from "@jsenv/operating-system-path"
 import { pathnameToDirname } from "@jsenv/module-resolution"
 
-export const resolvePackageMain = (packageData, packagePathname) => {
-  if ("module" in packageData) return resolveMainFile(packageData.module, packagePathname)
-  if ("jsnext:main" in packageData)
-    return resolveMainFile(packageData["jsnext:main"], packagePathname)
-  if ("main" in packageData) return resolveMainFile(packageData.main, packagePathname)
-  return resolveMainFile("index", packagePathname)
+export const resolvePackageMain = ({ packageData, packagePathname, onWarn }) => {
+  if ("module" in packageData) {
+    return resolveMainFile({
+      from: "module",
+      main: packageData.module,
+      packagePathname,
+      onWarn,
+    })
+  }
+
+  if ("jsnext:main" in packageData) {
+    return resolveMainFile({
+      from: "jsnext:main",
+      main: packageData["jsnext:main"],
+      packagePathname,
+      onWarn,
+    })
+  }
+
+  if ("main" in packageData) {
+    return resolveMainFile({
+      from: "main",
+      main: packageData.main,
+      packagePathname,
+      onWarn,
+    })
+  }
+
+  return resolveMainFile({
+    from: "default",
+    main: "index",
+    packagePathname,
+    onWarn,
+  })
 }
 
 const extensionCandidateArray = ["js", "json", "node"]
 
-const resolveMainFile = async (main, packagePathname) => {
+const resolveMainFile = async ({ main, packagePathname, onWarn }) => {
   if (main.slice(0, 2) === "./") main = main.slice(2)
   if (main[0] === "/") main = main.slice(1)
 
+  const packageDirname = pathnameToDirname(packagePathname)
   const extension = extname(main)
+
   if (extension === "") {
+    const fileWithoutExtensionPathname = `${packageDirname}/${main}`
+
     const extensionLeadingToFile = await firstOperationMatching({
       array: extensionCandidateArray,
       start: async (extensionCandidate) => {
-        const packageDirname = pathnameToDirname(packagePathname)
         const path = pathnameToOperatingSystemPath(
-          `${packageDirname}/${main}.${extensionCandidate}`,
+          `${fileWithoutExtensionPathname}.${extensionCandidate}`,
         )
         const isFile = await pathLeadsToAFile(path)
         return isFile ? extensionCandidate : null
@@ -33,10 +64,30 @@ const resolveMainFile = async (main, packagePathname) => {
       predicate: (extension) => Boolean(extension),
     })
     if (extensionLeadingToFile) return `${main}.${extensionLeadingToFile}`
-    // we know in advance this remapping does not lead to an actual file.
-    // however we have no guarantee this remapping will actually be used
-    // in the codebase.
+
+    onWarn({
+      code: "MAIN_FILE_NOT_FOUND",
+      message: createMainFileNotFoundMessage({
+        mainPathname: fileWithoutExtensionPathname,
+        packagePathname,
+      }),
+      data: { main, packagePathname },
+    })
+
     return `${main}.js`
+  }
+
+  const mainPathname = `${packageDirname}/${main}`
+  const isFile = await pathLeadsToAFile(mainPathname)
+  if (!isFile) {
+    onWarn({
+      code: "MAIN_FILE_NOT_FOUND",
+      message: createMainFileNotFoundMessage({
+        mainPathname,
+        packagePathname,
+      }),
+      data: { main, packagePathname },
+    })
   }
 
   return main
@@ -54,3 +105,17 @@ const pathLeadsToAFile = (path) => {
     })
   })
 }
+
+// we know in advance this remapping does not lead to an actual file.
+// we only warn because we have no guarantee this remapping will actually be used
+// in the codebase.
+const createMainFileNotFoundMessage = ({
+  mainPathname,
+  packagePathname,
+}) => `cannot find a module main file.
+--- extensions tried ---
+${extensionCandidateArray.join(",")}
+--- main path ---
+${pathnameToOperatingSystemPath(mainPathname)}
+--- package.json path ---
+${pathnameToOperatingSystemPath(packagePathname)}`

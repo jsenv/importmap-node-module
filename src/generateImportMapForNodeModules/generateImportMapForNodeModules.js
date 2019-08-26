@@ -35,6 +35,9 @@ export const generateImportMapForNodeModules = async ({
     if ("jsnext:main" in packageData) return true
     return false
   },
+  onWarn = ({ message }) => {
+    console.warn(message)
+  },
   writeImportMapFile = false,
   logImportMapFilePath = true,
   throwUnhandled = true,
@@ -173,10 +176,11 @@ export const generateImportMapForNodeModules = async ({
           }
 
           if (remapMain) {
-            const dependencyMain = await resolvePackageMain(
-              dependencyPackageData,
-              dependencyPackagePathname,
-            )
+            const dependencyMain = await resolvePackageMain({
+              packageData: dependencyPackageData,
+              packagePathname: dependencyPackagePathname,
+              onWarn,
+            })
             const from = dependencyName
             const to = `${dependencyActualRelativePath}/${dependencyMain}`
 
