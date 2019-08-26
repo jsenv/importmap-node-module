@@ -1,13 +1,11 @@
 import { importMetaURLToFolderPath } from "@jsenv/operating-system-path"
 import { remapResolvedImport } from "@jsenv/module-resolution"
 import { assert } from "@dmail/assert"
-import { generateImportMapForProjectNodeModules } from "../../index.js"
+import { generateImportMapForNodeModules } from "../../index.js"
 
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
-const importMap = await generateImportMapForProjectNodeModules({
+const importMap = await generateImportMapForNodeModules({
   projectPath: testFolderPath,
-  writeImportMapFile: false,
-  writeJsconfigFile: false,
 })
 
 const resolve = ({ importer, specifier }) =>

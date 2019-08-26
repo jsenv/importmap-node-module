@@ -1,7 +1,0 @@
-{
-  "name": "missing-package",
-  "version": "0.0.1",
-  "dependencies": {
-    "whatever": "*"
-  }
-}
