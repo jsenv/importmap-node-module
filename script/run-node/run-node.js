@@ -1,4 +1,4 @@
-const { execute } = require("@jsenv/core")
+const { execute } = require("@jsenv/execution")
 const { launchNode } = require("@jsenv/node-launcher")
 const { projectPath } = require("../../jsenv.config.js")
 

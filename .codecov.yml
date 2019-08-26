@@ -1,0 +1,16 @@
+coverage:
+  # I like coverage but I think it should not be enforced
+  # so force coverage status to be always green
+  range: 0...100
+  status:
+    # same idea about coverage being nice to have:
+    # a commit/pr decreasing coverage is still successful not matter how much
+    # it decreases coverage
+    project: off
+    patch: off
+  parsers:
+    javascript:
+      enable_partials: yes
+
+comment:
+  layout: "header"
