@@ -34,7 +34,7 @@ export const resolveNodeModule = async ({
         return { packagePathname, packageData }
       } catch (e) {
         if (e.code === "ENOENT") {
-          return null
+          return {}
         }
 
         if (e.name === "SyntaxError") {
@@ -50,24 +50,21 @@ export const resolveNodeModule = async ({
     predicate: ({ packageData }) => Boolean(packageData),
   })
 
-  const { packageData: dependencyPackageData } = result
-
-  if (dependencyPackageData) {
-    return result
+  if (!result) {
+    onWarn({
+      code: "DEPENDENCY_NOT_FOUND",
+      message: createDendencyNotFoundMessage({
+        dependencyName,
+        dependencyType,
+        dependencyVersionPattern,
+        packagePathname,
+        packageData,
+      }),
+      data: { packagePathname, packageData, dependencyName, dependencyType },
+    })
   }
 
-  onWarn({
-    code: "DEPENDENCY_NOT_FOUND",
-    message: createDendencyNotFoundMessage({
-      dependencyName,
-      dependencyType,
-      dependencyVersionPattern,
-      packagePathname,
-      packageData,
-    }),
-    data: { packagePathname, packageData, dependencyName, dependencyType },
-  })
-  return null
+  return result
 }
 
 const getCandidateArrayFromPackageFolder = (packageFolderRelativePath) => {

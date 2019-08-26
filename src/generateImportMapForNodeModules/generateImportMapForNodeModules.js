@@ -157,7 +157,7 @@ export const generateImportMapForNodeModules = async ({
             packageData,
             dependencyName,
             dependencyType: dependency.type,
-            dependencyVersionPatter: dependency.versionPattern,
+            dependencyVersionPattern: dependency.versionPattern,
           })
           if (!dependencyData) {
             return
