@@ -5,6 +5,7 @@ import { generateImportMapForNodeModules } from "../../index.js"
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const actual = await generateImportMapForNodeModules({
   projectPath: testFolderPath,
+  scopeOriginRelativePerModule: true,
 })
 const expected = {
   imports: {
@@ -18,7 +19,4 @@ const expected = {
     },
   },
 }
-assert({
-  actual,
-  expected,
-})
+assert({ actual, expected })

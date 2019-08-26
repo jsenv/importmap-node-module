@@ -6,6 +6,7 @@ import { generateImportMapForNodeModules } from "../../index.js"
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const importMap = await generateImportMapForNodeModules({
   projectPath: testFolderPath,
+  scopeOriginRelativePerModule: true,
 })
 
 const resolve = ({ importer, specifier }) =>
