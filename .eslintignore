@@ -1,5 +1,6 @@
 /.dist/
 /coverage/
 /dist/
+/docs/basic-project/node_modules/
 /test/malformed-package/node_modules/malformed/
 /node_modules/

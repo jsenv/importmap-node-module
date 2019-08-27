@@ -1,6 +1,9 @@
 /.dist/
 /coverage/
 /dist/
+/docs/basic-project/node_modules/
+/docs/basic-project/importMap.json
+/docs/basic-project/package-lock.json
 /node_modules/
 /importMap.json
 /jsconfig.json
