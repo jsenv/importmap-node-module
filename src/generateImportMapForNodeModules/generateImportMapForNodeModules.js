@@ -41,7 +41,7 @@ export const generateImportMapForNodeModules = async ({
   writeImportMapFile = false,
   logImportMapFilePath = true,
   throwUnhandled = true,
-  writeJsconfigFile = false,
+  writeJsConfigFile = false,
   logJsConfigFilePath = true,
 }) =>
   catchAsyncFunctionCancellation(async () => {
@@ -73,7 +73,7 @@ export const generateImportMapForNodeModules = async ({
           console.log(`-> ${importMapPath}`)
         }
       }
-      if (writeJsconfigFile) {
+      if (writeJsConfigFile) {
         const jsConfigPath = pathnameToOperatingSystemPath(`${projectPathname}/jsconfig.json`)
         try {
           const jsConfig = {

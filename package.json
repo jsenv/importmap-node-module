@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -26,7 +26,6 @@
     "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
     "dist": "npm run clean && npm run generate-commonjs-bundle",
     "clean": "rimraf dist && rimraf coverage",
-    "postinstall": "npm run generate-import-map",
     "reinstall": "npm run clean && rimraf node_modules && npm install",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
@@ -38,19 +37,19 @@
     "@dmail/helper": "2.3.0"
   },
   "devDependencies": {
-    "@jsenv/execution": "1.1.0",
-    "@jsenv/testing": "1.27.0",
-    "@jsenv/bundling": "1.15.0",
-    "@jsenv/node-launcher": "1.19.0",
+    "@jsenv/execution": "1.2.0",
+    "@jsenv/testing": "1.29.0",
+    "@jsenv/bundling": "2.0.0",
+    "@jsenv/node-launcher": "2.0.0",
     "@jsenv/codecov-upload": "1.7.0",
     "@jsenv/eslint-config": "9.9.0",
     "@jsenv/prettier-config": "1.0.0",
     "@jsenv/prettier-check-project": "3.3.0",
-    "@jsenv/node-module-import-map": "4.1.0",
+    "@jsenv/node-module-import-map": "4.2.0",
     "@dmail/assert": "3.14.0",
     "babel-eslint": "11.0.0-beta.0",
     "prettier": "1.18.2",
-    "eslint": "6.2.1",
+    "eslint": "6.2.2",
     "rimraf": "3.0.0"
   }
 }
