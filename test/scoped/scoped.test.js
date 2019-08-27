@@ -8,6 +8,25 @@ const importMap = await generateImportMapForNodeModules({
   projectPath: testFolderPath,
 })
 
+{
+  const actual = importMap
+  const expected = {
+    imports: {
+      "bar/": "/node_modules/bar/",
+      "foo/": "/node_modules/foo/",
+      bar: "/node_modules/bar/bar.js",
+      foo: "/node_modules/foo/foo.js",
+    },
+    scopes: {
+      "/node_modules/foo/": {
+        "bar/": "/node_modules/foo/node_modules/bar/",
+        bar: "/node_modules/foo/node_modules/bar/bar.js",
+      },
+    },
+  }
+  assert({ actual, expected })
+}
+
 const resolve = ({ importer, specifier }) =>
   remapResolvedImport({
     importMap,

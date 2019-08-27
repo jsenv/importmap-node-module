@@ -189,11 +189,6 @@ export const generateImportMapForNodeModules = async ({
             addMapping({ importerName, from, to })
             if (moved) {
               addScopedImportMapping({ scope: `/${importerName}/`, from, to })
-              addScopedImportMapping({
-                scope: `${dependencyActualRelativePath}/`,
-                from: `${dependencyActualRelativePath}/`,
-                to: `${dependencyActualRelativePath}/`,
-              })
             }
           }
 
