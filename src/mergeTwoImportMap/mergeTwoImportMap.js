@@ -15,7 +15,7 @@ const mergeScopes = (leftScopes = {}, rightScopes = {}) => {
     if (scopes.hasOwnProperty(pathPattern)) {
       scopes[pathPattern] = { ...scopes[pathPattern], ...rightScopes[pathPattern] }
     } else {
-      scopes[pathPattern] = rightScopes[pathPattern]
+      scopes[pathPattern] = { ...rightScopes[pathPattern] }
     }
   })
   return scopes

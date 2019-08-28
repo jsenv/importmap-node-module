@@ -7,34 +7,24 @@ import {
 import { pathnameToDirname } from "@jsenv/module-resolution"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
+import { mergeTwoImportMap } from "../mergeTwoImportMap/mergeTwoImportMap.js"
 import {
   resolveNodeModule,
   readPackageData,
   resolvePackageMain,
 } from "./node-module-resolution/index.js"
 import { sortImportMap } from "./sortImportMap.js"
-import { mergeTwoImportMap } from "./mergeTwoImportMap.js"
 import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
 export const generateImportMapForNodeModules = async ({
   projectPath,
   importMapRelativePath = "/importMap.json",
   inputImportMap = {},
-  scopeOriginRelativePerModule = false, // import '/folder/file.js' is scoped per node_module
   remapMain = true, // import 'lodash' remapped to '/node_modules/lodash/index.js'
   remapFolder = true, // import 'lodash/src/file.js' remapped to '/node_modules/lodash/src/file.js'
-  remapDevDependencies = true,
-  remapPredicate = ({ isTopLevel, packageData }) => {
-    if (isTopLevel) return true
-
-    // jsenv do not remap modules without import/export
-    // this is just a perf optimization.
-    // other tools than jsenv might want the full import map
-    // and would have to remove this logic
-    if ("module" in packageData) return true
-    if ("jsnext:main" in packageData) return true
-    return false
-  },
+  scopeOriginRelativePerModule = false, // import '/folder/file.js' is scoped per node_module
+  remapTopLevelDevDependencies = false,
+  remapPredicate = () => true,
   onWarn = ({ message }) => {
     console.warn(message)
   },
@@ -124,7 +114,7 @@ export const generateImportMapForNodeModules = async ({
           versionPattern: peerDependencies[dependencyName],
         }
       })
-      if (remapDevDependencies && isTopLevel) {
+      if (remapTopLevelDevDependencies && isTopLevel) {
         Object.keys(devDependencies).forEach((dependencyName) => {
           if (!dependencyMap.hasOwnProperty(dependencyName)) {
             dependencyMap[dependencyName] = {
