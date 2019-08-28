@@ -18,12 +18,13 @@ import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
 export const generateImportMapForNodeModules = async ({
   projectPath,
+  rootProjectPath = projectPath,
   importMapRelativePath = "/importMap.json",
   inputImportMap = {},
   remapMain = true, // import 'lodash' remapped to '/node_modules/lodash/index.js'
   remapFolder = true, // import 'lodash/src/file.js' remapped to '/node_modules/lodash/src/file.js'
   scopeOriginRelativePerModule = false, // import '/folder/file.js' is scoped per node_module
-  remapTopLevelDevDependencies = false,
+  remapDevDependencies = false,
   remapPredicate = () => true,
   onWarn = ({ message }) => {
     console.warn(message)
@@ -36,19 +37,23 @@ export const generateImportMapForNodeModules = async ({
 }) =>
   catchAsyncFunctionCancellation(async () => {
     const projectPathname = operatingSystemPathToPathname(projectPath)
-    const topLevelPackagePathname = `${projectPathname}/package.json`
-    const topLevelImporterName = basename(pathnameToDirname(topLevelPackagePathname))
+    const projectPackagePathname = `${projectPathname}/package.json`
+
+    const rootProjectPathname = operatingSystemPathToPathname(rootProjectPath)
+    const rootImporterName = basename(pathnameToDirname(rootProjectPathname))
+    const rootPackagePathname = `${rootProjectPathname}/package.json`
+
     const imports = {}
     const scopes = {}
 
     const start = async () => {
-      const topLevelPackageData = await readPackageData({
-        path: pathnameToOperatingSystemPath(topLevelPackagePathname),
+      const projectPackageData = await readPackageData({
+        path: pathnameToOperatingSystemPath(projectPackagePathname),
         onWarn,
       })
       await visit({
-        packagePathname: topLevelPackagePathname,
-        packageData: topLevelPackageData,
+        packagePathname: projectPackagePathname,
+        packageData: projectPackageData,
       })
       const nodeModuleImportMap = { imports, scopes }
       const importMap = mergeTwoImportMap(inputImportMap, nodeModuleImportMap)
@@ -94,11 +99,14 @@ export const generateImportMapForNodeModules = async ({
       if (packagePathname in seen) return
       seen[packagePathname] = true
 
-      const isTopLevel = packagePathname === topLevelPackagePathname
+      const isProjectPackage = packagePathname === projectPackagePathname
+      const isRootPackage = packagePathname === rootPackagePathname
 
-      const importerName = isTopLevel
-        ? topLevelImporterName
-        : pathnameToDirname(pathnameToRelativePathname(packagePathname, projectPathname)).slice(1)
+      const importerName = isRootPackage
+        ? rootImporterName
+        : pathnameToDirname(pathnameToRelativePathname(packagePathname, rootProjectPathname)).slice(
+            1,
+          )
       const { dependencies = {}, peerDependencies = {}, devDependencies = {} } = packageData
 
       const dependencyMap = {}
@@ -114,7 +122,7 @@ export const generateImportMapForNodeModules = async ({
           versionPattern: peerDependencies[dependencyName],
         }
       })
-      if (remapTopLevelDevDependencies && isTopLevel) {
+      if (remapDevDependencies && isProjectPackage) {
         Object.keys(devDependencies).forEach((dependencyName) => {
           if (!dependencyMap.hasOwnProperty(dependencyName)) {
             dependencyMap[dependencyName] = {
@@ -132,7 +140,8 @@ export const generateImportMapForNodeModules = async ({
           if (
             !remapPredicate({
               importerName,
-              isTopLevel,
+              isProjectPackage,
+              isRootPackage,
               dependencyName,
               dependencyType: dependency.type,
               dependencyVersionPattern: dependency.versionPattern,
@@ -161,14 +170,14 @@ export const generateImportMapForNodeModules = async ({
           const dependencyActualPathname = pathnameToDirname(dependencyPackagePathname)
           const dependencyActualRelativePath = pathnameToRelativePathname(
             dependencyActualPathname,
-            projectPathname,
+            rootProjectPathname,
           )
           const dependencyExpectedPathname = `${pathnameToDirname(
             packagePathname,
           )}/node_modules/${dependencyName}`
           const dependencyExpectedRelativePath = pathnameToRelativePathname(
             dependencyExpectedPathname,
-            projectPathname,
+            rootProjectPathname,
           )
           const moved = dependencyActualRelativePath !== dependencyExpectedRelativePath
 
@@ -255,7 +264,7 @@ export const generateImportMapForNodeModules = async ({
     }
 
     const addMapping = ({ importerName, from, to }) => {
-      if (importerName === topLevelImporterName) {
+      if (importerName === rootImporterName) {
         addImportMapping({ from, to })
       } else {
         addScopedImportMapping({ scope: `/${importerName}/`, from, to })
@@ -277,7 +286,7 @@ export const generateImportMapForNodeModules = async ({
         return dependenciesCache[packagePathname][dependencyName]
       }
       const dependencyPromise = resolveNodeModule({
-        rootPathname: projectPathname,
+        rootPathname: rootProjectPathname,
         packagePathname,
         packageData,
         dependencyName,
