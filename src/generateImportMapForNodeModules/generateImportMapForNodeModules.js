@@ -240,7 +240,7 @@ export const generateImportMapForNodeModules = async ({
         if (!resolvedKey) return
         const resolvedValue = resolvePathInPackage(packageImports[key], packagePathname)
         if (!resolvedValue) return
-        const from = `${packageName}${resolvedKey}`
+        const from = resolvedKey
         const to = `${actualRelativePath}${resolvedValue}`
 
         addScopedImportMapping({
