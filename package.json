@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -11,6 +11,9 @@
   },
   "module": "index.js",
   "main": "dist/commonjs/main.js",
+  "exports": {
+    "/": "/"
+  },
   "files": [
     "/src/",
     "/dist/",

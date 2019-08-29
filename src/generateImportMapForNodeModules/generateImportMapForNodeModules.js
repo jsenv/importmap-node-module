@@ -8,12 +8,12 @@ import { pathnameToDirname } from "@jsenv/module-resolution"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
 import { mergeTwoImportMap } from "../mergeTwoImportMap/mergeTwoImportMap.js"
+import { sortImportMap } from "../sortImportMap/sortImportMap.js"
 import {
   resolveNodeModule,
   readPackageData,
   resolvePackageMain,
 } from "./node-module-resolution/index.js"
-import { sortImportMap } from "./sortImportMap.js"
 import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
 export const generateImportMapForNodeModules = async ({
