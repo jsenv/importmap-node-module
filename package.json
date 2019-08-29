@@ -41,7 +41,7 @@
     "@dmail/assert": "3.14.0",
     "@jsenv/bundling": "3.1.0",
     "@jsenv/codecov-upload": "1.7.0",
-    "@jsenv/eslint-config": "9.9.0",
+    "@jsenv/eslint-config": "10.0.0",
     "@jsenv/execution": "3.2.0",
     "@jsenv/node-launcher": "3.2.0",
     "@jsenv/node-module-import-map": "5.1.0",
