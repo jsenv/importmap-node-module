@@ -9,6 +9,7 @@
 ## Introduction
 
 `jsenv-node-module-import-map` can generate an importMap object from a `package.json` file.<br />
+— see [importMap spec](https://github.com/WICG/import-maps)
 
 ## Table of contents
 
@@ -53,10 +54,6 @@ We will setup a basic project and generate an importMap.json file for it.
 ## API
 
 — see [./docs/api](./docs/api.md)
-
-## What is an importMap ?
-
-https://github.com/WICG/import-maps
 
 ## Custom node module resolution
 
