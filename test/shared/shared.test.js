@@ -12,7 +12,6 @@ const testFolderPath = importMetaURLToFolderPath(import.meta.url)
   const expected = {
     imports: {
       "bar/": "/node_modules/bar/",
-      "foo/": "/node_modules/foo/",
       bar: "/node_modules/bar/bar.js",
       foo: "/node_modules/foo/foo.js",
     },
