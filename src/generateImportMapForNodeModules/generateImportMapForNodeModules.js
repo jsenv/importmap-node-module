@@ -36,7 +36,7 @@ export const generateImportMapForNodeModules = async ({
     const projectPackagePathname = `${projectPathname}/package.json`
 
     const rootProjectPathname = operatingSystemPathToPathname(rootProjectPath)
-    const rootImporterName = basename(pathnameToDirname(rootProjectPathname))
+    const rootImporterName = basename(rootProjectPathname)
     const rootPackagePathname = `${rootProjectPathname}/package.json`
 
     const imports = {}
@@ -47,7 +47,7 @@ export const generateImportMapForNodeModules = async ({
         path: pathnameToOperatingSystemPath(projectPackagePathname),
         onWarn,
       })
-      await visit({
+      await visitProjectPackage({
         packagePathname: projectPackagePathname,
         packageData: projectPackageData,
       })
@@ -90,82 +90,111 @@ export const generateImportMapForNodeModules = async ({
       return sortedImportMap
     }
 
+    const visitProjectPackage = async ({ packagePathname, packageData }) => {
+      await visit({
+        packagePathname,
+        packageData,
+        packageName: packageData.name,
+        importerPackagePathname: packagePathname,
+      })
+    }
+
     const seen = {}
-    const visit = async ({ packagePathname, packageData, name }) => {
-      if (packagePathname in seen) return
-      seen[packagePathname] = true
-
-      const isRootPackage = packagePathname === rootPackagePathname
-
-      const importerName = isRootPackage
-        ? rootImporterName
-        : pathnameToDirname(pathnameToRelativePathname(packagePathname, rootProjectPathname)).slice(
-            1,
-          )
-
-      if (isRootPackage) {
-        // si c'est root on se moque de main et exports
-        // par contre on veut générer imports
+    const visit = async ({
+      packagePathname,
+      packageData,
+      packageName,
+      importerPackagePathname,
+    }) => {
+      if (packagePathname in seen) {
+        if (seen[packagePathname].includes(importerPackagePathname)) return
+        seen[packagePathname].push(importerPackagePathname)
       } else {
-        const dependencyActualPathname = pathnameToDirname(packagePathname)
-        const dependencyActualRelativePath = pathnameToRelativePathname(
-          dependencyActualPathname,
-          rootProjectPathname,
-        )
-        const dependencyExpectedPathname = `${pathnameToDirname(
-          packagePathname,
-        )}/node_modules/${name}`
-        const dependencyExpectedRelativePath = pathnameToRelativePathname(
-          dependencyExpectedPathname,
-          rootProjectPathname,
-        )
-        const moved = dependencyActualRelativePath !== dependencyExpectedRelativePath
-        const main = await resolvePackageMain({
-          packageData,
-          packagePathname,
-          onWarn: () => {},
-        })
-
-        if (main) {
-          const from = name
-          const to = `${dependencyActualRelativePath}/${main}`
-
-          addMapping({ importerName, from, to })
-          if (moved) {
-            addScopedImportMapping({ scope: `/${importerName}/`, from, to })
-          }
-        }
-
-        if ("imports" in packageData) {
-          visitPackageImports({
-            packageData,
-            packagePathname,
-            importerName,
-            actualRelativePath: dependencyActualRelativePath,
-            expectedRelativePath: dependencyExpectedRelativePath,
-          })
-        }
-
-        if ("exports" in packageData) {
-          visitPackageExports({
-            packageData,
-            packagePathname,
-            importerName,
-            actualRelativePath: dependencyActualRelativePath,
-            expectedRelativePath: dependencyExpectedRelativePath,
-          })
-        }
+        seen[packagePathname] = [importerPackagePathname]
       }
 
+      const isRootPackage = packagePathname === rootPackagePathname
+      if (isRootPackage) {
+        await visitRootPackage()
+      } else {
+        await visitNonRootPackage({
+          packagePathname,
+          packageData,
+          packageName,
+          importerPackagePathname,
+        })
+      }
       await visitDependencies({
         packagePathname,
         packageData,
       })
     }
 
+    const visitRootPackage = async () => {
+      // TODO: take into acount `imports` only
+    }
+
+    const visitNonRootPackage = async ({
+      packagePathname,
+      packageData,
+      packageName,
+      importerPackagePathname,
+    }) => {
+      const importerName =
+        importerPackagePathname === rootPackagePathname
+          ? rootImporterName
+          : pathnameToDirname(
+              pathnameToRelativePathname(importerPackagePathname, rootProjectPathname),
+            ).slice(1)
+      const actualPathname = pathnameToDirname(packagePathname)
+      const actualRelativePath = pathnameToRelativePathname(actualPathname, rootProjectPathname)
+      const expectedPathname = `${pathnameToDirname(
+        importerPackagePathname,
+      )}/node_modules/${packageName}`
+      const expectedRelativePath = pathnameToRelativePathname(expectedPathname, rootProjectPathname)
+      const main = await resolvePackageMain({
+        packageData,
+        packagePathname,
+        onWarn: () => {},
+      })
+
+      if (main) {
+        const from = packageName
+        const to = `${actualRelativePath}/${main}`
+
+        addMapping({ importerName, from, to })
+        if (actualRelativePath !== expectedRelativePath) {
+          addScopedImportMapping({ scope: `/${importerName}/`, from, to })
+        }
+      }
+
+      if ("imports" in packageData) {
+        visitPackageImports({
+          packageData,
+          packagePathname,
+          packageName,
+          importerName,
+          actualRelativePath,
+          expectedRelativePath,
+        })
+      }
+
+      if ("exports" in packageData) {
+        visitPackageExports({
+          packageData,
+          packagePathname,
+          packageName,
+          importerName,
+          actualRelativePath,
+          expectedRelativePath,
+        })
+      }
+    }
+
     const visitPackageImports = ({
       packageData,
       packagePathname,
+      packageName,
       importerName,
       actualRelativePath,
       expectedRelativePath,
@@ -211,7 +240,7 @@ export const generateImportMapForNodeModules = async ({
         if (!resolvedKey) return
         const resolvedValue = resolvePathInPackage(packageImports[key], packagePathname)
         if (!resolvedValue) return
-        const from = `${importerName}${resolvedKey}`
+        const from = `${packageName}${resolvedKey}`
         const to = `${actualRelativePath}${resolvedValue}`
 
         addScopedImportMapping({
@@ -225,6 +254,7 @@ export const generateImportMapForNodeModules = async ({
     const visitPackageExports = ({
       packageData,
       packagePathname,
+      packageName,
       importerName,
       actualRelativePath,
       expectedRelativePath,
@@ -245,7 +275,7 @@ export const generateImportMapForNodeModules = async ({
         if (!resolvedKey) return
         const resolvedValue = resolvePathInPackage(packageExports[key], packagePathname)
         if (!resolvedValue) return
-        const from = `${importerName}${resolvedKey}`
+        const from = `${packageName}${resolvedKey}`
         const to = `${actualRelativePath}${resolvedValue}`
 
         addMapping({
@@ -317,7 +347,8 @@ export const generateImportMapForNodeModules = async ({
           await visit({
             packagePathname: dependencyPackagePathname,
             packageData: dependencyPackageData,
-            name: dependencyName,
+            packageName: dependencyName,
+            importerPackagePathname: packagePathname,
           })
         }),
       )
