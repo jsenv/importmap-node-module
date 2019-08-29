@@ -22,11 +22,11 @@ It accepts several options documented below. Each option can be passed like `pro
 > Path leading to a folder with a package.json.
 
 ```js
-const projectPath = "/Users/dmail/folder"
+const projectPath = "/Users/you/folder"
 ```
 
 - This option is **required**.
-- On windows you would pass `C:\Users\dmail\folder`, that's fine.
+- On windows you would pass `C:\Users\you\folder`, that's fine.
 - You can use `__dirname` to provide this option value.<br />
   — see [\_\_dirname documentation on node.js](https://nodejs.org/docs/latest/api/modules.html#modules_dirname)
 
