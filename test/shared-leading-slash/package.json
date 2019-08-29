@@ -1,7 +1,0 @@
-{
-  "name": "shared-name",
-  "dependencies": {
-    "bar": "*",
-    "foo": "*"
-  }
-}
