@@ -12,10 +12,10 @@ const expected = {
   imports: {},
   scopes: {
     "/node_modules/project/": {
-      "scoped/": "/node_modules/project/node_modules/scoped/",
-      "shared/": "/node_modules/shared/",
+      "/node_modules/project/": "/node_modules/project/",
       scoped: "/node_modules/project/node_modules/scoped/index.js",
       shared: "/node_modules/shared/index.js",
+      "/": "/",
     },
   },
 }

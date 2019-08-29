@@ -5,7 +5,6 @@ import { generateImportMapForNodeModules } from "../../index.js"
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const actual = await generateImportMapForNodeModules({
   projectPath: testFolderPath,
-  remapFolder: false,
 })
 const expected = {
   imports: {
@@ -13,8 +12,12 @@ const expected = {
     foo: "/node_modules/foo/foo.js",
   },
   scopes: {
-    "/node_modules/bar/": { foo: "/node_modules/foo/foo.js" },
-    "/node_modules/foo/": { bar: "/node_modules/bar/bar.js" },
+    "/node_modules/bar/": {
+      foo: "/node_modules/foo/foo.js",
+    },
+    "/node_modules/foo/": {
+      bar: "/node_modules/bar/bar.js",
+    },
   },
 }
 assert({ actual, expected })
