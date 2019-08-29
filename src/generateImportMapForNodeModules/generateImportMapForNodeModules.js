@@ -250,34 +250,9 @@ export const generateImportMapForNodeModules = async ({
       })
 
       if (!packageIsRoot) {
-        ensureImportsScopedInsidePackage(packagePathInfo)
-      }
-    }
-
-    const ensureImportsScopedInsidePackage = ({
-      importerName,
-      actualRelativePath,
-      expectedRelativePath,
-    }) => {
-      addScopedImportMapping({
-        scope: `${actualRelativePath}/`,
-        from: `${actualRelativePath}/`,
-        to: `${actualRelativePath}/`,
-      })
-      if (actualRelativePath === expectedRelativePath) {
+        // ensureImportsScopedInsidePackage
         addScopedImportMapping({
-          scope: `${expectedRelativePath}/`,
-          from: `${expectedRelativePath}/`,
-          to: `${actualRelativePath}/`,
-        })
-      } else {
-        addScopedImportMapping({
-          scope: `/${importerName}/`,
-          from: `${expectedRelativePath}/`,
-          to: `${actualRelativePath}/`,
-        })
-        addScopedImportMapping({
-          scope: `/${importerName}/`,
+          scope: `${actualRelativePath}/`,
           from: `${actualRelativePath}/`,
           to: `${actualRelativePath}/`,
         })
