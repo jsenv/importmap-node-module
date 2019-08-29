@@ -32,22 +32,22 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
-    "@jsenv/module-resolution": "3.4.0",
-    "@jsenv/operating-system-path": "2.3.0",
     "@dmail/cancellation": "2.6.0",
-    "@dmail/helper": "2.3.0"
+    "@dmail/helper": "2.3.0",
+    "@jsenv/module-resolution": "3.5.0",
+    "@jsenv/operating-system-path": "2.4.0"
   },
   "devDependencies": {
-    "@jsenv/execution": "1.2.0",
-    "@jsenv/testing": "1.29.0",
-    "@jsenv/bundling": "2.0.0",
-    "@jsenv/node-launcher": "2.0.0",
+    "@dmail/assert": "3.14.0",
+    "@jsenv/bundling": "3.1.0",
     "@jsenv/codecov-upload": "1.7.0",
     "@jsenv/eslint-config": "9.9.0",
+    "@jsenv/execution": "3.2.0",
+    "@jsenv/node-launcher": "3.2.0",
+    "@jsenv/node-module-import-map": "5.1.0",
     "@jsenv/prettier-config": "1.0.0",
     "@jsenv/prettier-check-project": "3.3.0",
-    "@jsenv/node-module-import-map": "4.2.0",
-    "@dmail/assert": "3.14.0",
+    "@jsenv/testing": "2.3.0",
     "babel-eslint": "11.0.0-beta.0",
     "prettier": "1.18.2",
     "eslint": "6.2.2",
