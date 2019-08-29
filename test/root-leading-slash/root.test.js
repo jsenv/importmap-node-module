@@ -13,9 +13,9 @@ const expected = {
   scopes: {
     "/node_modules/project/": {
       "/node_modules/project/": "/node_modules/project/",
-      scoped: "/node_modules/project/node_modules/scoped/index.js",
+      inside: "/node_modules/project/node_modules/inside/index.js",
       shared: "/node_modules/shared/index.js",
-      "/": "/",
+      "/": "/node_modules/project/",
     },
   },
 }
