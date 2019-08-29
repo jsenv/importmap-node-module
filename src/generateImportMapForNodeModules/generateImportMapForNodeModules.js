@@ -16,18 +16,6 @@ import {
 import { sortImportMap } from "./sortImportMap.js"
 import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
-/**
- * reste a tester:
- *
- * exports
- * verif qu'on peut aussi faire
- * exports: {
- *  "/file.js": "/src/file.js"
- * }
- * et qu'avec l'import map on resolvera bien a src/file.js
- *
- */
-
 export const generateImportMapForNodeModules = async ({
   projectPath,
   rootProjectPath = projectPath,
