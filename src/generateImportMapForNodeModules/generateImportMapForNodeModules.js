@@ -400,6 +400,23 @@ export const generateImportMapForNodeModules = async ({
     }
 
     const addImportMapping = ({ from, to }) => {
+      // we could think it's useless to remap from with to
+      // however it can be used to ensure a weaker remapping
+      // does not win over this specific file or folder
+      if (from === to) {
+        /**
+         * however remapping '/' to '/' is truly useless
+         * moreover it would make wrapImportMap create something like
+         * {
+         *   imports: {
+         *     "/": "/.dist/best/"
+         *   }
+         * }
+         * that would append the wrapped folder twice
+         * */
+        if (from === "/") return
+      }
+
       imports[from] = to
     }
 
