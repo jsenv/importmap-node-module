@@ -30,6 +30,16 @@ const projectPath = "/Users/you/folder"
 - You can use `__dirname` to provide this option value.<br />
   — see [\_\_dirname documentation on node.js](https://nodejs.org/docs/latest/api/modules.html#modules_dirname)
 
+### includeDevDependencies option
+
+> When true, devDependencies are included in the generated importMap.
+
+If you don't pass this option, default value is
+
+```js
+false
+```
+
 ### writeImportMapFile option
 
 > When true, importMap will be written to a file.
