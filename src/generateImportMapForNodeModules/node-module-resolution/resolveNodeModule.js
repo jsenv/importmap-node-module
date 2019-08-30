@@ -2,8 +2,8 @@ import {
   pathnameToOperatingSystemPath,
   pathnameToRelativePathname,
 } from "@jsenv/operating-system-path"
-import { pathnameToDirname } from "@jsenv/module-resolution"
 import { firstOperationMatching } from "@dmail/helper"
+import { pathnameToDirname } from "../../pathnameToDirname.js"
 import { readPackageData } from "./readPackageData.js"
 
 export const resolveNodeModule = async ({

@@ -1,5 +1,5 @@
 import { importMetaURLToFolderPath } from "@jsenv/operating-system-path"
-import { remapResolvedImport } from "@jsenv/module-resolution"
+import { applyImportMap } from "@jsenv/import-map"
 import { assert } from "@dmail/assert"
 import { generateImportMapForNodeModules } from "../../index.js"
 
@@ -26,10 +26,10 @@ assert({ actual, expected })
 
 {
   const resolve = ({ importer, specifier }) =>
-    remapResolvedImport({
+    applyImportMap({
       importMap,
+      href: `http://example.com/${specifier}`,
       importerHref: `http://example.com/${importer}`,
-      resolvedImport: `http://example.com/${specifier}`,
     }).slice("http://example.com/".length)
 
   // import 'bar' inside project

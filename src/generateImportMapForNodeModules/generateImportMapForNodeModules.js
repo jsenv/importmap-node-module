@@ -1,14 +1,13 @@
 import { basename } from "path"
+import { composeTwoImportMaps, sortImportMap } from "@jsenv/import-map"
 import {
   operatingSystemPathToPathname,
   pathnameToRelativePathname,
   pathnameToOperatingSystemPath,
 } from "@jsenv/operating-system-path"
-import { pathnameToDirname } from "@jsenv/module-resolution"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
-import { mergeTwoImportMap } from "../mergeTwoImportMap/mergeTwoImportMap.js"
-import { sortImportMap } from "../sortImportMap/sortImportMap.js"
+import { pathnameToDirname } from "../pathnameToDirname.js"
 import {
   resolveNodeModule,
   readPackageData,
@@ -21,7 +20,7 @@ export const generateImportMapForNodeModules = async ({
   rootProjectPath = projectPath,
   importMapRelativePath = "/importMap.json",
   inputImportMap = {},
-  remapDevDependencies = true,
+  includeDevDependencies = false,
   onWarn = ({ message }) => {
     console.warn(message)
   },
@@ -52,7 +51,7 @@ export const generateImportMapForNodeModules = async ({
         packageData: projectPackageData,
       })
       const nodeModuleImportMap = { imports, scopes }
-      const importMap = mergeTwoImportMap(inputImportMap, nodeModuleImportMap)
+      const importMap = composeTwoImportMaps(inputImportMap, nodeModuleImportMap)
       const sortedImportMap = sortImportMap(importMap)
 
       if (writeImportMapFile) {
@@ -309,7 +308,7 @@ export const generateImportMapForNodeModules = async ({
       })
 
       const isProjectPackage = packagePathname === projectPackagePathname
-      if (remapDevDependencies && isProjectPackage) {
+      if (includeDevDependencies && isProjectPackage) {
         const { devDependencies = {} } = packageData
         Object.keys(devDependencies).forEach((dependencyName) => {
           if (!dependencyMap.hasOwnProperty(dependencyName)) {
