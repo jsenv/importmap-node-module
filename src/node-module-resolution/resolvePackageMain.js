@@ -2,7 +2,7 @@ import { extname } from "path"
 import { stat } from "fs"
 import { firstOperationMatching } from "@dmail/helper"
 import { pathnameToOperatingSystemPath } from "@jsenv/operating-system-path"
-import { pathnameToDirname } from "../../pathnameToDirname.js"
+import { pathnameToDirname } from "../pathnameToDirname.js"
 
 export const resolvePackageMain = ({ packageData, packagePathname, onWarn }) => {
   if ("module" in packageData) {
