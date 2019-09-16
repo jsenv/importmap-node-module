@@ -5,47 +5,43 @@ import {
 } from "@jsenv/operating-system-path"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
-import { createNodeModulesImportMapGenerator } from "../createNodeModulesImportMapGenerator.js"
+import { generateImportMapForPackage } from "../generateImportMapForPackage/generateImportMapForPackage.js"
 import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
-export const generateImportMapForNodeModules = async ({
+export const generateImportMapForProjectPackage = async ({
   projectPath,
-  rootProjectPath,
   importMapRelativePath = "/importMap.json",
   inputImportMap,
   includeDevDependencies,
   onWarn,
-  writeImportMapFile = false,
-  logImportMapFilePath = true,
   throwUnhandled = true,
-  writeJsConfigFile = false,
-  logJsConfigFilePath = true,
+  importMapFile = true,
+  importMapFileLog = true,
+  jsConfigFile = false,
+  jsConfigFileLog = true,
 }) =>
   catchAsyncFunctionCancellation(async () => {
     const start = async () => {
-      const generator = createNodeModulesImportMapGenerator({
+      const projectPackageImportMap = await generateImportMapForPackage({
         projectPath,
-        rootProjectPath,
+        includeDevDependencies,
         onWarn,
       })
-      const nodeModuleImportMap = await generator.generateProjectImportMap({
-        includeDevDependencies,
-      })
       const importMap = inputImportMap
-        ? composeTwoImportMaps(inputImportMap, nodeModuleImportMap)
-        : nodeModuleImportMap
+        ? composeTwoImportMaps(inputImportMap, projectPackageImportMap)
+        : projectPackageImportMap
 
-      if (writeImportMapFile) {
+      if (importMapFile) {
         const projectPathname = operatingSystemPathToPathname(projectPath)
         const importMapPath = pathnameToOperatingSystemPath(
           `${projectPathname}${importMapRelativePath}`,
         )
         await fileWrite(importMapPath, JSON.stringify(importMap, null, "  "))
-        if (logImportMapFilePath) {
+        if (importMapFileLog) {
           console.log(`-> ${importMapPath}`)
         }
       }
-      if (writeJsConfigFile) {
+      if (jsConfigFile) {
         const projectPathname = operatingSystemPathToPathname(projectPath)
         const jsConfigPath = pathnameToOperatingSystemPath(`${projectPathname}/jsconfig.json`)
         try {
@@ -59,7 +55,7 @@ export const generateImportMapForNodeModules = async ({
             },
           }
           await fileWrite(jsConfigPath, JSON.stringify(jsConfig, null, "  "))
-          if (logJsConfigFilePath) {
+          if (jsConfigFileLog) {
             console.log(`-> ${jsConfigPath}`)
           }
         } catch (e) {

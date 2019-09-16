@@ -6,15 +6,14 @@ import {
 } from "@jsenv/operating-system-path"
 import { sortImportMap } from "@jsenv/import-map"
 import { pathnameToDirname } from "./pathnameToDirname.js"
-import {
-  readPackageData,
-  resolveNodeModule,
-  resolvePackageMain,
-} from "./node-module-resolution/index.js"
+import { readPackageData } from "./readPackageData.js"
+import { resolveNodeModule } from "./resolveNodeModule.js"
+import { resolvePackageMain } from "./resolvePackageMain.js"
 
-export const createNodeModulesImportMapGenerator = async ({
+export const generateImportMapForPackage = async ({
   projectPath,
   rootProjectPath = projectPath,
+  includeDevDependencies = false,
   onWarn = ({ message }) => {
     console.warn(message)
   },
@@ -27,7 +26,6 @@ export const createNodeModulesImportMapGenerator = async ({
 
   const imports = {}
   const scopes = {}
-
   const seen = {}
 
   const markPackageAsSeen = (packagePathname, importerPackagePathname) => {
@@ -40,52 +38,6 @@ export const createNodeModulesImportMapGenerator = async ({
 
   const packageIsSeen = (packagePathname, importerPackagePathname) => {
     return packagePathname in seen && seen[packagePathname].includes(importerPackagePathname)
-  }
-
-  const generateImportMapForProject = async ({ includeDevDependencies = false } = {}) => {
-    const projectPackageData = await readPackageData({
-      path: pathnameToOperatingSystemPath(projectPackagePathname),
-      onWarn,
-    })
-    markPackageAsSeen(projectPackagePathname, projectPackagePathname)
-    await visit({
-      packagePathname: projectPackagePathname,
-      packageData: projectPackageData,
-      includeDevDependencies,
-      packageName: projectPackageData.name,
-      importerPackagePathname: projectPackagePathname,
-    })
-    return sortImportMap({ imports, scopes })
-  }
-
-  const generateImportMapForProjectDependency = async ({
-    dependencyName,
-    dependencyType = "dependency",
-    dependencyVersionPattern = "*",
-  }) => {
-    const projectPackageData = await readPackageData({
-      path: pathnameToOperatingSystemPath(projectPackagePathname),
-      onWarn,
-    })
-    markPackageAsSeen(projectPackagePathname, projectPackagePathname)
-
-    // we must visit package too because it may contain
-    // exports or stuff like that that we may expect in the importMap
-    // I guess so
-    await visitPackage({
-      packagePathname: projectPackagePathname,
-      packageData: projectPackageData,
-      packageName: projectPackageData.name,
-      importerPackagePathname: projectPackagePathname,
-    })
-    await visitDependency({
-      packagePathname: projectPackagePathname,
-      packageData: projectPackageData,
-      dependencyName,
-      dependencyType,
-      dependencyVersionPattern,
-    })
-    return sortImportMap({ imports, scopes })
   }
 
   const visit = async ({
@@ -456,7 +408,20 @@ export const createNodeModulesImportMapGenerator = async ({
     return dependencyPromise
   }
 
-  return { generateImportMapForProject, generateImportMapForProjectDependency }
+  const projectPackageData = await readPackageData({
+    path: pathnameToOperatingSystemPath(projectPackagePathname),
+    onWarn,
+  })
+  markPackageAsSeen(projectPackagePathname, projectPackagePathname)
+  await visit({
+    packagePathname: projectPackagePathname,
+    packageData: projectPackageData,
+    includeDevDependencies,
+    packageName: projectPackageData.name,
+    importerPackagePathname: projectPackagePathname,
+  })
+
+  return sortImportMap({ imports, scopes })
 }
 
 const createInvalidPackageRelativePathWarning = ({ path, packagePathname }) => {
