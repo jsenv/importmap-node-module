@@ -2,6 +2,7 @@ const { generateImportMapForProjectPackage } = require("@jsenv/node-module-impor
 
 generateImportMapForProjectPackage({
   projectPath: __dirname,
+  includeDevDependencies: true,
   importMapFile: true,
   importMapFileRelativePath: "/importMap.json",
 })

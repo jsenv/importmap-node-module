@@ -4,6 +4,7 @@
 /dist/
 /docs/basic-project/node_modules/
 /docs/basic-project/package-lock.json
+/docs/basic-project/yarn.lock
 /node_modules/
 /env.json
 /importMap.json
