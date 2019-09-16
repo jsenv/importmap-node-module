@@ -2,6 +2,6 @@
   "name": "whatever",
   "version": "0.0.1",
   "devDependencies": {
-    "@jsenv/node-module-import-map": "6.3.0"
+    "@jsenv/node-module-import-map": "7.0.0"
   }
 }

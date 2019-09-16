@@ -1,0 +1,22 @@
+{
+  "imports": {
+    "@jsenv/node-module-import-map/": "/node_modules/@jsenv/node-module-import-map/",
+    "@jsenv/node-module-import-map": "/node_modules/@jsenv/node-module-import-map/index.js"
+  },
+  "scopes": {
+    "/node_modules/@jsenv/node-module-import-map/": {
+      "@jsenv/operating-system-path/": "/node_modules/@jsenv/operating-system-path/",
+      "@jsenv/operating-system-path": "/node_modules/@jsenv/operating-system-path/index.js",
+      "@jsenv/module-resolution/": "/node_modules/@jsenv/module-resolution/",
+      "@jsenv/module-resolution": "/node_modules/@jsenv/module-resolution/index.js",
+      "@dmail/cancellation/": "/node_modules/@dmail/cancellation/",
+      "@dmail/cancellation": "/node_modules/@dmail/cancellation/index.js",
+      "@dmail/helper/": "/node_modules/@dmail/helper/",
+      "@dmail/helper": "/node_modules/@dmail/helper/index.js"
+    },
+    "/node_modules/@jsenv/operating-system-path/": {
+      "@jsenv/module-resolution/": "/node_modules/@jsenv/module-resolution/",
+      "@jsenv/module-resolution": "/node_modules/@jsenv/module-resolution/index.js"
+    }
+  }
+}

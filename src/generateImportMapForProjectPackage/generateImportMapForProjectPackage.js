@@ -10,12 +10,12 @@ import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
 export const generateImportMapForProjectPackage = async ({
   projectPath,
-  importMapRelativePath = "/importMap.json",
   inputImportMap,
   includeDevDependencies,
   onWarn,
   throwUnhandled = true,
-  importMapFile = true,
+  importMapFile = false,
+  importMapFileRelativePath = "/importMap.json",
   importMapFileLog = true,
   jsConfigFile = false,
   jsConfigFileLog = true,
@@ -34,7 +34,7 @@ export const generateImportMapForProjectPackage = async ({
       if (importMapFile) {
         const projectPathname = operatingSystemPathToPathname(projectPath)
         const importMapPath = pathnameToOperatingSystemPath(
-          `${projectPathname}${importMapRelativePath}`,
+          `${projectPathname}${importMapFileRelativePath}`,
         )
         await fileWrite(importMapPath, JSON.stringify(importMap, null, "  "))
         if (importMapFileLog) {

@@ -2,14 +2,14 @@
 
 `@jsenv/node-module-import-map` has the following exports:
 
-- `generateImportMapForNodeModules`
+- `generateImportMapForProjectPackage`
 
-## `generateImportMapForNodeModules`
+## `generateImportMapForProjectPackage`
 
 ```js
-const { generateImportMapForNodeModules } = require("@jsenv/node-module-import-map")
+const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
 
-generateImportMapForNodeModules({
+generateImportMapForProjectPackage({
   projectPath: __dirname,
 })
 ```
@@ -40,7 +40,7 @@ If you don't pass this option, default value is
 false
 ```
 
-### writeImportMapFile option
+### importMapFile option
 
 > When true, importMap will be written to a file.
 
@@ -50,7 +50,7 @@ If you don't pass this option, default value is
 false
 ```
 
-### importMapRelativePath option
+### importMapFileRelativePath option
 
 > Relative path where the importMap file is written.
 
@@ -58,7 +58,7 @@ When written, import map file will be at
 
 <!-- prettier-ignore -->
 ```js
-`${projectPath}${importMapRelativePath}`
+`${projectPath}${importMapFileRelativePath}`
 ```
 
 If you don't pass this option, default value is
@@ -67,9 +67,9 @@ If you don't pass this option, default value is
 "/importMap.json"
 ```
 
-### logImportMapFilePath option
+### importMapFileLog option
 
-> When both `writeImportMapFile` and `logImportMapFilePath` are true, the function will log path to the written importMap file in the terminal.
+> When both `importMapFile` and `importMapFileLog` are true, the function will log path to the written importMap file in the terminal.
 
 If you don't pass this option, default value is
 

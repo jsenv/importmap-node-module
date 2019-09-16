@@ -1,7 +1,7 @@
-const { generateImportMapForNodeModules } = require("@jsenv/node-module-import-map")
+const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
 
-generateImportMapForNodeModules({
+generateImportMapForProjectPackage({
   projectPath: __dirname,
-  writeImportMapFile: true,
-  importMapRelativePath: "/importMap.json",
+  importMapFile: true,
+  importMapFileRelativePath: "/importMap.json",
 })

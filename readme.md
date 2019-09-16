@@ -81,9 +81,9 @@ instead of<br />
 ## Installation
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map@6.0.0
+npm install --save-dev @jsenv/node-module-import-map@7.0.0
 ```
 
 ```console
-yarn add @jsenv/node-module-import-map@6.0.0 --dev
+yarn add @jsenv/node-module-import-map@7.0.0 --dev
 ```
