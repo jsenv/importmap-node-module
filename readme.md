@@ -8,7 +8,7 @@
 
 ## Introduction
 
-`@jsenv/node-module-import-map` can generate an importMap object starting from a `package.json` file.<br />
+`@jsenv/node-module-import-map` can generate an importMap object for your project node_modules folder.<br />
 — see [importMap spec](https://github.com/WICG/import-maps)
 
 ## Table of contents
