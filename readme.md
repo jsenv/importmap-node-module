@@ -8,15 +8,14 @@
 
 ## Introduction
 
-`@jsenv/node-module-import-map` can generate an importMap object for your project node_modules folder.<br />
+`@jsenv/node-module-import-map` generates importMap for your project node_modules.<br />
 — see [importMap spec](https://github.com/WICG/import-maps)
 
 ## Table of contents
 
 - [How it works](#how-it-works)
 - [How to use](#how-to-use)
-  - [Example on basic project](#example-on-basic-project)
-- [API](#api)
+- [Concrete example](#concrete-example)
 - [Custom node module resolution](#custom-node-module-resolution)
 - [Installation](#installation)
 
@@ -26,11 +25,28 @@ Reads `package.json` and recursively try to find your dependencies.<br />
 
 Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importMap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.<br />
 
-## How to use
+### How to use
 
-To understand how to use `@jsenv/node-module-import-map` let's setup a basic project and generate an importMap.json.
+Here is code example using `@jsenv/node-module-import-map` to create an `importMap.json`.
 
-### Example on basic project
+```js
+const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
+
+generateImportMapForProjectPackage({
+  projectPath: __dirname,
+  includeDevDependencies: true,
+  importMapFile: true,
+  importMapFileRelativePath: "/importMap.json",
+})
+```
+
+For more information check the api documentation.<br />
+— see [./docs/api](./docs/api.md)
+
+## Concrete example
+
+This part explains how to try `@jsenv/node-module-import-map` on a basic project.<br />
+It helps to setup a real environment to see it in action.
 
 1. Create basic project file structure
 
@@ -49,10 +65,6 @@ To understand how to use `@jsenv/node-module-import-map` let's setup a basic pro
    ```
 
    `basic-project/importMap.json` file will be created.
-
-## API
-
-— see [./docs/api](./docs/api.md)
 
 ## Custom node module resolution
 
