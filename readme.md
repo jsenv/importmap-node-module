@@ -68,7 +68,7 @@ It helps to setup a real environment to see it in action.
 
 ## Custom node module resolution
 
-This project uses a custom node module resolution.<br />
+`@jsenv/node-module-import-map` uses a custom node module resolution.<br />
 — see [node module resolution on node.js](https://nodejs.org/api/modules.html#modules_all_together)
 
 It behaves as Node.js with one big change:
@@ -83,7 +83,9 @@ You have a server at `https://example.com` serving files inside `/Users/you/proj
 Your project uses a file outside of your project folder like `/Users/you/node_modules/whatever/index.js`.
 
 From a filesystem perspective we could find file using `../node_modules/whatever/index.js`.<br />
-For a web client however `../node_modules/whatever/index.js` resolves to `https://example.com/node_modules/whatever/index.js`. Server would be requested at that url searching for `/Users/you/project/node_modules/whatever/index.js` instead of `/Users/you/node_modules/whatever/index.js`
+For a web client however `../node_modules/whatever/index.js` resolves to `https://example.com/node_modules/whatever/index.js`. Server would be requested at that url searching for `/Users/you/project/node_modules/whatever/index.js` instead of `/Users/you/node_modules/whatever/index.js`.
+
+In practice it does not impact you because node modules are inside your project folder. If not, explicitely write your dependencies in your `package.json` and run `npm install`.
 
 ## Installation
 
