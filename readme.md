@@ -1,14 +1,14 @@
 # jsenv-node-module-import-map
 
+> convert node_modules into importMap
+
 [![npm package](https://img.shields.io/npm/v/@jsenv/node-module-import-map.svg)](https://www.npmjs.com/package/@jsenv/node-module-import-map)
 [![build](https://travis-ci.com/jsenv/jsenv-node-module-import-map.svg?branch=master)](http://travis-ci.com/jsenv/jsenv-node-module-import-map)
 [![codecov](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
 
-> convert node_modules into importMap
-
 ## Introduction
 
-`jsenv-node-module-import-map` can generate an importMap object from a `package.json` file.<br />
+`@jsenv/node-module-import-map` can generate an importMap object starting from a `package.json` file.<br />
 — see [importMap spec](https://github.com/WICG/import-maps)
 
 ## Table of contents
@@ -24,12 +24,11 @@
 
 Reads `package.json` and recursively try to find your dependencies.<br />
 
-It must happen once node modules are on your machine, because it searches dependencies on your filesystem. For that reason, you must use it after `npm install` or anything that is responsible to download node modules to put them on your machine.<br />
+Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importMap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.<br />
 
 ## How to use
 
-To understand how to use this repository let's use it on a "real" project.<br />
-We will setup a basic project and generate an importMap.json file for it.
+To understand how to use `@jsenv/node-module-import-map` let's setup a basic project and generate an importMap.json.
 
 ### Example on basic project
 
@@ -64,19 +63,15 @@ It behaves as Node.js with one big change:
 
 > A node module will not be found if it is outside your project folder.
 
-We do this because importMap are used on the web.<br/>
-A web server hide its internal file structure for obvious security reasons. Consequently browsers cannot get a file outside a server origin.
+We do this because importMap are used on the web where a file outside project folder would fail.<br/>
 
-An other way to realize this is to see what it means exactly for a browser. If you had a project at `/Users/you/project` served at `https://example.com`, trying to find a file at `/Users/you/node_modules/whatever/index.js` means doing this:
+And here is why:
 
-```js
-new URL("../node_modules/whatever/index.js", "https://example.com/file.js")
-```
+You have a server at `https://example.com` serving files inside `/Users/you/project`.<br />
+Your project uses a file outside of your project folder like `/Users/you/node_modules/whatever/index.js`.
 
-Your server would send<br />
-`/Users/you/project/node_modules/whatever/index.js`<br />
-instead of<br />
-`/Users/you/node_modules/whatever/index.js`
+From a filesystem perspective we could find file using `../node_modules/whatever/index.js`.<br />
+For a web client however `../node_modules/whatever/index.js` resolves to `https://example.com/node_modules/whatever/index.js`. Server would be requested at that url searching for `/Users/you/project/node_modules/whatever/index.js` instead of `/Users/you/node_modules/whatever/index.js`
 
 ## Installation
 
