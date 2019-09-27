@@ -1,5 +1,5 @@
 import { importMetaURLToFolderPath } from "@jsenv/operating-system-path"
-import { applyImportMap } from "@jsenv/import-map"
+import { applyImportMap, normalizeImportMap } from "@jsenv/import-map"
 import { assert } from "@dmail/assert"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
@@ -22,23 +22,25 @@ const expected = {
 }
 assert({ actual, expected })
 
-const resolve = ({ importer, specifier }) =>
-  applyImportMap({
-    importMap,
-    href: `http://example.com/${specifier}`,
-    importerHref: `http://example.com/${importer}`,
-  }).slice("http://example.com/".length)
-
+const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
 // import 'bar' inside project
 {
-  const actual = resolve({ importer: "scoped.js", specifier: "bar" })
-  const expected = "node_modules/bar/bar.js"
+  const actual = applyImportMap({
+    importMap: importMapNormalized,
+    href: `http://example.com/bar`,
+    importerHref: `http://example.com/scoped.js`,
+  })
+  const expected = `http://example.com/node_modules/bar/bar.js`
   assert({ actual, expected })
 }
 
 // import 'bar' inside foo
 {
-  const actual = resolve({ importer: "node_modules/foo/foo.js", specifier: "bar" })
-  const expected = "node_modules/foo/node_modules/bar/bar.js"
+  const actual = applyImportMap({
+    importMap: importMapNormalized,
+    href: `http://example.com/bar`,
+    importerHref: `http://example.com/node_modules/foo/foo.js`,
+  })
+  const expected = `http://example.com/node_modules/foo/node_modules/bar/bar.js`
   assert({ actual, expected })
 }

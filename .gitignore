@@ -6,8 +6,8 @@
 /docs/basic-project/package-lock.json
 /docs/basic-project/yarn.lock
 /node_modules/
-/env.json
 /importMap.json
 /jsconfig.json
+/secrets.json
 /package-lock.json
 /yarn.lock
