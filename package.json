@@ -7,7 +7,8 @@
     "url": "https://github.com/jsenv/jsenv-node-module-import-map"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
   },
   "module": "index.js",
   "main": "dist/commonjs/main.js",

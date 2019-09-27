@@ -2,7 +2,7 @@
 
 > convert node_modules into importMap
 
-[![npm package](https://img.shields.io/npm/v/@jsenv/node-module-import-map.svg)](https://www.npmjs.com/package/@jsenv/node-module-import-map)
+[![github package](https://img.shields.io/github/package-json/v/jsenv/jsenv-node-module-import-map.svg?label=package&logo=github)](https://github.com/jsenv/jsenv-node-module-import-map/packages)
 [![ci status](https://github.com/jsenv/jsenv-node-module-import-map/workflows/ci/badge.svg)](https://github.com/jsenv/jsenv-node-module-import-map/actions)
 [![codecov](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
 

@@ -20,6 +20,8 @@ jobs:
           node-version: 12.x
       - name: yarn install, build, and test
         run: |
+          npm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
+          npm config set @jsenv:registry https://npm.pkg.github.com
           yarn install
           yarn eslint-check
           yarn prettier-check
