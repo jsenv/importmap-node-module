@@ -1,6 +1,7 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "7.2.0",
+  "description": "generate importMap for node modules",
+  "version": "7.2.2",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -38,8 +39,8 @@
   "dependencies": {
     "@dmail/cancellation": "2.6.0",
     "@dmail/helper": "2.3.0",
-    "@jsenv/import-map": "5.8.0",
-    "@jsenv/operating-system-path": "2.5.0"
+    "@jsenv/import-map": "5.8.1",
+    "@jsenv/operating-system-path": "2.5.1"
   },
   "devDependencies": {
     "@dmail/assert": "3.14.0",

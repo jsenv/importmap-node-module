@@ -1,10 +1,10 @@
 # api
 
-`@jsenv/node-module-import-map` has the following exports:
+`@jsenv/node-module-import-map` exports are documented in this section.
 
-- `generateImportMapForProjectPackage`
+- [generateImportMapForProjectPackage](#generateimportmapforprojectpackage)
 
-## `generateImportMapForProjectPackage`
+## generateImportMapForProjectPackage
 
 ```js
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")

@@ -1,7 +1,5 @@
 # jsenv-node-module-import-map
 
-> convert node_modules into importMap
-
 [![github package](https://img.shields.io/github/package-json/v/jsenv/jsenv-node-module-import-map.svg?label=package&logo=github)](https://github.com/jsenv/jsenv-node-module-import-map/packages)
 [![ci status](https://github.com/jsenv/jsenv-node-module-import-map/workflows/ci/badge.svg)](https://github.com/jsenv/jsenv-node-module-import-map/actions)
 [![codecov](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
@@ -17,7 +15,8 @@
 - [How to use](#how-to-use)
 - [Concrete example](#concrete-example)
 - [Custom node module resolution](#custom-node-module-resolution)
-- [Installation](#installation)
+- [Installation using npm](#installation-using-npm)
+- [Installation using yarn](#installation-using-yarn)
 
 ## How it works
 
@@ -52,13 +51,17 @@ It helps to setup a real environment to see it in action.
 
    — see [./docs/basic-project](./docs/basic-project)
 
-2. Install dependencies
+2. Configure npm authentification
+
+   — see [documentation about npm authentification on github registry](https://github.com/jsenv/jsenv-core/blob/master/docs/npm-auth-github-registry.md##npm-authentification-on-github-registry)
+
+3. Install dependencies
 
    ```console
    npm install
    ```
 
-3. Generate `basic-project/importMap.json`
+4. Generate `basic-project/importMap.json`
 
    ```console
    node ./generate-import-map.js
@@ -87,12 +90,39 @@ For a web client however `../node_modules/whatever/index.js` resolves to `https:
 
 In practice it does not impact you because node modules are inside your project folder. If not, explicitely write your dependencies in your `package.json` and run `npm install`.
 
-## Installation
+## Installation using npm
 
-```console
-npm install --save-dev @jsenv/node-module-import-map@7.0.0
+`@jsenv/node-module-import-map` is published on github package registry.<br />
+You need to configure npm to use github registry for this package.
+
+1. Configure npm authentification
+
+— see [documentation about npm authentification on github registry](https://github.com/jsenv/jsenv-core/blob/master/docs/npm-auth-github-registry.md##npm-authentification-on-github-registry)
+
+2. Configure npm registry
+
+Add the following line to your `.npmrc`
+
+```
+@jsenv:registry=https://npm.pkg.github.com
 ```
 
+Or run the following command
+
 ```console
-yarn add @jsenv/node-module-import-map@7.0.0 --dev
+npm config set @jsenv:registry https://npm.pkg.github.com
+```
+
+3. Run npm install command
+
+```console
+npm install @jsenv/node-module-import-map@7.2.2
+```
+
+### Installation using yarn
+
+Same steps as [Installation using npm](#installation-using-npm) replacing step 3 by
+
+```console
+yarn add @jsenv/node-module-import-map@7.2.2
 ```
