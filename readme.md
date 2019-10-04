@@ -24,7 +24,7 @@ Reads `package.json` and recursively try to find your dependencies.<br />
 
 Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importMap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.<br />
 
-### How to use
+## How to use
 
 Here is code example using `@jsenv/node-module-import-map` to create an `importMap.json`.
 
