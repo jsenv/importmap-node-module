@@ -1,8 +1,11 @@
-# api
+# Table of contents for api documentation
 
-`@jsenv/node-module-import-map` exports are documented in this section.
-
-- [generateImportMapForProjectPackage](#generateimportmapforprojectpackage)
+- [generateImportMapForProjectPackage](#generateImportMapForProjectPackage)
+  - [projectPath](#projectPath)
+  - [importMapFile](#importMapFile)
+  - [importMapFileRelativePath](#importMapFileRelativePath)
+  - [importMapFileLog](#importMapFileLog)
+  - [includeDevDependencies](#includeDevDependencies)
 
 ## generateImportMapForProjectPackage
 
@@ -14,64 +17,76 @@ generateImportMapForProjectPackage({
 })
 ```
 
-An async function returning an importMap object.<br />
-It accepts several options documented below. Each option can be passed like `projectPath` is passed in the code above.
+— see [source code on github](../src/generateImportMapForProjectPackage/generateImportMapForProjectPackage.js).
 
-### projectPath option
+It is an async function returning an importMap object.
 
-> Path leading to a folder with a package.json.
+---
 
-```js
-const projectPath = "/Users/you/folder"
-```
+### projectPath
 
-- This option is **required**.
-- On windows you would pass `C:\Users\you\folder`, that's fine.
-- You can use `__dirname` to provide this option value.<br />
-  — see [\_\_dirname documentation on node.js](https://nodejs.org/docs/latest/api/modules.html#modules_dirname)
+> `projectPath` is a string leading to a folder with a package.json.<br />
 
-### includeDevDependencies option
-
-> When true, devDependencies are included in the generated importMap.
-
-If you don't pass this option, default value is
+This parameter is **required**, an example value could be:
 
 ```js
-false
+"/Users/you/folder"
 ```
 
-### importMapFile option
+On windows you would pass `C:\Users\you\folder`, that's fine.<br />
+You can use `__dirname` to provide this parameter value.<br />
+— see [\_\_dirname documentation on node.js](https://nodejs.org/docs/latest/api/modules.html#modules_dirname)
 
-> When true, importMap will be written to a file.
+---
 
-If you don't pass this option, default value is
+### includeDevDependencies
+
+> `includeDevDependencies` controls if devDependencies are included in the generated importMap.
+
+This parameter is optional, the default value is:
 
 ```js
 false
 ```
 
-### importMapFileRelativePath option
+---
 
-> Relative path where the importMap file is written.
+### importMapFile
 
-When written, import map file will be at
+> `importMapFile` controls if importMap will be written to a file.
+
+This parameter is optional, the default value is:
+
+```js
+false
+```
+
+---
+
+### importMapFileRelativePath
+
+> `importMapFileRelativePath` is a string controlling where importMap file is written.
+
+This parameter is optional, the default value is:
+
+```js
+"/importMap.json"
+```
+
+It means if `importMapFile` is true importMap file is written at
 
 <!-- prettier-ignore -->
 ```js
 `${projectPath}${importMapFileRelativePath}`
 ```
 
-If you don't pass this option, default value is
+---
 
-```js
-"/importMap.json"
-```
+### importMapFileLog
 
-### importMapFileLog option
+> `importMapFileLog` controls if there is log in the termminal when writing importMap file.
 
-> When both `importMapFile` and `importMapFileLog` are true, the function will log path to the written importMap file in the terminal.
-
-If you don't pass this option, default value is
+This parameter is optional, the default value is:
 
 ```js
 true

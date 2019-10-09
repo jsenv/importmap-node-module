@@ -1,7 +1,7 @@
 {
   "name": "@jsenv/node-module-import-map",
   "description": "generate importMap for node modules",
-  "version": "7.2.2",
+  "version": "7.2.3",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -44,18 +44,19 @@
   },
   "devDependencies": {
     "@dmail/assert": "3.14.0",
-    "@jsenv/bundling": "6.3.0",
-    "@jsenv/codecov-upload": "1.9.0",
+    "@jsenv/bundling": "6.7.1",
+    "@jsenv/codecov-upload": "2.0.0",
+    "@jsenv/continuous-size-reporting": "1.1.0",
     "@jsenv/eslint-config": "10.2.0",
-    "@jsenv/execution": "6.1.0",
-    "@jsenv/node-launcher": "4.20.0",
-    "@jsenv/node-module-import-map": "7.1.0",
-    "@jsenv/prettier-config": "1.0.0",
+    "@jsenv/execution": "6.2.0",
+    "@jsenv/node-launcher": "4.21.0",
+    "@jsenv/node-module-import-map": "7.2.2",
+    "@jsenv/prettier-config": "1.0.1",
     "@jsenv/prettier-check-project": "3.5.0",
-    "@jsenv/testing": "3.6.0",
+    "@jsenv/testing": "3.7.0",
     "babel-eslint": "11.0.0-beta.0",
     "prettier": "1.18.2",
-    "eslint": "6.5.0",
+    "eslint": "6.5.1",
     "rimraf": "3.0.0"
   }
 }
