@@ -2,10 +2,10 @@
 
 - [generateImportMapForProjectPackage](#generateImportMapForProjectPackage)
   - [projectPath](#projectPath)
+  - [includeDevDependencies](#includeDevDependencies)
   - [importMapFile](#importMapFile)
   - [importMapFileRelativePath](#importMapFileRelativePath)
   - [importMapFileLog](#importMapFileLog)
-  - [includeDevDependencies](#includeDevDependencies)
 
 ## generateImportMapForProjectPackage
 
@@ -16,6 +16,10 @@ const { generateImportMapForProjectPackage } = require("@jsenv/node-module-impor
 
 const importMap = await generateImportMapForProjectPackage({
   projectPath: __dirname,
+  includeDevDependencies: true,
+  importMapFile: false,
+  importMapFileRelativePath: "/importMap.json",
+  importMapFileLog: true,
 })
 ```
 
