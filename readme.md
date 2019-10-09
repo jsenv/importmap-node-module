@@ -50,7 +50,7 @@ It helps to setup a real environment to see it in action.
 
 ### Step 1 - Copy file structure
 
-— see [./docs/basic-project](./docs/basic-project)
+Reproduce the basic project file structure at [./docs/basic-project](./docs/basic-project)
 
 ### Step 2 - Install dependencies
 

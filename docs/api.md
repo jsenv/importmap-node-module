@@ -9,23 +9,23 @@
 
 ## generateImportMapForProjectPackage
 
+> `generateImportMapForProjectPackage` is an async function returning an importMap object.
+
 ```js
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
 
-generateImportMapForProjectPackage({
+const importMap = await generateImportMapForProjectPackage({
   projectPath: __dirname,
 })
 ```
 
 — see [source code on github](../src/generateImportMapForProjectPackage/generateImportMapForProjectPackage.js).
 
-It is an async function returning an importMap object.
-
 ---
 
 ### projectPath
 
-> `projectPath` is a string leading to a folder with a package.json.<br />
+> `projectPath` parameter is a string leading to a folder with a package.json.<br />
 
 This parameter is **required**, an example value could be:
 
@@ -41,7 +41,7 @@ You can use `__dirname` to provide this parameter value.<br />
 
 ### includeDevDependencies
 
-> `includeDevDependencies` controls if devDependencies are included in the generated importMap.
+> `includeDevDependencies` parameter controls if devDependencies are included in the generated importMap.
 
 This parameter is optional, the default value is:
 
@@ -53,7 +53,7 @@ false
 
 ### importMapFile
 
-> `importMapFile` controls if importMap will be written to a file.
+> `importMapFile` parameter controls if importMap will be written to a file.
 
 This parameter is optional, the default value is:
 
@@ -65,7 +65,7 @@ false
 
 ### importMapFileRelativePath
 
-> `importMapFileRelativePath` is a string controlling where importMap file is written.
+> `importMapFileRelativePath` parameter is a string controlling where importMap file is written.
 
 This parameter is optional, the default value is:
 
@@ -84,7 +84,7 @@ It means if `importMapFile` is true importMap file is written at
 
 ### importMapFileLog
 
-> `importMapFileLog` controls if there is log in the termminal when writing importMap file.
+> `importMapFileLog` parameter controls if there is log in the terminal when writing importMap file.
 
 This parameter is optional, the default value is:
 
