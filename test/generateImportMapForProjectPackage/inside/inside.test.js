@@ -26,7 +26,7 @@ const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
 // import 'bar' inside project
 {
   const actual = resolveImport({
-    specifier: `http://example.com/bar`,
+    specifier: `bar`,
     importer: `http://example.com/scoped.js`,
     importMap: importMapNormalized,
   })
@@ -37,7 +37,7 @@ const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
 // import 'bar' inside foo
 {
   const actual = resolveImport({
-    specifier: `http://example.com/bar`,
+    specifier: `bar`,
     importer: `http://example.com/node_modules/foo/foo.js`,
     importMap: importMapNormalized,
   })

@@ -30,7 +30,7 @@ assert({ actual, expected })
   // import 'bar' inside project
   {
     const actual = resolveImport({
-      specifier: "http://example.com/bar",
+      specifier: "bar",
       importer: "http://example.com/shared.js",
       importMap: importMapNormalized,
     })
@@ -41,7 +41,7 @@ assert({ actual, expected })
   // import 'bar' inside foo
   {
     const actual = resolveImport({
-      specifier: "http://example.com/bar",
+      specifier: "bar",
       importer: "http://example.com/node_modules/foo/foo.js",
       importMap: importMapNormalized,
     })
@@ -63,7 +63,7 @@ assert({ actual, expected })
   // import 'foo' inside project
   {
     const actual = resolveImport({
-      specifier: "http://example.com/foo",
+      specifier: "foo",
       importer: "http://example.com/shared.js",
       importMap: importMapNormalized,
     })
