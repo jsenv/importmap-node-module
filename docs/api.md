@@ -10,6 +10,7 @@
 ## generateImportMapForProjectPackage
 
 > `generateImportMapForProjectPackage` is an async function returning an importMap object.
+> See source in [src/generateImportMapForProjectPackage/generateImportMapForProjectPackage.js](../src/generateImportMapForProjectPackage/generateImportMapForProjectPackage.js)
 
 ```js
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
@@ -22,8 +23,6 @@ const importMap = await generateImportMapForProjectPackage({
   importMapFileLog: true,
 })
 ```
-
-— see [source code on github](../src/generateImportMapForProjectPackage/generateImportMapForProjectPackage.js).
 
 ---
 

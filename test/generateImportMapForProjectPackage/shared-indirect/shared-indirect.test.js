@@ -1,6 +1,6 @@
 import { assert } from "@dmail/assert"
 import { importMetaURLToFolderPath } from "@jsenv/operating-system-path"
-import { applyImportMap, normalizeImportMap } from "@jsenv/import-map"
+import { resolveImport, normalizeImportMap } from "@jsenv/import-map"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
@@ -26,10 +26,10 @@ assert({ actual, expected })
 
 {
   const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
-  const actual = applyImportMap({
+  const actual = resolveImport({
+    specifier: "http://example.com/file-inside-bar.js",
+    importer: `http://example.com/node_modules/bar/bar.js`,
     importMap: importMapNormalized,
-    href: "http://example.com/file-inside-bar.js",
-    importerHref: `http://example.com/node_modules/bar/bar.js`,
   })
   const expected = `http://example.com/node_modules/bar/file-inside-bar.js`
   assert({ actual, expected })
