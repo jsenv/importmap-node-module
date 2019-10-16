@@ -1,7 +1,7 @@
 {
   "name": "@jsenv/node-module-import-map",
   "description": "generate importMap for a project package.json",
-  "version": "8.0.2",
+  "version": "8.1.0",
   "license": "MIT",
   "repository": {
     "type": "git",

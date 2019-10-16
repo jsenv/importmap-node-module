@@ -1,7 +1,10 @@
-import { extname } from "path"
+import { extname, basename } from "path"
 import { stat } from "fs"
 import { firstOperationMatching } from "@dmail/helper"
-import { pathnameToOperatingSystemPath } from "@jsenv/operating-system-path"
+import {
+  pathnameToOperatingSystemPath,
+  pathnameToRelativePathname,
+} from "@jsenv/operating-system-path"
 import { pathnameToDirname } from "./pathnameToDirname.js"
 import { hasScheme } from "./hasScheme.js"
 
@@ -79,26 +82,15 @@ const resolveMainFile = async ({
     mainRelativePath = `/${packageMainFieldValue}`
   }
 
+  if (packageMainFieldValue.endsWith("/")) {
+    mainRelativePath += `index`
+  }
+
   const packageDirname = pathnameToDirname(packagePathname)
-  const mainFilePath = pathnameToOperatingSystemPath(`${packageDirname}/${mainRelativePath}`)
-  const extension = extname(mainFilePath)
+  const mainFilePathnameFirstCandidate = `${packageDirname}${mainRelativePath}`
+  const mainFilePathname = await findMainFilePathnameOrNull(mainFilePathnameFirstCandidate)
 
-  if (extension === "") {
-    const extensionLeadingToFile = await firstOperationMatching({
-      array: extensionCandidateArray,
-      start: async (extensionCandidate) => {
-        const pathCandidate = pathnameToOperatingSystemPath(
-          `${packageDirname}${mainRelativePath}.${extensionCandidate}`,
-        )
-        const isFile = await pathLeadsToAFile(pathCandidate)
-        return isFile ? extensionCandidate : null
-      },
-      predicate: (extension) => Boolean(extension),
-    })
-    if (extensionLeadingToFile) {
-      return `${mainRelativePath}.${extensionLeadingToFile}`
-    }
-
+  if (mainFilePathname === null) {
     // we know in advance this remapping does not lead to an actual file.
     // we only warn because we have no guarantee this remapping will actually be used
     // in the codebase.
@@ -107,36 +99,73 @@ const resolveMainFile = async ({
         packagePathname,
         packageMainFieldName,
         packageMainFieldValue,
-        mainFilePath,
+        mainFilePath: pathnameToOperatingSystemPath(mainFilePathnameFirstCandidate),
       }),
     )
-
     return `${mainRelativePath}.js`
   }
 
-  const isFile = await pathLeadsToAFile(mainFilePath)
-  if (!isFile) {
-    logger.warn(
-      writePackageMainFileNotFound({
-        packagePathname,
-        packageMainFieldName,
-        packageMainFieldValue,
-        mainFilePath,
-      }),
-    )
-  }
-
-  return mainRelativePath
+  return pathnameToRelativePathname(mainFilePathname, packageDirname)
 }
 
-const pathLeadsToAFile = (path) => {
+const findMainFilePathnameOrNull = async (mainFilePathname) => {
+  const mainFilePath = pathnameToOperatingSystemPath(mainFilePathname)
+  const stats = await pathToStats(mainFilePath)
+
+  if (stats === null) {
+    const extension = extname(mainFilePathname)
+
+    if (extension === "") {
+      const extensionLeadingToAFile = await findExtension(mainFilePathname)
+      if (extensionLeadingToAFile === null) {
+        return null
+      }
+      return `${mainFilePathname}.${extensionLeadingToAFile}`
+    }
+    return null
+  }
+
+  if (stats.isFile()) {
+    return mainFilePathname
+  }
+
+  if (stats.isDirectory()) {
+    mainFilePathname += `index`
+    const extensionLeadingToAFile = await findExtension(mainFilePathname)
+    if (extensionLeadingToAFile === null) {
+      return null
+    }
+    return `${mainFilePathname}.${extensionLeadingToAFile}`
+  }
+
+  return null
+}
+
+const findExtension = async (pathname) => {
+  const dirname = pathnameToDirname(pathname)
+  const filename = basename(pathname)
+  const extensionLeadingToFile = await firstOperationMatching({
+    array: extensionCandidateArray,
+    start: async (extensionCandidate) => {
+      const pathCandidate = pathnameToOperatingSystemPath(
+        `${dirname}/${filename}.${extensionCandidate}`,
+      )
+      const stats = await pathToStats(pathCandidate)
+      return stats && stats.isFile() ? extensionCandidate : null
+    },
+    predicate: (extension) => Boolean(extension),
+  })
+  return extensionLeadingToFile || null
+}
+
+const pathToStats = (path) => {
   return new Promise((resolve, reject) => {
     stat(path, (error, statObject) => {
       if (error) {
-        if (error.code === "ENOENT") resolve(false)
+        if (error.code === "ENOENT") resolve(null)
         else reject(error)
       } else {
-        resolve(statObject.isFile())
+        resolve(statObject)
       }
     })
   })
