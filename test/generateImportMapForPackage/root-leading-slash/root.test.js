@@ -1,4 +1,5 @@
 import { importMetaURLToFolderPath } from "@jsenv/operating-system-path"
+import { createLogger } from "@jsenv/logger"
 import { assert } from "@dmail/assert"
 import { generateImportMapForPackage } from "../../../index.js"
 
@@ -7,6 +8,7 @@ const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const actual = await generateImportMapForPackage({
   projectPath: `${testFolderPath}/node_modules/project`,
   rootProjectPath: testFolderPath,
+  logger: createLogger(),
 })
 const expected = {
   imports: {},
