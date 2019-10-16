@@ -8,13 +8,13 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "@dmail/yo": "/node_modules/@dmail/yo/index.js",
-    bar: "/node_modules/bar/bar.js",
-    foo: "/node_modules/foo/foo.js",
+    "@dmail/yo": "./node_modules/@dmail/yo/index.js",
+    bar: "./node_modules/bar/bar.js",
+    foo: "./node_modules/foo/foo.js",
   },
   scopes: {
-    "/node_modules/foo/": {
-      bar: "/node_modules/foo/node_modules/bar/index.js",
+    "./node_modules/foo/": {
+      bar: "./node_modules/foo/node_modules/bar/index.js",
     },
   },
 }

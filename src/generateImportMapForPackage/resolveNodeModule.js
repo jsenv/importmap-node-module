@@ -13,7 +13,7 @@ export const resolveNodeModule = async ({
   dependencyName,
   dependencyVersionPattern,
   dependencyType,
-  onWarn,
+  logger,
 }) => {
   const packageFolderPathname = pathnameToDirname(packagePathname)
   const packageFolderRelativePath = pathnameToRelativePathname(packageFolderPathname, rootPathname)
@@ -38,10 +38,13 @@ export const resolveNodeModule = async ({
         }
 
         if (e.name === "SyntaxError") {
-          throw createDependencyPackageParsingError({
-            parsingError: e,
-            packagePathname,
-          })
+          logger.error(
+            writeDependencyPackageParsingError({
+              parsingError: e,
+              packagePathname,
+            }),
+          )
+          return {}
         }
 
         throw e
@@ -51,17 +54,15 @@ export const resolveNodeModule = async ({
   })
 
   if (!result) {
-    onWarn({
-      code: "DEPENDENCY_NOT_FOUND",
-      message: createDendencyNotFoundMessage({
+    logger.warn(
+      writeDendencyNotFound({
         dependencyName,
         dependencyType,
         dependencyVersionPattern,
         packagePathname,
         packageData,
       }),
-      data: { packagePathname, packageData, dependencyName, dependencyType },
-    })
+    )
   }
 
   return result
@@ -85,15 +86,16 @@ const getCandidateArrayFromPackageFolder = (packageFolderRelativePath) => {
   return candidateArray
 }
 
-const createDependencyPackageParsingError = ({ parsingError, packagePathname }) =>
-  new SyntaxError(`error while parsing dependency package.json.
+const writeDependencyPackageParsingError = ({
+  parsingError,
+  packagePathname,
+}) => `error while parsing dependency package.json.
 --- parsing error message ---
 ${parsingError.message}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
-`)
+${pathnameToOperatingSystemPath(packagePathname)}`
 
-const createDendencyNotFoundMessage = ({
+const writeDendencyNotFound = ({
   dependencyName,
   dependencyType,
   dependencyVersionPattern,
@@ -105,5 +107,4 @@ ${dependencyName}@${dependencyVersionPattern}
 --- required by ---
 ${packageData.name}@${packageData.version}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
-`
+${pathnameToOperatingSystemPath(packagePathname)}`

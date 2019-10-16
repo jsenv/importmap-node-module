@@ -10,15 +10,15 @@ const importMap = await generateImportMapForProjectPackage({
 const actual = importMap
 const expected = {
   imports: {
-    foo: "/node_modules/foo/foo.js",
+    foo: "./node_modules/foo/foo.js",
   },
   scopes: {
-    "/node_modules/bar/": {
-      "/node_modules/bar/": "/node_modules/bar/",
-      "/": "/node_modules/bar/",
+    "./node_modules/bar/": {
+      "./node_modules/bar/": "./node_modules/bar/",
+      "./": "./node_modules/bar/",
     },
-    "/node_modules/foo/": {
-      bar: "/node_modules/bar/bar.js",
+    "./node_modules/foo/": {
+      bar: "./node_modules/bar/bar.js",
     },
   },
 }

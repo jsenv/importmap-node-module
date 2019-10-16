@@ -3,98 +3,129 @@ import { stat } from "fs"
 import { firstOperationMatching } from "@dmail/helper"
 import { pathnameToOperatingSystemPath } from "@jsenv/operating-system-path"
 import { pathnameToDirname } from "./pathnameToDirname.js"
+import { hasScheme } from "./hasScheme.js"
 
-export const resolvePackageMain = ({ packageData, packagePathname, onWarn }) => {
+export const resolvePackageMain = ({ packageData, packagePathname, logger }) => {
   if ("module" in packageData) {
     return resolveMainFile({
-      from: "module",
-      main: packageData.module,
       packagePathname,
-      onWarn,
+      logger,
+      packageMainFieldName: "module",
+      packageMainFieldValue: packageData.module,
     })
   }
 
   if ("jsnext:main" in packageData) {
     return resolveMainFile({
-      from: "jsnext:main",
-      main: packageData["jsnext:main"],
       packagePathname,
-      onWarn,
+      logger,
+      packageMainFieldName: "jsnext:main",
+      packageMainFieldValue: packageData["jsnext:main"],
     })
   }
 
   if ("main" in packageData) {
     return resolveMainFile({
-      from: "main",
-      main: packageData.main,
       packagePathname,
-      onWarn,
+      logger,
+      packageMainFieldName: "main",
+      packageMainFieldValue: packageData.main,
     })
   }
 
   return resolveMainFile({
-    from: "default",
-    main: "index",
     packagePathname,
-    onWarn,
+    logger,
+    packageMainFieldName: "default",
+    packageMainFieldValue: "index",
   })
 }
 
 const extensionCandidateArray = ["js", "json", "node"]
 
-const resolveMainFile = async ({ main, packagePathname, onWarn }) => {
+const resolveMainFile = async ({
+  packagePathname,
+  logger,
+  packageMainFieldName,
+  packageMainFieldValue,
+}) => {
   // main is explicitely empty meaning
   // it is assumed that we should not find a file
-  if (main === "") return ""
+  if (packageMainFieldValue === "") {
+    return null
+  }
 
-  if (main.slice(0, 2) === "./") main = main.slice(2)
-  if (main[0] === "/") main = main.slice(1)
+  if (
+    hasScheme(packageMainFieldValue) ||
+    packageMainFieldValue.startsWith("//") ||
+    packageMainFieldValue.startsWith("../")
+  ) {
+    logger.warn(
+      writePackageMainFieldMustBeInside({
+        packagePathname,
+        packageMainFieldName,
+        packageMainFieldValue,
+      }),
+    )
+    return null
+  }
+
+  let mainRelativePath
+  if (packageMainFieldValue.slice(0, 2) === "./") {
+    mainRelativePath = packageMainFieldValue.slice(1)
+  } else if (packageMainFieldValue[0] === "/") {
+    mainRelativePath = packageMainFieldValue
+  } else {
+    mainRelativePath = `/${packageMainFieldValue}`
+  }
 
   const packageDirname = pathnameToDirname(packagePathname)
-  const extension = extname(main)
+  const mainFilePath = pathnameToOperatingSystemPath(`${packageDirname}/${mainRelativePath}`)
+  const extension = extname(mainFilePath)
 
   if (extension === "") {
-    const fileWithoutExtensionPathname = `${packageDirname}/${main}`
-
     const extensionLeadingToFile = await firstOperationMatching({
       array: extensionCandidateArray,
       start: async (extensionCandidate) => {
-        const path = pathnameToOperatingSystemPath(
-          `${fileWithoutExtensionPathname}.${extensionCandidate}`,
+        const pathCandidate = pathnameToOperatingSystemPath(
+          `${packageDirname}${mainRelativePath}.${extensionCandidate}`,
         )
-        const isFile = await pathLeadsToAFile(path)
+        const isFile = await pathLeadsToAFile(pathCandidate)
         return isFile ? extensionCandidate : null
       },
       predicate: (extension) => Boolean(extension),
     })
-    if (extensionLeadingToFile) return `${main}.${extensionLeadingToFile}`
+    if (extensionLeadingToFile) {
+      return `${mainRelativePath}.${extensionLeadingToFile}`
+    }
 
-    onWarn({
-      code: "MAIN_FILE_NOT_FOUND",
-      message: createMainFileNotFoundMessage({
-        mainPathname: fileWithoutExtensionPathname,
+    // we know in advance this remapping does not lead to an actual file.
+    // we only warn because we have no guarantee this remapping will actually be used
+    // in the codebase.
+    logger.warn(
+      writePackageMainFileNotFound({
         packagePathname,
+        packageMainFieldName,
+        mainFilePath,
       }),
-      data: { main, packagePathname },
-    })
+    )
 
-    return `${main}.js`
+    return `${mainRelativePath}.js`
   }
 
-  const mainPathname = `${packageDirname}/${main}`
-  const isFile = await pathLeadsToAFile(mainPathname)
+  const isFile = await pathLeadsToAFile(mainFilePath)
   if (!isFile) {
-    onWarn({
-      code: "MAIN_FILE_NOT_FOUND",
-      message: createMainFileNotFoundMessage({
-        mainPathname,
+    logger.warn(
+      writePackageMainFileNotFound({
         packagePathname,
+        packageMainFieldName,
+        packageMainFieldValue,
+        mainFilePath,
       }),
-      data: { main, packagePathname },
-    })
+    )
   }
 
-  return main
+  return mainRelativePath
 }
 
 const pathLeadsToAFile = (path) => {
@@ -110,16 +141,27 @@ const pathLeadsToAFile = (path) => {
   })
 }
 
-// we know in advance this remapping does not lead to an actual file.
-// we only warn because we have no guarantee this remapping will actually be used
-// in the codebase.
-const createMainFileNotFoundMessage = ({
-  mainPathname,
+const writePackageMainFieldMustBeInside = ({
   packagePathname,
-}) => `cannot find a module main file.
---- extensions tried ---
-${extensionCandidateArray.join(",")}
---- main path ---
-${pathnameToOperatingSystemPath(mainPathname)}
+  packageMainFieldName,
+  packageMainFieldValue,
+}) => `${packageMainFieldName} field in package.json must be inside package.json folder.
+--- ${packageMainFieldName} ---
+${packageMainFieldValue}
 --- package.json path ---
 ${pathnameToOperatingSystemPath(packagePathname)}`
+
+const writePackageMainFileNotFound = ({
+  packagePathname,
+  packageMainFieldName,
+  packageMainFieldValue,
+  mainFilePath,
+}) => `cannot find file for package.json ${packageMainFieldName} field
+--- ${packageMainFieldName} ---
+${packageMainFieldValue}
+--- file path ---
+${mainFilePath}
+--- package.json path ---
+${pathnameToOperatingSystemPath(packagePathname)}
+--- extensions tried ---
+${extensionCandidateArray.join(`,`)}`
