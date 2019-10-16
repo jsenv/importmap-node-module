@@ -86,14 +86,13 @@ const getCandidateArrayFromPackageFolder = (packageFolderRelativePath) => {
   return candidateArray
 }
 
-const writeDependencyPackageParsingError = ({
-  parsingError,
-  packagePathname,
-}) => `error while parsing dependency package.json.
+const writeDependencyPackageParsingError = ({ parsingError, packagePathname }) => `
+error while parsing dependency package.json.
 --- parsing error message ---
 ${parsingError.message}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
 const writeDendencyNotFound = ({
   dependencyName,
@@ -101,10 +100,12 @@ const writeDendencyNotFound = ({
   dependencyVersionPattern,
   packageData,
   packagePathname,
-}) => `cannot find a ${dependencyType}.
+}) => `
+cannot find a ${dependencyType}.
 --- ${dependencyType} ---
 ${dependencyName}@${dependencyVersionPattern}
 --- required by ---
 ${packageData.name}@${packageData.version}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`

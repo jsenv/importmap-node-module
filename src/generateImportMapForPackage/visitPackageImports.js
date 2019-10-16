@@ -65,44 +65,38 @@ export const visitPackageImports = ({ logger, packagePathname, packageData }) =>
   return importsForPackageImports
 }
 
-const writeImportsMustBeObject = ({
-  packagePathname,
-  packageImports,
-}) => `imports of package.json must be an object.
+const writeImportsMustBeObject = ({ packagePathname, packageImports }) => `
+imports of package.json must be an object.
 --- package.json imports ---
 ${packageImports}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
-const writeAddressMustBeString = ({
-  packagePathname,
-  specifier,
-  address,
-}) => `found unexpected address in imports of package.json, it must be a string.
+const writeAddressMustBeString = ({ packagePathname, specifier, address }) => `
+found unexpected address in imports of package.json, it must be a string.
 --- address ---
 ${address}
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
-const writeSpecifierMustBeRelative = ({
-  packagePathname,
-  specifier,
-}) => `found unexpected specifier in imports of package.json, it must be relative to package.json.
+const writeSpecifierMustBeRelative = ({ packagePathname, specifier }) => `
+found unexpected specifier in imports of package.json, it must be relative to package.json.
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
-const writeAddressMustBeRelative = ({
-  packagePathname,
-  specifier,
-  address,
-}) => `found unexpected address in imports of package.json, it must be relative to package.json.
+const writeAddressMustBeRelative = ({ packagePathname, specifier, address }) => `
+found unexpected address in imports of package.json, it must be relative to package.json.
 --- address ---
 ${address}
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`

@@ -82,44 +82,38 @@ export const visitPackageExports = ({
   return importsForPackageExports
 }
 
-const writeExportsMustBeAnObject = ({
-  packagePathname,
-  packageExports,
-}) => `exports of package.json must be an object.
+const writeExportsMustBeAnObject = ({ packagePathname, packageExports }) => `
+exports of package.json must be an object.
 --- package.json exports ---
 ${packageExports}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
-const writeSpecifierMustBeRelative = ({
-  packagePathname,
-  specifier,
-}) => `found unexpected specifier in exports of package.json, it must be relative to package.json.
+const writeSpecifierMustBeRelative = ({ packagePathname, specifier }) => `
+found unexpected specifier in exports of package.json, it must be relative to package.json.
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
-const writeAddressMustBeString = ({
-  packagePathname,
-  specifier,
-  address,
-}) => `found unexpected address in exports of package.json, it must be a string.
+const writeAddressMustBeString = ({ packagePathname, specifier, address }) => `
+found unexpected address in exports of package.json, it must be a string.
 --- address ---
 ${address}
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
-const writeAddressMustBeRelative = ({
-  packagePathname,
-  specifier,
-  address,
-}) => `found unexpected address in exports of package.json, it must be relative to package.json.
+const writeAddressMustBeRelative = ({ packagePathname, specifier, address }) => `
+found unexpected address in exports of package.json, it must be relative to package.json.
 --- address ---
 ${address}
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`

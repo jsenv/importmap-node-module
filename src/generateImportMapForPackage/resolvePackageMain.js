@@ -146,18 +146,21 @@ const writePackageMainFieldMustBeInside = ({
   packagePathname,
   packageMainFieldName,
   packageMainFieldValue,
-}) => `${packageMainFieldName} field in package.json must be inside package.json folder.
+}) => `
+${packageMainFieldName} field in package.json must be inside package.json folder.
 --- ${packageMainFieldName} ---
 ${packageMainFieldValue}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}`
+${pathnameToOperatingSystemPath(packagePathname)}
+`
 
 const writePackageMainFileNotFound = ({
   packagePathname,
   packageMainFieldName,
   packageMainFieldValue,
   mainFilePath,
-}) => `cannot find file for package.json ${packageMainFieldName} field
+}) => `
+cannot find file for package.json ${packageMainFieldName} field
 --- ${packageMainFieldName} ---
 ${packageMainFieldValue}
 --- file path ---
@@ -165,4 +168,5 @@ ${mainFilePath}
 --- package.json path ---
 ${pathnameToOperatingSystemPath(packagePathname)}
 --- extensions tried ---
-${extensionCandidateArray.join(`,`)}`
+${extensionCandidateArray.join(`,`)}
+`
