@@ -71,7 +71,7 @@ export const visitPackageExports = ({
     if (address[0] === "/") {
       to = address
     } else if (address.startsWith("./")) {
-      to = `.${actualRelativePath}${specifier.slice(1)}`
+      to = `.${actualRelativePath}${address.slice(1)}`
     } else {
       to = `.${actualRelativePath}/${address}`
     }

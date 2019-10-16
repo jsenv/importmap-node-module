@@ -95,28 +95,35 @@ export const generateImportMapForPackage = async ({
         if (packageIsRoot) {
           addImportMapping({ from, to })
         } else {
+          const toScoped =
+            to[0] === "/"
+              ? to
+              : `.${actualRelativePath}${to.startsWith("./") ? to.slice(1) : `/${to}`}`
+
           addScopedImportMapping({
             scope: `.${actualRelativePath}/`,
             from,
-            to: to[0] === "/" ? to : `.${actualRelativePath}${to}`,
+            to: toScoped,
           })
+
+          // when a package says './' maps to './'
+          // we must add something to say if we are already inside the package
+          // no need to ensure leading slash are scoped to the package
+          if (from === "./" && to === "./") {
+            addScopedImportMapping({
+              scope: `.${actualRelativePath}/`,
+              from: `.${actualRelativePath}/`,
+              to: `.${actualRelativePath}/`,
+            })
+          } else if (from === "/" && to === "/") {
+            addScopedImportMapping({
+              scope: `.${actualRelativePath}/`,
+              from: `.${actualRelativePath}/`,
+              to: `.${actualRelativePath}/`,
+            })
+          }
         }
       })
-
-      // if (`./` in packageImports && packageImports["./"] === "./" && !packageIsRoot) {
-      //   addScopedImportMapping({
-      //     scope: `.${actualRelativePath}/`,
-      //     from: `.${actualRelativePath}/`,
-      //     to: `.${actualRelativePath}/`,
-      //   })
-      // }
-      // if (`/` in packageImports && packageImports["/"] === "/" && !packageIsRoot) {
-      //   addScopedImportMapping({
-      //     scope: `.${actualRelativePath}/`,
-      //     from: `${actualRelativePath}/`,
-      //     to: `${actualRelativePath}/`,
-      //   })
-      // }
     }
 
     if ("exports" in packageData) {

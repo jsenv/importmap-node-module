@@ -5,7 +5,6 @@ import { generateImportMapForProjectPackage } from "../../../index.js"
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const importMap = await generateImportMapForProjectPackage({
   projectPath: testFolderPath,
-  logLevel: "error",
 })
 
 const actual = importMap
