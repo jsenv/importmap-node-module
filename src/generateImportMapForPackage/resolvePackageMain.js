@@ -94,14 +94,20 @@ const resolveMainFile = async ({
     // we know in advance this remapping does not lead to an actual file.
     // we only warn because we have no guarantee this remapping will actually be used
     // in the codebase.
-    logger.warn(
-      writePackageMainFileNotFound({
-        packagePathname,
-        packageMainFieldName,
-        packageMainFieldValue,
-        mainFilePath: pathnameToOperatingSystemPath(mainFilePathnameFirstCandidate),
-      }),
-    )
+
+    // warn only if there is actually a main field
+    // otherwise the package.json is missing the main field
+    // it certainly means it's not important
+    if (packageMainFieldName !== "default") {
+      logger.warn(
+        writePackageMainFileNotFound({
+          packagePathname,
+          packageMainFieldName,
+          packageMainFieldValue,
+          mainFilePath: pathnameToOperatingSystemPath(mainFilePathnameFirstCandidate),
+        }),
+      )
+    }
     return `${mainRelativePath}.js`
   }
 
@@ -130,7 +136,7 @@ const findMainFilePathnameOrNull = async (mainFilePathname) => {
   }
 
   if (stats.isDirectory()) {
-    mainFilePathname += `index`
+    mainFilePathname += mainFilePathname.endsWith("/") ? `index` : `/index`
     const extensionLeadingToAFile = await findExtension(mainFilePathname)
     if (extensionLeadingToAFile === null) {
       return null
