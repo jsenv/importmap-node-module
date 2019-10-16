@@ -106,6 +106,7 @@ const resolveMainFile = async ({
       writePackageMainFileNotFound({
         packagePathname,
         packageMainFieldName,
+        packageMainFieldValue,
         mainFilePath,
       }),
     )
