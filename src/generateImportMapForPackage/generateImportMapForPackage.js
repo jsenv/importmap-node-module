@@ -1,3 +1,4 @@
+/* eslint-disable import/max-dependencies */
 import { basename } from "path"
 import {
   operatingSystemPathToPathname,
@@ -9,14 +10,14 @@ import { pathnameToDirname } from "./pathnameToDirname.js"
 import { readPackageData } from "./readPackageData.js"
 import { resolveNodeModule } from "./resolveNodeModule.js"
 import { resolvePackageMain } from "./resolvePackageMain.js"
+import { visitPackageImports } from "./visitPackageImports.js"
+import { visitPackageExports } from "./visitPackageExports.js"
 
 export const generateImportMapForPackage = async ({
   projectPath,
   rootProjectPath = projectPath,
   includeDevDependencies = false,
-  onWarn = ({ message }) => {
-    console.warn(message)
-  },
+  logger,
 }) => {
   const projectPathname = operatingSystemPathToPathname(projectPath)
   const projectPackagePathname = `${projectPathname}/package.json`
@@ -80,20 +81,75 @@ export const generateImportMapForPackage = async ({
     })
 
     if ("imports" in packageData) {
-      visitPackageImports({
+      const importsForPackageImports = visitPackageImports({
         packagePathname,
         packageName,
         packageData,
         packagePathInfo,
       })
+
+      const { packageIsRoot, actualRelativePath } = packagePathInfo
+      Object.keys(importsForPackageImports).forEach((from) => {
+        const to = importsForPackageImports[from]
+
+        if (packageIsRoot) {
+          addImportMapping({ from, to })
+        } else {
+          const toScoped =
+            to[0] === "/"
+              ? to
+              : `.${actualRelativePath}${to.startsWith("./") ? to.slice(1) : `/${to}`}`
+
+          addScopedImportMapping({
+            scope: `.${actualRelativePath}/`,
+            from,
+            to: toScoped,
+          })
+
+          // when a package says './' maps to './'
+          // we must add something to say if we are already inside the package
+          // no need to ensure leading slash are scoped to the package
+          if (from === "./" && to === "./") {
+            addScopedImportMapping({
+              scope: `.${actualRelativePath}/`,
+              from: `.${actualRelativePath}/`,
+              to: `.${actualRelativePath}/`,
+            })
+          } else if (from === "/" && to === "/") {
+            addScopedImportMapping({
+              scope: `.${actualRelativePath}/`,
+              from: `.${actualRelativePath}/`,
+              to: `.${actualRelativePath}/`,
+            })
+          }
+        }
+      })
     }
 
     if ("exports" in packageData) {
-      visitPackageExports({
+      const importsForPackageExports = visitPackageExports({
         packagePathname,
         packageName,
         packageData,
         packagePathInfo,
+      })
+
+      const { importerName, actualRelativePath, expectedRelativePath } = packagePathInfo
+      Object.keys(importsForPackageExports).forEach((from) => {
+        const to = importsForPackageExports[from]
+
+        if (importerName === rootImporterName) {
+          addImportMapping({ from, to })
+        } else {
+          addScopedImportMapping({ scope: `./${importerName}/`, from, to })
+        }
+        if (actualRelativePath !== expectedRelativePath) {
+          addScopedImportMapping({
+            scope: `./${importerName}/`,
+            from,
+            to,
+          })
+        }
       })
     }
   }
@@ -114,114 +170,28 @@ export const generateImportMapForPackage = async ({
     if (packageIsRoot) return
     if (packageIsProject) return
 
-    const main = await resolvePackageMain({
+    const mainRelativePath = await resolvePackageMain({
       packagePathname,
       packageData,
-      onWarn: () => {},
+      logger,
     })
 
     // it's possible to have no main
     // like { main: "" } in package.json
     // or a main that does not lead to an actual file
-    if (!main) return
+    if (!mainRelativePath) return
 
     const from = packageName
-    const to = `${actualRelativePath}/${main}`
+    const to = `.${actualRelativePath}${mainRelativePath}`
 
     if (importerPackageIsRoot) {
       addImportMapping({ from, to })
     } else {
-      addScopedImportMapping({ scope: `/${importerName}/`, from, to })
+      addScopedImportMapping({ scope: `./${importerName}/`, from, to })
     }
     if (actualRelativePath !== expectedRelativePath) {
-      addScopedImportMapping({ scope: `/${importerName}/`, from, to })
+      addScopedImportMapping({ scope: `./${importerName}/`, from, to })
     }
-  }
-
-  const visitPackageImports = ({ packagePathname, packageData, packagePathInfo }) => {
-    const { imports: packageImports } = packageData
-    if (typeof packageImports !== "object" || packageImports === null) {
-      onWarn(
-        createUnexpectedPackageImportsWarning({
-          packageImports,
-          packagePathname,
-        }),
-      )
-      return
-    }
-
-    const { packageIsRoot, actualRelativePath } = packagePathInfo
-
-    Object.keys(packageImports).forEach((key) => {
-      const resolvedKey = resolvePathInPackage(key, packagePathname)
-      if (!resolvedKey) return
-      const resolvedValue = resolvePathInPackage(packageImports[key], packagePathname)
-      if (!resolvedValue) return
-
-      if (packageIsRoot) {
-        addImportMapping({
-          from: resolvedKey,
-          to: resolvedValue,
-        })
-      } else {
-        addScopedImportMapping({
-          scope: `${actualRelativePath}/`,
-          from: resolvedKey,
-          to: `${actualRelativePath}${resolvedValue}`,
-        })
-      }
-    })
-
-    if (!packageIsRoot) {
-      // ensureImportsScopedInsidePackage
-      addScopedImportMapping({
-        scope: `${actualRelativePath}/`,
-        from: `${actualRelativePath}/`,
-        to: `${actualRelativePath}/`,
-      })
-    }
-  }
-
-  const visitPackageExports = ({
-    packagePathname,
-    packageName,
-    packageData,
-    packagePathInfo: { importerName, packageIsRoot, actualRelativePath, expectedRelativePath },
-  }) => {
-    if (packageIsRoot) return
-
-    const { exports: packageExports } = packageData
-    if (typeof packageExports !== "object" || packageExports === null) {
-      onWarn(
-        createUnexpectedPackageExportsWarning({
-          packageExports,
-          packagePathname,
-        }),
-      )
-      return
-    }
-
-    Object.keys(packageExports).forEach((key) => {
-      const resolvedKey = resolvePathInPackage(key, packagePathname)
-      if (!resolvedKey) return
-      const resolvedValue = resolvePathInPackage(packageExports[key], packagePathname)
-      if (!resolvedValue) return
-      const from = `${packageName}${resolvedKey}`
-      const to = `${actualRelativePath}${resolvedValue}`
-
-      if (importerName === rootImporterName) {
-        addImportMapping({ from, to })
-      } else {
-        addScopedImportMapping({ scope: `/${importerName}/`, from, to })
-      }
-      if (actualRelativePath !== expectedRelativePath) {
-        addScopedImportMapping({
-          scope: `/${importerName}/`,
-          from,
-          to,
-        })
-      }
-    })
   }
 
   const visitDependencies = async ({ packagePathname, packageData, includeDevDependencies }) => {
@@ -341,18 +311,6 @@ export const generateImportMapForPackage = async ({
     }
   }
 
-  const resolvePathInPackage = (path, packagePathname) => {
-    if (path[0] === "/") return path
-    if (path.slice(0, 2) === "./") return path.slice(1)
-    onWarn(
-      createInvalidPackageRelativePathWarning({
-        path,
-        packagePathname,
-      }),
-    )
-    return ""
-  }
-
   const addImportMapping = ({ from, to }) => {
     // we could think it's useless to remap from with to
     // however it can be used to ensure a weaker remapping
@@ -402,7 +360,7 @@ export const generateImportMapForPackage = async ({
       dependencyName,
       dependencyType,
       dependencyVersionPattern,
-      onWarn,
+      logger,
     })
     dependenciesCache[packagePathname][dependencyName] = dependencyPromise
     return dependencyPromise
@@ -410,7 +368,6 @@ export const generateImportMapForPackage = async ({
 
   const projectPackageData = await readPackageData({
     path: pathnameToOperatingSystemPath(projectPackagePathname),
-    onWarn,
   })
   markPackageAsSeen(projectPackagePathname, projectPackagePathname)
   await visit({
@@ -422,46 +379,4 @@ export const generateImportMapForPackage = async ({
   })
 
   return sortImportMap({ imports, scopes })
-}
-
-const createInvalidPackageRelativePathWarning = ({ path, packagePathname }) => {
-  return {
-    code: "INVALID_PATH_RELATIVE_TO_PACKAGE",
-    message: `
-invalid path relative to package.
---- path ---
-${path}
---- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
-`,
-    data: { packagePathname, path },
-  }
-}
-
-const createUnexpectedPackageImportsWarning = ({ packageImports, packagePathname }) => {
-  return {
-    code: "UNEXPECTED_PACKAGE_IMPORTS",
-    message: `
-package.imports must be an object.
---- package.json imports ---
-${packageImports}
---- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
-`,
-    data: { packagePathname, packageImports },
-  }
-}
-
-const createUnexpectedPackageExportsWarning = ({ packageExports, packagePathname }) => {
-  return {
-    code: "UNEXPECTED_PACKAGE_EXPORTS",
-    message: `
-package.exports must be an object.
---- package.json exports ---
-${packageExports}
---- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
-`,
-    data: { packagePathname, packageExports },
-  }
 }

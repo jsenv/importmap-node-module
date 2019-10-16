@@ -6,10 +6,6 @@ const testFolderPath = importMetaURLToFolderPath(import.meta.url)
 const actual = await generateImportMapForProjectPackage({
   projectPath: testFolderPath,
 })
-const expected = {
-  imports: {
-    "main-jsnext": "./node_modules/main-jsnext/jsnext.js",
-  },
-  scopes: {},
-}
+const expected = { imports: {}, scopes: {} }
+// we could/should also expect a console.warn occurs
 assert({ actual, expected })

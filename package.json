@@ -1,7 +1,7 @@
 {
   "name": "@jsenv/node-module-import-map",
   "description": "generate importMap for a project package.json",
-  "version": "7.2.3",
+  "version": "8.0.2",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,9 +13,6 @@
   },
   "module": "index.js",
   "main": "dist/commonjs/main.js",
-  "exports": {
-    "/": "/"
-  },
   "files": [
     "/src/",
     "/dist/",
@@ -39,7 +36,8 @@
   "dependencies": {
     "@dmail/cancellation": "2.6.0",
     "@dmail/helper": "2.3.0",
-    "@jsenv/import-map": "5.8.1",
+    "@jsenv/import-map": "6.0.0",
+    "@jsenv/logger": "1.0.0",
     "@jsenv/operating-system-path": "2.5.1"
   },
   "devDependencies": {

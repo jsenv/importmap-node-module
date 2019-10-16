@@ -9,15 +9,15 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "@jsenv/bundling": "/node_modules/@jsenv/bundling/whatever.js",
+    "@jsenv/bundling": "./node_modules/@jsenv/bundling/whatever.js",
   },
   scopes: {
-    "/node_modules/@jsenv/bundling/node_modules/@jsenv/core/": {
+    "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/": {
       "@dmail/project-structure":
-        "/node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/whatever.js",
+        "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/whatever.js",
     },
-    "/node_modules/@jsenv/bundling/": {
-      "@jsenv/core": "/node_modules/@jsenv/bundling/node_modules/@jsenv/core/whatever.js",
+    "./node_modules/@jsenv/bundling/": {
+      "@jsenv/core": "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/whatever.js",
     },
   },
 }

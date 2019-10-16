@@ -3,13 +3,9 @@ import { assert } from "@dmail/assert"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
 const testFolderPath = importMetaURLToFolderPath(import.meta.url)
+// we could/should expected a console warning occurs
 const actual = await generateImportMapForProjectPackage({
   projectPath: testFolderPath,
 })
-const expected = {
-  imports: {
-    "main-jsnext": "./node_modules/main-jsnext/jsnext.js",
-  },
-  scopes: {},
-}
+const expected = { imports: {}, scopes: {} }
 assert({ actual, expected })

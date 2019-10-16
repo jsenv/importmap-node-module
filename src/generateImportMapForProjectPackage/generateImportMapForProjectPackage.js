@@ -3,6 +3,7 @@ import {
   operatingSystemPathToPathname,
   pathnameToOperatingSystemPath,
 } from "@jsenv/operating-system-path"
+import { createLogger } from "@jsenv/logger"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
 import { generateImportMapForPackage } from "../generateImportMapForPackage/generateImportMapForPackage.js"
@@ -12,7 +13,7 @@ export const generateImportMapForProjectPackage = async ({
   projectPath,
   inputImportMap,
   includeDevDependencies,
-  onWarn,
+  logLevel,
   throwUnhandled = true,
   importMapFile = false,
   importMapFileRelativePath = "/importMap.json",
@@ -22,10 +23,11 @@ export const generateImportMapForProjectPackage = async ({
 }) =>
   catchAsyncFunctionCancellation(async () => {
     const start = async () => {
+      const logger = createLogger({ logLevel })
       const projectPackageImportMap = await generateImportMapForPackage({
         projectPath,
         includeDevDependencies,
-        onWarn,
+        logger,
       })
       const importMap = inputImportMap
         ? composeTwoImportMaps(inputImportMap, projectPackageImportMap)
@@ -38,7 +40,7 @@ export const generateImportMapForProjectPackage = async ({
         )
         await fileWrite(importMapPath, JSON.stringify(importMap, null, "  "))
         if (importMapFileLog) {
-          console.log(`-> ${importMapPath}`)
+          logger.info(`-> ${importMapPath}`)
         }
       }
       if (jsConfigFile) {
@@ -56,7 +58,7 @@ export const generateImportMapForProjectPackage = async ({
           }
           await fileWrite(jsConfigPath, JSON.stringify(jsConfig, null, "  "))
           if (jsConfigFileLog) {
-            console.log(`-> ${jsConfigPath}`)
+            logger.info(`-> ${jsConfigPath}`)
           }
         } catch (e) {
           if (e.code !== "ENOENT") {
