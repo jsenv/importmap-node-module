@@ -10,8 +10,8 @@ const importMap = await generateImportMapForProjectPackage({
 const actual = importMap
 const expected = {
   imports: {
-    "@jsenv/whatever/": "./node_modules/@jsenv/whatever/",
-    "@jsenv/whatever": "./node_modules/@jsenv/whatever/index.js",
+    "foo/": "./node_modules/foo/",
+    foo: "./node_modules/foo/index.js",
   },
   scopes: {},
 }
