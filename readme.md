@@ -1,16 +1,15 @@
-# jsenv-node-module-import-map
+# Jsenv node module import map
 
-[![github package](https://img.shields.io/github/package-json/v/jsenv/jsenv-node-module-import-map.svg?label=package&logo=github)](https://github.com/jsenv/jsenv-node-module-import-map/packages)
-[![workflow status](https://github.com/jsenv/jsenv-node-module-import-map/workflows/continuous%20testing/badge.svg)](https://github.com/jsenv/jsenv-node-module-import-map/actions?workflow=continuous+testing)
-[![codecov](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
+[![github package](https://img.shields.io/github/package-json/v/jsenv/jsenv-node-module-import-map.svg?logo=github&label=package)](https://github.com/jsenv/jsenv-node-module-import-map/packages)
+[![npm package](https://img.shields.io/npm/v/@jsenv/node-module-import-map.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/node-module-import-map)
+[![github ci](https://github.com/jsenv/jsenv-m=node-module-import-map/workflows/ci/badge.svg)](https://github.com/jsenv/jsenv-node-module-import-map/actions?workflow=ci)
+[![codecov coverage](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
 
-## Introduction
-
-`@jsenv/node-module-import-map` generates importMap for your project node_modules.<br />
-— see [importMap spec](https://github.com/WICG/import-maps)
+Generate importMap for a project node modules.
 
 ## Table of contents
 
+- [Presentation](#Presentation)
 - [How it works](#how-it-works)
 - [How to use](#how-to-use)
 - [Concrete example](#concrete-example)
@@ -19,6 +18,11 @@
   - [Step 3 - Generate importMap](#step-3---generate-importMap)
 - [Custom node module resolution](#custom-node-module-resolution)
 - [Installation](#installation-using-npm)
+
+## Presentation
+
+`@jsenv/node-module-import-map` generates importMap for your project node_modules.<br />
+— see [importMap spec](https://github.com/WICG/import-maps)
 
 ## How it works
 
