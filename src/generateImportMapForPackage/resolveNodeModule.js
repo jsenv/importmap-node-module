@@ -1,37 +1,38 @@
-import {
-  pathnameToOperatingSystemPath,
-  pathnameToRelativePathname,
-} from "@jsenv/operating-system-path"
+import { fileURLToPath } from "url"
 import { firstOperationMatching } from "@dmail/helper"
-import { pathnameToDirname } from "./pathnameToDirname.js"
 import { readPackageData } from "./readPackageData.js"
+import { resolveDirectoryUrl } from "./resolveDirectoryUrl.js"
 
 export const resolveNodeModule = async ({
-  rootPathname,
-  packagePathname,
+  rootProjectDirectoryUrl,
+  packageFileUrl,
   packageData,
   dependencyName,
   dependencyVersionPattern,
   dependencyType,
   logger,
 }) => {
-  const packageFolderPathname = pathnameToDirname(packagePathname)
-  const packageFolderRelativePath = pathnameToRelativePathname(packageFolderPathname, rootPathname)
+  const packageDirectoryUrl = resolveDirectoryUrl("./", packageFileUrl)
+  const packageDirectoryRelativePath = packageDirectoryUrl.slice(rootProjectDirectoryUrl.length)
 
   const nodeModuleCandidateArray = [
-    ...getCandidateArrayFromPackageFolder(packageFolderRelativePath),
-    `node_modules`,
+    ...computeNodeModuleCandidateArray(packageDirectoryRelativePath),
+    `node_modules/`,
   ]
 
   const result = await firstOperationMatching({
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
-      const packagePathname = `${rootPathname}/${nodeModuleCandidate}/${dependencyName}/package.json`
+      const packageFileUrl = `${rootProjectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`
+      const packageFilePath = fileURLToPath(packageFileUrl)
       try {
         const packageData = await readPackageData({
-          path: pathnameToOperatingSystemPath(packagePathname),
+          path: packageFilePath,
         })
-        return { packagePathname, packageData }
+        return {
+          packageFileUrl,
+          packageData,
+        }
       } catch (e) {
         if (e.code === "ENOENT") {
           return {}
@@ -41,7 +42,7 @@ export const resolveNodeModule = async ({
           logger.error(
             writeDependencyPackageParsingError({
               parsingError: e,
-              packagePathname,
+              packageFilePath,
             }),
           )
           return {}
@@ -59,7 +60,7 @@ export const resolveNodeModule = async ({
         dependencyName,
         dependencyType,
         dependencyVersionPattern,
-        packagePathname,
+        packageFilePath: fileURLToPath(packageFileUrl),
         packageData,
       }),
     )
@@ -68,30 +69,32 @@ export const resolveNodeModule = async ({
   return result
 }
 
-const getCandidateArrayFromPackageFolder = (packageFolderRelativePath) => {
-  if (packageFolderRelativePath === "") return []
+const computeNodeModuleCandidateArray = (packageDirectoryRelativePath) => {
+  if (packageDirectoryRelativePath === "") return []
 
   const candidateArray = []
-  const relativeFolderNameArray = packageFolderRelativePath.split("/node_modules/")
+  const relativeNodeModuleDirectoryArray = packageDirectoryRelativePath.split("/node_modules/")
   // remove the first empty string
-  relativeFolderNameArray.shift()
+  relativeNodeModuleDirectoryArray.shift()
 
-  let i = relativeFolderNameArray.length
+  let i = relativeNodeModuleDirectoryArray.length
   while (i--) {
     candidateArray.push(
-      `node_modules/${relativeFolderNameArray.slice(0, i + 1).join("/node_modules/")}/node_modules`,
+      `node_modules/${relativeNodeModuleDirectoryArray
+        .slice(0, i + 1)
+        .join("/node_modules/")}/node_modules/`,
     )
   }
 
   return candidateArray
 }
 
-const writeDependencyPackageParsingError = ({ parsingError, packagePathname }) => `
+const writeDependencyPackageParsingError = ({ parsingError, packageFilePath }) => `
 error while parsing dependency package.json.
 --- parsing error message ---
 ${parsingError.message}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
+${packageFilePath}
 `
 
 const writeDendencyNotFound = ({
@@ -99,7 +102,7 @@ const writeDendencyNotFound = ({
   dependencyType,
   dependencyVersionPattern,
   packageData,
-  packagePathname,
+  packageFilePath,
 }) => `
 cannot find a ${dependencyType}.
 --- ${dependencyType} ---
@@ -107,5 +110,5 @@ ${dependencyName}@${dependencyVersionPattern}
 --- required by ---
 ${packageData.name}@${packageData.version}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
+${packageFilePath}
 `

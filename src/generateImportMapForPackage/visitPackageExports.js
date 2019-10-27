@@ -1,13 +1,14 @@
-import { pathnameToOperatingSystemPath } from "@jsenv/operating-system-path"
 import { hasScheme } from "./hasScheme.js"
+import { fileURLToPath } from "url"
 
 export const visitPackageExports = ({
   logger,
-  packagePathname,
+  packageFileUrl,
   packageName,
   packageData,
-  packagePathInfo: { packageIsRoot, actualRelativePath },
+  packageInfo: { packageIsRoot, packageDirectoryRelativePath },
 }) => {
+  const packageFilePath = fileURLToPath(packageFileUrl)
   const importsForPackageExports = {}
 
   if (packageIsRoot) {
@@ -18,8 +19,8 @@ export const visitPackageExports = ({
   if (typeof packageExports !== "object" || packageExports === null) {
     logger.warn(
       writeExportsMustBeAnObject({
+        packageFilePath,
         packageExports,
-        packagePathname,
       }),
     )
     return importsForPackageExports
@@ -29,7 +30,7 @@ export const visitPackageExports = ({
     if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
       logger.warn(
         writeSpecifierMustBeRelative({
-          packagePathname,
+          packageFilePath,
           specifier,
         }),
       )
@@ -40,7 +41,7 @@ export const visitPackageExports = ({
     if (typeof address !== "string") {
       logger.warn(
         writeAddressMustBeString({
-          packagePathname,
+          packageFilePath,
           specifier,
           address,
         }),
@@ -50,7 +51,7 @@ export const visitPackageExports = ({
     if (hasScheme(address) || address.startsWith("//") || address.startsWith("../")) {
       logger.warn(
         writeAddressMustBeRelative({
-          packagePathname,
+          packageFilePath,
           specifier,
           address,
         }),
@@ -71,9 +72,9 @@ export const visitPackageExports = ({
     if (address[0] === "/") {
       to = address
     } else if (address.startsWith("./")) {
-      to = `.${actualRelativePath}${address.slice(1)}`
+      to = `${packageDirectoryRelativePath}${address.slice(2)}`
     } else {
-      to = `.${actualRelativePath}/${address}`
+      to = `${packageDirectoryRelativePath}${address}`
     }
 
     importsForPackageExports[from] = to
@@ -82,38 +83,38 @@ export const visitPackageExports = ({
   return importsForPackageExports
 }
 
-const writeExportsMustBeAnObject = ({ packagePathname, packageExports }) => `
+const writeExportsMustBeAnObject = ({ packageFilePath, packageExports }) => `
 exports of package.json must be an object.
 --- package.json exports ---
 ${packageExports}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
+${packageFilePath}
 `
 
-const writeSpecifierMustBeRelative = ({ packagePathname, specifier }) => `
+const writeSpecifierMustBeRelative = ({ packageFilePath, specifier }) => `
 found unexpected specifier in exports of package.json, it must be relative to package.json.
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
+${packageFilePath}
 `
 
-const writeAddressMustBeString = ({ packagePathname, specifier, address }) => `
+const writeAddressMustBeString = ({ packageFilePath, specifier, address }) => `
 found unexpected address in exports of package.json, it must be a string.
 --- address ---
 ${address}
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
+${packageFilePath}
 `
 
-const writeAddressMustBeRelative = ({ packagePathname, specifier, address }) => `
+const writeAddressMustBeRelative = ({ packageFilePath, specifier, address }) => `
 found unexpected address in exports of package.json, it must be relative to package.json.
 --- address ---
 ${address}
 --- specifier ---
 ${specifier}
 --- package.json path ---
-${pathnameToOperatingSystemPath(packagePathname)}
+${packageFilePath}
 `

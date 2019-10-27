@@ -1,31 +1,29 @@
-import { composeTwoImportMaps } from "@jsenv/import-map"
-import {
-  operatingSystemPathToPathname,
-  pathnameToOperatingSystemPath,
-} from "@jsenv/operating-system-path"
+import { pathToFileURL, fileURLToPath } from "url"
 import { createLogger } from "@jsenv/logger"
+import { composeTwoImportMaps } from "@jsenv/import-map"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
 import { generateImportMapForPackage } from "../generateImportMapForPackage/generateImportMapForPackage.js"
 import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
 export const generateImportMapForProjectPackage = async ({
-  projectPath,
+  logLevel,
+  projectDirectoryPath,
   inputImportMap,
   includeDevDependencies,
-  logLevel,
   throwUnhandled = true,
   importMapFile = false,
-  importMapFileRelativePath = "/importMap.json",
+  importMapFileRelativePath = "./importMap.json",
   importMapFileLog = true,
   jsConfigFile = false,
   jsConfigFileLog = true,
+  jsConfigLeadingSlash = false,
 }) =>
   catchAsyncFunctionCancellation(async () => {
     const start = async () => {
       const logger = createLogger({ logLevel })
       const projectPackageImportMap = await generateImportMapForPackage({
-        projectPath,
+        projectDirectoryPath,
         includeDevDependencies,
         logger,
       })
@@ -34,31 +32,31 @@ export const generateImportMapForProjectPackage = async ({
         : projectPackageImportMap
 
       if (importMapFile) {
-        const projectPathname = operatingSystemPathToPathname(projectPath)
-        const importMapPath = pathnameToOperatingSystemPath(
-          `${projectPathname}${importMapFileRelativePath}`,
-        )
-        await fileWrite(importMapPath, JSON.stringify(importMap, null, "  "))
+        const projectDirectoryUrl = pathToFileURL(projectDirectoryPath)
+        const importMapFileUrl = new URL(importMapFileRelativePath, projectDirectoryUrl)
+        const importMapFilePath = fileURLToPath(importMapFileUrl)
+        await fileWrite(importMapFilePath, JSON.stringify(importMap, null, "  "))
         if (importMapFileLog) {
-          logger.info(`-> ${importMapPath}`)
+          logger.info(`-> ${importMapFilePath}`)
         }
       }
       if (jsConfigFile) {
-        const projectPathname = operatingSystemPathToPathname(projectPath)
-        const jsConfigPath = pathnameToOperatingSystemPath(`${projectPathname}/jsconfig.json`)
+        const projectDirectoryUrl = pathToFileURL(projectDirectoryPath)
+        const jsConfigFileUrl = new URL("./jsconfig.json", projectDirectoryUrl)
+        const jsConfigFilePath = fileURLToPath(jsConfigFileUrl)
         try {
           const jsConfig = {
             compilerOptions: {
               baseUrl: ".",
               paths: {
-                "/*": ["./*"],
+                ...(jsConfigLeadingSlash ? { "/*": ["./*"] } : {}),
                 ...importMapToVsCodeConfigPaths(importMap),
               },
             },
           }
-          await fileWrite(jsConfigPath, JSON.stringify(jsConfig, null, "  "))
+          await fileWrite(jsConfigFilePath, JSON.stringify(jsConfig, null, "  "))
           if (jsConfigFileLog) {
-            logger.info(`-> ${jsConfigPath}`)
+            logger.info(`-> ${jsConfigFilePath}`)
           }
         } catch (e) {
           if (e.code !== "ENOENT") {
