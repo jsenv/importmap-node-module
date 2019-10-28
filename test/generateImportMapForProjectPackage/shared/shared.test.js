@@ -1,9 +1,9 @@
 import { resolveImport, normalizeImportMap } from "@jsenv/import-map"
 import { assert } from "@dmail/assert"
 import { generateImportMapForProjectPackage } from "../../../index.js"
-import { importMetaURLToDirectoryPath } from "../../importMetaURLToDirectoryPath.js"
+import { importMetaUrlToDirectoryPath } from "../../importMetaUrlToDirectoryPath.js"
 
-const testDirectoryPath = importMetaURLToDirectoryPath(import.meta.url)
+const testDirectoryPath = importMetaUrlToDirectoryPath(import.meta.url)
 const importMap = await generateImportMapForProjectPackage({
   projectDirectoryPath: testDirectoryPath,
 })

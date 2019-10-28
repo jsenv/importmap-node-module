@@ -1,8 +1,8 @@
 import { assert } from "@dmail/assert"
 import { generateImportMapForProjectPackage } from "../../../index.js"
-import { importMetaURLToDirectoryPath } from "../../importMetaURLToDirectoryPath.js"
+import { importMetaUrlToDirectoryPath } from "../../importMetaUrlToDirectoryPath.js"
 
-const testDirectoryPath = importMetaURLToDirectoryPath(import.meta.url)
+const testDirectoryPath = importMetaUrlToDirectoryPath(import.meta.url)
 
 try {
   await generateImportMapForProjectPackage({
