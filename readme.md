@@ -107,9 +107,9 @@ If you never installed a jsenv package, read [Installing a jsenv package](https:
 This documentation is up-to-date with a specific version so prefer any of the following commands
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map@8.4.0
+npm install --save-dev @jsenv/node-module-import-map@8.4.1
 ```
 
 ```console
-yarn add --dev @jsenv/node-module-import-map@8.4.0
+yarn add --dev @jsenv/node-module-import-map@8.4.1
 ```

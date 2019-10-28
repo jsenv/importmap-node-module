@@ -4,7 +4,6 @@
   },
   "scopes": {
     "./node_modules/@jsenv/node-module-import-map/": {
-      "@jsenv/operating-system-path": "./node_modules/@jsenv/operating-system-path/index.js",
       "@dmail/cancellation": "./node_modules/@dmail/cancellation/index.js",
       "@jsenv/import-map/": "./node_modules/@jsenv/import-map/",
       "@jsenv/import-map": "./node_modules/@jsenv/import-map/index.js",
