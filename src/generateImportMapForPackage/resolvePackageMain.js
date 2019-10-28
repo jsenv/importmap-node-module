@@ -1,41 +1,40 @@
-import { fileURLToPath } from "url"
 import { dirname, extname, basename } from "path"
 import { stat } from "fs"
 import { firstOperationMatching } from "@dmail/helper"
-import { resolveDirectoryUrl } from "./resolveDirectoryUrl.js"
-import { resolveFileUrl } from "./resolveFileUrl.js"
+import { resolveFileUrl, fileUrlToDirectoryUrl, fileUrlToPath } from "./urlHelpers.js"
+import { fileURLToPath } from "url"
 
-export const resolvePackageMain = ({ packageData, packageFileUrl, logger }) => {
-  if ("module" in packageData) {
+export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
+  if ("module" in packageJsonObject) {
     return resolveMainFile({
-      packageFileUrl,
       logger,
+      packageFileUrl,
       packageMainFieldName: "module",
-      packageMainFieldValue: packageData.module,
+      packageMainFieldValue: packageJsonObject.module,
     })
   }
 
-  if ("jsnext:main" in packageData) {
+  if ("jsnext:main" in packageJsonObject) {
     return resolveMainFile({
-      packageFileUrl,
       logger,
+      packageFileUrl,
       packageMainFieldName: "jsnext:main",
-      packageMainFieldValue: packageData["jsnext:main"],
+      packageMainFieldValue: packageJsonObject["jsnext:main"],
     })
   }
 
-  if ("main" in packageData) {
+  if ("main" in packageJsonObject) {
     return resolveMainFile({
-      packageFileUrl,
       logger,
+      packageFileUrl,
       packageMainFieldName: "main",
-      packageMainFieldValue: packageData.main,
+      packageMainFieldValue: packageJsonObject.main,
     })
   }
 
   return resolveMainFile({
-    packageFileUrl,
     logger,
+    packageFileUrl,
     packageMainFieldName: "default",
     packageMainFieldValue: "index",
   })
@@ -44,8 +43,8 @@ export const resolvePackageMain = ({ packageData, packageFileUrl, logger }) => {
 const extensionCandidateArray = ["js", "json", "node"]
 
 const resolveMainFile = async ({
-  packageFileUrl,
   logger,
+  packageFileUrl,
   packageMainFieldName,
   packageMainFieldValue,
 }) => {
@@ -55,8 +54,8 @@ const resolveMainFile = async ({
     return null
   }
 
-  const packageFilePath = fileURLToPath(packageFileUrl)
-  const packageDirectoryUrl = resolveDirectoryUrl("./", packageFileUrl)
+  const packageFilePath = fileUrlToPath(packageFileUrl)
+  const packageDirectoryUrl = fileUrlToDirectoryUrl(packageFileUrl)
   const mainFileRelativePath = packageMainFieldValue.endsWith("/")
     ? `${packageMainFieldValue}index`
     : packageMainFieldValue
@@ -65,11 +64,13 @@ const resolveMainFile = async ({
 
   if (!mainFileUrlFirstCandidate.startsWith(packageDirectoryUrl)) {
     logger.warn(
-      writePackageMainFieldMustBeInside({
-        packageFilePath,
-        packageMainFieldName,
-        packageMainFieldValue,
-      }),
+      `
+${packageMainFieldName} field in package.json must be inside package.json folder.
+--- ${packageMainFieldName} ---
+${packageMainFieldValue}
+--- package.json path ---
+${packageFilePath}
+`,
     )
     return null
   }
@@ -86,12 +87,17 @@ const resolveMainFile = async ({
     // it certainly means it's not important
     if (packageMainFieldName !== "default") {
       logger.warn(
-        writePackageMainFileNotFound({
-          packageFilePath: fileURLToPath(packageFileUrl),
-          packageMainFieldName,
-          packageMainFieldValue,
-          mainFilePath: fileURLToPath(mainFileUrlFirstCandidate),
-        }),
+        `
+cannot find file for package.json ${packageMainFieldName} field
+--- ${packageMainFieldName} ---
+${packageMainFieldValue}
+--- file path ---
+${fileURLToPath(mainFileUrlFirstCandidate)}
+--- package.json path ---
+${packageFilePath}
+--- extensions tried ---
+${extensionCandidateArray.join(`,`)}
+        `,
       )
     }
     return mainFileUrlFirstCandidate
@@ -101,7 +107,7 @@ const resolveMainFile = async ({
 }
 
 const findMainFileUrlOrNull = async (mainFileUrl) => {
-  const mainFilePath = fileURLToPath(mainFileUrl)
+  const mainFilePath = fileUrlToPath(mainFileUrl)
   const stats = await pathToStats(mainFilePath)
 
   if (stats === null) {
@@ -160,32 +166,3 @@ const pathToStats = (path) => {
     })
   })
 }
-
-const writePackageMainFieldMustBeInside = ({
-  packageFilePath,
-  packageMainFieldName,
-  packageMainFieldValue,
-}) => `
-${packageMainFieldName} field in package.json must be inside package.json folder.
---- ${packageMainFieldName} ---
-${packageMainFieldValue}
---- package.json path ---
-${packageFilePath}
-`
-
-const writePackageMainFileNotFound = ({
-  packageFilePath,
-  packageMainFieldName,
-  packageMainFieldValue,
-  mainFilePath,
-}) => `
-cannot find file for package.json ${packageMainFieldName} field
---- ${packageMainFieldName} ---
-${packageMainFieldValue}
---- file path ---
-${mainFilePath}
---- package.json path ---
-${packageFilePath}
---- extensions tried ---
-${extensionCandidateArray.join(`,`)}
-`

@@ -1,22 +1,20 @@
 import { fileURLToPath } from "url"
 import { firstOperationMatching } from "@dmail/helper"
-import { readPackageData } from "./readPackageData.js"
-import { resolveDirectoryUrl } from "./resolveDirectoryUrl.js"
+import { fileUrlToRelativePath, fileUrlToDirectoryUrl } from "./urlHelpers.js"
+import { readPackageFile } from "./readPackageFile.js"
 
 export const resolveNodeModule = async ({
+  logger,
   rootProjectDirectoryUrl,
   packageFileUrl,
-  packageData,
+  packageJsonObject,
   dependencyName,
   dependencyVersionPattern,
   dependencyType,
-  logger,
 }) => {
-  const packageDirectoryUrl = resolveDirectoryUrl("./", packageFileUrl)
-  const packageDirectoryRelativePath = packageDirectoryUrl.slice(rootProjectDirectoryUrl.length)
-
+  const packageDirectoryUrl = fileUrlToDirectoryUrl(packageFileUrl)
   const nodeModuleCandidateArray = [
-    ...computeNodeModuleCandidateArray(packageDirectoryRelativePath),
+    ...computeNodeModuleCandidateArray(packageDirectoryUrl, rootProjectDirectoryUrl),
     `node_modules/`,
   ]
 
@@ -26,12 +24,10 @@ export const resolveNodeModule = async ({
       const packageFileUrl = `${rootProjectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`
       const packageFilePath = fileURLToPath(packageFileUrl)
       try {
-        const packageData = await readPackageData({
-          path: packageFilePath,
-        })
+        const packageJsonObject = await readPackageFile(packageFilePath)
         return {
           packageFileUrl,
-          packageData,
+          packageJsonObject,
         }
       } catch (e) {
         if (e.code === "ENOENT") {
@@ -39,38 +35,46 @@ export const resolveNodeModule = async ({
         }
 
         if (e.name === "SyntaxError") {
-          logger.error(
-            writeDependencyPackageParsingError({
-              parsingError: e,
-              packageFilePath,
-            }),
-          )
+          logger.error(`
+error while parsing dependency package.json.
+--- parsing error message ---
+${e.message}
+--- package.json path ---
+${packageFilePath}
+`)
           return {}
         }
 
         throw e
       }
     },
-    predicate: ({ packageData }) => Boolean(packageData),
+    predicate: ({ packageJsonObject }) => Boolean(packageJsonObject),
   })
 
   if (!result) {
-    logger.warn(
-      writeDendencyNotFound({
-        dependencyName,
-        dependencyType,
-        dependencyVersionPattern,
-        packageFilePath: fileURLToPath(packageFileUrl),
-        packageData,
-      }),
-    )
+    logger.warn(`
+cannot find a ${dependencyType}.
+--- ${dependencyType} ---
+${dependencyName}@${dependencyVersionPattern}
+--- required by ---
+${packageJsonObject.name}@${packageJsonObject.version}
+--- package.json path ---
+${fileURLToPath(packageFileUrl)}
+    `)
   }
 
   return result
 }
 
-const computeNodeModuleCandidateArray = (packageDirectoryRelativePath) => {
-  if (packageDirectoryRelativePath === "") return []
+const computeNodeModuleCandidateArray = (packageDirectoryUrl, rootProjectDirectoryUrl) => {
+  if (packageDirectoryUrl === rootProjectDirectoryUrl) {
+    return []
+  }
+
+  const packageDirectoryRelativePath = fileUrlToRelativePath(
+    packageDirectoryUrl,
+    rootProjectDirectoryUrl,
+  )
 
   const candidateArray = []
   const relativeNodeModuleDirectoryArray = packageDirectoryRelativePath.split("/node_modules/")
@@ -82,33 +86,9 @@ const computeNodeModuleCandidateArray = (packageDirectoryRelativePath) => {
     candidateArray.push(
       `node_modules/${relativeNodeModuleDirectoryArray
         .slice(0, i + 1)
-        .join("/node_modules/")}/node_modules/`,
+        .join("/node_modules/")}node_modules/`,
     )
   }
 
   return candidateArray
 }
-
-const writeDependencyPackageParsingError = ({ parsingError, packageFilePath }) => `
-error while parsing dependency package.json.
---- parsing error message ---
-${parsingError.message}
---- package.json path ---
-${packageFilePath}
-`
-
-const writeDendencyNotFound = ({
-  dependencyName,
-  dependencyType,
-  dependencyVersionPattern,
-  packageData,
-  packageFilePath,
-}) => `
-cannot find a ${dependencyType}.
---- ${dependencyType} ---
-${dependencyName}@${dependencyVersionPattern}
---- required by ---
-${packageData.name}@${packageData.version}
---- package.json path ---
-${packageFilePath}
-`

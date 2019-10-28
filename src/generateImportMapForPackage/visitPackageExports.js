@@ -1,61 +1,66 @@
-import { hasScheme } from "./hasScheme.js"
-import { fileURLToPath } from "url"
+import { hasScheme, fileUrlToPath } from "./urlHelpers.js"
 
 export const visitPackageExports = ({
   logger,
   packageFileUrl,
   packageName,
-  packageData,
+  packageJsonObject,
   packageInfo: { packageIsRoot, packageDirectoryRelativePath },
 }) => {
-  const packageFilePath = fileURLToPath(packageFileUrl)
   const importsForPackageExports = {}
 
   if (packageIsRoot) {
     return importsForPackageExports
   }
 
-  const { exports: packageExports } = packageData
+  const packageFilePath = fileUrlToPath(packageFileUrl)
+  const { exports: packageExports } = packageJsonObject
   if (typeof packageExports !== "object" || packageExports === null) {
-    logger.warn(
-      writeExportsMustBeAnObject({
-        packageFilePath,
-        packageExports,
-      }),
-    )
+    logger.warn(`
+exports of package.json must be an object.
+--- package.json exports ---
+${packageExports}
+--- package.json path ---
+${packageFilePath}
+`)
     return importsForPackageExports
   }
 
   Object.keys(packageExports).forEach((specifier) => {
     if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
-      logger.warn(
-        writeSpecifierMustBeRelative({
-          packageFilePath,
-          specifier,
-        }),
-      )
+      logger.warn(`
+found unexpected specifier in exports of package.json, it must be relative to package.json.
+--- specifier ---
+${specifier}
+--- package.json path ---
+${packageFilePath}
+`)
       return
     }
 
     const address = packageExports[specifier]
     if (typeof address !== "string") {
-      logger.warn(
-        writeAddressMustBeString({
-          packageFilePath,
-          specifier,
-          address,
-        }),
-      )
+      logger.warn(`
+found unexpected address in exports of package.json, it must be a string.
+--- address ---
+${address}
+--- specifier ---
+${specifier}
+--- package.json path ---
+${packageFilePath}
+`)
       return
     }
     if (hasScheme(address) || address.startsWith("//") || address.startsWith("../")) {
-      logger.warn(
-        writeAddressMustBeRelative({
-          packageFilePath,
-          specifier,
-          address,
-        }),
-      )
+      logger.warn(`
+found unexpected address in exports of package.json, it must be relative to package.json.
+--- address ---
+${address}
+--- specifier ---
+${specifier}
+--- package.json path ---
+${packageFilePath}
+`)
       return
     }
 
@@ -82,39 +87,3 @@ export const visitPackageExports = ({
 
   return importsForPackageExports
 }
-
-const writeExportsMustBeAnObject = ({ packageFilePath, packageExports }) => `
-exports of package.json must be an object.
---- package.json exports ---
-${packageExports}
---- package.json path ---
-${packageFilePath}
-`
-
-const writeSpecifierMustBeRelative = ({ packageFilePath, specifier }) => `
-found unexpected specifier in exports of package.json, it must be relative to package.json.
---- specifier ---
-${specifier}
---- package.json path ---
-${packageFilePath}
-`
-
-const writeAddressMustBeString = ({ packageFilePath, specifier, address }) => `
-found unexpected address in exports of package.json, it must be a string.
---- address ---
-${address}
---- specifier ---
-${specifier}
---- package.json path ---
-${packageFilePath}
-`
-
-const writeAddressMustBeRelative = ({ packageFilePath, specifier, address }) => `
-found unexpected address in exports of package.json, it must be relative to package.json.
---- address ---
-${address}
---- specifier ---
-${specifier}
---- package.json path ---
-${packageFilePath}
-`
