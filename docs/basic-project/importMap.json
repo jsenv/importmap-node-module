@@ -1,24 +1,19 @@
 {
   "imports": {
-    "@jsenv/node-module-import-map/": "/node_modules/@jsenv/node-module-import-map/",
-    "@jsenv/node-module-import-map": "/node_modules/@jsenv/node-module-import-map/index.js"
+    "@jsenv/node-module-import-map": "./node_modules/@jsenv/node-module-import-map/index.js"
   },
   "scopes": {
-    "/node_modules/@jsenv/node-module-import-map/": {
-      "@jsenv/operating-system-path": "/node_modules/@jsenv/operating-system-path/index.js",
-      "@dmail/cancellation": "/node_modules/@dmail/cancellation/index.js",
-      "@jsenv/import-map/": "/node_modules/@jsenv/import-map/",
-      "@jsenv/import-map": "/node_modules/@jsenv/import-map/index.js",
-      "@dmail/helper": "/node_modules/@dmail/helper/index.js"
+    "./node_modules/@jsenv/node-module-import-map/": {
+      "@jsenv/operating-system-path": "./node_modules/@jsenv/operating-system-path/index.js",
+      "@dmail/cancellation": "./node_modules/@dmail/cancellation/index.js",
+      "@jsenv/import-map/": "./node_modules/@jsenv/import-map/",
+      "@jsenv/import-map": "./node_modules/@jsenv/import-map/index.js",
+      "@dmail/helper": "./node_modules/@dmail/helper/index.js",
+      "@jsenv/logger": "./node_modules/@jsenv/logger/index.js"
     },
-    "/node_modules/@jsenv/operating-system-path/": {
-      "@jsenv/href/": "/node_modules/@jsenv/href/",
-      "@jsenv/href": "/node_modules/@jsenv/href/index.js"
-    },
-    "/node_modules/@jsenv/import-map/": {
-      "@jsenv/operating-system-path": "/node_modules/@jsenv/operating-system-path/index.js",
-      "@jsenv/href/": "/node_modules/@jsenv/href/",
-      "@jsenv/href": "/node_modules/@jsenv/href/index.js"
+    "./node_modules/@jsenv/import-map/": {
+      "@jsenv/href/": "./node_modules/@jsenv/href/",
+      "@jsenv/href": "./node_modules/@jsenv/href/index.js"
     }
   }
 }
