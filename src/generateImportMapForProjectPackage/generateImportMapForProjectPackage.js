@@ -1,8 +1,8 @@
-import { pathToFileURL, fileURLToPath } from "url"
 import { createLogger } from "@jsenv/logger"
 import { composeTwoImportMaps } from "@jsenv/import-map"
 import { fileWrite } from "@dmail/helper"
 import { catchAsyncFunctionCancellation } from "@dmail/cancellation"
+import { pathToDirectoryUrl, resolveFileUrl, fileUrlToPath } from "../urlHelpers.js"
 import { generateImportMapForPackage } from "../generateImportMapForPackage/generateImportMapForPackage.js"
 import { importMapToVsCodeConfigPaths } from "./importMapToVsCodeConfigPaths.js"
 
@@ -32,18 +32,18 @@ export const generateImportMapForProjectPackage = async ({
         : projectPackageImportMap
 
       if (importMapFile) {
-        const projectDirectoryUrl = pathToFileURL(projectDirectoryPath)
-        const importMapFileUrl = new URL(importMapFileRelativePath, projectDirectoryUrl)
-        const importMapFilePath = fileURLToPath(importMapFileUrl)
+        const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath)
+        const importMapFileUrl = resolveFileUrl(importMapFileRelativePath, projectDirectoryUrl)
+        const importMapFilePath = fileUrlToPath(importMapFileUrl)
         await fileWrite(importMapFilePath, JSON.stringify(importMap, null, "  "))
         if (importMapFileLog) {
           logger.info(`-> ${importMapFilePath}`)
         }
       }
       if (jsConfigFile) {
-        const projectDirectoryUrl = pathToFileURL(projectDirectoryPath)
-        const jsConfigFileUrl = new URL("./jsconfig.json", projectDirectoryUrl)
-        const jsConfigFilePath = fileURLToPath(jsConfigFileUrl)
+        const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath)
+        const jsConfigFileUrl = resolveFileUrl("./jsconfig.json", projectDirectoryUrl)
+        const jsConfigFilePath = fileUrlToPath(jsConfigFileUrl)
         try {
           const jsConfig = {
             compilerOptions: {

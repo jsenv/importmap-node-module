@@ -1,11 +1,12 @@
 import { assert } from "@dmail/assert"
 import { generateImportMapForProjectPackage } from "../../../index.js"
-import { importMetaURLToFolderPath } from "../../importMetaUrlToFolderPath.js"
+import { importMetaURLToDirectoryPath } from "../../importMetaURLToDirectoryPath.js"
 
-const testFolderPath = importMetaURLToFolderPath(import.meta.url)
+const testDirectoryPath = importMetaURLToDirectoryPath(import.meta.url)
+
 try {
   await generateImportMapForProjectPackage({
-    projectPath: testFolderPath,
+    projectDirectoryPath: testDirectoryPath,
     throwUnhandled: false,
   })
   throw new Error("should throw")
@@ -14,7 +15,7 @@ try {
   const actual = { code, message }
   const expected = {
     code: "ENOENT",
-    message: `ENOENT: no such file or directory, open '${testFolderPath}/package.json'`,
+    message: `ENOENT: no such file or directory, open '${testDirectoryPath}package.json'`,
   }
   assert({ actual, expected })
 }

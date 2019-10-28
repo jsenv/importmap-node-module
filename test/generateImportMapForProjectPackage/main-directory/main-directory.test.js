@@ -8,7 +8,7 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "main-relative": "./node_modules/main-relative/lib/index.js",
+    "main-directory": "./node_modules/main-directory/lib/index.js",
   },
   scopes: {},
 }

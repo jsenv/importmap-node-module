@@ -7,7 +7,7 @@ import {
   fileUrlToDirectoryUrl,
   fileUrlToPath,
   fileUrlToRelativePath,
-} from "./urlHelpers.js"
+} from "../urlHelpers.js"
 import { readPackageFile } from "./readPackageFile.js"
 import { resolveNodeModule } from "./resolveNodeModule.js"
 import { resolvePackageMain } from "./resolvePackageMain.js"
@@ -15,10 +15,10 @@ import { visitPackageImports } from "./visitPackageImports.js"
 import { visitPackageExports } from "./visitPackageExports.js"
 
 export const generateImportMapForPackage = async ({
+  logger,
   projectDirectoryPath,
   rootProjectDirectoryPath = projectDirectoryPath,
   includeDevDependencies = false,
-  logger,
 }) => {
   const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath)
   const rootProjectDirectoryUrl = pathToDirectoryUrl(rootProjectDirectoryPath)

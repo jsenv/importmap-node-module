@@ -1,28 +1,30 @@
 import { assert } from "@dmail/assert"
 import { resolveImport, normalizeImportMap } from "@jsenv/import-map"
 import { generateImportMapForProjectPackage } from "../../../index.js"
-import { importMetaURLToFolderPath } from "../../importMetaUrlToFolderPath.js"
+import { importMetaURLToDirectoryPath } from "../../importMetaURLToDirectoryPath.js"
 
-const testFolderPath = importMetaURLToFolderPath(import.meta.url)
+const testDirectoryPath = importMetaURLToDirectoryPath(import.meta.url)
 const importMap = await generateImportMapForProjectPackage({
-  projectPath: testFolderPath,
+  projectDirectoryPath: testDirectoryPath,
 })
-const actual = importMap
-const expected = {
-  imports: {
-    foo: "./node_modules/foo/foo.js",
-  },
-  scopes: {
-    "./node_modules/bar/": {
-      "./node_modules/bar/": "./node_modules/bar/",
-      "./": "./node_modules/bar/",
+{
+  const actual = importMap
+  const expected = {
+    imports: {
+      foo: "./node_modules/foo/foo.js",
     },
-    "./node_modules/foo/": {
-      bar: "./node_modules/bar/bar.js",
+    scopes: {
+      "./node_modules/bar/": {
+        "./node_modules/bar/": "./node_modules/bar/",
+        "./": "./node_modules/bar/",
+      },
+      "./node_modules/foo/": {
+        bar: "./node_modules/bar/bar.js",
+      },
     },
-  },
+  }
+  assert({ actual, expected })
 }
-assert({ actual, expected })
 
 {
   const importMapNormalized = normalizeImportMap(importMap, "http://example.com")

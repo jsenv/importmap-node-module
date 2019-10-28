@@ -1,4 +1,4 @@
-import { hasScheme, fileUrlToPath } from "./urlHelpers.js"
+import { hasScheme, fileUrlToPath } from "../urlHelpers.js"
 
 export const visitPackageExports = ({
   logger,

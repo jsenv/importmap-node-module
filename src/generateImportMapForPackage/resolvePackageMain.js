@@ -1,7 +1,7 @@
 import { dirname, extname, basename } from "path"
 import { stat } from "fs"
 import { firstOperationMatching } from "@dmail/helper"
-import { resolveFileUrl, fileUrlToDirectoryUrl, fileUrlToPath } from "./urlHelpers.js"
+import { resolveFileUrl, fileUrlToDirectoryUrl, fileUrlToPath } from "../urlHelpers.js"
 import { fileURLToPath } from "url"
 
 export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
@@ -128,8 +128,11 @@ const findMainFileUrlOrNull = async (mainFileUrl) => {
   }
 
   if (stats.isDirectory()) {
-    const indexFileUrl = `${mainFileUrl}${mainFileUrl.endsWith("/") ? `index` : `/index`}`
-    const extensionLeadingToAFile = await findExtension(indexFileUrl)
+    const indexFileUrl = resolveFileUrl(
+      "./index",
+      mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`,
+    )
+    const extensionLeadingToAFile = await findExtension(fileUrlToPath(indexFileUrl))
     if (extensionLeadingToAFile === null) {
       return null
     }

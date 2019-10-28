@@ -1,6 +1,6 @@
 import { fileURLToPath } from "url"
 import { firstOperationMatching } from "@dmail/helper"
-import { fileUrlToRelativePath, fileUrlToDirectoryUrl } from "./urlHelpers.js"
+import { fileUrlToRelativePath, fileUrlToDirectoryUrl } from "../urlHelpers.js"
 import { readPackageFile } from "./readPackageFile.js"
 
 export const resolveNodeModule = async ({

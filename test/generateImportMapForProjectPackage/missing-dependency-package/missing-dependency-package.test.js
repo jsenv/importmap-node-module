@@ -1,11 +1,10 @@
 import { assert } from "@dmail/assert"
 import { generateImportMapForProjectPackage } from "../../../index.js"
-import { importMetaURLToFolderPath } from "../../importMetaUrlToFolderPath.js"
+import { importMetaURLToDirectoryPath } from "../../importMetaURLToDirectoryPath.js"
 
-const testFolderPath = importMetaURLToFolderPath(import.meta.url)
-// we could/should expected a console warning occurs
+const testDirectoryPath = importMetaURLToDirectoryPath(import.meta.url)
 const actual = await generateImportMapForProjectPackage({
-  projectPath: testFolderPath,
+  projectDirectoryPath: testDirectoryPath,
 })
 const expected = { imports: {}, scopes: {} }
 assert({ actual, expected })
