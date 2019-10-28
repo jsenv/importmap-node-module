@@ -11,7 +11,8 @@ Generate importMap for a project node modules.
 
 - [Presentation](#Presentation)
 - [How it works](#how-it-works)
-- [How to use](#how-to-use)
+- [Code example](#code-example)
+- [API](./docs/api.md)
 - [Concrete example](#concrete-example)
   - [Step 1 - Setup project](#step-1---setup-project)
   - [Step 2 - Install project dependencies](#step-2---install-project-dependencies)
@@ -30,7 +31,7 @@ Reads `package.json` and recursively try to find your dependencies.<br />
 
 Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importMap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.<br />
 
-## How to use
+## Code example
 
 Here is code example using `@jsenv/node-module-import-map` to create an `importMap.json`.
 
