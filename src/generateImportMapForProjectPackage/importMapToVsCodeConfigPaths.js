@@ -1,30 +1,29 @@
 export const importMapToVsCodeConfigPaths = ({ imports = {} }) => {
   const paths = {}
 
-  const handleImportsAt = (pathPattern, remappingValue) => {
-    let path
-    if (pathPattern.endsWith("/")) {
-      path = `${pathPattern}*`
+  Object.keys(imports).forEach((importKey) => {
+    const importValue = imports[importKey]
+
+    let key
+    if (importKey.endsWith("/")) {
+      key = `${importKey}*`
     } else {
-      path = pathPattern
+      key = importKey
     }
 
-    const remappingArray = typeof remappingValue === "string" ? [remappingValue] : remappingValue
-    const candidates = remappingArray
-      .filter((remapping) => !remapping.endsWith("/"))
-      .map((remapping) => `.${remapping}`)
-
-    if (candidates.length) {
-      if (path in paths) {
-        paths[path] = [...paths[path], ...candidates]
-      } else {
-        paths[path] = candidates
+    const importValueArray = typeof importValue === "string" ? [importValue] : importValue
+    const candidatesForPath = importValueArray.map((importValue) => {
+      if (importValue.endsWith("/")) {
+        return `${importValue}*`
       }
-    }
-  }
+      return importValue
+    })
 
-  Object.keys(imports).forEach((importPattern) => {
-    handleImportsAt(importPattern, imports[importPattern])
+    if (key in paths) {
+      paths[key] = [...paths[key], ...candidatesForPath]
+    } else {
+      paths[key] = candidatesForPath
+    }
   })
 
   return paths
