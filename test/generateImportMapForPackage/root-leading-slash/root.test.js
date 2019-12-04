@@ -9,6 +9,7 @@ const actual = await generateImportMapForPackage({
   logger: createLogger(),
   projectDirectoryPath: `${testDirectoryPath}node_modules/project`,
   rootProjectDirectoryPath: testDirectoryPath,
+  includeImports: true,
 })
 const expected = {
   imports: {},

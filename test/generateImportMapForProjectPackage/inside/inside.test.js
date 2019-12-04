@@ -1,9 +1,10 @@
 import { resolveImport, normalizeImportMap } from "@jsenv/import-map"
-import { assert } from "@dmail/assert"
+import { assert } from "@jsenv/assert"
+import { fileUrlToPath } from "../../../src/internal/urlHelpers.js"
 import { generateImportMapForProjectPackage } from "../../../index.js"
-import { importMetaUrlToDirectoryPath } from "../../importMetaUrlToDirectoryPath.js"
 
-const testDirectoryPath = importMetaUrlToDirectoryPath(import.meta.url)
+const testDirectoryPath = fileUrlToPath(import.meta.resolve("./"))
+
 const importMap = await generateImportMapForProjectPackage({
   projectDirectoryPath: testDirectoryPath,
 })

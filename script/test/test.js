@@ -10,4 +10,5 @@ executeTestPlan({
       },
     },
   },
+  coverage: process.argv.includes("--coverage"),
 })

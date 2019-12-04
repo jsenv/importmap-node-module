@@ -23,6 +23,7 @@
   ],
   "scripts": {
     "test": "node ./script/test/test.js",
+    "test-with-coverage": "node ./script/test/test.js --coverage",
     "eslint-check": "eslint .",
     "prettier-check": "node ./script/prettier-check/prettier-check.js",
     "generate-coverage": "node ./script/generate-coverage/generate-coverage.js",

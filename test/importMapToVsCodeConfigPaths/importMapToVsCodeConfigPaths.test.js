@@ -1,5 +1,5 @@
-import { assert } from "@dmail/assert"
-import { importMapToVsCodeConfigPaths } from "../../src/generateImportMapForProjectPackage/importMapToVsCodeConfigPaths.js"
+import { assert } from "@jsenv/assert"
+import { importMapToVsCodeConfigPaths } from "../../src/internal/importMapToVsCodeConfigPaths.js"
 
 {
   const actual = importMapToVsCodeConfigPaths({
