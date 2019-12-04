@@ -20,7 +20,7 @@ export const directoryUrlToPackageFileUrl = (directoryUrl) => {
   return String(new URL("./package.json", directoryUrl))
 }
 
-export const resolveFileUrl = (specifier, baseUrl) => {
+export const resolveUrl = (specifier, baseUrl) => {
   return String(new URL(specifier, baseUrl))
 }
 

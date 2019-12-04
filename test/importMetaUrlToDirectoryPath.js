@@ -1,4 +1,4 @@
-import { fileUrlToDirectoryUrl, fileUrlToPath } from "../src/urlHelpers.js"
+import { fileUrlToDirectoryUrl, fileUrlToPath } from "../src/internal/urlHelpers.js"
 
 export const importMetaUrlToDirectoryPath = (importMetaURL) => {
   const directoryUrl = fileUrlToDirectoryUrl(importMetaURL)

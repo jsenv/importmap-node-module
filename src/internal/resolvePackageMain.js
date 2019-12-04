@@ -1,7 +1,7 @@
 import { dirname, extname, basename } from "path"
 import { stat } from "fs"
-import { firstOperationMatching } from "@dmail/helper"
-import { resolveFileUrl, fileUrlToDirectoryUrl, fileUrlToPath } from "../urlHelpers.js"
+import { firstOperationMatching } from "@jsenv/cancellation"
+import { resolveUrl, fileUrlToDirectoryUrl, fileUrlToPath } from "./urlHelpers.js"
 import { fileURLToPath } from "url"
 
 export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
@@ -60,7 +60,7 @@ const resolveMainFile = async ({
     ? `${packageMainFieldValue}index`
     : packageMainFieldValue
 
-  const mainFileUrlFirstCandidate = resolveFileUrl(mainFileRelativePath, packageFileUrl)
+  const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativePath, packageFileUrl)
 
   if (!mainFileUrlFirstCandidate.startsWith(packageDirectoryUrl)) {
     logger.warn(
@@ -128,7 +128,7 @@ const findMainFileUrlOrNull = async (mainFileUrl) => {
   }
 
   if (stats.isDirectory()) {
-    const indexFileUrl = resolveFileUrl(
+    const indexFileUrl = resolveUrl(
       "./index",
       mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`,
     )

@@ -1,8 +1,8 @@
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
-const { projectPath } = require("../../jsenv.config.js")
+const { projectDirectoryPath } = require("../../jsenv.config.js")
 
 generateImportMapForProjectPackage({
-  projectPath,
+  projectPath: projectDirectoryPath,
   includeDevDependencies: true,
   importMapFile: true,
   jsConfigFile: true,

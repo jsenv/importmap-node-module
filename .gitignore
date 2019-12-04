@@ -1,4 +1,4 @@
-/.dist/
+/.jsenv/
 /.vscode/settings.json
 /coverage/
 /docs/basic-project/node_modules/

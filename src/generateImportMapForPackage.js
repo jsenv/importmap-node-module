@@ -7,18 +7,21 @@ import {
   fileUrlToDirectoryUrl,
   fileUrlToPath,
   fileUrlToRelativePath,
-} from "../urlHelpers.js"
-import { readPackageFile } from "./readPackageFile.js"
-import { resolveNodeModule } from "./resolveNodeModule.js"
-import { resolvePackageMain } from "./resolvePackageMain.js"
-import { visitPackageImports } from "./visitPackageImports.js"
-import { visitPackageExports } from "./visitPackageExports.js"
+} from "./internal/urlHelpers.js"
+import { readPackageFile } from "./internal/readPackageFile.js"
+import { resolveNodeModule } from "./internal/resolveNodeModule.js"
+import { resolvePackageMain } from "./internal/resolvePackageMain.js"
+import { visitPackageImports } from "./internal/visitPackageImports.js"
+import { visitPackageExports } from "./internal/visitPackageExports.js"
 
 export const generateImportMapForPackage = async ({
   logger,
   projectDirectoryPath,
   rootProjectDirectoryPath = projectDirectoryPath,
   includeDevDependencies = false,
+  includeExports,
+  includeImports,
+  packageExportCondition,
 }) => {
   const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath)
   const rootProjectDirectoryUrl = pathToDirectoryUrl(rootProjectDirectoryPath)
@@ -80,7 +83,7 @@ export const generateImportMapForPackage = async ({
       packageInfo,
     })
 
-    if ("imports" in packageJsonObject) {
+    if (includeImports && "imports" in packageJsonObject) {
       const importsForPackageImports = visitPackageImports({
         packageFileUrl,
         packageName,
@@ -126,12 +129,13 @@ export const generateImportMapForPackage = async ({
       })
     }
 
-    if ("exports" in packageJsonObject) {
+    if (includeExports && "exports" in packageJsonObject) {
       const importsForPackageExports = visitPackageExports({
         packageFileUrl,
         packageName,
         packageJsonObject,
         packageInfo,
+        packageExportCondition,
       })
 
       const {

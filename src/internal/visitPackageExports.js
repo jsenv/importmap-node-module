@@ -1,4 +1,7 @@
-import { hasScheme, fileUrlToPath } from "../urlHelpers.js"
+import { hasScheme, fileUrlToPath } from "./urlHelpers.js"
+
+// TODO: update with latest behaviour
+// documented in https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
 
 export const visitPackageExports = ({
   logger,
@@ -6,6 +9,11 @@ export const visitPackageExports = ({
   packageName,
   packageJsonObject,
   packageInfo: { packageIsRoot, packageDirectoryRelativePath },
+  // maybe should depend on package.json field type
+  // "module" -> "default"
+  // "commonjs" -> "required"
+  // undefined -> "default"
+  packageExportCondition = "default",
 }) => {
   const importsForPackageExports = {}
 
@@ -14,17 +22,24 @@ export const visitPackageExports = ({
   }
 
   const packageFilePath = fileUrlToPath(packageFileUrl)
-  const { exports: packageExports } = packageJsonObject
-  if (typeof packageExports !== "object" || packageExports === null) {
+  const { exports: rawPackageExports } = packageJsonObject
+  if (typeof rawPackageExports !== "object" || rawPackageExports === null) {
+    if (rawPackageExports === false) return importsForPackageExports
+
     logger.warn(`
 exports of package.json must be an object.
 --- package.json exports ---
-${packageExports}
+${rawPackageExports}
 --- package.json path ---
 ${packageFilePath}
 `)
     return importsForPackageExports
   }
+
+  const packageExports =
+    packageExportCondition in rawPackageExports
+      ? rawPackageExports[packageExportCondition]
+      : rawPackageExports
 
   Object.keys(packageExports).forEach((specifier) => {
     if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
@@ -38,19 +53,29 @@ ${packageFilePath}
       return
     }
 
-    const address = packageExports[specifier]
-    if (typeof address !== "string") {
+    const value = packageExports[specifier]
+    let address
+
+    if (typeof value === "object") {
+      if (packageExportCondition in value === false) {
+        return
+      }
+      address = value[packageExportCondition]
+    } else if (typeof value === "string") {
+      address = value
+    } else {
       logger.warn(`
-found unexpected address in exports of package.json, it must be a string.
---- address ---
-${address}
---- specifier ---
-${specifier}
---- package.json path ---
-${packageFilePath}
-`)
+      found unexpected address in exports of package.json, it must be a string.
+      --- address ---
+      ${address}
+      --- specifier ---
+      ${specifier}
+      --- package.json path ---
+      ${packageFilePath}
+      `)
       return
     }
+
     if (hasScheme(address) || address.startsWith("//") || address.startsWith("../")) {
       logger.warn(`
 found unexpected address in exports of package.json, it must be relative to package.json.

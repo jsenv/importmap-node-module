@@ -1,8 +1,8 @@
 const { prettierCheckProject, jsenvPrettifyMap } = require("@jsenv/prettier-check-project")
-const { projectPath } = require("../../jsenv.config.js")
+const { projectDirectoryPath } = require("../../jsenv.config.js")
 
 prettierCheckProject({
-  projectPath,
+  projectPath: projectDirectoryPath,
   prettifyMap: {
     ...jsenvPrettifyMap,
     "/docs/basic-project/node_modules/": false,
