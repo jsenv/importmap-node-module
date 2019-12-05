@@ -14,9 +14,8 @@ Generate importMap for a project node modules.
 - [Code example](#code-example)
 - [API](./docs/api.md)
 - [Concrete example](#concrete-example)
-  - [Step 1 - Setup project](#step-1---setup-project)
-  - [Step 2 - Install project dependencies](#step-2---install-project-dependencies)
-  - [Step 3 - Generate project importMap](#step-3---generate-project-importMap)
+  - [Step 1 - Setup basic project](#step-1---setup-project)
+  - [Step 2 - Generate project importMap](#step-2---generate-project-importMap)
 - [Custom node module resolution](#custom-node-module-resolution)
 - [Installation](#installation-using-npm)
 
@@ -42,7 +41,7 @@ generateImportMapForProjectPackage({
   projectDirectoryPath: __dirname,
   includeDevDependencies: true,
   importMapFile: true,
-  importMapFileRelativePath: "./importMap.json",
+  importMapFileRelativeUrl: "./importMap.json",
 })
 ```
 
@@ -53,25 +52,21 @@ For more information check the [api documentation](./docs/api.md).
 This part explains how to setup a real environment to see `@jsenv/node-module-import-map` in action.
 It reuses a preconfigured project where you can generate import map file.
 
-### Step 1 - Setup project
+### Step 1 - Setup basic project
 
 ```console
-git clone git@github.com:jsenv/jsenv-node-module-import-map.git
+git clone https://github.com/jsenv/jsenv-node-module-import-map.git
 ```
-
-### Step 2 - Install project dependencies
 
 ```console
 cd ./jsenv-node-module-import-map/docs/basic-project
 ```
 
-If you never configured npm authentification on github registry see [Configure npm authentification on github registry](https://github.com/jsenv/jsenv-core/blob/master/docs/installing-jsenv-package.md#configure-npm-authentification-on-github-registry) first.
-
 ```console
 npm install
 ```
 
-### Step 3 - Generate project importMap
+### Step 2 - Generate project importMap
 
 Running command below will generate import map file at `docs/basic-project/importMap.json`.
 
@@ -107,9 +102,9 @@ If you never installed a jsenv package, read [Installing a jsenv package](https:
 This documentation is up-to-date with a specific version so prefer any of the following commands
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map@8.4.1
+npm install --save-dev @jsenv/node-module-import-map@8.6.0
 ```
 
 ```console
-yarn add --dev @jsenv/node-module-import-map@8.4.1
+yarn add --dev @jsenv/node-module-import-map@8.6.0
 ```

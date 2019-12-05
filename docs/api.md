@@ -4,7 +4,7 @@
   - [projectDirectoryPath](#projectDirectoryPath)
   - [includeDevDependencies](#includeDevDependencies)
   - [importMapFile](#importMapFile)
-  - [importMapFileRelativePath](#importMapFileRelativePath)
+  - [importMapFileRelativeUrl](#importMapFileRelativeUrl)
   - [importMapFileLog](#importMapFileLog)
 
 ## generateImportMapForProjectPackage
@@ -19,7 +19,7 @@ const importMap = await generateImportMapForProjectPackage({
   projectDirectoryPath: __dirname,
   includeDevDependencies: true,
   importMapFile: false,
-  importMapFileRelativePath: "./importMap.json",
+  importMapFileRelativeUrl: "./importMap.json",
   importMapFileLog: true,
 })
 ```
@@ -68,9 +68,9 @@ It is a boolean controling if importMap is written to a file.
 
 ---
 
-### importMapFileRelativePath
+### importMapFileRelativeUrl
 
-`importMapFileRelativePath` is an optional parameter with a default value of
+`importMapFileRelativeUrl` is an optional parameter with a default value of
 
 ```js
 "./importMap.json"

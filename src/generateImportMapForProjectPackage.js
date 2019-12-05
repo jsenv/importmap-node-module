@@ -12,7 +12,7 @@ export const generateImportMapForProjectPackage = async ({
   inputImportMap,
   includeDevDependencies,
   includeExports = false,
-  packageExportCondition,
+  favoredExports,
   includeImports = false,
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",
@@ -28,7 +28,7 @@ export const generateImportMapForProjectPackage = async ({
       includeDevDependencies,
       includeExports,
       includeImports,
-      packageExportCondition,
+      favoredExports,
       logger,
     })
     const importMap = inputImportMap

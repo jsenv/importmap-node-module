@@ -7,7 +7,7 @@ const testDirectoryPath = fileUrlToPath(import.meta.resolve("./"))
 
 const importMap = await generateImportMapForProjectPackage({
   projectDirectoryPath: testDirectoryPath,
-  includeImports: true
+  includeImports: true,
 })
 {
   const actual = importMap

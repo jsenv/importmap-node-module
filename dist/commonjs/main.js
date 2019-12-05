@@ -506,7 +506,8 @@ ${packageFilePath}
   return importsForPackageImports;
 };
 
-// documented in https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
+// because currently it works but if the package.json contains malformed exports field our code
+// might behave unexpectedly, warning logs would be better
 
 const visitPackageExports = ({
   logger,
@@ -517,11 +518,9 @@ const visitPackageExports = ({
     packageIsRoot,
     packageDirectoryRelativePath
   },
-  // maybe should depend on package.json field type
-  // "module" -> "default"
-  // "commonjs" -> "required"
-  // undefined -> "default"
-  packageExportCondition = "default"
+  // pass ['browser', 'default'] to read browser first then 'default' if defined
+  // in package exports field
+  favoredExports = ["default"]
 }) => {
   const importsForPackageExports = {};
 
@@ -546,7 +545,8 @@ ${packageFilePath}
     return importsForPackageExports;
   }
 
-  const packageExports = packageExportCondition in rawPackageExports ? rawPackageExports[packageExportCondition] : rawPackageExports;
+  const favoredExport = favoredExports ? favoredExports.find(favoredExportCandidate => favoredExportCandidate in rawPackageExports) : null;
+  const packageExports = favoredExport ? rawPackageExports[favoredExport] : rawPackageExports;
   Object.keys(packageExports).forEach(specifier => {
     if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
       logger.warn(`
@@ -563,11 +563,15 @@ ${packageFilePath}
     let address;
 
     if (typeof value === "object") {
-      if (packageExportCondition in value === false) {
+      if (!favoredExport) {
         return;
       }
 
-      address = value[packageExportCondition];
+      if (favoredExport in value === false) {
+        return;
+      }
+
+      address = value[favoredExport];
     } else if (typeof value === "string") {
       address = value;
     } else {
@@ -628,8 +632,8 @@ const generateImportMapForPackage = async ({
   rootProjectDirectoryPath = projectDirectoryPath,
   includeDevDependencies = false,
   includeExports,
-  includeImports,
-  packageExportCondition
+  favoredExports,
+  includeImports
 }) => {
   const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath);
   const rootProjectDirectoryUrl = pathToDirectoryUrl(rootProjectDirectoryPath);
@@ -741,7 +745,7 @@ const generateImportMapForPackage = async ({
         packageName,
         packageJsonObject,
         packageInfo,
-        packageExportCondition
+        favoredExports
       });
       const {
         importerIsRoot,
@@ -1155,7 +1159,7 @@ const generateImportMapForProjectPackage = async ({
   inputImportMap,
   includeDevDependencies,
   includeExports = false,
-  packageExportCondition,
+  favoredExports,
   includeImports = false,
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",
@@ -1172,7 +1176,7 @@ const generateImportMapForProjectPackage = async ({
     includeDevDependencies,
     includeExports,
     includeImports,
-    packageExportCondition,
+    favoredExports,
     logger
   });
   const importMap = inputImportMap ? composeTwoImportMaps(inputImportMap, projectPackageImportMap) : projectPackageImportMap;

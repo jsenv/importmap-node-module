@@ -1,7 +1,8 @@
 import { hasScheme, fileUrlToPath } from "./urlHelpers.js"
 
-// TODO: update with latest behaviour
-// documented in https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
+// TODO: improve compliance with https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
+// because currently it works but if the package.json contains malformed exports field our code
+// might behave unexpectedly, warning logs would be better
 
 export const visitPackageExports = ({
   logger,
@@ -9,11 +10,9 @@ export const visitPackageExports = ({
   packageName,
   packageJsonObject,
   packageInfo: { packageIsRoot, packageDirectoryRelativePath },
-  // maybe should depend on package.json field type
-  // "module" -> "default"
-  // "commonjs" -> "required"
-  // undefined -> "default"
-  packageExportCondition = "default",
+  // pass ['browser', 'default'] to read browser first then 'default' if defined
+  // in package exports field
+  favoredExports = ["default"],
 }) => {
   const importsForPackageExports = {}
 
@@ -36,10 +35,10 @@ ${packageFilePath}
     return importsForPackageExports
   }
 
-  const packageExports =
-    packageExportCondition in rawPackageExports
-      ? rawPackageExports[packageExportCondition]
-      : rawPackageExports
+  const favoredExport = favoredExports
+    ? favoredExports.find((favoredExportCandidate) => favoredExportCandidate in rawPackageExports)
+    : null
+  const packageExports = favoredExport ? rawPackageExports[favoredExport] : rawPackageExports
 
   Object.keys(packageExports).forEach((specifier) => {
     if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
@@ -57,10 +56,13 @@ ${packageFilePath}
     let address
 
     if (typeof value === "object") {
-      if (packageExportCondition in value === false) {
+      if (!favoredExport) {
         return
       }
-      address = value[packageExportCondition]
+      if (favoredExport in value === false) {
+        return
+      }
+      address = value[favoredExport]
     } else if (typeof value === "string") {
       address = value
     } else {

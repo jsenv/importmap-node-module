@@ -20,8 +20,8 @@ export const generateImportMapForPackage = async ({
   rootProjectDirectoryPath = projectDirectoryPath,
   includeDevDependencies = false,
   includeExports,
+  favoredExports,
   includeImports,
-  packageExportCondition,
 }) => {
   const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath)
   const rootProjectDirectoryUrl = pathToDirectoryUrl(rootProjectDirectoryPath)
@@ -135,7 +135,7 @@ export const generateImportMapForPackage = async ({
         packageName,
         packageJsonObject,
         packageInfo,
-        packageExportCondition,
+        favoredExports,
       })
 
       const {
