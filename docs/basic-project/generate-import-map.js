@@ -1,8 +1,11 @@
+const { pathToFileURL } = require("url")
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
 
 generateImportMapForProjectPackage({
-  projectDirectoryPath: __dirname,
+  projectDirectoryUrl: pathToFileURL(__dirname),
   includeDevDependencies: true,
+  includeExports: true,
+  includesImports: true,
   importMapFile: true,
   importMapFileRelativeUrl: "./importMap.json",
 })
