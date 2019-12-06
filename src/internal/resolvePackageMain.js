@@ -1,7 +1,7 @@
 import { dirname, extname, basename } from "path"
 import { stat } from "fs"
 import { firstOperationMatching } from "@jsenv/cancellation"
-import { resolveUrl, fileUrlToDirectoryUrl, fileUrlToPath } from "./urlHelpers.js"
+import { resolveUrl, urlToFilePath } from "./urlUtils.js"
 import { fileURLToPath } from "url"
 
 export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
@@ -54,13 +54,13 @@ const resolveMainFile = async ({
     return null
   }
 
-  const packageFilePath = fileUrlToPath(packageFileUrl)
-  const packageDirectoryUrl = fileUrlToDirectoryUrl(packageFileUrl)
-  const mainFileRelativePath = packageMainFieldValue.endsWith("/")
+  const packageFilePath = urlToFilePath(packageFileUrl)
+  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
+  const mainFileRelativeUrl = packageMainFieldValue.endsWith("/")
     ? `${packageMainFieldValue}index`
     : packageMainFieldValue
 
-  const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativePath, packageFileUrl)
+  const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativeUrl, packageFileUrl)
 
   if (!mainFileUrlFirstCandidate.startsWith(packageDirectoryUrl)) {
     logger.warn(
@@ -107,7 +107,7 @@ ${extensionCandidateArray.join(`,`)}
 }
 
 const findMainFileUrlOrNull = async (mainFileUrl) => {
-  const mainFilePath = fileUrlToPath(mainFileUrl)
+  const mainFilePath = urlToFilePath(mainFileUrl)
   const stats = await pathToStats(mainFilePath)
 
   if (stats === null) {
@@ -132,7 +132,7 @@ const findMainFileUrlOrNull = async (mainFileUrl) => {
       "./index",
       mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`,
     )
-    const extensionLeadingToAFile = await findExtension(fileUrlToPath(indexFileUrl))
+    const extensionLeadingToAFile = await findExtension(urlToFilePath(indexFileUrl))
     if (extensionLeadingToAFile === null) {
       return null
     }

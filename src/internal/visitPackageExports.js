@@ -1,4 +1,4 @@
-import { hasScheme, fileUrlToPath } from "./urlHelpers.js"
+import { hasScheme, urlToFilePath } from "./urlUtils.js"
 
 // TODO: improve compliance with https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
 // because currently it works but if the package.json contains malformed exports field our code
@@ -9,7 +9,7 @@ export const visitPackageExports = ({
   packageFileUrl,
   packageName,
   packageJsonObject,
-  packageInfo: { packageIsRoot, packageDirectoryRelativePath },
+  packageInfo: { packageIsRoot, packageDirectoryRelativeUrl },
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
   favoredExports = ["default"],
@@ -20,7 +20,7 @@ export const visitPackageExports = ({
     return importsForPackageExports
   }
 
-  const packageFilePath = fileUrlToPath(packageFileUrl)
+  const packageFilePath = urlToFilePath(packageFileUrl)
   const { exports: rawPackageExports } = packageJsonObject
   if (typeof rawPackageExports !== "object" || rawPackageExports === null) {
     if (rawPackageExports === false) return importsForPackageExports
@@ -104,9 +104,9 @@ ${packageFilePath}
     if (address[0] === "/") {
       to = address
     } else if (address.startsWith("./")) {
-      to = `${packageDirectoryRelativePath}${address.slice(2)}`
+      to = `./${packageDirectoryRelativeUrl}${address.slice(2)}`
     } else {
-      to = `${packageDirectoryRelativePath}${address}`
+      to = `./${packageDirectoryRelativeUrl}${address}`
     }
 
     importsForPackageExports[from] = to

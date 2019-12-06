@@ -1,8 +1,8 @@
-import { fileUrlToPath, hasScheme } from "./urlHelpers.js"
+import { urlToFilePath, hasScheme } from "./urlUtils.js"
 
 export const visitPackageImports = ({ logger, packageFileUrl, packageJsonObject }) => {
   const importsForPackageImports = {}
-  const packageFilePath = fileUrlToPath(packageFileUrl)
+  const packageFilePath = urlToFilePath(packageFileUrl)
 
   const { imports: packageImports } = packageJsonObject
   if (typeof packageImports !== "object" || packageImports === null) {
