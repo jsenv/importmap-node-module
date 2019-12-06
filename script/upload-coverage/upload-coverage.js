@@ -1,6 +1,7 @@
+const { fileURLToPath } = require("url")
 const { uploadCoverage } = require("@jsenv/codecov-upload")
-const { projectDirectoryPath } = require("../../jsenv.config.js")
+const { projectDirectoryUrl } = require("../../jsenv.config.js")
 
 uploadCoverage({
-  projectPath: projectDirectoryPath,
+  projectPath: fileURLToPath(projectDirectoryUrl),
 })

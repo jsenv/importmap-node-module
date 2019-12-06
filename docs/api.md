@@ -1,7 +1,7 @@
 # Table of contents for api documentation
 
 - [generateImportMapForProjectPackage](#generateImportMapForProjectPackage)
-  - [projectDirectoryPath](#projectDirectoryPath)
+  - [projectDirectoryUrl](#projectDirectoryUrl)
   - [includeDevDependencies](#includeDevDependencies)
   - [importMapFile](#importMapFile)
   - [importMapFileRelativeUrl](#importMapFileRelativeUrl)
@@ -10,13 +10,13 @@
 ## generateImportMapForProjectPackage
 
 > `generateImportMapForProjectPackage` is an async function returning an importMap object.
-> Implemented in [src/generateImportMapForProjectPackage/generateImportMapForProjectPackage.js](../src/generateImportMapForProjectPackage/generateImportMapForProjectPackage.js)
+> Implemented in [src/generateImportMapForProjectPackage.js](../src/generateImportMapForProjectPackage.js)
 
 ```js
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
 
 const importMap = await generateImportMapForProjectPackage({
-  projectDirectoryPath: __dirname,
+  projectDirectoryUrl: __dirname,
   includeDevDependencies: true,
   importMapFile: false,
   importMapFileRelativeUrl: "./importMap.json",
@@ -26,12 +26,12 @@ const importMap = await generateImportMapForProjectPackage({
 
 ---
 
-### projectDirectoryPath
+### projectDirectoryUrl
 
-`projectDirectoryPath` is a **required** parameter, an example value could be:
+`projectDirectoryUrl` is a **required** parameter, an example value could be:
 
 ```js
-"/Users/you/folder"
+"file:///Users/you/folder/"
 ```
 
 It is a string leading to a folder with a package.json.<br />

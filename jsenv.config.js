@@ -1,2 +1,3 @@
-const projectDirectoryPath = __dirname
-exports.projectDirectoryPath = projectDirectoryPath
+const { pathToFileURL } = require("url")
+
+exports.projectDirectoryUrl = `${String(pathToFileURL(__dirname))}/`

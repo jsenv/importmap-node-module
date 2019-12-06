@@ -1,12 +1,12 @@
 import { assert } from "@jsenv/assert"
-import { fileUrlToPath } from "../../../src/internal/urlHelpers.js"
+import { urlToFilePath } from "../../../src/internal/urlUtils.js"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
-const testDirectoryPath = fileUrlToPath(import.meta.resolve("./"))
+const testDirectoryUrl = import.meta.resolve("./")
 
 try {
   await generateImportMapForProjectPackage({
-    projectDirectoryPath: testDirectoryPath,
+    projectDirectoryUrl: testDirectoryUrl,
     throwUnhandled: false,
   })
   throw new Error("should throw")
@@ -15,7 +15,9 @@ try {
   const actual = { code, message }
   const expected = {
     code: "ENOENT",
-    message: `ENOENT: no such file or directory, open '${testDirectoryPath}package.json'`,
+    message: `ENOENT: no such file or directory, open '${urlToFilePath(
+      testDirectoryUrl,
+    )}package.json'`,
   }
   assert({ actual, expected })
 }

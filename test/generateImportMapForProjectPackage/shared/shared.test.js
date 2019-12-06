@@ -1,12 +1,11 @@
 import { normalizeImportMap, resolveImport } from "@jsenv/import-map"
 import { assert } from "@jsenv/assert"
-import { fileUrlToPath } from "../../../src/internal/urlHelpers.js"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
-const testDirectoryPath = fileUrlToPath(import.meta.resolve("./"))
+const testDirectoryUrl = import.meta.resolve("./")
 
 const importMap = await generateImportMapForProjectPackage({
-  projectDirectoryPath: testDirectoryPath,
+  projectDirectoryUrl: testDirectoryUrl,
   includeExports: true,
 })
 {
@@ -14,13 +13,13 @@ const importMap = await generateImportMapForProjectPackage({
   const expected = {
     imports: {
       "bar/": "./node_modules/bar/",
-      bar: "./node_modules/bar/bar.js",
-      foo: "./node_modules/foo/foo.js",
+      "bar": "./node_modules/bar/bar.js",
+      "foo": "./node_modules/foo/foo.js",
     },
     scopes: {
       "./node_modules/foo/": {
         "bar/": "./node_modules/bar/",
-        bar: "./node_modules/bar/bar.js",
+        "bar": "./node_modules/bar/bar.js",
       },
     },
   }
