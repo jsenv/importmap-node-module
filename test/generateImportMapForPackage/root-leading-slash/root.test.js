@@ -1,14 +1,13 @@
 import { createLogger } from "@jsenv/logger"
 import { assert } from "@jsenv/assert"
-import { fileUrlToPath } from "../../../src/internal/urlHelpers.js"
 import { generateImportMapForPackage } from "../../../index.js"
 
-const testDirectoryPath = fileUrlToPath(import.meta.resolve("./"))
+const testDirectoryUrl = import.meta.resolve("./")
 
 const actual = await generateImportMapForPackage({
   logger: createLogger(),
-  projectDirectoryPath: `${testDirectoryPath}node_modules/project`,
-  rootProjectDirectoryPath: testDirectoryPath,
+  projectDirectoryUrl: `${testDirectoryUrl}node_modules/project`,
+  rootProjectDirectoryUrl: testDirectoryUrl,
   includeImports: true,
 })
 const expected = {
@@ -16,8 +15,8 @@ const expected = {
   scopes: {
     "./node_modules/project/": {
       "./node_modules/project/": "./node_modules/project/",
-      inside: "./node_modules/project/node_modules/inside/index.js",
-      shared: "./node_modules/shared/index.js",
+      "inside": "./node_modules/project/node_modules/inside/index.js",
+      "shared": "./node_modules/shared/index.js",
       "./": "./node_modules/project/",
     },
   },

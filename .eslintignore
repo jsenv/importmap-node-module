@@ -1,4 +1,5 @@
-/.dist/
+!/.github/
+/.jsenv/
 /coverage/
 /dist/
 /docs/basic-project/node_modules/

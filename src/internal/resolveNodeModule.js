@@ -1,6 +1,6 @@
 import { fileURLToPath } from "url"
 import { firstOperationMatching } from "@jsenv/cancellation"
-import { fileUrlToRelativePath, fileUrlToDirectoryUrl } from "./urlHelpers.js"
+import { urlToRelativeUrl, resolveUrl } from "./urlUtils.js"
 import { readPackageFile } from "./readPackageFile.js"
 
 export const resolveNodeModule = async ({
@@ -12,7 +12,7 @@ export const resolveNodeModule = async ({
   dependencyVersionPattern,
   dependencyType,
 }) => {
-  const packageDirectoryUrl = fileUrlToDirectoryUrl(packageFileUrl)
+  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const nodeModuleCandidateArray = [
     ...computeNodeModuleCandidateArray(packageDirectoryUrl, rootProjectDirectoryUrl),
     `node_modules/`,
@@ -71,13 +71,12 @@ const computeNodeModuleCandidateArray = (packageDirectoryUrl, rootProjectDirecto
     return []
   }
 
-  const packageDirectoryRelativePath = fileUrlToRelativePath(
-    packageDirectoryUrl,
-    rootProjectDirectoryUrl,
-  )
+  const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, rootProjectDirectoryUrl)
 
   const candidateArray = []
-  const relativeNodeModuleDirectoryArray = packageDirectoryRelativePath.split("/node_modules/")
+  const relativeNodeModuleDirectoryArray = `./${packageDirectoryRelativeUrl}`.split(
+    "/node_modules/",
+  )
   // remove the first empty string
   relativeNodeModuleDirectoryArray.shift()
 

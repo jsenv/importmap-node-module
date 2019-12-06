@@ -36,14 +36,14 @@ jobs:
         run: npm run upload-coverage
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: auto publish
+      - name: publish package
         if: github.event_name == 'push'
-        run: node ./.github/auto-publish.js
+        run: node ./.github/publish-package.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: auto release on github
+      - name: ensure github release
         if: github.event_name == 'push'
-        run: node ./.github/auto-release-on-github.js
+        run: node ./.github/ensure-github-release-for-package.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
