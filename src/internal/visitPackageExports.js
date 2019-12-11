@@ -10,9 +10,7 @@ export const visitPackageExports = ({
   packageName,
   packageJsonObject,
   packageInfo: { packageIsRoot, packageDirectoryRelativeUrl },
-  // pass ['browser', 'default'] to read browser first then 'default' if defined
-  // in package exports field
-  favoredExports = ["default"],
+  favoredExports,
 }) => {
   const importsForPackageExports = {}
 
