@@ -1,4 +1,4 @@
-import { hasScheme, urlToFilePath } from "./urlUtils.js"
+import { hasScheme, filePathToUrl } from "./urlUtils.js"
 
 export const normalizeDirectoryUrl = (value, name = "projectDirectoryUrl") => {
   if (value instanceof URL) {
@@ -6,7 +6,7 @@ export const normalizeDirectoryUrl = (value, name = "projectDirectoryUrl") => {
   }
 
   if (typeof value === "string") {
-    const url = hasScheme(value) ? value : urlToFilePath(value)
+    const url = hasScheme(value) ? value : filePathToUrl(value)
 
     if (!url.startsWith("file://")) {
       throw new Error(`${name} must starts with file://, received ${value}`)
