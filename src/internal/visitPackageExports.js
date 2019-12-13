@@ -1,8 +1,6 @@
-import { hasScheme, urlToFilePath } from "./urlUtils.js"
+// https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
 
-// TODO: improve compliance with https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
-// because currently it works but if the package.json contains malformed exports field our code
-// might behave unexpectedly, warning logs would be better
+import { hasScheme, urlToFilePath } from "./urlUtils.js"
 
 export const visitPackageExports = ({
   logger,
@@ -20,9 +18,14 @@ export const visitPackageExports = ({
 
   const packageFilePath = urlToFilePath(packageFileUrl)
   const { exports: rawPackageExports } = packageJsonObject
-  if (typeof rawPackageExports !== "object" || rawPackageExports === null) {
-    if (rawPackageExports === false) return importsForPackageExports
 
+  // false is allowed as laternative to exports: {}
+  if (rawPackageExports === false) return importsForPackageExports
+
+  // string allowed, exports becomes an alternative to main or module field
+  if (typeof rawPackageExports === "string") return importsForPackageExports
+
+  if (typeof rawPackageExports !== "object" || rawPackageExports === null) {
     logger.warn(`
 exports of package.json must be an object.
 --- package.json exports ---
