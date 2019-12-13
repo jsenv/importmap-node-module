@@ -23,38 +23,6 @@ const assertImportMap = value => {
   }
 };
 
-// https://github.com/systemjs/systemjs/blob/89391f92dfeac33919b0223bbf834a1f4eea5750/src/common.js#L136
-const composeTwoImportMaps = (leftImportMap, rightImportMap) => {
-  assertImportMap(leftImportMap);
-  assertImportMap(rightImportMap);
-  return {
-    imports: composeTwoImports(leftImportMap.imports, rightImportMap.imports),
-    scopes: composeTwoScopes(leftImportMap.scopes, rightImportMap.scopes)
-  };
-};
-
-const composeTwoImports = (leftImports = {}, rightImports = {}) => {
-  return { ...leftImports,
-    ...rightImports
-  };
-};
-
-const composeTwoScopes = (leftScopes = {}, rightScopes = {}) => {
-  const scopes = { ...leftScopes
-  };
-  Object.keys(rightScopes).forEach(scopeKey => {
-    if (scopes.hasOwnProperty(scopeKey)) {
-      scopes[scopeKey] = { ...scopes[scopeKey],
-        ...rightScopes[scopeKey]
-      };
-    } else {
-      scopes[scopeKey] = { ...rightScopes[scopeKey]
-      };
-    }
-  });
-  return scopes;
-};
-
 const sortImportMap = importMap => {
   assertImportMap(importMap);
   const {
@@ -88,6 +56,9 @@ const compareLengthOrLocaleCompare = (a, b) => {
 const resolveUrl = (value, baseUrl) => {
   return String(new URL(value, baseUrl));
 };
+const filePathToUrl = path => {
+  return String(url.pathToFileURL(path));
+};
 const urlToFilePath = url$1 => {
   return url.fileURLToPath(url$1);
 };
@@ -114,7 +85,7 @@ const normalizeDirectoryUrl = (value, name = "projectDirectoryUrl") => {
   }
 
   if (typeof value === "string") {
-    const url = hasScheme(value) ? value : urlToFilePath(value);
+    const url = hasScheme(value) ? value : filePathToUrl(value);
 
     if (!url.startsWith("file://")) {
       throw new Error(`${name} must starts with file://, received ${value}`);
@@ -130,11 +101,47 @@ const ensureTrailingSlash = string => {
   return string.endsWith("/") ? string : `${string}/`;
 };
 
-const readPackageFile = async path => {
+const readPackageFile = async (path, manualOverrides) => {
   const packageFileString = await readFileContent(path);
   const packageJsonObject = JSON.parse(packageFileString);
+  const {
+    name,
+    version
+  } = packageJsonObject;
+  const overrideKey = Object.keys(manualOverrides).find(overrideKeyCandidate => {
+    if (name === overrideKeyCandidate) return true;
+    if (`${name}@${version}` === overrideKeyCandidate) return true;
+    return false;
+  });
+
+  if (overrideKey) {
+    return composeObject(packageJsonObject, manualOverrides[overrideKey]);
+  }
+
   return packageJsonObject;
 };
+
+const composeObject = (leftObject, rightObject) => {
+  const composedObject = { ...leftObject
+  };
+  Object.keys(rightObject).forEach(key => {
+    const rightValue = rightObject[key];
+
+    if (rightValue === null || typeof rightValue !== "object" || key in leftObject === false) {
+      composedObject[key] = rightValue;
+    } else {
+      const leftValue = leftObject[key];
+
+      if (leftValue === null || typeof leftValue !== "object") {
+        composedObject[key] = rightValue;
+      } else {
+        composedObject[key] = composeObject(leftValue, rightValue);
+      }
+    }
+  });
+  return composedObject;
+};
+
 const readFilePromisified = util.promisify(fs.readFile);
 
 const readFileContent = async filePath => {
@@ -284,6 +291,7 @@ const createCancellationTokenForProcessSIGINT = () => {
 const resolveNodeModule = async ({
   logger,
   rootProjectDirectoryUrl,
+  manualOverrides,
   packageFileUrl,
   packageJsonObject,
   dependencyName,
@@ -299,7 +307,7 @@ const resolveNodeModule = async ({
       const packageFilePath = url.fileURLToPath(packageFileUrl);
 
       try {
-        const packageJsonObject = await readPackageFile(packageFilePath);
+        const packageJsonObject = await readPackageFile(packageFilePath, manualOverrides);
         return {
           packageFileUrl,
           packageJsonObject
@@ -603,9 +611,7 @@ ${packageFilePath}
   return importsForPackageImports;
 };
 
-// because currently it works but if the package.json contains malformed exports field our code
-// might behave unexpectedly, warning logs would be better
-
+// https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
 const visitPackageExports = ({
   logger,
   packageFileUrl,
@@ -625,24 +631,47 @@ const visitPackageExports = ({
 
   const packageFilePath = urlToFilePath(packageFileUrl);
   const {
-    exports: rawPackageExports
-  } = packageJsonObject;
+    exports: packageExports
+  } = packageJsonObject; // false is allowed as laternative to exports: {}
 
-  if (typeof rawPackageExports !== "object" || rawPackageExports === null) {
-    if (rawPackageExports === false) return importsForPackageExports;
+  if (packageExports === false) return importsForPackageExports; // exports used to indicate the main file
+
+  if (typeof packageExports === "string") {
+    const from = packageName;
+    const to = packageExports;
+    importsForPackageExports[from] = to;
+    return importsForPackageExports;
+  }
+
+  if (typeof packageExports !== "object" || packageExports === null) {
     logger.warn(`
 exports of package.json must be an object.
 --- package.json exports ---
-${rawPackageExports}
+${packageExports}
 --- package.json path ---
 ${packageFilePath}
 `);
     return importsForPackageExports;
   }
 
-  const favoredExport = favoredExports ? favoredExports.find(favoredExportCandidate => favoredExportCandidate in rawPackageExports) : null;
-  const packageExports = favoredExport ? rawPackageExports[favoredExport] : rawPackageExports;
-  Object.keys(packageExports).forEach(specifier => {
+  const packageExportsKeys = Object.keys(packageExports);
+  const someSpecifierStartsWithDot = packageExportsKeys.some(key => key.startsWith("."));
+
+  if (someSpecifierStartsWithDot) {
+    const someSpecifierDoesNotStartsWithDot = packageExportsKeys.some(key => !key.startsWith("."));
+
+    if (someSpecifierDoesNotStartsWithDot) {
+      // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
+      logger.error(`
+exports of package.json mixes conditional exports and direct exports.
+--- package.json path ---
+${packageFilePath}
+`);
+      return importsForPackageExports;
+    }
+  }
+
+  packageExportsKeys.forEach(specifier => {
     if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
       logger.warn(`
 found unexpected specifier in exports of package.json, it must be relative to package.json.
@@ -658,27 +687,27 @@ ${packageFilePath}
     let address;
 
     if (typeof value === "object") {
-      if (!favoredExport) {
+      const favoredExport = favoredExports.find(key => key in value);
+
+      if (favoredExport) {
+        address = value[favoredExport];
+      } else if ("default" in value) {
+        address = value.default;
+      } else {
         return;
       }
-
-      if (favoredExport in value === false) {
-        return;
-      }
-
-      address = value[favoredExport];
     } else if (typeof value === "string") {
       address = value;
     } else {
       logger.warn(`
-      found unexpected address in exports of package.json, it must be a string.
-      --- address ---
-      ${address}
-      --- specifier ---
-      ${specifier}
-      --- package.json path ---
-      ${packageFilePath}
-      `);
+found unexpected address in exports of package.json, it must be a string.
+--- address ---
+${address}
+--- specifier ---
+${specifier}
+--- package.json path ---
+${packageFilePath}
+`);
       return;
     }
 
@@ -697,7 +726,9 @@ ${packageFilePath}
 
     let from;
 
-    if (specifier[0] === "/") {
+    if (specifier === ".") {
+      from = packageName;
+    } else if (specifier[0] === "/") {
       from = specifier;
     } else if (specifier.startsWith("./")) {
       from = `${packageName}${specifier.slice(1)}`;
@@ -725,11 +756,12 @@ const generateImportMapForPackage = async ({
   logger,
   projectDirectoryUrl,
   rootProjectDirectoryUrl,
+  manualOverrides = {},
   includeDevDependencies = false,
   includeExports = true,
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
-  favoredExports = ["default"],
+  favoredExports = [],
   includeImports = true
 }) => {
   projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl);
@@ -1108,6 +1140,7 @@ const generateImportMapForPackage = async ({
 
     const dependencyPromise = resolveNodeModule({
       rootProjectDirectoryUrl,
+      manualOverrides,
       packageFileUrl,
       packageJsonObject,
       dependencyName,
@@ -1119,7 +1152,7 @@ const generateImportMapForPackage = async ({
     return dependencyPromise;
   };
 
-  const projectPackageJsonObject = await readPackageFile(urlToFilePath(projectPackageFileUrl));
+  const projectPackageJsonObject = await readPackageFile(urlToFilePath(projectPackageFileUrl), manualOverrides);
   const packageFileUrl = projectPackageFileUrl;
   const importerPackageFileUrl = projectPackageFileUrl;
   markPackageAsSeen(packageFileUrl, importerPackageFileUrl);
@@ -1263,10 +1296,10 @@ const generateImportMapForProjectPackage = async ({
   cancellationToken = createCancellationTokenForProcessSIGINT(),
   logLevel,
   projectDirectoryUrl,
-  inputImportMap,
+  manualOverrides,
   includeDevDependencies = process.env.NODE_ENV !== "production",
   includeExports = true,
-  favoredExports = ["default"],
+  favoredExports = [],
   includeImports = true,
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",
@@ -1279,16 +1312,16 @@ const generateImportMapForProjectPackage = async ({
   const logger = createLogger({
     logLevel
   });
-  const projectPackageImportMap = await generateImportMapForPackage({
+  const importMap = await generateImportMapForPackage({
     cancellationToken,
     logger,
     projectDirectoryUrl,
+    manualOverrides,
     includeDevDependencies,
     includeExports,
     includeImports,
     favoredExports
   });
-  const importMap = inputImportMap ? composeTwoImportMaps(inputImportMap, projectPackageImportMap) : projectPackageImportMap;
 
   if (importMapFile) {
     const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
