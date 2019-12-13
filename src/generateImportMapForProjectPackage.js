@@ -20,7 +20,7 @@ export const generateImportMapForProjectPackage = async ({
   manualOverrides,
   includeDevDependencies = process.env.NODE_ENV !== "production",
   includeExports = true,
-  favoredExports = ["default"],
+  favoredExports = [],
   includeImports = true,
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",

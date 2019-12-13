@@ -17,31 +17,46 @@ export const visitPackageExports = ({
   }
 
   const packageFilePath = urlToFilePath(packageFileUrl)
-  const { exports: rawPackageExports } = packageJsonObject
+  const { exports: packageExports } = packageJsonObject
 
   // false is allowed as laternative to exports: {}
-  if (rawPackageExports === false) return importsForPackageExports
+  if (packageExports === false) return importsForPackageExports
 
-  // string allowed, exports becomes an alternative to main or module field
-  if (typeof rawPackageExports === "string") return importsForPackageExports
+  // exports used to indicate the main file
+  if (typeof packageExports === "string") {
+    const from = packageName
+    const to = packageExports
+    importsForPackageExports[from] = to
+    return importsForPackageExports
+  }
 
-  if (typeof rawPackageExports !== "object" || rawPackageExports === null) {
+  if (typeof packageExports !== "object" || packageExports === null) {
     logger.warn(`
 exports of package.json must be an object.
 --- package.json exports ---
-${rawPackageExports}
+${packageExports}
 --- package.json path ---
 ${packageFilePath}
 `)
     return importsForPackageExports
   }
 
-  const favoredExport = favoredExports
-    ? favoredExports.find((favoredExportCandidate) => favoredExportCandidate in rawPackageExports)
-    : null
-  const packageExports = favoredExport ? rawPackageExports[favoredExport] : rawPackageExports
+  const packageExportsKeys = Object.keys(packageExports)
+  const someSpecifierStartsWithDot = packageExportsKeys.some((key) => key.startsWith("."))
+  if (someSpecifierStartsWithDot) {
+    const someSpecifierDoesNotStartsWithDot = packageExportsKeys.some((key) => !key.startsWith("."))
+    if (someSpecifierDoesNotStartsWithDot) {
+      // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
+      logger.error(`
+exports of package.json mixes conditional exports and direct exports.
+--- package.json path ---
+${packageFilePath}
+`)
+      return importsForPackageExports
+    }
+  }
 
-  Object.keys(packageExports).forEach((specifier) => {
+  packageExportsKeys.forEach((specifier) => {
     if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
       logger.warn(`
 found unexpected specifier in exports of package.json, it must be relative to package.json.
@@ -57,25 +72,27 @@ ${packageFilePath}
     let address
 
     if (typeof value === "object") {
-      if (!favoredExport) {
+      const favoredExport = favoredExports.find((key) => key in value)
+
+      if (favoredExport) {
+        address = value[favoredExport]
+      } else if ("default" in value) {
+        address = value.default
+      } else {
         return
       }
-      if (favoredExport in value === false) {
-        return
-      }
-      address = value[favoredExport]
     } else if (typeof value === "string") {
       address = value
     } else {
       logger.warn(`
-      found unexpected address in exports of package.json, it must be a string.
-      --- address ---
-      ${address}
-      --- specifier ---
-      ${specifier}
-      --- package.json path ---
-      ${packageFilePath}
-      `)
+found unexpected address in exports of package.json, it must be a string.
+--- address ---
+${address}
+--- specifier ---
+${specifier}
+--- package.json path ---
+${packageFilePath}
+`)
       return
     }
 
@@ -93,7 +110,9 @@ ${packageFilePath}
     }
 
     let from
-    if (specifier[0] === "/") {
+    if (specifier === ".") {
+      from = packageName
+    } else if (specifier[0] === "/") {
       from = specifier
     } else if (specifier.startsWith("./")) {
       from = `${packageName}${specifier.slice(1)}`
