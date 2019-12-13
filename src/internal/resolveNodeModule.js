@@ -6,6 +6,7 @@ import { readPackageFile } from "./readPackageFile.js"
 export const resolveNodeModule = async ({
   logger,
   rootProjectDirectoryUrl,
+  manualOverrides,
   packageFileUrl,
   packageJsonObject,
   dependencyName,
@@ -24,7 +25,7 @@ export const resolveNodeModule = async ({
       const packageFileUrl = `${rootProjectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`
       const packageFilePath = fileURLToPath(packageFileUrl)
       try {
-        const packageJsonObject = await readPackageFile(packageFilePath)
+        const packageJsonObject = await readPackageFile(packageFilePath, manualOverrides)
         return {
           packageFileUrl,
           packageJsonObject,

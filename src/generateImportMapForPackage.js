@@ -13,11 +13,12 @@ export const generateImportMapForPackage = async ({
   logger,
   projectDirectoryUrl,
   rootProjectDirectoryUrl,
+  manualOverrides = {},
   includeDevDependencies = false,
   includeExports = true,
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
-  favoredExports = ["default"],
+  favoredExports = [],
   includeImports = true,
 }) => {
   projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl)
@@ -379,6 +380,7 @@ export const generateImportMapForPackage = async ({
     }
     const dependencyPromise = resolveNodeModule({
       rootProjectDirectoryUrl,
+      manualOverrides,
       packageFileUrl,
       packageJsonObject,
       dependencyName,
@@ -390,7 +392,10 @@ export const generateImportMapForPackage = async ({
     return dependencyPromise
   }
 
-  const projectPackageJsonObject = await readPackageFile(urlToFilePath(projectPackageFileUrl))
+  const projectPackageJsonObject = await readPackageFile(
+    urlToFilePath(projectPackageFileUrl),
+    manualOverrides,
+  )
 
   const packageFileUrl = projectPackageFileUrl
   const importerPackageFileUrl = projectPackageFileUrl

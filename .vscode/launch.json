@@ -25,8 +25,8 @@
       "program": "${workspaceFolder}/script/run-node/run-node.js",
       "args": ["${relativeFile}"],
       "autoAttachChildProcesses": true,
-      "sourceMaps": false,
-      // "smartStep": true,
+      "sourceMaps": true,
+      "smartStep": true,
       "skipFiles": [
         // force-multiline
         "node_modules/@babel/template/**",

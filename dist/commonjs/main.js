@@ -85,42 +85,49 @@ const compareLengthOrLocaleCompare = (a, b) => {
   return b.length - a.length || a.localeCompare(b);
 };
 
-const pathToDirectoryUrl = path => {
-  const directoryUrl = path.startsWith("file://") ? path : String(url.pathToFileURL(path));
-
-  if (directoryUrl.endsWith("/")) {
-    return directoryUrl;
-  }
-
-  return `${directoryUrl}/`;
+const resolveUrl = (value, baseUrl) => {
+  return String(new URL(value, baseUrl));
 };
-const fileUrlToPath = fileUrl => {
-  return url.fileURLToPath(fileUrl);
-};
-const directoryUrlToPackageFileUrl = directoryUrl => {
-  return String(new URL("./package.json", directoryUrl));
-};
-const resolveUrl = (specifier, baseUrl) => {
-  return String(new URL(specifier, baseUrl));
-};
-const fileUrlToDirectoryUrl = fileUrl => {
-  const directoryUrl = String(new URL("./", fileUrl));
-
-  if (directoryUrl.endsWith("/")) {
-    return directoryUrl;
-  }
-
-  return `${directoryUrl}/`;
-};
-const fileUrlToRelativePath = (fileUrl, baseUrl) => {
-  if (fileUrl.startsWith(baseUrl)) {
-    return `./${fileUrl.slice(baseUrl.length)}`;
-  }
-
-  return fileUrl;
+const urlToFilePath = url$1 => {
+  return url.fileURLToPath(url$1);
 };
 const hasScheme = string => {
   return /^[a-zA-Z]{2,}:/.test(string);
+};
+const urlToRelativeUrl = (url, baseUrl) => {
+  if (typeof baseUrl !== "string") {
+    throw new TypeError(`baseUrl must be a string, got ${baseUrl}`);
+  }
+
+  if (url.startsWith(baseUrl)) {
+    // we should take into account only pathname
+    // and ignore search params
+    return url.slice(baseUrl.length);
+  }
+
+  return url;
+};
+
+const normalizeDirectoryUrl = (value, name = "projectDirectoryUrl") => {
+  if (value instanceof URL) {
+    value = value.href;
+  }
+
+  if (typeof value === "string") {
+    const url = hasScheme(value) ? value : urlToFilePath(value);
+
+    if (!url.startsWith("file://")) {
+      throw new Error(`${name} must starts with file://, received ${value}`);
+    }
+
+    return ensureTrailingSlash(url);
+  }
+
+  throw new TypeError(`${name} must be a string or an url, received ${value}`);
+};
+
+const ensureTrailingSlash = string => {
+  return string.endsWith("/") ? string : `${string}/`;
 };
 
 const readPackageFile = async path => {
@@ -173,8 +180,92 @@ const firstOperationMatching = ({
   });
 };
 
+const createCancelError = reason => {
+  const cancelError = new Error(`canceled because ${reason}`);
+  cancelError.name = "CANCEL_ERROR";
+  cancelError.reason = reason;
+  return cancelError;
+};
 const isCancelError = value => {
   return value && typeof value === "object" && value.name === "CANCEL_ERROR";
+};
+
+const arrayWithout = (array, item) => {
+  const arrayWithoutItem = [];
+  let i = 0;
+
+  while (i < array.length) {
+    const value = array[i];
+    i++;
+
+    if (value === item) {
+      continue;
+    }
+
+    arrayWithoutItem.push(value);
+  }
+
+  return arrayWithoutItem;
+};
+
+// https://github.com/tc39/proposal-cancellation/tree/master/stage0
+const createCancellationSource = () => {
+  let requested = false;
+  let cancelError;
+  let registrationArray = [];
+
+  const cancel = reason => {
+    if (requested) return;
+    requested = true;
+    cancelError = createCancelError(reason);
+    const registrationArrayCopy = registrationArray.slice();
+    registrationArray.length = 0;
+    registrationArrayCopy.forEach(registration => {
+      registration.callback(cancelError); // const removedDuringCall = registrationArray.indexOf(registration) === -1
+    });
+  };
+
+  const register = callback => {
+    if (typeof callback !== "function") {
+      throw new Error(`callback must be a function, got ${callback}`);
+    }
+
+    const existingRegistration = registrationArray.find(registration => {
+      return registration.callback === callback;
+    }); // don't register twice
+
+    if (existingRegistration) {
+      return existingRegistration;
+    }
+
+    const registration = {
+      callback,
+      unregister: () => {
+        registrationArray = arrayWithout(registrationArray, registration);
+      }
+    };
+    registrationArray = [registration, ...registrationArray];
+    return registration;
+  };
+
+  const throwIfRequested = () => {
+    if (requested) {
+      throw cancelError;
+    }
+  };
+
+  return {
+    token: {
+      register,
+
+      get cancellationRequested() {
+        return requested;
+      },
+
+      throwIfRequested
+    },
+    cancel
+  };
 };
 
 const catchAsyncFunctionCancellation = asyncFunction => {
@@ -182,6 +273,12 @@ const catchAsyncFunctionCancellation = asyncFunction => {
     if (isCancelError(error)) return;
     throw error;
   });
+};
+
+const createCancellationTokenForProcessSIGINT = () => {
+  const SIGINTCancelSource = createCancellationSource();
+  process.on("SIGINT", () => SIGINTCancelSource.cancel("process interruption"));
+  return SIGINTCancelSource.token;
 };
 
 const resolveNodeModule = async ({
@@ -193,7 +290,7 @@ const resolveNodeModule = async ({
   dependencyVersionPattern,
   dependencyType
 }) => {
-  const packageDirectoryUrl = fileUrlToDirectoryUrl(packageFileUrl);
+  const packageDirectoryUrl = resolveUrl("./", packageFileUrl);
   const nodeModuleCandidateArray = [...computeNodeModuleCandidateArray(packageDirectoryUrl, rootProjectDirectoryUrl), `node_modules/`];
   const result = await firstOperationMatching({
     array: nodeModuleCandidateArray,
@@ -251,9 +348,9 @@ const computeNodeModuleCandidateArray = (packageDirectoryUrl, rootProjectDirecto
     return [];
   }
 
-  const packageDirectoryRelativePath = fileUrlToRelativePath(packageDirectoryUrl, rootProjectDirectoryUrl);
+  const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, rootProjectDirectoryUrl);
   const candidateArray = [];
-  const relativeNodeModuleDirectoryArray = packageDirectoryRelativePath.split("/node_modules/"); // remove the first empty string
+  const relativeNodeModuleDirectoryArray = `./${packageDirectoryRelativeUrl}`.split("/node_modules/"); // remove the first empty string
 
   relativeNodeModuleDirectoryArray.shift();
   let i = relativeNodeModuleDirectoryArray.length;
@@ -318,10 +415,10 @@ const resolveMainFile = async ({
     return null;
   }
 
-  const packageFilePath = fileUrlToPath(packageFileUrl);
-  const packageDirectoryUrl = fileUrlToDirectoryUrl(packageFileUrl);
-  const mainFileRelativePath = packageMainFieldValue.endsWith("/") ? `${packageMainFieldValue}index` : packageMainFieldValue;
-  const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativePath, packageFileUrl);
+  const packageFilePath = urlToFilePath(packageFileUrl);
+  const packageDirectoryUrl = resolveUrl("./", packageFileUrl);
+  const mainFileRelativeUrl = packageMainFieldValue.endsWith("/") ? `${packageMainFieldValue}index` : packageMainFieldValue;
+  const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativeUrl, packageFileUrl);
 
   if (!mainFileUrlFirstCandidate.startsWith(packageDirectoryUrl)) {
     logger.warn(`
@@ -364,7 +461,7 @@ ${extensionCandidateArray.join(`,`)}
 };
 
 const findMainFileUrlOrNull = async mainFileUrl => {
-  const mainFilePath = fileUrlToPath(mainFileUrl);
+  const mainFilePath = urlToFilePath(mainFileUrl);
   const stats = await pathToStats(mainFilePath);
 
   if (stats === null) {
@@ -389,7 +486,7 @@ const findMainFileUrlOrNull = async mainFileUrl => {
 
   if (stats.isDirectory()) {
     const indexFileUrl = resolveUrl("./index", mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`);
-    const extensionLeadingToAFile = await findExtension(fileUrlToPath(indexFileUrl));
+    const extensionLeadingToAFile = await findExtension(urlToFilePath(indexFileUrl));
 
     if (extensionLeadingToAFile === null) {
       return null;
@@ -434,7 +531,7 @@ const visitPackageImports = ({
   packageJsonObject
 }) => {
   const importsForPackageImports = {};
-  const packageFilePath = fileUrlToPath(packageFileUrl);
+  const packageFilePath = urlToFilePath(packageFileUrl);
   const {
     imports: packageImports
   } = packageJsonObject;
@@ -516,11 +613,9 @@ const visitPackageExports = ({
   packageJsonObject,
   packageInfo: {
     packageIsRoot,
-    packageDirectoryRelativePath
+    packageDirectoryRelativeUrl
   },
-  // pass ['browser', 'default'] to read browser first then 'default' if defined
-  // in package exports field
-  favoredExports = ["default"]
+  favoredExports
 }) => {
   const importsForPackageExports = {};
 
@@ -528,7 +623,7 @@ const visitPackageExports = ({
     return importsForPackageExports;
   }
 
-  const packageFilePath = fileUrlToPath(packageFileUrl);
+  const packageFilePath = urlToFilePath(packageFileUrl);
   const {
     exports: rawPackageExports
   } = packageJsonObject;
@@ -615,9 +710,9 @@ ${packageFilePath}
     if (address[0] === "/") {
       to = address;
     } else if (address.startsWith("./")) {
-      to = `${packageDirectoryRelativePath}${address.slice(2)}`;
+      to = `./${packageDirectoryRelativeUrl}${address.slice(2)}`;
     } else {
-      to = `${packageDirectoryRelativePath}${address}`;
+      to = `./${packageDirectoryRelativeUrl}${address}`;
     }
 
     importsForPackageExports[from] = to;
@@ -628,17 +723,25 @@ ${packageFilePath}
 /* eslint-disable import/max-dependencies */
 const generateImportMapForPackage = async ({
   logger,
-  projectDirectoryPath,
-  rootProjectDirectoryPath = projectDirectoryPath,
+  projectDirectoryUrl,
+  rootProjectDirectoryUrl,
   includeDevDependencies = false,
-  includeExports,
-  favoredExports,
-  includeImports
+  includeExports = true,
+  // pass ['browser', 'default'] to read browser first then 'default' if defined
+  // in package exports field
+  favoredExports = ["default"],
+  includeImports = true
 }) => {
-  const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath);
-  const rootProjectDirectoryUrl = pathToDirectoryUrl(rootProjectDirectoryPath);
-  const projectPackageFileUrl = directoryUrlToPackageFileUrl(projectDirectoryUrl);
-  const rootProjectPackageFileUrl = directoryUrlToPackageFileUrl(rootProjectDirectoryUrl);
+  projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl);
+
+  if (typeof rootProjectDirectoryUrl === "undefined") {
+    rootProjectDirectoryUrl = projectDirectoryUrl;
+  } else {
+    rootProjectDirectoryUrl = normalizeDirectoryUrl(rootProjectDirectoryUrl, "rootProjectDirectoryUrl");
+  }
+
+  const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl);
+  const rootProjectPackageFileUrl = resolveUrl("./package.json", rootProjectDirectoryUrl);
   const imports = {};
   const scopes = {};
   const seen = {};
@@ -702,7 +805,7 @@ const generateImportMapForPackage = async ({
       });
       const {
         packageIsRoot,
-        packageDirectoryRelativePath
+        packageDirectoryRelativeUrl
       } = packageInfo;
       Object.keys(importsForPackageImports).forEach(from => {
         const to = importsForPackageImports[from];
@@ -713,9 +816,9 @@ const generateImportMapForPackage = async ({
             to
           });
         } else {
-          const toScoped = to[0] === "/" ? to : `${packageDirectoryRelativePath}${to.startsWith("./") ? to.slice(2) : to}`;
+          const toScoped = to[0] === "/" ? to : `./${packageDirectoryRelativeUrl}${to.startsWith("./") ? to.slice(2) : to}`;
           addScopedImportMapping({
-            scope: packageDirectoryRelativePath,
+            scope: `./${packageDirectoryRelativeUrl}`,
             from,
             to: toScoped
           }); // when a package says './' maps to './'
@@ -724,15 +827,15 @@ const generateImportMapForPackage = async ({
 
           if (from === "./" && to === "./") {
             addScopedImportMapping({
-              scope: packageDirectoryRelativePath,
-              from: packageDirectoryRelativePath,
-              to: packageDirectoryRelativePath
+              scope: `./${packageDirectoryRelativeUrl}`,
+              from: `./${packageDirectoryRelativeUrl}`,
+              to: `./${packageDirectoryRelativeUrl}`
             });
           } else if (from === "/" && to === "/") {
             addScopedImportMapping({
-              scope: packageDirectoryRelativePath,
-              from: packageDirectoryRelativePath,
-              to: packageDirectoryRelativePath
+              scope: `./${packageDirectoryRelativeUrl}`,
+              from: `./${packageDirectoryRelativeUrl}`,
+              to: `./${packageDirectoryRelativeUrl}`
             });
           }
         }
@@ -749,7 +852,7 @@ const generateImportMapForPackage = async ({
       });
       const {
         importerIsRoot,
-        importerRelativePath,
+        importerRelativeUrl,
         packageDirectoryUrl,
         packageDirectoryUrlExpected
       } = packageInfo;
@@ -763,7 +866,7 @@ const generateImportMapForPackage = async ({
           });
         } else {
           addScopedImportMapping({
-            scope: importerRelativePath,
+            scope: `./${importerRelativeUrl}`,
             from,
             to
           });
@@ -771,7 +874,7 @@ const generateImportMapForPackage = async ({
 
         if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
           addScopedImportMapping({
-            scope: importerRelativePath,
+            scope: `./${importerRelativeUrl}`,
             from,
             to
           });
@@ -786,7 +889,7 @@ const generateImportMapForPackage = async ({
     packageJsonObject,
     packageInfo: {
       importerIsRoot,
-      importerRelativePath,
+      importerRelativeUrl,
       packageIsRoot,
       packageIsProject,
       packageDirectoryUrl,
@@ -804,9 +907,9 @@ const generateImportMapForPackage = async ({
     // or a main that does not lead to an actual file
 
     if (mainFileUrl === null) return;
-    const mainFileRelativePath = fileUrlToRelativePath(mainFileUrl, rootProjectDirectoryUrl);
+    const mainFileRelativeUrl = urlToRelativeUrl(mainFileUrl, rootProjectDirectoryUrl);
     const from = packageName;
-    const to = mainFileRelativePath;
+    const to = `./${mainFileRelativeUrl}`;
 
     if (importerIsRoot) {
       addImportMapping({
@@ -815,7 +918,7 @@ const generateImportMapForPackage = async ({
       });
     } else {
       addScopedImportMapping({
-        scope: importerRelativePath,
+        scope: `./${importerRelativeUrl}`,
         from,
         to
       });
@@ -823,7 +926,7 @@ const generateImportMapForPackage = async ({
 
     if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
       addScopedImportMapping({
-        scope: importerRelativePath,
+        scope: `./${importerRelativeUrl}`,
         from,
         to
       });
@@ -926,11 +1029,11 @@ const generateImportMapForPackage = async ({
   }) => {
     const importerIsRoot = importerPackageFileUrl === rootProjectPackageFileUrl;
     const importerIsProject = importerPackageFileUrl === projectPackageFileUrl;
-    const importerPackageDirectoryUrl = fileUrlToDirectoryUrl(importerPackageFileUrl);
-    const importerRelativePath = importerIsRoot ? `./${path.basename(rootProjectDirectoryUrl)}/` : fileUrlToRelativePath(importerPackageDirectoryUrl, rootProjectDirectoryUrl);
+    const importerPackageDirectoryUrl = resolveUrl("./", importerPackageFileUrl);
+    const importerRelativeUrl = importerIsRoot ? `${path.basename(rootProjectDirectoryUrl)}/` : urlToRelativeUrl(importerPackageDirectoryUrl, rootProjectDirectoryUrl);
     const packageIsRoot = packageFileUrl === rootProjectPackageFileUrl;
     const packageIsProject = packageFileUrl === projectPackageFileUrl;
-    const packageDirectoryUrl = fileUrlToDirectoryUrl(packageFileUrl);
+    const packageDirectoryUrl = resolveUrl("./", packageFileUrl);
     let packageDirectoryUrlExpected;
 
     if (packageIsProject && !packageIsRoot) {
@@ -939,16 +1042,16 @@ const generateImportMapForPackage = async ({
       packageDirectoryUrlExpected = `${importerPackageDirectoryUrl}node_modules/${packageName}/`;
     }
 
-    const packageDirectoryRelativePath = fileUrlToRelativePath(packageDirectoryUrl, rootProjectDirectoryUrl);
+    const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, rootProjectDirectoryUrl);
     return {
       importerIsRoot,
       importerIsProject,
-      importerRelativePath,
+      importerRelativeUrl,
       packageIsRoot,
       packageIsProject,
       packageDirectoryUrl,
       packageDirectoryUrlExpected,
-      packageDirectoryRelativePath
+      packageDirectoryRelativeUrl
     };
   };
 
@@ -1016,7 +1119,7 @@ const generateImportMapForPackage = async ({
     return dependencyPromise;
   };
 
-  const projectPackageJsonObject = await readPackageFile(fileUrlToPath(projectPackageFileUrl));
+  const projectPackageJsonObject = await readPackageFile(urlToFilePath(projectPackageFileUrl));
   const packageFileUrl = projectPackageFileUrl;
   const importerPackageFileUrl = projectPackageFileUrl;
   markPackageAsSeen(packageFileUrl, importerPackageFileUrl);
@@ -1154,13 +1257,17 @@ const importMapToVsCodeConfigPaths = ({
 };
 
 const generateImportMapForProjectPackage = async ({
+  // nothing is actually listening for this cancellationToken for now
+  // it's not very important but it would be better to register on it
+  // an stops what we are doing if asked to do so
+  cancellationToken = createCancellationTokenForProcessSIGINT(),
   logLevel,
-  projectDirectoryPath,
+  projectDirectoryUrl,
   inputImportMap,
-  includeDevDependencies,
-  includeExports = false,
-  favoredExports,
-  includeImports = false,
+  includeDevDependencies = process.env.NODE_ENV !== "production",
+  includeExports = true,
+  favoredExports = ["default"],
+  includeImports = true,
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",
   importMapFileLog = true,
@@ -1168,23 +1275,24 @@ const generateImportMapForProjectPackage = async ({
   jsConfigFileLog = true,
   jsConfigLeadingSlash = false
 }) => catchAsyncFunctionCancellation(async () => {
+  projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl);
   const logger = createLogger({
     logLevel
   });
   const projectPackageImportMap = await generateImportMapForPackage({
-    projectDirectoryPath,
+    cancellationToken,
+    logger,
+    projectDirectoryUrl,
     includeDevDependencies,
     includeExports,
     includeImports,
-    favoredExports,
-    logger
+    favoredExports
   });
   const importMap = inputImportMap ? composeTwoImportMaps(inputImportMap, projectPackageImportMap) : projectPackageImportMap;
 
   if (importMapFile) {
-    const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath);
     const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
-    const importMapFilePath = fileUrlToPath(importMapFileUrl);
+    const importMapFilePath = urlToFilePath(importMapFileUrl);
     await writeFileContent(importMapFilePath, JSON.stringify(importMap, null, "  "));
 
     if (importMapFileLog) {
@@ -1193,9 +1301,8 @@ const generateImportMapForProjectPackage = async ({
   }
 
   if (jsConfigFile) {
-    const projectDirectoryUrl = pathToDirectoryUrl(projectDirectoryPath);
     const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl);
-    const jsConfigFilePath = fileUrlToPath(jsConfigFileUrl);
+    const jsConfigFilePath = urlToFilePath(jsConfigFileUrl);
 
     try {
       const jsConfig = {

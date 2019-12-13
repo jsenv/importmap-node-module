@@ -1,6 +1,6 @@
-const { createConfig } = require("@jsenv/eslint-config")
+const { createEslintConfig } = require("@jsenv/eslint-config")
 
-const config = createConfig({
+const config = createEslintConfig({
   importResolutionMethod: "node",
 })
 

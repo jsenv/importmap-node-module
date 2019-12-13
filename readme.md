@@ -38,7 +38,7 @@ Here is code example using `@jsenv/node-module-import-map` to create an `importM
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
 
 generateImportMapForProjectPackage({
-  projectDirectoryUrl: "file:///Users/you/folder/",
+  projectDirectoryUrl: "file:///Users/you/folder",
   includeDevDependencies: true,
   importMapFile: true,
   importMapFileRelativeUrl: "./importMap.json",
@@ -102,9 +102,9 @@ If you never installed a jsenv package, read [Installing a jsenv package](https:
 This documentation is up-to-date with a specific version so prefer any of the following commands
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map@9.0.0
+npm install --save-dev @jsenv/node-module-import-map@9.2.0
 ```
 
 ```console
-yarn add --dev @jsenv/node-module-import-map@9.0.0
+yarn add --dev @jsenv/node-module-import-map@9.2.0
 ```

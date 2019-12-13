@@ -12,7 +12,7 @@ export const normalizeDirectoryUrl = (value, name = "projectDirectoryUrl") => {
       throw new Error(`${name} must starts with file://, received ${value}`)
     }
 
-    return ensureTrailingSlash(value)
+    return ensureTrailingSlash(url)
   }
 
   throw new TypeError(`${name} must be a string or an url, received ${value}`)

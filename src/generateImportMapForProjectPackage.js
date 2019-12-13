@@ -4,7 +4,6 @@ import {
   catchAsyncFunctionCancellation,
 } from "@jsenv/cancellation"
 import { createLogger } from "@jsenv/logger"
-import { composeTwoImportMaps } from "@jsenv/import-map"
 import { resolveUrl, urlToFilePath } from "./internal/urlUtils.js"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 import { normalizeDirectoryUrl } from "./internal/normalizeDirectoryUrl.js"
@@ -17,10 +16,11 @@ export const generateImportMapForProjectPackage = async ({
   cancellationToken = createCancellationTokenForProcessSIGINT(),
   logLevel,
   projectDirectoryUrl,
-  inputImportMap,
+
+  manualOverrides,
   includeDevDependencies = process.env.NODE_ENV !== "production",
   includeExports = true,
-  favoredExports = ["default"],
+  favoredExports = [],
   includeImports = true,
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",
@@ -33,19 +33,17 @@ export const generateImportMapForProjectPackage = async ({
     projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl)
 
     const logger = createLogger({ logLevel })
-    const projectPackageImportMap = await generateImportMapForPackage({
+    const importMap = await generateImportMapForPackage({
       cancellationToken,
       logger,
 
       projectDirectoryUrl,
+      manualOverrides,
       includeDevDependencies,
       includeExports,
       includeImports,
       favoredExports,
     })
-    const importMap = inputImportMap
-      ? composeTwoImportMaps(inputImportMap, projectPackageImportMap)
-      : projectPackageImportMap
 
     if (importMapFile) {
       const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl)
