@@ -1,8 +1,9 @@
-import { urlToFilePath, hasScheme } from "./urlUtils.js"
+import { urlToFileSystemPath } from "@jsenv/util"
+import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageImports = ({ logger, packageFileUrl, packageJsonObject }) => {
   const importsForPackageImports = {}
-  const packageFilePath = urlToFilePath(packageFileUrl)
+  const packageFilePath = urlToFileSystemPath(packageFileUrl)
 
   const { imports: packageImports } = packageJsonObject
   if (typeof packageImports !== "object" || packageImports === null) {
@@ -17,7 +18,7 @@ ${packageFilePath}
   }
 
   Object.keys(packageImports).forEach((specifier) => {
-    if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
+    if (!specifierIsRelative(specifier)) {
       logger.warn(`
 found unexpected specifier in imports of package.json, it must be relative to package.json.
 --- specifier ---
@@ -41,7 +42,7 @@ ${packageFilePath}
 `)
       return
     }
-    if (hasScheme(address) || address.startsWith("//") || address.startsWith("../")) {
+    if (!specifierIsRelative(address)) {
       logger.warn(`
 found unexpected address in imports of package.json, it must be relative to package.json.
 --- address ---

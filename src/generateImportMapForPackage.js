@@ -1,8 +1,7 @@
 /* eslint-disable import/max-dependencies */
 import { basename } from "path"
 import { sortImportMap } from "@jsenv/import-map"
-import { resolveUrl, urlToFilePath, urlToRelativeUrl } from "./internal/urlUtils.js"
-import { normalizeDirectoryUrl } from "./internal/normalizeDirectoryUrl.js"
+import { resolveUrl, urlToRelativeUrl, assertAndNormalizeDirectoryUrl } from "@jsenv/util"
 import { readPackageFile } from "./internal/readPackageFile.js"
 import { resolveNodeModule } from "./internal/resolveNodeModule.js"
 import { resolvePackageMain } from "./internal/resolvePackageMain.js"
@@ -22,14 +21,11 @@ export const generateImportMapForPackage = async ({
   includeImports = true,
   selfImport = true,
 }) => {
-  projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl)
+  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
   if (typeof rootProjectDirectoryUrl === "undefined") {
     rootProjectDirectoryUrl = projectDirectoryUrl
   } else {
-    rootProjectDirectoryUrl = normalizeDirectoryUrl(
-      rootProjectDirectoryUrl,
-      "rootProjectDirectoryUrl",
-    )
+    rootProjectDirectoryUrl = assertAndNormalizeDirectoryUrl(rootProjectDirectoryUrl)
   }
 
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
@@ -425,10 +421,7 @@ export const generateImportMapForPackage = async ({
     return dependencyPromise
   }
 
-  const projectPackageJsonObject = await readPackageFile(
-    urlToFilePath(projectPackageFileUrl),
-    manualOverrides,
-  )
+  const projectPackageJsonObject = await readPackageFile(projectPackageFileUrl, manualOverrides)
 
   const packageFileUrl = projectPackageFileUrl
   const importerPackageFileUrl = projectPackageFileUrl

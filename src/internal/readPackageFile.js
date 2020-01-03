@@ -1,8 +1,7 @@
-import { promisify } from "util"
-import { readFile } from "fs"
+import { readFileContent } from "@jsenv/util"
 
-export const readPackageFile = async (path, manualOverrides) => {
-  const packageFileString = await readFileContent(path)
+export const readPackageFile = async (packageFileUrl, manualOverrides) => {
+  const packageFileString = await readFileContent(packageFileUrl)
   const packageJsonObject = JSON.parse(packageFileString)
   const { name, version } = packageJsonObject
 
@@ -36,10 +35,4 @@ const composeObject = (leftObject, rightObject) => {
     }
   })
   return composedObject
-}
-
-const readFilePromisified = promisify(readFile)
-const readFileContent = async (filePath) => {
-  const buffer = await readFilePromisified(filePath)
-  return buffer.toString()
 }
