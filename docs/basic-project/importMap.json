@@ -1,13 +1,78 @@
 {
   "imports": {
-    "@jsenv/node-module-import-map": "./node_modules/@jsenv/node-module-import-map/index.js"
+    "@jsenv/node-module-import-map/": "./node_modules/@jsenv/node-module-import-map/",
+    "@jsenv/node-module-import-map": "./node_modules/@jsenv/node-module-import-map/index.js",
+    "whatever/": "./"
   },
   "scopes": {
     "./node_modules/@jsenv/node-module-import-map/": {
       "@jsenv/cancellation": "./node_modules/@jsenv/cancellation/index.js",
       "@jsenv/import-map/": "./node_modules/@jsenv/import-map/",
       "@jsenv/import-map": "./node_modules/@jsenv/import-map/index.js",
-      "@jsenv/logger": "./node_modules/@jsenv/logger/index.js"
+      "@jsenv/logger": "./node_modules/@jsenv/logger/index.js",
+      "@jsenv/util": "./node_modules/@jsenv/util/index.js"
+    },
+    "./node_modules/@jsenv/cancellation/": {
+      "@jsenv/cancellation/": "./node_modules/@jsenv/cancellation/"
+    },
+    "./node_modules/@jsenv/import-map/": {
+      "@jsenv/import-map/": "./node_modules/@jsenv/import-map/"
+    },
+    "./node_modules/path-is-absolute/": {
+      "path-is-absolute/": "./node_modules/path-is-absolute/"
+    },
+    "./node_modules/brace-expansion/": {
+      "brace-expansion/": "./node_modules/brace-expansion/",
+      "balanced-match": "./node_modules/balanced-match/index.js",
+      "concat-map": "./node_modules/concat-map/index.js"
+    },
+    "./node_modules/balanced-match/": {
+      "balanced-match/": "./node_modules/balanced-match/"
+    },
+    "./node_modules/@jsenv/logger/": {
+      "@jsenv/logger/": "./node_modules/@jsenv/logger/"
+    },
+    "./node_modules/@jsenv/util/": {
+      "@jsenv/util/": "./node_modules/@jsenv/util/",
+      "rimraf": "./node_modules/rimraf/rimraf.js"
+    },
+    "./node_modules/fs.realpath/": {
+      "fs.realpath/": "./node_modules/fs.realpath/"
+    },
+    "./node_modules/concat-map/": {
+      "concat-map/": "./node_modules/concat-map/"
+    },
+    "./node_modules/minimatch/": {
+      "brace-expansion": "./node_modules/brace-expansion/index.js",
+      "minimatch/": "./node_modules/minimatch/"
+    },
+    "./node_modules/inflight/": {
+      "inflight/": "./node_modules/inflight/",
+      "wrappy": "./node_modules/wrappy/wrappy.js",
+      "once": "./node_modules/once/once.js"
+    },
+    "./node_modules/inherits/": {
+      "inherits/": "./node_modules/inherits/"
+    },
+    "./node_modules/rimraf/": {
+      "rimraf/": "./node_modules/rimraf/",
+      "glob": "./node_modules/glob/glob.js"
+    },
+    "./node_modules/wrappy/": {
+      "wrappy/": "./node_modules/wrappy/"
+    },
+    "./node_modules/glob/": {
+      "path-is-absolute": "./node_modules/path-is-absolute/index.js",
+      "fs.realpath": "./node_modules/fs.realpath/index.js",
+      "minimatch": "./node_modules/minimatch/minimatch.js",
+      "inflight": "./node_modules/inflight/inflight.js",
+      "inherits": "./node_modules/inherits/inherits.js",
+      "glob/": "./node_modules/glob/",
+      "once": "./node_modules/once/once.js"
+    },
+    "./node_modules/once/": {
+      "wrappy": "./node_modules/wrappy/wrappy.js",
+      "once/": "./node_modules/once/"
     }
   }
 }

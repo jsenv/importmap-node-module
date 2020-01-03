@@ -6,6 +6,6 @@
     "generate-import-map": "node ./generate-import-map.js"
   },
   "devDependencies": {
-    "@jsenv/node-module-import-map": "9.4.0"
+    "@jsenv/node-module-import-map": "10.0.0"
   }
 }
