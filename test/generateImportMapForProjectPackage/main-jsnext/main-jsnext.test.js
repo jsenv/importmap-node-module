@@ -8,7 +8,9 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
+    "main-jsnext/": "./node_modules/main-jsnext/",
     "main-jsnext": "./node_modules/main-jsnext/jsnext.js",
+    "root/": "./",
   },
   scopes: {},
 }

@@ -1,7 +1,6 @@
 import { dirname, extname, basename } from "path"
-import { stat } from "fs"
 import { firstOperationMatching } from "@jsenv/cancellation"
-import { resolveUrl, urlToFilePath } from "./urlUtils.js"
+import { resolveUrl, urlToFileSystemPath, fileExists, directoryExists } from "@jsenv/util"
 import { fileURLToPath } from "url"
 
 export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
@@ -54,7 +53,7 @@ const resolveMainFile = async ({
     return null
   }
 
-  const packageFilePath = urlToFilePath(packageFileUrl)
+  const packageFilePath = urlToFileSystemPath(packageFileUrl)
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const mainFileRelativeUrl = packageMainFieldValue.endsWith("/")
     ? `${packageMainFieldValue}index`
@@ -107,65 +106,47 @@ ${extensionCandidateArray.join(`,`)}
 }
 
 const findMainFileUrlOrNull = async (mainFileUrl) => {
-  const mainFilePath = urlToFilePath(mainFileUrl)
-  const stats = await pathToStats(mainFilePath)
-
-  if (stats === null) {
-    const extension = extname(mainFilePath)
-
-    if (extension === "") {
-      const extensionLeadingToAFile = await findExtension(mainFilePath)
-      if (extensionLeadingToAFile === null) {
-        return null
-      }
-      return `${mainFileUrl}.${extensionLeadingToAFile}`
-    }
-    return null
-  }
-
-  if (stats.isFile()) {
+  if (await fileExists(mainFileUrl)) {
     return mainFileUrl
   }
 
-  if (stats.isDirectory()) {
+  if (await directoryExists(mainFileUrl)) {
     const indexFileUrl = resolveUrl(
       "./index",
       mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`,
     )
-    const extensionLeadingToAFile = await findExtension(urlToFilePath(indexFileUrl))
+    const extensionLeadingToAFile = await findExtension(indexFileUrl)
     if (extensionLeadingToAFile === null) {
       return null
     }
     return `${indexFileUrl}.${extensionLeadingToAFile}`
   }
 
+  const mainFilePath = urlToFileSystemPath(mainFileUrl)
+  const extension = extname(mainFilePath)
+
+  if (extension === "") {
+    const extensionLeadingToAFile = await findExtension(mainFileUrl)
+    if (extensionLeadingToAFile === null) {
+      return null
+    }
+    return `${mainFileUrl}.${extensionLeadingToAFile}`
+  }
   return null
 }
 
-const findExtension = async (path) => {
-  const pathDirname = dirname(path)
-  const pathBasename = basename(path)
+const findExtension = async (fileUrl) => {
+  const filePath = urlToFileSystemPath(fileUrl)
+  const fileDirname = dirname(filePath)
+  const fileBasename = basename(filePath)
   const extensionLeadingToFile = await firstOperationMatching({
     array: extensionCandidateArray,
     start: async (extensionCandidate) => {
-      const pathCandidate = `${pathDirname}/${pathBasename}.${extensionCandidate}`
-      const stats = await pathToStats(pathCandidate)
-      return stats && stats.isFile() ? extensionCandidate : null
+      const filePathCandidate = `${fileDirname}/${fileBasename}.${extensionCandidate}`
+      const exists = await fileExists(filePathCandidate)
+      return exists ? extensionCandidate : null
     },
     predicate: (extension) => Boolean(extension),
   })
   return extensionLeadingToFile || null
-}
-
-const pathToStats = (path) => {
-  return new Promise((resolve, reject) => {
-    stat(path, (error, statObject) => {
-      if (error) {
-        if (error.code === "ENOENT") resolve(null)
-        else reject(error)
-      } else {
-        resolve(statObject)
-      }
-    })
-  })
 }

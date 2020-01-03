@@ -1,5 +1,5 @@
 {
-  "name": "basic-name",
+  "name": "root",
   "module": "index.js",
   "dependencies": {
     "bar": "*",

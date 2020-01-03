@@ -8,16 +8,12 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    bar: "./node_modules/bar/bar.js",
-    foo: "./node_modules/foo/foo.js",
+    "whatever/": "./",
+    "bar/": "./node_modules/bar/",
+    "foo/": "./node_modules/foo/",
+    "bar": "./node_modules/bar/bar.js",
+    "foo": "./node_modules/foo/foo.js",
   },
-  scopes: {
-    "./node_modules/bar/": {
-      foo: "./node_modules/foo/foo.js",
-    },
-    "./node_modules/foo/": {
-      bar: "./node_modules/bar/bar.js",
-    },
-  },
+  scopes: {},
 }
 assert({ actual, expected })

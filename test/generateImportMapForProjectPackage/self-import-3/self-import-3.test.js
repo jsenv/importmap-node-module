@@ -8,9 +8,11 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "main-folder-trailing/": "./node_modules/main-folder-trailing/",
-    "main-folder-trailing": "./node_modules/main-folder-trailing/lib/index.js",
+    "root/boo": "./lib/boo.js",
+    "foo/bar": "./node_modules/foo/src/bar.js",
     "root/": "./",
+    "foo/": "./node_modules/foo/",
+    "foo": "./node_modules/foo/index",
   },
   scopes: {},
 }

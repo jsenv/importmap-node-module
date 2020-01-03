@@ -1,5 +1,5 @@
 {
-  "name": "whatever",
+  "name": "root",
   "version": "0.0.1",
   "dependencies": {
     "not-found": "*"

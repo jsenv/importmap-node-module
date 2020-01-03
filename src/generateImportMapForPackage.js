@@ -1,8 +1,7 @@
 /* eslint-disable import/max-dependencies */
 import { basename } from "path"
 import { sortImportMap } from "@jsenv/import-map"
-import { resolveUrl, urlToFilePath, urlToRelativeUrl } from "./internal/urlUtils.js"
-import { normalizeDirectoryUrl } from "./internal/normalizeDirectoryUrl.js"
+import { resolveUrl, urlToRelativeUrl, assertAndNormalizeDirectoryUrl } from "@jsenv/util"
 import { readPackageFile } from "./internal/readPackageFile.js"
 import { resolveNodeModule } from "./internal/resolveNodeModule.js"
 import { resolvePackageMain } from "./internal/resolvePackageMain.js"
@@ -20,15 +19,13 @@ export const generateImportMapForPackage = async ({
   // in package exports field
   favoredExports = [],
   includeImports = true,
+  selfImport = true,
 }) => {
-  projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl)
+  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
   if (typeof rootProjectDirectoryUrl === "undefined") {
     rootProjectDirectoryUrl = projectDirectoryUrl
   } else {
-    rootProjectDirectoryUrl = normalizeDirectoryUrl(
-      rootProjectDirectoryUrl,
-      "rootProjectDirectoryUrl",
-    )
+    rootProjectDirectoryUrl = assertAndNormalizeDirectoryUrl(rootProjectDirectoryUrl)
   }
 
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
@@ -135,6 +132,23 @@ export const generateImportMapForPackage = async ({
       })
     }
 
+    if (selfImport) {
+      const { importerIsRoot, packageDirectoryRelativeUrl } = packageInfo
+
+      if (importerIsRoot) {
+        addImportMapping({
+          from: `${packageName}/`,
+          to: `./${packageDirectoryRelativeUrl}`,
+        })
+      } else {
+        addScopedImportMapping({
+          scope: `./${packageDirectoryRelativeUrl}`,
+          from: `${packageName}/`,
+          to: `./${packageDirectoryRelativeUrl}`,
+        })
+      }
+    }
+
     if (includeExports && "exports" in packageJsonObject) {
       const importsForPackageExports = visitPackageExports({
         packageFileUrl,
@@ -147,25 +161,40 @@ export const generateImportMapForPackage = async ({
       const {
         importerIsRoot,
         importerRelativeUrl,
+        packageIsRoot,
         packageDirectoryUrl,
         packageDirectoryUrlExpected,
       } = packageInfo
-      Object.keys(importsForPackageExports).forEach((from) => {
-        const to = importsForPackageExports[from]
 
-        if (importerIsRoot) {
-          addImportMapping({ from, to })
-        } else {
-          addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
-        }
-        if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
-          addScopedImportMapping({
-            scope: `./${importerRelativeUrl}`,
+      if (packageIsRoot && selfImport) {
+        Object.keys(importsForPackageExports).forEach((from) => {
+          const to = importsForPackageExports[from]
+          addImportMapping({
             from,
             to,
           })
-        }
-      })
+        })
+      } else if (packageIsRoot) {
+        // ignore exports
+      } else {
+        Object.keys(importsForPackageExports).forEach((from) => {
+          const to = importsForPackageExports[from]
+
+          if (importerIsRoot) {
+            addImportMapping({ from, to })
+          } else {
+            addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
+          }
+
+          if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
+            addScopedImportMapping({
+              scope: `./${importerRelativeUrl}`,
+              from,
+              to,
+            })
+          }
+        })
+      }
     }
   }
 
@@ -392,20 +421,43 @@ export const generateImportMapForPackage = async ({
     return dependencyPromise
   }
 
-  const projectPackageJsonObject = await readPackageFile(
-    urlToFilePath(projectPackageFileUrl),
-    manualOverrides,
-  )
+  const projectPackageJsonObject = await readPackageFile(projectPackageFileUrl, manualOverrides)
 
   const packageFileUrl = projectPackageFileUrl
   const importerPackageFileUrl = projectPackageFileUrl
   markPackageAsSeen(packageFileUrl, importerPackageFileUrl)
-  await visit({
-    packageFileUrl,
-    packageName: projectPackageJsonObject.name,
-    packageJsonObject: projectPackageJsonObject,
-    importerPackageFileUrl,
-    includeDevDependencies,
+
+  const packageName = projectPackageJsonObject.name
+  if (typeof packageName === "string") {
+    await visit({
+      packageFileUrl,
+      packageName: projectPackageJsonObject.name,
+      packageJsonObject: projectPackageJsonObject,
+      importerPackageFileUrl,
+      includeDevDependencies,
+    })
+  } else {
+    logger.warn(`package name field must be a string
+--- package name field ---
+${packageName}
+--- package.json file path ---
+${packageFileUrl}`)
+  }
+
+  // remove useless duplicates (scoped key+value already defined on imports)
+  Object.keys(scopes).forEach((key) => {
+    const scopedImports = scopes[key]
+    Object.keys(scopedImports).forEach((scopedImportKey) => {
+      if (
+        scopedImportKey in imports &&
+        imports[scopedImportKey] === scopedImports[scopedImportKey]
+      ) {
+        delete scopedImports[scopedImportKey]
+      }
+    })
+    if (Object.keys(scopedImports).length === 0) {
+      delete scopes[key]
+    }
   })
 
   return sortImportMap({ imports, scopes })

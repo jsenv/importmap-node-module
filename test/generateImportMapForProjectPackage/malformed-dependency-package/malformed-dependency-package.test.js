@@ -8,6 +8,11 @@ const actual = await generateImportMapForProjectPackage({
   logLevel: "off",
   projectDirectoryUrl: testDirectoryUrl,
 })
-const expected = { imports: {}, scopes: {} }
+const expected = {
+  imports: {
+    "root/": "./",
+  },
+  scopes: {},
+}
 // we could/should also expect a console.warn occurs
 assert({ actual, expected })

@@ -1,22 +1,19 @@
 // https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
 
-import { hasScheme, urlToFilePath } from "./urlUtils.js"
+import { urlToFileSystemPath } from "@jsenv/util"
+import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({
   logger,
   packageFileUrl,
   packageName,
   packageJsonObject,
-  packageInfo: { packageIsRoot, packageDirectoryRelativeUrl },
+  packageInfo: { packageDirectoryRelativeUrl },
   favoredExports,
 }) => {
   const importsForPackageExports = {}
 
-  if (packageIsRoot) {
-    return importsForPackageExports
-  }
-
-  const packageFilePath = urlToFilePath(packageFileUrl)
+  const packageFilePath = urlToFileSystemPath(packageFileUrl)
   const { exports: packageExports } = packageJsonObject
 
   // false is allowed as laternative to exports: {}
@@ -57,7 +54,7 @@ ${packageFilePath}
   }
 
   packageExportsKeys.forEach((specifier) => {
-    if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
+    if (!specifierIsRelative(specifier)) {
       logger.warn(`
 found unexpected specifier in exports of package.json, it must be relative to package.json.
 --- specifier ---
@@ -96,7 +93,7 @@ ${packageFilePath}
       return
     }
 
-    if (hasScheme(address) || address.startsWith("//") || address.startsWith("../")) {
+    if (!specifierIsRelative(address)) {
       logger.warn(`
 found unexpected address in exports of package.json, it must be relative to package.json.
 --- address ---

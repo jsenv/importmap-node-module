@@ -1,6 +1,5 @@
-import { fileURLToPath } from "url"
 import { firstOperationMatching } from "@jsenv/cancellation"
-import { urlToRelativeUrl, resolveUrl } from "./urlUtils.js"
+import { urlToRelativeUrl, resolveUrl, urlToFileSystemPath } from "@jsenv/util"
 import { readPackageFile } from "./readPackageFile.js"
 
 export const resolveNodeModule = async ({
@@ -23,9 +22,8 @@ export const resolveNodeModule = async ({
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
       const packageFileUrl = `${rootProjectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`
-      const packageFilePath = fileURLToPath(packageFileUrl)
       try {
-        const packageJsonObject = await readPackageFile(packageFilePath, manualOverrides)
+        const packageJsonObject = await readPackageFile(packageFileUrl, manualOverrides)
         return {
           packageFileUrl,
           packageJsonObject,
@@ -41,7 +39,7 @@ error while parsing dependency package.json.
 --- parsing error message ---
 ${e.message}
 --- package.json path ---
-${packageFilePath}
+${urlToFileSystemPath(packageFileUrl)}
 `)
           return {}
         }
@@ -60,7 +58,7 @@ ${dependencyName}@${dependencyVersionPattern}
 --- required by ---
 ${packageJsonObject.name}@${packageJsonObject.version}
 --- package.json path ---
-${fileURLToPath(packageFileUrl)}
+${urlToFileSystemPath(packageFileUrl)}
     `)
   }
 

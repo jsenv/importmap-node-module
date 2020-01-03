@@ -1,12 +1,15 @@
-import { writeFile } from "fs"
 import {
   createCancellationTokenForProcessSIGINT,
   catchAsyncFunctionCancellation,
 } from "@jsenv/cancellation"
 import { createLogger } from "@jsenv/logger"
-import { resolveUrl, urlToFilePath } from "./internal/urlUtils.js"
+import {
+  resolveUrl,
+  urlToFileSystemPath,
+  assertAndNormalizeDirectoryUrl,
+  writeFileContent,
+} from "@jsenv/util"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
-import { normalizeDirectoryUrl } from "./internal/normalizeDirectoryUrl.js"
 import { generateImportMapForPackage } from "./generateImportMapForPackage.js"
 
 export const generateImportMapForProjectPackage = async ({
@@ -30,7 +33,7 @@ export const generateImportMapForProjectPackage = async ({
   jsConfigLeadingSlash = false,
 }) =>
   catchAsyncFunctionCancellation(async () => {
-    projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl)
+    projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
     const logger = createLogger({ logLevel })
     const importMap = await generateImportMapForPackage({
@@ -47,7 +50,7 @@ export const generateImportMapForProjectPackage = async ({
 
     if (importMapFile) {
       const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl)
-      const importMapFilePath = urlToFilePath(importMapFileUrl)
+      const importMapFilePath = urlToFileSystemPath(importMapFileUrl)
       await writeFileContent(importMapFilePath, JSON.stringify(importMap, null, "  "))
       if (importMapFileLog) {
         logger.info(`-> ${importMapFilePath}`)
@@ -55,7 +58,7 @@ export const generateImportMapForProjectPackage = async ({
     }
     if (jsConfigFile) {
       const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl)
-      const jsConfigFilePath = urlToFilePath(jsConfigFileUrl)
+      const jsConfigFilePath = urlToFileSystemPath(jsConfigFileUrl)
       try {
         const jsConfig = {
           compilerOptions: {
@@ -78,15 +81,4 @@ export const generateImportMapForProjectPackage = async ({
     }
 
     return importMap
-  })
-
-const writeFileContent = (path, content) =>
-  new Promise((resolve, reject) => {
-    writeFile(path, content, (error) => {
-      if (error) {
-        reject(error)
-      } else {
-        resolve()
-      }
-    })
   })
