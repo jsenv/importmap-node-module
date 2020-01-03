@@ -3,9 +3,10 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var path = require('path');
-var url = require('url');
-var util = require('util');
+var url$1 = require('url');
 var fs = require('fs');
+require('crypto');
+var util = require('util');
 
 const assertImportMap = value => {
   if (value === null) {
@@ -53,56 +54,280 @@ const compareLengthOrLocaleCompare = (a, b) => {
   return b.length - a.length || a.localeCompare(b);
 };
 
-const resolveUrl = (value, baseUrl) => {
-  return String(new URL(value, baseUrl));
-};
-const filePathToUrl = path => {
-  return String(url.pathToFileURL(path));
-};
-const urlToFilePath = url$1 => {
-  return url.fileURLToPath(url$1);
-};
-const hasScheme = string => {
-  return /^[a-zA-Z]{2,}:/.test(string);
-};
-const urlToRelativeUrl = (url, baseUrl) => {
-  if (typeof baseUrl !== "string") {
-    throw new TypeError(`baseUrl must be a string, got ${baseUrl}`);
+const isFileSystemPath = value => {
+  if (typeof value !== "string") {
+    throw new TypeError(`isFileSystemPath first arg must be a string, got ${value}`);
   }
 
-  if (url.startsWith(baseUrl)) {
-    // we should take into account only pathname
-    // and ignore search params
-    return url.slice(baseUrl.length);
-  }
-
-  return url;
+  if (value[0] === "/") return true;
+  return startsWithWindowsDriveLetter(value);
 };
 
-const normalizeDirectoryUrl = (value, name = "projectDirectoryUrl") => {
+const startsWithWindowsDriveLetter = string => {
+  const firstChar = string[0];
+  if (!/[a-zA-Z]/.test(firstChar)) return false;
+  const secondChar = string[1];
+  if (secondChar !== ":") return false;
+  return true;
+};
+
+const fileSystemPathToUrl = value => {
+  if (!isFileSystemPath(value)) {
+    throw new Error(`received an invalid value for fileSystemPath: ${value}`);
+  }
+
+  return String(url$1.pathToFileURL(value));
+};
+
+const ensureUrlTrailingSlash = url => {
+  return url.endsWith("/") ? url : `${url}/`;
+};
+
+const assertAndNormalizeDirectoryUrl = value => {
+  let urlString;
+
   if (value instanceof URL) {
-    value = value.href;
+    urlString = value.href;
+  } else if (typeof value === "string") {
+    if (isFileSystemPath(value)) {
+      urlString = fileSystemPathToUrl(value);
+    } else {
+      try {
+        urlString = String(new URL(value));
+      } catch (e) {
+        throw new TypeError(`directoryUrl must be a valid url, received ${value}`);
+      }
+    }
+  } else {
+    throw new TypeError(`directoryUrl must be a string or an url, received ${value}`);
   }
 
-  if (typeof value === "string") {
-    const url = hasScheme(value) ? value : filePathToUrl(value);
+  if (!urlString.startsWith("file://")) {
+    throw new Error(`directoryUrl must starts with file://, received ${value}`);
+  }
 
-    if (!url.startsWith("file://")) {
-      throw new Error(`${name} must starts with file://, received ${value}`);
+  return ensureUrlTrailingSlash(urlString);
+};
+
+const assertAndNormalizeFileUrl = value => {
+  let urlString;
+
+  if (value instanceof URL) {
+    urlString = value.href;
+  } else if (typeof value === "string") {
+    if (isFileSystemPath(value)) {
+      urlString = fileSystemPathToUrl(value);
+    } else {
+      try {
+        urlString = String(new URL(value));
+      } catch (e) {
+        throw new TypeError(`fileUrl must be a valid url, received ${value}`);
+      }
+    }
+  } else {
+    throw new TypeError(`fileUrl must be a string or an url, received ${value}`);
+  }
+
+  if (!urlString.startsWith("file://")) {
+    throw new Error(`fileUrl must starts with file://, received ${value}`);
+  }
+
+  return urlString;
+};
+
+const urlToFileSystemPath = fileUrl => {
+  return url$1.fileURLToPath(fileUrl);
+};
+
+// eslint-disable-next-line import/no-unresolved
+const nodeRequire = require;
+const filenameContainsBackSlashes = __filename.indexOf("\\") > -1;
+const url = filenameContainsBackSlashes ? `file:///${__filename.replace(/\\/g, "/")}` : `file://${__filename}`;
+
+const rimraf = nodeRequire("rimraf");
+
+const createFileDirectories = value => {
+  const fileUrl = assertAndNormalizeFileUrl(value);
+  const filePath = urlToFileSystemPath(fileUrl);
+  return new Promise((resolve, reject) => {
+    fs.mkdir(path.dirname(filePath), {
+      recursive: true
+    }, error => {
+      if (error) {
+        if (error.code === "EEXIST") {
+          resolve();
+          return;
+        }
+
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+};
+
+const directoryExists = async value => {
+  const directoryUrl = assertAndNormalizeDirectoryUrl(value);
+  const directoryPath = urlToFileSystemPath(directoryUrl);
+  return new Promise((resolve, reject) => {
+    fs.stat(directoryPath, (error, stats) => {
+      if (error) {
+        if (error.code === "ENOENT") resolve(false);else reject(error);
+      } else {
+        resolve(stats.isDirectory());
+      }
+    });
+  });
+};
+
+// the error.code === 'ENOENT' shortcut that avoids
+// throwing any error
+
+const fileExists = async value => {
+  const fileUrl = assertAndNormalizeFileUrl(value);
+  const filePath = urlToFileSystemPath(fileUrl);
+  return new Promise((resolve, reject) => {
+    fs.stat(filePath, (error, stats) => {
+      if (error) {
+        if (error.code === "ENOENT") resolve(false);else reject(error);
+      } else {
+        resolve(stats.isFile());
+      }
+    });
+  });
+};
+
+const readFilePromisified = util.promisify(fs.readFile);
+const readFileContent = async value => {
+  const fileUrl = assertAndNormalizeFileUrl(value);
+  const filePath = urlToFileSystemPath(fileUrl);
+  const buffer = await readFilePromisified(filePath);
+  return buffer.toString();
+};
+
+const statPromisified = util.promisify(fs.stat);
+
+const resolveUrl = (specifier, baseUrl) => {
+  if (typeof baseUrl === "undefined") {
+    throw new TypeError(`baseUrl missing`);
+  }
+
+  return String(new URL(specifier, baseUrl));
+};
+
+const getCommonPathname = (pathname, otherPathname) => {
+  const firstDifferentCharacterIndex = findFirstDifferentCharacterIndex(pathname, otherPathname); // pathname and otherpathname are exactly the same
+
+  if (firstDifferentCharacterIndex === -1) {
+    return pathname;
+  }
+
+  const commonString = pathname.slice(0, firstDifferentCharacterIndex + 1); // the first different char is at firstDifferentCharacterIndex
+
+  if (pathname.charAt(firstDifferentCharacterIndex) === "/") {
+    return commonString;
+  }
+
+  if (otherPathname.charAt(firstDifferentCharacterIndex) === "/") {
+    return commonString;
+  }
+
+  const firstDifferentSlashIndex = commonString.lastIndexOf("/");
+  return pathname.slice(0, firstDifferentSlashIndex + 1);
+};
+
+const findFirstDifferentCharacterIndex = (string, otherString) => {
+  const maxCommonLength = Math.min(string.length, otherString.length);
+  let i = 0;
+
+  while (i < maxCommonLength) {
+    const char = string.charAt(i);
+    const otherChar = otherString.charAt(i);
+
+    if (char !== otherChar) {
+      return i;
     }
 
-    return ensureTrailingSlash(url);
+    i++;
   }
 
-  throw new TypeError(`${name} must be a string or an url, received ${value}`);
+  if (string.length === otherString.length) {
+    return -1;
+  } // they differ at maxCommonLength
+
+
+  return maxCommonLength;
 };
 
-const ensureTrailingSlash = string => {
-  return string.endsWith("/") ? string : `${string}/`;
+const pathnameToDirectoryPathname = pathname => {
+  if (pathname.endsWith("/")) {
+    return pathname;
+  }
+
+  const slashLastIndex = pathname.lastIndexOf("/");
+
+  if (slashLastIndex === -1) {
+    return "";
+  }
+
+  return pathname.slice(0, slashLastIndex + 1);
 };
 
-const readPackageFile = async (path, manualOverrides) => {
-  const packageFileString = await readFileContent(path);
+const urlToRelativeUrl = (urlArg, baseUrlArg) => {
+  const url = new URL(urlArg);
+  const baseUrl = new URL(baseUrlArg);
+
+  if (url.protocol !== baseUrl.protocol) {
+    return urlArg;
+  }
+
+  if (url.username !== baseUrl.username || url.password !== baseUrl.password) {
+    return urlArg.slice(url.protocol.length);
+  }
+
+  if (url.host !== baseUrl.host) {
+    return urlArg.slice(url.protocol.length);
+  }
+
+  const {
+    pathname,
+    hash,
+    search
+  } = url;
+
+  if (pathname === "/") {
+    return baseUrl.pathname.slice(1);
+  }
+
+  const {
+    pathname: basePathname
+  } = baseUrl;
+  const commonPathname = getCommonPathname(pathname, basePathname);
+
+  if (!commonPathname) {
+    return urlArg;
+  }
+
+  const specificPathname = pathname.slice(commonPathname.length);
+  const baseSpecificPathname = basePathname.slice(commonPathname.length);
+  const baseSpecificDirectoryPathname = pathnameToDirectoryPathname(baseSpecificPathname);
+  const relativeDirectoriesNotation = baseSpecificDirectoryPathname.replace(/.*?\//g, "../");
+  const relativePathname = `${relativeDirectoriesNotation}${specificPathname}`;
+  return `${relativePathname}${search}${hash}`;
+};
+
+const writeFilePromisified = util.promisify(fs.writeFile);
+const writeFileContent = async (value, content) => {
+  const fileUrl = assertAndNormalizeFileUrl(value);
+  const filePath = urlToFileSystemPath(fileUrl);
+  await createFileDirectories(filePath);
+  return writeFilePromisified(filePath, content);
+};
+
+const readPackageFile = async (packageFileUrl, manualOverrides) => {
+  const packageFileString = await readFileContent(packageFileUrl);
   const packageJsonObject = JSON.parse(packageFileString);
   const {
     name,
@@ -140,13 +365,6 @@ const composeObject = (leftObject, rightObject) => {
     }
   });
   return composedObject;
-};
-
-const readFilePromisified = util.promisify(fs.readFile);
-
-const readFileContent = async filePath => {
-  const buffer = await readFilePromisified(filePath);
-  return buffer.toString();
 };
 
 const firstOperationMatching = ({
@@ -304,10 +522,9 @@ const resolveNodeModule = async ({
     array: nodeModuleCandidateArray,
     start: async nodeModuleCandidate => {
       const packageFileUrl = `${rootProjectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`;
-      const packageFilePath = url.fileURLToPath(packageFileUrl);
 
       try {
-        const packageJsonObject = await readPackageFile(packageFilePath, manualOverrides);
+        const packageJsonObject = await readPackageFile(packageFileUrl, manualOverrides);
         return {
           packageFileUrl,
           packageJsonObject
@@ -323,7 +540,7 @@ error while parsing dependency package.json.
 --- parsing error message ---
 ${e.message}
 --- package.json path ---
-${packageFilePath}
+${urlToFileSystemPath(packageFileUrl)}
 `);
           return {};
         }
@@ -344,7 +561,7 @@ ${dependencyName}@${dependencyVersionPattern}
 --- required by ---
 ${packageJsonObject.name}@${packageJsonObject.version}
 --- package.json path ---
-${url.fileURLToPath(packageFileUrl)}
+${urlToFileSystemPath(packageFileUrl)}
     `);
   }
 
@@ -423,7 +640,7 @@ const resolveMainFile = async ({
     return null;
   }
 
-  const packageFilePath = urlToFilePath(packageFileUrl);
+  const packageFilePath = urlToFileSystemPath(packageFileUrl);
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl);
   const mainFileRelativeUrl = packageMainFieldValue.endsWith("/") ? `${packageMainFieldValue}index` : packageMainFieldValue;
   const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativeUrl, packageFileUrl);
@@ -454,7 +671,7 @@ cannot find file for package.json ${packageMainFieldName} field
 --- ${packageMainFieldName} ---
 ${packageMainFieldValue}
 --- file path ---
-${url.fileURLToPath(mainFileUrlFirstCandidate)}
+${url$1.fileURLToPath(mainFileUrlFirstCandidate)}
 --- package.json path ---
 ${packageFilePath}
 --- extensions tried ---
@@ -469,32 +686,13 @@ ${extensionCandidateArray.join(`,`)}
 };
 
 const findMainFileUrlOrNull = async mainFileUrl => {
-  const mainFilePath = urlToFilePath(mainFileUrl);
-  const stats = await pathToStats(mainFilePath);
-
-  if (stats === null) {
-    const extension = path.extname(mainFilePath);
-
-    if (extension === "") {
-      const extensionLeadingToAFile = await findExtension(mainFilePath);
-
-      if (extensionLeadingToAFile === null) {
-        return null;
-      }
-
-      return `${mainFileUrl}.${extensionLeadingToAFile}`;
-    }
-
-    return null;
-  }
-
-  if (stats.isFile()) {
+  if (await fileExists(mainFileUrl)) {
     return mainFileUrl;
   }
 
-  if (stats.isDirectory()) {
+  if (await directoryExists(mainFileUrl)) {
     const indexFileUrl = resolveUrl("./index", mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`);
-    const extensionLeadingToAFile = await findExtension(urlToFilePath(indexFileUrl));
+    const extensionLeadingToAFile = await findExtension(indexFileUrl);
 
     if (extensionLeadingToAFile === null) {
       return null;
@@ -503,34 +701,53 @@ const findMainFileUrlOrNull = async mainFileUrl => {
     return `${indexFileUrl}.${extensionLeadingToAFile}`;
   }
 
+  const mainFilePath = urlToFileSystemPath(mainFileUrl);
+  const extension = path.extname(mainFilePath);
+
+  if (extension === "") {
+    const extensionLeadingToAFile = await findExtension(mainFileUrl);
+
+    if (extensionLeadingToAFile === null) {
+      return null;
+    }
+
+    return `${mainFileUrl}.${extensionLeadingToAFile}`;
+  }
+
   return null;
 };
 
-const findExtension = async path$1 => {
-  const pathDirname = path.dirname(path$1);
-  const pathBasename = path.basename(path$1);
+const findExtension = async fileUrl => {
+  const filePath = urlToFileSystemPath(fileUrl);
+  const fileDirname = path.dirname(filePath);
+  const fileBasename = path.basename(filePath);
   const extensionLeadingToFile = await firstOperationMatching({
     array: extensionCandidateArray,
     start: async extensionCandidate => {
-      const pathCandidate = `${pathDirname}/${pathBasename}.${extensionCandidate}`;
-      const stats = await pathToStats(pathCandidate);
-      return stats && stats.isFile() ? extensionCandidate : null;
+      const filePathCandidate = `${fileDirname}/${fileBasename}.${extensionCandidate}`;
+      const exists = await fileExists(filePathCandidate);
+      return exists ? extensionCandidate : null;
     },
     predicate: extension => Boolean(extension)
   });
   return extensionLeadingToFile || null;
 };
 
-const pathToStats = path => {
-  return new Promise((resolve, reject) => {
-    fs.stat(path, (error, statObject) => {
-      if (error) {
-        if (error.code === "ENOENT") resolve(null);else reject(error);
-      } else {
-        resolve(statObject);
-      }
-    });
-  });
+const specifierIsRelative = specifier => {
+  if (specifier.startsWith("//")) {
+    return false;
+  }
+
+  if (specifier.startsWith("../")) {
+    return false;
+  } // starts with http:// or file:// or ftp: for instance
+
+
+  if (/^[a-zA-Z]+\:/.test(specifier)) {
+    return false;
+  }
+
+  return true;
 };
 
 const visitPackageImports = ({
@@ -539,7 +756,7 @@ const visitPackageImports = ({
   packageJsonObject
 }) => {
   const importsForPackageImports = {};
-  const packageFilePath = urlToFilePath(packageFileUrl);
+  const packageFilePath = urlToFileSystemPath(packageFileUrl);
   const {
     imports: packageImports
   } = packageJsonObject;
@@ -556,7 +773,7 @@ ${packageFilePath}
   }
 
   Object.keys(packageImports).forEach(specifier => {
-    if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
+    if (!specifierIsRelative(specifier)) {
       logger.warn(`
 found unexpected specifier in imports of package.json, it must be relative to package.json.
 --- specifier ---
@@ -582,7 +799,7 @@ ${packageFilePath}
       return;
     }
 
-    if (hasScheme(address) || address.startsWith("//") || address.startsWith("../")) {
+    if (!specifierIsRelative(address)) {
       logger.warn(`
 found unexpected address in imports of package.json, it must be relative to package.json.
 --- address ---
@@ -618,18 +835,12 @@ const visitPackageExports = ({
   packageName,
   packageJsonObject,
   packageInfo: {
-    packageIsRoot,
     packageDirectoryRelativeUrl
   },
   favoredExports
 }) => {
   const importsForPackageExports = {};
-
-  if (packageIsRoot) {
-    return importsForPackageExports;
-  }
-
-  const packageFilePath = urlToFilePath(packageFileUrl);
+  const packageFilePath = urlToFileSystemPath(packageFileUrl);
   const {
     exports: packageExports
   } = packageJsonObject; // false is allowed as laternative to exports: {}
@@ -672,7 +883,7 @@ ${packageFilePath}
   }
 
   packageExportsKeys.forEach(specifier => {
-    if (hasScheme(specifier) || specifier.startsWith("//") || specifier.startsWith("../")) {
+    if (!specifierIsRelative(specifier)) {
       logger.warn(`
 found unexpected specifier in exports of package.json, it must be relative to package.json.
 --- specifier ---
@@ -711,7 +922,7 @@ ${packageFilePath}
       return;
     }
 
-    if (hasScheme(address) || address.startsWith("//") || address.startsWith("../")) {
+    if (!specifierIsRelative(address)) {
       logger.warn(`
 found unexpected address in exports of package.json, it must be relative to package.json.
 --- address ---
@@ -762,14 +973,15 @@ const generateImportMapForPackage = async ({
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
   favoredExports = [],
-  includeImports = true
+  includeImports = true,
+  selfImport = true
 }) => {
-  projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl);
+  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
 
   if (typeof rootProjectDirectoryUrl === "undefined") {
     rootProjectDirectoryUrl = projectDirectoryUrl;
   } else {
-    rootProjectDirectoryUrl = normalizeDirectoryUrl(rootProjectDirectoryUrl, "rootProjectDirectoryUrl");
+    rootProjectDirectoryUrl = assertAndNormalizeDirectoryUrl(rootProjectDirectoryUrl);
   }
 
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl);
@@ -874,6 +1086,26 @@ const generateImportMapForPackage = async ({
       });
     }
 
+    if (selfImport) {
+      const {
+        importerIsRoot,
+        packageDirectoryRelativeUrl
+      } = packageInfo;
+
+      if (importerIsRoot) {
+        addImportMapping({
+          from: `${packageName}/`,
+          to: `./${packageDirectoryRelativeUrl}`
+        });
+      } else {
+        addScopedImportMapping({
+          scope: `./${packageDirectoryRelativeUrl}`,
+          from: `${packageName}/`,
+          to: `./${packageDirectoryRelativeUrl}`
+        });
+      }
+    }
+
     if (includeExports && "exports" in packageJsonObject) {
       const importsForPackageExports = visitPackageExports({
         packageFileUrl,
@@ -885,33 +1117,45 @@ const generateImportMapForPackage = async ({
       const {
         importerIsRoot,
         importerRelativeUrl,
+        packageIsRoot,
         packageDirectoryUrl,
         packageDirectoryUrlExpected
       } = packageInfo;
-      Object.keys(importsForPackageExports).forEach(from => {
-        const to = importsForPackageExports[from];
 
-        if (importerIsRoot) {
+      if (packageIsRoot && selfImport) {
+        Object.keys(importsForPackageExports).forEach(from => {
+          const to = importsForPackageExports[from];
           addImportMapping({
             from,
             to
           });
-        } else {
-          addScopedImportMapping({
-            scope: `./${importerRelativeUrl}`,
-            from,
-            to
-          });
-        }
+        });
+      } else if (packageIsRoot) ; else {
+        Object.keys(importsForPackageExports).forEach(from => {
+          const to = importsForPackageExports[from];
 
-        if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
-          addScopedImportMapping({
-            scope: `./${importerRelativeUrl}`,
-            from,
-            to
-          });
-        }
-      });
+          if (importerIsRoot) {
+            addImportMapping({
+              from,
+              to
+            });
+          } else {
+            addScopedImportMapping({
+              scope: `./${importerRelativeUrl}`,
+              from,
+              to
+            });
+          }
+
+          if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
+            addScopedImportMapping({
+              scope: `./${importerRelativeUrl}`,
+              from,
+              to
+            });
+          }
+        });
+      }
     }
   };
 
@@ -1152,16 +1396,40 @@ const generateImportMapForPackage = async ({
     return dependencyPromise;
   };
 
-  const projectPackageJsonObject = await readPackageFile(urlToFilePath(projectPackageFileUrl), manualOverrides);
+  const projectPackageJsonObject = await readPackageFile(projectPackageFileUrl, manualOverrides);
   const packageFileUrl = projectPackageFileUrl;
   const importerPackageFileUrl = projectPackageFileUrl;
   markPackageAsSeen(packageFileUrl, importerPackageFileUrl);
-  await visit({
-    packageFileUrl,
-    packageName: projectPackageJsonObject.name,
-    packageJsonObject: projectPackageJsonObject,
-    importerPackageFileUrl,
-    includeDevDependencies
+  const packageName = projectPackageJsonObject.name;
+
+  if (typeof packageName === "string") {
+    await visit({
+      packageFileUrl,
+      packageName: projectPackageJsonObject.name,
+      packageJsonObject: projectPackageJsonObject,
+      importerPackageFileUrl,
+      includeDevDependencies
+    });
+  } else {
+    logger.warn(`package name field must be a string
+--- package name field ---
+${packageName}
+--- package.json file path ---
+${packageFileUrl}`);
+  } // remove useless duplicates (scoped key+value already defined on imports)
+
+
+  Object.keys(scopes).forEach(key => {
+    const scopedImports = scopes[key];
+    Object.keys(scopedImports).forEach(scopedImportKey => {
+      if (scopedImportKey in imports && imports[scopedImportKey] === scopedImports[scopedImportKey]) {
+        delete scopedImports[scopedImportKey];
+      }
+    });
+
+    if (Object.keys(scopedImports).length === 0) {
+      delete scopes[key];
+    }
   });
   return sortImportMap({
     imports,
@@ -1223,14 +1491,7 @@ const createLogger = ({
     };
   }
 
-  throw new Error(createUnexpectedLogLevelMessage({
-    logLevel
-  }));
-};
-
-const createUnexpectedLogLevelMessage = ({
-  logLevel
-}) => `unexpected logLevel.
+  throw new Error(`unexpected logLevel.
 --- logLevel ---
 ${logLevel}
 --- allowed log levels ---
@@ -1238,9 +1499,8 @@ ${LOG_LEVEL_OFF}
 ${LOG_LEVEL_ERROR}
 ${LOG_LEVEL_WARN}
 ${LOG_LEVEL_INFO}
-${LOG_LEVEL_DEBUG}
-`;
-
+${LOG_LEVEL_DEBUG}`);
+};
 const debug = console.debug;
 
 const debugDisabled = () => {};
@@ -1308,7 +1568,7 @@ const generateImportMapForProjectPackage = async ({
   jsConfigFileLog = true,
   jsConfigLeadingSlash = false
 }) => catchAsyncFunctionCancellation(async () => {
-  projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl);
+  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
   const logger = createLogger({
     logLevel
   });
@@ -1325,7 +1585,7 @@ const generateImportMapForProjectPackage = async ({
 
   if (importMapFile) {
     const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
-    const importMapFilePath = urlToFilePath(importMapFileUrl);
+    const importMapFilePath = urlToFileSystemPath(importMapFileUrl);
     await writeFileContent(importMapFilePath, JSON.stringify(importMap, null, "  "));
 
     if (importMapFileLog) {
@@ -1335,7 +1595,7 @@ const generateImportMapForProjectPackage = async ({
 
   if (jsConfigFile) {
     const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl);
-    const jsConfigFilePath = urlToFilePath(jsConfigFileUrl);
+    const jsConfigFilePath = urlToFileSystemPath(jsConfigFileUrl);
 
     try {
       const jsConfig = {
@@ -1361,16 +1621,6 @@ const generateImportMapForProjectPackage = async ({
   }
 
   return importMap;
-});
-
-const writeFileContent = (path, content) => new Promise((resolve, reject) => {
-  fs.writeFile(path, content, error => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve();
-    }
-  });
 });
 
 exports.generateImportMapForPackage = generateImportMapForPackage;
