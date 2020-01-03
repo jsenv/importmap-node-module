@@ -1,7 +1,6 @@
 {
   "name": "whatever",
   "dependencies": {
-    "bar": "",
-    "foo": ""
+    "foo": "*"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "whatever",
+  "dependencies": {
+    "foo": "*"
+  },
+  "exports": {
+    "./": "./",
+    "./boo": "./lib/boo.js"
+  }
+}

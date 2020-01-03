@@ -8,11 +8,11 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
+    "whatever/boo": "./lib/boo.js",
     "whatever/": "./",
-    "bar/": "./node_modules/bar/",
+    "foo/bar": "./node_modules/foo/src/bar.js",
     "foo/": "./node_modules/foo/",
-    "bar": "./node_modules/bar/bar.js",
-    "foo": "./node_modules/foo/foo.js",
+    "foo": "./node_modules/foo/index",
   },
   scopes: {},
 }
