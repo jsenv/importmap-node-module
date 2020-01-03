@@ -20,6 +20,7 @@ export const generateImportMapForPackage = async ({
   // in package exports field
   favoredExports = [],
   includeImports = true,
+  selfImport = true,
 }) => {
   projectDirectoryUrl = normalizeDirectoryUrl(projectDirectoryUrl)
   if (typeof rootProjectDirectoryUrl === "undefined") {
@@ -135,6 +136,33 @@ export const generateImportMapForPackage = async ({
       })
     }
 
+    if (selfImport) {
+      const {
+        importerIsRoot,
+        packageDirectoryRelativeUrl,
+        packageDirectoryUrl,
+        packageDirectoryUrlExpected,
+      } = packageInfo
+
+      if (importerIsRoot) {
+        addImportMapping({
+          from: `${packageName}/`,
+          to: `./${packageDirectoryRelativeUrl}`,
+        })
+      } else if (packageDirectoryUrl === packageDirectoryUrlExpected) {
+        addImportMapping({
+          from: `${packageName}/`,
+          to: `./${packageDirectoryRelativeUrl}`,
+        })
+      } else {
+        addScopedImportMapping({
+          scope: `./${packageDirectoryRelativeUrl}`,
+          from: `${packageName}/`,
+          to: `./${packageDirectoryRelativeUrl}`,
+        })
+      }
+    }
+
     if (includeExports && "exports" in packageJsonObject) {
       const importsForPackageExports = visitPackageExports({
         packageFileUrl,
@@ -147,25 +175,40 @@ export const generateImportMapForPackage = async ({
       const {
         importerIsRoot,
         importerRelativeUrl,
+        packageIsRoot,
         packageDirectoryUrl,
         packageDirectoryUrlExpected,
       } = packageInfo
-      Object.keys(importsForPackageExports).forEach((from) => {
-        const to = importsForPackageExports[from]
 
-        if (importerIsRoot) {
-          addImportMapping({ from, to })
-        } else {
-          addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
-        }
-        if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
-          addScopedImportMapping({
-            scope: `./${importerRelativeUrl}`,
+      if (packageIsRoot && selfImport) {
+        Object.keys(importsForPackageExports).forEach((from) => {
+          const to = importsForPackageExports[from]
+          addImportMapping({
             from,
             to,
           })
-        }
-      })
+        })
+      } else if (packageIsRoot) {
+        // ignore exports
+      } else {
+        Object.keys(importsForPackageExports).forEach((from) => {
+          const to = importsForPackageExports[from]
+
+          if (importerIsRoot) {
+            addImportMapping({ from, to })
+          } else {
+            addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
+          }
+
+          if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
+            addScopedImportMapping({
+              scope: `./${importerRelativeUrl}`,
+              from,
+              to,
+            })
+          }
+        })
+      }
     }
   }
 
@@ -406,6 +449,22 @@ export const generateImportMapForPackage = async ({
     packageJsonObject: projectPackageJsonObject,
     importerPackageFileUrl,
     includeDevDependencies,
+  })
+
+  // remove useless duplicates (scoped key+value already defined on imports)
+  Object.keys(scopes).forEach((key) => {
+    const scopedImports = scopes[key]
+    Object.keys(scopedImports).forEach((scopedImportKey) => {
+      if (
+        scopedImportKey in imports &&
+        imports[scopedImportKey] === scopedImports[scopedImportKey]
+      ) {
+        delete scopedImports[scopedImportKey]
+      }
+    })
+    if (Object.keys(scopedImports).length === 0) {
+      delete scopes[key]
+    }
   })
 
   return sortImportMap({ imports, scopes })

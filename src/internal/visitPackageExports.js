@@ -7,14 +7,10 @@ export const visitPackageExports = ({
   packageFileUrl,
   packageName,
   packageJsonObject,
-  packageInfo: { packageIsRoot, packageDirectoryRelativeUrl },
+  packageInfo: { packageDirectoryRelativeUrl },
   favoredExports,
 }) => {
   const importsForPackageExports = {}
-
-  if (packageIsRoot) {
-    return importsForPackageExports
-  }
 
   const packageFilePath = urlToFilePath(packageFileUrl)
   const { exports: packageExports } = packageJsonObject
