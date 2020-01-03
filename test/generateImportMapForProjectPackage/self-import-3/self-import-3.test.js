@@ -8,9 +8,9 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "whatever/boo": "./lib/boo.js",
-    "whatever/": "./",
+    "root/boo": "./lib/boo.js",
     "foo/bar": "./node_modules/foo/src/bar.js",
+    "root/": "./",
     "foo/": "./node_modules/foo/",
     "foo": "./node_modules/foo/index",
   },

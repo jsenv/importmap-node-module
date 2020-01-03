@@ -1,5 +1,5 @@
 {
-  "name": "whatever",
+  "name": "root",
   "dependencies": {
     "main-undefined": "*"
   }

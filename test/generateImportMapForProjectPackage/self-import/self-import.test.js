@@ -8,7 +8,7 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "whatever/": "./",
+    "root/": "./",
   },
   scopes: {},
 }

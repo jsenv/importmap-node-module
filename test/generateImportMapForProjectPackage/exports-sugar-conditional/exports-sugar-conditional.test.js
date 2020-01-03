@@ -12,7 +12,9 @@ const testDirectoryUrl = import.meta.resolve("./")
   const actual = importMap
   const expected = {
     imports: {
-      foo: "./node_modules/foo/index.browser.js",
+      "root/": "./",
+      "foo/": "./node_modules/foo/",
+      "foo": "./node_modules/foo/index.browser.js",
     },
     scopes: {},
   }
@@ -27,7 +29,9 @@ const testDirectoryUrl = import.meta.resolve("./")
   const actual = importMap
   const expected = {
     imports: {
-      foo: "./node_modules/foo/index.default.js",
+      "root/": "./",
+      "foo/": "./node_modules/foo/",
+      "foo": "./node_modules/foo/index.default.js",
     },
     scopes: {},
   }

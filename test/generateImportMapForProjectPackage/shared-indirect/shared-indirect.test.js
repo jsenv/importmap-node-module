@@ -12,11 +12,14 @@ const importMap = await generateImportMapForProjectPackage({
   const actual = importMap
   const expected = {
     imports: {
-      foo: "./node_modules/foo/foo.js",
+      "root/": "./",
+      "foo/": "./node_modules/foo/",
+      "foo": "./node_modules/foo/foo.js",
     },
     scopes: {
       "./node_modules/bar/": {
         "./node_modules/bar/": "./node_modules/bar/",
+        "bar/": "./node_modules/bar/",
         "./": "./node_modules/bar/",
       },
       "./node_modules/foo/": {

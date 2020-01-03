@@ -137,19 +137,9 @@ export const generateImportMapForPackage = async ({
     }
 
     if (selfImport) {
-      const {
-        importerIsRoot,
-        packageDirectoryRelativeUrl,
-        packageDirectoryUrl,
-        packageDirectoryUrlExpected,
-      } = packageInfo
+      const { importerIsRoot, packageDirectoryRelativeUrl } = packageInfo
 
       if (importerIsRoot) {
-        addImportMapping({
-          from: `${packageName}/`,
-          to: `./${packageDirectoryRelativeUrl}`,
-        })
-      } else if (packageDirectoryUrl === packageDirectoryUrlExpected) {
         addImportMapping({
           from: `${packageName}/`,
           to: `./${packageDirectoryRelativeUrl}`,
@@ -443,13 +433,23 @@ export const generateImportMapForPackage = async ({
   const packageFileUrl = projectPackageFileUrl
   const importerPackageFileUrl = projectPackageFileUrl
   markPackageAsSeen(packageFileUrl, importerPackageFileUrl)
-  await visit({
-    packageFileUrl,
-    packageName: projectPackageJsonObject.name,
-    packageJsonObject: projectPackageJsonObject,
-    importerPackageFileUrl,
-    includeDevDependencies,
-  })
+
+  const packageName = projectPackageJsonObject.name
+  if (typeof packageName === "string") {
+    await visit({
+      packageFileUrl,
+      packageName: projectPackageJsonObject.name,
+      packageJsonObject: projectPackageJsonObject,
+      importerPackageFileUrl,
+      includeDevDependencies,
+    })
+  } else {
+    logger.warn(`package name field must be a string
+--- package name field ---
+${packageName}
+--- package.json file path ---
+${packageFileUrl}`)
+  }
 
   // remove useless duplicates (scoped key+value already defined on imports)
   Object.keys(scopes).forEach((key) => {
