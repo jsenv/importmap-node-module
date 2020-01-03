@@ -1,6 +1,6 @@
 import { dirname, extname, basename } from "path"
 import { firstOperationMatching } from "@jsenv/cancellation"
-import { resolveUrl, urlToFileSystemPath, readFileStat } from "@jsenv/util"
+import { resolveUrl, urlToFileSystemPath, fileExists, directoryExists } from "@jsenv/util"
 import { fileURLToPath } from "url"
 
 export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
@@ -106,27 +106,11 @@ ${extensionCandidateArray.join(`,`)}
 }
 
 const findMainFileUrlOrNull = async (mainFileUrl) => {
-  const stats = await readFileStat(mainFileUrl)
-
-  if (stats === null) {
-    const mainFilePath = urlToFileSystemPath(mainFileUrl)
-    const extension = extname(mainFilePath)
-
-    if (extension === "") {
-      const extensionLeadingToAFile = await findExtension(mainFileUrl)
-      if (extensionLeadingToAFile === null) {
-        return null
-      }
-      return `${mainFileUrl}.${extensionLeadingToAFile}`
-    }
-    return null
-  }
-
-  if (stats.isFile()) {
+  if (await fileExists(mainFileUrl)) {
     return mainFileUrl
   }
 
-  if (stats.isDirectory()) {
+  if (await directoryExists(mainFileUrl)) {
     const indexFileUrl = resolveUrl(
       "./index",
       mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`,
@@ -138,6 +122,16 @@ const findMainFileUrlOrNull = async (mainFileUrl) => {
     return `${indexFileUrl}.${extensionLeadingToAFile}`
   }
 
+  const mainFilePath = urlToFileSystemPath(mainFileUrl)
+  const extension = extname(mainFilePath)
+
+  if (extension === "") {
+    const extensionLeadingToAFile = await findExtension(mainFileUrl)
+    if (extensionLeadingToAFile === null) {
+      return null
+    }
+    return `${mainFileUrl}.${extensionLeadingToAFile}`
+  }
   return null
 }
 
@@ -149,8 +143,8 @@ const findExtension = async (fileUrl) => {
     array: extensionCandidateArray,
     start: async (extensionCandidate) => {
       const filePathCandidate = `${fileDirname}/${fileBasename}.${extensionCandidate}`
-      const stats = await readFileStat(filePathCandidate)
-      return stats && stats.isFile() ? extensionCandidate : null
+      const exists = await fileExists(filePathCandidate)
+      return exists ? extensionCandidate : null
     },
     predicate: (extension) => Boolean(extension),
   })
