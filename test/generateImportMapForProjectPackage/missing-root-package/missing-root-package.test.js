@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlToFilePath } from "../../../src/internal/urlUtils.js"
+import { urlToFileSystemPath } from "@jsenv/util"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
 const testDirectoryUrl = import.meta.resolve("./")
@@ -15,7 +15,7 @@ try {
   const actual = { code, message }
   const expected = {
     code: "ENOENT",
-    message: `ENOENT: no such file or directory, open '${urlToFilePath(
+    message: `ENOENT: no such file or directory, open '${urlToFileSystemPath(
       testDirectoryUrl,
     )}package.json'`,
   }
