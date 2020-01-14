@@ -19,10 +19,20 @@ export const visitPackageExports = ({
   // false is allowed as laternative to exports: {}
   if (packageExports === false) return importsForPackageExports
 
+  const addressToDestination = (address) => {
+    if (address[0] === "/") {
+      return address
+    }
+    if (address.startsWith("./")) {
+      return `./${packageDirectoryRelativeUrl}${address.slice(2)}`
+    }
+    return `./${packageDirectoryRelativeUrl}${address}`
+  }
+
   // exports used to indicate the main file
   if (typeof packageExports === "string") {
     const from = packageName
-    const to = packageExports
+    const to = addressToDestination(packageExports)
     importsForPackageExports[from] = to
     return importsForPackageExports
   }
@@ -117,14 +127,7 @@ ${packageFilePath}
       from = `${packageName}/${specifier}`
     }
 
-    let to
-    if (address[0] === "/") {
-      to = address
-    } else if (address.startsWith("./")) {
-      to = `./${packageDirectoryRelativeUrl}${address.slice(2)}`
-    } else {
-      to = `./${packageDirectoryRelativeUrl}${address}`
-    }
+    const to = addressToDestination(address)
 
     importsForPackageExports[from] = to
   })
