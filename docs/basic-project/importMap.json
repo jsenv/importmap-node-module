@@ -1,0 +1,33 @@
+{
+  "imports": {
+    "@jsenv/node-module-import-map/": "./node_modules/@jsenv/node-module-import-map/",
+    "@jsenv/node-module-import-map": "./node_modules/@jsenv/node-module-import-map/index.js",
+    "whatever/": "./"
+  },
+  "scopes": {
+    "./node_modules/@jsenv/node-module-import-map/": {
+      "@jsenv/cancellation": "./node_modules/@jsenv/cancellation/index.js",
+      "@jsenv/import-map/": "./node_modules/@jsenv/import-map/",
+      "@jsenv/import-map": "./node_modules/@jsenv/import-map/index.js",
+      "@jsenv/logger": "./node_modules/@jsenv/logger/index.js",
+      "@jsenv/util": "./node_modules/@jsenv/util/index.js"
+    },
+    "./node_modules/@jsenv/cancellation/": {
+      "@jsenv/cancellation/": "./node_modules/@jsenv/cancellation/"
+    },
+    "./node_modules/@jsenv/import-map/": {
+      "@jsenv/import-map/": "./node_modules/@jsenv/import-map/"
+    },
+    "./node_modules/@jsenv/url-meta/": {
+      "@jsenv/url-meta/": "./node_modules/@jsenv/url-meta/"
+    },
+    "./node_modules/@jsenv/logger/": {
+      "@jsenv/logger/": "./node_modules/@jsenv/logger/"
+    },
+    "./node_modules/@jsenv/util/": {
+      "@jsenv/cancellation": "./node_modules/@jsenv/cancellation/index.js",
+      "@jsenv/url-meta": "./node_modules/@jsenv/url-meta/index.js",
+      "@jsenv/util/": "./node_modules/@jsenv/util/"
+    }
+  }
+}
