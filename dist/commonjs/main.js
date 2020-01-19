@@ -3,7 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var path = require('path');
-var url$1 = require('url');
+var url = require('url');
 var fs = require('fs');
 require('crypto');
 var util = require('util');
@@ -54,6 +54,10 @@ const compareLengthOrLocaleCompare = (a, b) => {
   return b.length - a.length || a.localeCompare(b);
 };
 
+const ensureUrlTrailingSlash = url => {
+  return url.endsWith("/") ? url : `${url}/`;
+};
+
 const isFileSystemPath = value => {
   if (typeof value !== "string") {
     throw new TypeError(`isFileSystemPath first arg must be a string, got ${value}`);
@@ -76,11 +80,7 @@ const fileSystemPathToUrl = value => {
     throw new Error(`received an invalid value for fileSystemPath: ${value}`);
   }
 
-  return String(url$1.pathToFileURL(value));
-};
-
-const ensureUrlTrailingSlash = url => {
-  return url.endsWith("/") ? url : `${url}/`;
+  return String(url.pathToFileURL(value));
 };
 
 const assertAndNormalizeDirectoryUrl = value => {
@@ -109,7 +109,7 @@ const assertAndNormalizeDirectoryUrl = value => {
   return ensureUrlTrailingSlash(urlString);
 };
 
-const assertAndNormalizeFileUrl = value => {
+const assertAndNormalizeFileUrl = (value, baseUrl) => {
   let urlString;
 
   if (value instanceof URL) {
@@ -119,7 +119,7 @@ const assertAndNormalizeFileUrl = value => {
       urlString = fileSystemPathToUrl(value);
     } else {
       try {
-        urlString = String(new URL(value));
+        urlString = String(new URL(value, baseUrl));
       } catch (e) {
         throw new TypeError(`fileUrl must be a valid url, received ${value}`);
       }
@@ -135,236 +135,219 @@ const assertAndNormalizeFileUrl = value => {
   return urlString;
 };
 
+const statsToType = stats => {
+  if (stats.isFile()) return "file";
+  if (stats.isDirectory()) return "directory";
+  if (stats.isSymbolicLink()) return "symbolic-link";
+  if (stats.isFIFO()) return "fifo";
+  if (stats.isSocket()) return "socket";
+  if (stats.isCharacterDevice()) return "character-device";
+  if (stats.isBlockDevice()) return "block-device";
+  return undefined;
+};
+
 const urlToFileSystemPath = fileUrl => {
-  return url$1.fileURLToPath(fileUrl);
+  if (fileUrl[fileUrl.length - 1] === "/") {
+    // remove trailing / so that nodejs path becomes predictable otherwise it logs
+    // the trailing slash on linux but does not on windows
+    fileUrl = fileUrl.slice(0, -1);
+  }
+
+  const fileSystemPath = url.fileURLToPath(fileUrl);
+  return fileSystemPath;
 };
 
-// eslint-disable-next-line import/no-unresolved
-const nodeRequire = require;
-const filenameContainsBackSlashes = __filename.indexOf("\\") > -1;
-const url = filenameContainsBackSlashes ? `file:///${__filename.replace(/\\/g, "/")}` : `file://${__filename}`;
+// https://github.com/coderaiser/cloudcmd/issues/63#issuecomment-195478143
+// https://nodejs.org/api/fs.html#fs_file_modes
+// https://github.com/TooTallNate/stat-mode
+// cannot get from fs.constants because they are not available on windows
+const S_IRUSR = 256;
+/* 0000400 read permission, owner */
 
-const rimraf = nodeRequire("rimraf");
+const S_IWUSR = 128;
+/* 0000200 write permission, owner */
 
-const createFileDirectories = value => {
-  const fileUrl = assertAndNormalizeFileUrl(value);
-  const filePath = urlToFileSystemPath(fileUrl);
+const S_IXUSR = 64;
+/* 0000100 execute/search permission, owner */
+
+const S_IRGRP = 32;
+/* 0000040 read permission, group */
+
+const S_IWGRP = 16;
+/* 0000020 write permission, group */
+
+const S_IXGRP = 8;
+/* 0000010 execute/search permission, group */
+
+const S_IROTH = 4;
+/* 0000004 read permission, others */
+
+const S_IWOTH = 2;
+/* 0000002 write permission, others */
+
+const S_IXOTH = 1;
+const permissionsToBinaryFlags = ({
+  owner,
+  group,
+  others
+}) => {
+  let binaryFlags = 0;
+  if (owner.read) binaryFlags |= S_IRUSR;
+  if (owner.write) binaryFlags |= S_IWUSR;
+  if (owner.execute) binaryFlags |= S_IXUSR;
+  if (group.read) binaryFlags |= S_IRGRP;
+  if (group.write) binaryFlags |= S_IWGRP;
+  if (group.execute) binaryFlags |= S_IXGRP;
+  if (others.read) binaryFlags |= S_IROTH;
+  if (others.write) binaryFlags |= S_IWOTH;
+  if (others.execute) binaryFlags |= S_IXOTH;
+  return binaryFlags;
+};
+
+const writeFileSystemNodePermissions = async (source, permissions) => {
+  const sourceUrl = assertAndNormalizeFileUrl(source);
+  const sourcePath = urlToFileSystemPath(sourceUrl);
+  let binaryFlags;
+
+  if (typeof permissions === "object") {
+    permissions = {
+      owner: {
+        read: getPermissionOrComputeDefault("read", "owner", permissions),
+        write: getPermissionOrComputeDefault("write", "owner", permissions),
+        execute: getPermissionOrComputeDefault("execute", "owner", permissions)
+      },
+      group: {
+        read: getPermissionOrComputeDefault("read", "group", permissions),
+        write: getPermissionOrComputeDefault("write", "group", permissions),
+        execute: getPermissionOrComputeDefault("execute", "group", permissions)
+      },
+      others: {
+        read: getPermissionOrComputeDefault("read", "others", permissions),
+        write: getPermissionOrComputeDefault("write", "others", permissions),
+        execute: getPermissionOrComputeDefault("execute", "others", permissions)
+      }
+    };
+    binaryFlags = permissionsToBinaryFlags(permissions);
+  } else {
+    binaryFlags = permissions;
+  }
+
+  return chmodNaive(sourcePath, binaryFlags);
+};
+
+const chmodNaive = (fileSystemPath, binaryFlags) => {
   return new Promise((resolve, reject) => {
-    fs.mkdir(path.dirname(filePath), {
-      recursive: true
-    }, error => {
+    fs.chmod(fileSystemPath, binaryFlags, error => {
       if (error) {
-        if (error.code === "EEXIST") {
-          resolve();
-          return;
-        }
-
         reject(error);
-        return;
-      }
-
-      resolve();
-    });
-  });
-};
-
-const directoryExists = async value => {
-  const directoryUrl = assertAndNormalizeDirectoryUrl(value);
-  const directoryPath = urlToFileSystemPath(directoryUrl);
-  return new Promise((resolve, reject) => {
-    fs.stat(directoryPath, (error, stats) => {
-      if (error) {
-        if (error.code === "ENOENT") resolve(false);else reject(error);
       } else {
-        resolve(stats.isDirectory());
+        resolve();
       }
     });
   });
 };
 
-// the error.code === 'ENOENT' shortcut that avoids
-// throwing any error
-
-const fileExists = async value => {
-  const fileUrl = assertAndNormalizeFileUrl(value);
-  const filePath = urlToFileSystemPath(fileUrl);
-  return new Promise((resolve, reject) => {
-    fs.stat(filePath, (error, stats) => {
-      if (error) {
-        if (error.code === "ENOENT") resolve(false);else reject(error);
-      } else {
-        resolve(stats.isFile());
-      }
-    });
-  });
+const actionLevels = {
+  read: 0,
+  write: 1,
+  execute: 2
+};
+const subjectLevels = {
+  others: 0,
+  group: 1,
+  owner: 2
 };
 
-const readFilePromisified = util.promisify(fs.readFile);
-const readFileContent = async value => {
-  const fileUrl = assertAndNormalizeFileUrl(value);
-  const filePath = urlToFileSystemPath(fileUrl);
-  const buffer = await readFilePromisified(filePath);
-  return buffer.toString();
-};
+const getPermissionOrComputeDefault = (action, subject, permissions) => {
+  if (subject in permissions) {
+    const subjectPermissions = permissions[subject];
 
-const statPromisified = util.promisify(fs.stat);
-
-const resolveUrl = (specifier, baseUrl) => {
-  if (typeof baseUrl === "undefined") {
-    throw new TypeError(`baseUrl missing`);
-  }
-
-  return String(new URL(specifier, baseUrl));
-};
-
-const getCommonPathname = (pathname, otherPathname) => {
-  const firstDifferentCharacterIndex = findFirstDifferentCharacterIndex(pathname, otherPathname); // pathname and otherpathname are exactly the same
-
-  if (firstDifferentCharacterIndex === -1) {
-    return pathname;
-  }
-
-  const commonString = pathname.slice(0, firstDifferentCharacterIndex + 1); // the first different char is at firstDifferentCharacterIndex
-
-  if (pathname.charAt(firstDifferentCharacterIndex) === "/") {
-    return commonString;
-  }
-
-  if (otherPathname.charAt(firstDifferentCharacterIndex) === "/") {
-    return commonString;
-  }
-
-  const firstDifferentSlashIndex = commonString.lastIndexOf("/");
-  return pathname.slice(0, firstDifferentSlashIndex + 1);
-};
-
-const findFirstDifferentCharacterIndex = (string, otherString) => {
-  const maxCommonLength = Math.min(string.length, otherString.length);
-  let i = 0;
-
-  while (i < maxCommonLength) {
-    const char = string.charAt(i);
-    const otherChar = otherString.charAt(i);
-
-    if (char !== otherChar) {
-      return i;
+    if (action in subjectPermissions) {
+      return subjectPermissions[action];
     }
 
-    i++;
-  }
+    const actionLevel = actionLevels[action];
+    const actionFallback = Object.keys(actionLevels).find(actionFallbackCandidate => actionLevels[actionFallbackCandidate] > actionLevel && actionFallbackCandidate in subjectPermissions);
 
-  if (string.length === otherString.length) {
-    return -1;
-  } // they differ at maxCommonLength
-
-
-  return maxCommonLength;
-};
-
-const pathnameToDirectoryPathname = pathname => {
-  if (pathname.endsWith("/")) {
-    return pathname;
-  }
-
-  const slashLastIndex = pathname.lastIndexOf("/");
-
-  if (slashLastIndex === -1) {
-    return "";
-  }
-
-  return pathname.slice(0, slashLastIndex + 1);
-};
-
-const urlToRelativeUrl = (urlArg, baseUrlArg) => {
-  const url = new URL(urlArg);
-  const baseUrl = new URL(baseUrlArg);
-
-  if (url.protocol !== baseUrl.protocol) {
-    return urlArg;
-  }
-
-  if (url.username !== baseUrl.username || url.password !== baseUrl.password) {
-    return urlArg.slice(url.protocol.length);
-  }
-
-  if (url.host !== baseUrl.host) {
-    return urlArg.slice(url.protocol.length);
-  }
-
-  const {
-    pathname,
-    hash,
-    search
-  } = url;
-
-  if (pathname === "/") {
-    return baseUrl.pathname.slice(1);
-  }
-
-  const {
-    pathname: basePathname
-  } = baseUrl;
-  const commonPathname = getCommonPathname(pathname, basePathname);
-
-  if (!commonPathname) {
-    return urlArg;
-  }
-
-  const specificPathname = pathname.slice(commonPathname.length);
-  const baseSpecificPathname = basePathname.slice(commonPathname.length);
-  const baseSpecificDirectoryPathname = pathnameToDirectoryPathname(baseSpecificPathname);
-  const relativeDirectoriesNotation = baseSpecificDirectoryPathname.replace(/.*?\//g, "../");
-  const relativePathname = `${relativeDirectoriesNotation}${specificPathname}`;
-  return `${relativePathname}${search}${hash}`;
-};
-
-const writeFilePromisified = util.promisify(fs.writeFile);
-const writeFileContent = async (value, content) => {
-  const fileUrl = assertAndNormalizeFileUrl(value);
-  const filePath = urlToFileSystemPath(fileUrl);
-  await createFileDirectories(filePath);
-  return writeFilePromisified(filePath, content);
-};
-
-const readPackageFile = async (packageFileUrl, manualOverrides) => {
-  const packageFileString = await readFileContent(packageFileUrl);
-  const packageJsonObject = JSON.parse(packageFileString);
-  const {
-    name,
-    version
-  } = packageJsonObject;
-  const overrideKey = Object.keys(manualOverrides).find(overrideKeyCandidate => {
-    if (name === overrideKeyCandidate) return true;
-    if (`${name}@${version}` === overrideKeyCandidate) return true;
-    return false;
-  });
-
-  if (overrideKey) {
-    return composeObject(packageJsonObject, manualOverrides[overrideKey]);
-  }
-
-  return packageJsonObject;
-};
-
-const composeObject = (leftObject, rightObject) => {
-  const composedObject = { ...leftObject
-  };
-  Object.keys(rightObject).forEach(key => {
-    const rightValue = rightObject[key];
-
-    if (rightValue === null || typeof rightValue !== "object" || key in leftObject === false) {
-      composedObject[key] = rightValue;
-    } else {
-      const leftValue = leftObject[key];
-
-      if (leftValue === null || typeof leftValue !== "object") {
-        composedObject[key] = rightValue;
-      } else {
-        composedObject[key] = composeObject(leftValue, rightValue);
-      }
+    if (actionFallback) {
+      return subjectPermissions[actionFallback];
     }
+  }
+
+  const subjectLevel = subjectLevels[subject]; // do we have a subject with a stronger level (group or owner)
+  // where we could read the action permission ?
+
+  const subjectFallback = Object.keys(subjectLevels).find(subjectFallbackCandidate => subjectLevels[subjectFallbackCandidate] > subjectLevel && subjectFallbackCandidate in permissions);
+
+  if (subjectFallback) {
+    const subjectPermissions = permissions[subjectFallback];
+    return action in subjectPermissions ? subjectPermissions[action] : getPermissionOrComputeDefault(action, subjectFallback, permissions);
+  }
+
+  return false;
+};
+
+const isWindows = process.platform === "win32";
+const readFileSystemNodeStat = async (source, {
+  nullIfNotFound = false,
+  followLink = true
+} = {}) => {
+  if (source.endsWith("/")) source = source.slice(0, -1);
+  const sourceUrl = assertAndNormalizeFileUrl(source);
+  const sourcePath = urlToFileSystemPath(sourceUrl);
+  const handleNotFoundOption = nullIfNotFound ? {
+    handleNotFoundError: () => null
+  } : {};
+  return readStat(sourcePath, {
+    followLink,
+    ...handleNotFoundOption,
+    ...(isWindows ? {
+      // Windows can EPERM on stat
+      handlePermissionDeniedError: async error => {
+        // unfortunately it means we mutate the permissions
+        // without being able to restore them to the previous value
+        // (because reading current permission would also throw)
+        try {
+          await writeFileSystemNodePermissions(sourceUrl, 0o666);
+          const stats = await readStat(sourcePath, {
+            followLink,
+            ...handleNotFoundOption,
+            // could not fix the permission error, give up and throw original error
+            handlePermissionDeniedError: () => {
+              throw error;
+            }
+          });
+          return stats;
+        } catch (e) {
+          // failed to write permission or readState, throw original error as well
+          throw error;
+        }
+      }
+    } : {})
   });
-  return composedObject;
+};
+
+const readStat = (sourcePath, {
+  followLink,
+  handleNotFoundError = null,
+  handlePermissionDeniedError = null
+} = {}) => {
+  const nodeMethod = followLink ? fs.stat : fs.lstat;
+  return new Promise((resolve, reject) => {
+    nodeMethod(sourcePath, (error, statsObject) => {
+      if (error) {
+        if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
+          resolve(handlePermissionDeniedError(error));
+        } else if (handleNotFoundError && error.code === "ENOENT") {
+          resolve(handleNotFoundError(error));
+        } else {
+          reject(error);
+        }
+      } else {
+        resolve(statsObject);
+      }
+    });
+  });
 };
 
 const firstOperationMatching = ({
@@ -504,6 +487,244 @@ const createCancellationTokenForProcessSIGINT = () => {
   const SIGINTCancelSource = createCancellationSource();
   process.on("SIGINT", () => SIGINTCancelSource.cancel("process interruption"));
   return SIGINTCancelSource.token;
+};
+
+const getCommonPathname = (pathname, otherPathname) => {
+  const firstDifferentCharacterIndex = findFirstDifferentCharacterIndex(pathname, otherPathname); // pathname and otherpathname are exactly the same
+
+  if (firstDifferentCharacterIndex === -1) {
+    return pathname;
+  }
+
+  const commonString = pathname.slice(0, firstDifferentCharacterIndex + 1); // the first different char is at firstDifferentCharacterIndex
+
+  if (pathname.charAt(firstDifferentCharacterIndex) === "/") {
+    return commonString;
+  }
+
+  if (otherPathname.charAt(firstDifferentCharacterIndex) === "/") {
+    return commonString;
+  }
+
+  const firstDifferentSlashIndex = commonString.lastIndexOf("/");
+  return pathname.slice(0, firstDifferentSlashIndex + 1);
+};
+
+const findFirstDifferentCharacterIndex = (string, otherString) => {
+  const maxCommonLength = Math.min(string.length, otherString.length);
+  let i = 0;
+
+  while (i < maxCommonLength) {
+    const char = string.charAt(i);
+    const otherChar = otherString.charAt(i);
+
+    if (char !== otherChar) {
+      return i;
+    }
+
+    i++;
+  }
+
+  if (string.length === otherString.length) {
+    return -1;
+  } // they differ at maxCommonLength
+
+
+  return maxCommonLength;
+};
+
+const pathnameToDirectoryPathname = pathname => {
+  if (pathname.endsWith("/")) {
+    return pathname;
+  }
+
+  const slashLastIndex = pathname.lastIndexOf("/");
+
+  if (slashLastIndex === -1) {
+    return "";
+  }
+
+  return pathname.slice(0, slashLastIndex + 1);
+};
+
+const urlToRelativeUrl = (urlArg, baseUrlArg) => {
+  const url = new URL(urlArg);
+  const baseUrl = new URL(baseUrlArg);
+
+  if (url.protocol !== baseUrl.protocol) {
+    return urlArg;
+  }
+
+  if (url.username !== baseUrl.username || url.password !== baseUrl.password) {
+    return urlArg.slice(url.protocol.length);
+  }
+
+  if (url.host !== baseUrl.host) {
+    return urlArg.slice(url.protocol.length);
+  }
+
+  const {
+    pathname,
+    hash,
+    search
+  } = url;
+
+  if (pathname === "/") {
+    return baseUrl.pathname.slice(1);
+  }
+
+  const {
+    pathname: basePathname
+  } = baseUrl;
+  const commonPathname = getCommonPathname(pathname, basePathname);
+
+  if (!commonPathname) {
+    return urlArg;
+  }
+
+  const specificPathname = pathname.slice(commonPathname.length);
+  const baseSpecificPathname = basePathname.slice(commonPathname.length);
+  const baseSpecificDirectoryPathname = pathnameToDirectoryPathname(baseSpecificPathname);
+  const relativeDirectoriesNotation = baseSpecificDirectoryPathname.replace(/.*?\//g, "../");
+  const relativePathname = `${relativeDirectoriesNotation}${specificPathname}`;
+  return `${relativePathname}${search}${hash}`;
+};
+
+const {
+  mkdir
+} = fs.promises;
+const writeDirectory = async (destination, {
+  recursive = true,
+  allowUseless = false
+} = {}) => {
+  const destinationUrl = assertAndNormalizeDirectoryUrl(destination);
+  const destinationPath = urlToFileSystemPath(destinationUrl);
+  const destinationStats = await readFileSystemNodeStat(destinationUrl, {
+    nullIfNotFound: true,
+    followLink: false
+  });
+
+  if (destinationStats) {
+    if (destinationStats.isDirectory()) {
+      if (allowUseless) {
+        return;
+      }
+
+      throw new Error(`directory already exists at ${destinationPath}`);
+    }
+
+    const destinationType = statsToType(destinationStats);
+    throw new Error(`cannot write directory at ${destinationPath} because there is a ${destinationType}`);
+  }
+
+  try {
+    await mkdir(destinationPath, {
+      recursive
+    });
+  } catch (error) {
+    if (allowUseless && error.code === "EEXIST") {
+      return;
+    }
+
+    throw error;
+  }
+};
+
+const resolveUrl = (specifier, baseUrl) => {
+  if (typeof baseUrl === "undefined") {
+    throw new TypeError(`baseUrl missing to resolve ${specifier}`);
+  }
+
+  return String(new URL(specifier, baseUrl));
+};
+
+const isWindows$1 = process.platform === "win32";
+const baseUrlFallback = fileSystemPathToUrl(process.cwd());
+
+const ensureParentDirectories = async destination => {
+  const destinationUrl = assertAndNormalizeFileUrl(destination);
+  const destinationPath = urlToFileSystemPath(destinationUrl);
+  const destinationParentPath = path.dirname(destinationPath);
+  return writeDirectory(destinationParentPath, {
+    recursive: true,
+    allowUseless: true
+  });
+};
+
+const isWindows$2 = process.platform === "win32";
+
+const readFilePromisified = util.promisify(fs.readFile);
+const readFile = async value => {
+  const fileUrl = assertAndNormalizeFileUrl(value);
+  const filePath = urlToFileSystemPath(fileUrl);
+  const buffer = await readFilePromisified(filePath);
+  return buffer.toString();
+};
+
+const isWindows$3 = process.platform === "win32";
+
+/* eslint-disable import/max-dependencies */
+const isLinux = process.platform === "linux"; // linux does not support recursive option
+
+const {
+  writeFile: writeFileNode
+} = fs.promises;
+const writeFile = async (destination, content = "") => {
+  const destinationUrl = assertAndNormalizeFileUrl(destination);
+  const destinationPath = urlToFileSystemPath(destinationUrl);
+
+  try {
+    await writeFileNode(destinationPath, content);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      await ensureParentDirectories(destinationUrl);
+      await writeFileNode(destinationPath, content);
+      return;
+    }
+
+    throw error;
+  }
+};
+
+const readPackageFile = async (packageFileUrl, manualOverrides) => {
+  const packageFileString = await readFile(packageFileUrl);
+  const packageJsonObject = JSON.parse(packageFileString);
+  const {
+    name,
+    version
+  } = packageJsonObject;
+  const overrideKey = Object.keys(manualOverrides).find(overrideKeyCandidate => {
+    if (name === overrideKeyCandidate) return true;
+    if (`${name}@${version}` === overrideKeyCandidate) return true;
+    return false;
+  });
+
+  if (overrideKey) {
+    return composeObject(packageJsonObject, manualOverrides[overrideKey]);
+  }
+
+  return packageJsonObject;
+};
+
+const composeObject = (leftObject, rightObject) => {
+  const composedObject = { ...leftObject
+  };
+  Object.keys(rightObject).forEach(key => {
+    const rightValue = rightObject[key];
+
+    if (rightValue === null || typeof rightValue !== "object" || key in leftObject === false) {
+      composedObject[key] = rightValue;
+    } else {
+      const leftValue = leftObject[key];
+
+      if (leftValue === null || typeof leftValue !== "object") {
+        composedObject[key] = rightValue;
+      } else {
+        composedObject[key] = composeObject(leftValue, rightValue);
+      }
+    }
+  });
+  return composedObject;
 };
 
 const resolveNodeModule = async ({
@@ -671,7 +892,7 @@ cannot find file for package.json ${packageMainFieldName} field
 --- ${packageMainFieldName} ---
 ${packageMainFieldValue}
 --- file path ---
-${url$1.fileURLToPath(mainFileUrlFirstCandidate)}
+${urlToFileSystemPath(mainFileUrlFirstCandidate)}
 --- package.json path ---
 ${packageFilePath}
 --- extensions tried ---
@@ -686,11 +907,15 @@ ${extensionCandidateArray.join(`,`)}
 };
 
 const findMainFileUrlOrNull = async mainFileUrl => {
-  if (await fileExists(mainFileUrl)) {
+  const mainStats = await readFileSystemNodeStat(mainFileUrl, {
+    nullIfNotFound: true
+  });
+
+  if (mainStats && mainStats.isFile()) {
     return mainFileUrl;
   }
 
-  if (await directoryExists(mainFileUrl)) {
+  if (mainStats && mainStats.isDirectory()) {
     const indexFileUrl = resolveUrl("./index", mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`);
     const extensionLeadingToAFile = await findExtension(indexFileUrl);
 
@@ -725,8 +950,10 @@ const findExtension = async fileUrl => {
     array: extensionCandidateArray,
     start: async extensionCandidate => {
       const filePathCandidate = `${fileDirname}/${fileBasename}.${extensionCandidate}`;
-      const exists = await fileExists(filePathCandidate);
-      return exists ? extensionCandidate : null;
+      const stats = await readFileSystemNodeStat(filePathCandidate, {
+        nullIfNotFound: true
+      });
+      return stats && stats.isFile() ? extensionCandidate : null;
     },
     predicate: extension => Boolean(extension)
   });
@@ -845,11 +1072,24 @@ const visitPackageExports = ({
     exports: packageExports
   } = packageJsonObject; // false is allowed as laternative to exports: {}
 
-  if (packageExports === false) return importsForPackageExports; // exports used to indicate the main file
+  if (packageExports === false) return importsForPackageExports;
+
+  const addressToDestination = address => {
+    if (address[0] === "/") {
+      return address;
+    }
+
+    if (address.startsWith("./")) {
+      return `./${packageDirectoryRelativeUrl}${address.slice(2)}`;
+    }
+
+    return `./${packageDirectoryRelativeUrl}${address}`;
+  }; // exports used to indicate the main file
+
 
   if (typeof packageExports === "string") {
     const from = packageName;
-    const to = packageExports;
+    const to = addressToDestination(packageExports);
     importsForPackageExports[from] = to;
     return importsForPackageExports;
   }
@@ -947,16 +1187,7 @@ ${packageFilePath}
       from = `${packageName}/${specifier}`;
     }
 
-    let to;
-
-    if (address[0] === "/") {
-      to = address;
-    } else if (address.startsWith("./")) {
-      to = `./${packageDirectoryRelativeUrl}${address.slice(2)}`;
-    } else {
-      to = `./${packageDirectoryRelativeUrl}${address}`;
-    }
-
+    const to = addressToDestination(address);
     importsForPackageExports[from] = to;
   });
   return importsForPackageExports;
@@ -1585,17 +1816,15 @@ const generateImportMapForProjectPackage = async ({
 
   if (importMapFile) {
     const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
-    const importMapFilePath = urlToFileSystemPath(importMapFileUrl);
-    await writeFileContent(importMapFilePath, JSON.stringify(importMap, null, "  "));
+    await writeFile(importMapFileUrl, JSON.stringify(importMap, null, "  "));
 
     if (importMapFileLog) {
-      logger.info(`-> ${importMapFilePath}`);
+      logger.info(`-> ${urlToFileSystemPath(importMapFileUrl)}`);
     }
   }
 
   if (jsConfigFile) {
     const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl);
-    const jsConfigFilePath = urlToFileSystemPath(jsConfigFileUrl);
 
     try {
       const jsConfig = {
@@ -1608,10 +1837,10 @@ const generateImportMapForProjectPackage = async ({
           }
         }
       };
-      await writeFileContent(jsConfigFilePath, JSON.stringify(jsConfig, null, "  "));
+      await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "));
 
       if (jsConfigFileLog) {
-        logger.info(`-> ${jsConfigFilePath}`);
+        logger.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`);
       }
     } catch (e) {
       if (e.code !== "ENOENT") {

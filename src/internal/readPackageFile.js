@@ -1,7 +1,7 @@
-import { readFileContent } from "@jsenv/util"
+import { readFile } from "@jsenv/util"
 
 export const readPackageFile = async (packageFileUrl, manualOverrides) => {
-  const packageFileString = await readFileContent(packageFileUrl)
+  const packageFileString = await readFile(packageFileUrl)
   const packageJsonObject = JSON.parse(packageFileString)
   const { name, version } = packageJsonObject
 

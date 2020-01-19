@@ -7,7 +7,7 @@ import {
   resolveUrl,
   urlToFileSystemPath,
   assertAndNormalizeDirectoryUrl,
-  writeFileContent,
+  writeFile,
 } from "@jsenv/util"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 import { generateImportMapForPackage } from "./generateImportMapForPackage.js"
@@ -50,15 +50,13 @@ export const generateImportMapForProjectPackage = async ({
 
     if (importMapFile) {
       const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl)
-      const importMapFilePath = urlToFileSystemPath(importMapFileUrl)
-      await writeFileContent(importMapFilePath, JSON.stringify(importMap, null, "  "))
+      await writeFile(importMapFileUrl, JSON.stringify(importMap, null, "  "))
       if (importMapFileLog) {
-        logger.info(`-> ${importMapFilePath}`)
+        logger.info(`-> ${urlToFileSystemPath(importMapFileUrl)}`)
       }
     }
     if (jsConfigFile) {
       const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl)
-      const jsConfigFilePath = urlToFileSystemPath(jsConfigFileUrl)
       try {
         const jsConfig = {
           compilerOptions: {
@@ -69,9 +67,9 @@ export const generateImportMapForProjectPackage = async ({
             },
           },
         }
-        await writeFileContent(jsConfigFilePath, JSON.stringify(jsConfig, null, "  "))
+        await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "))
         if (jsConfigFileLog) {
-          logger.info(`-> ${jsConfigFilePath}`)
+          logger.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`)
         }
       } catch (e) {
         if (e.code !== "ENOENT") {

@@ -1,7 +1,6 @@
 import { dirname, extname, basename } from "path"
 import { firstOperationMatching } from "@jsenv/cancellation"
-import { resolveUrl, urlToFileSystemPath, fileExists, directoryExists } from "@jsenv/util"
-import { fileURLToPath } from "url"
+import { resolveUrl, urlToFileSystemPath, readFileSystemNodeStat } from "@jsenv/util"
 
 export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
   if ("module" in packageJsonObject) {
@@ -91,7 +90,7 @@ cannot find file for package.json ${packageMainFieldName} field
 --- ${packageMainFieldName} ---
 ${packageMainFieldValue}
 --- file path ---
-${fileURLToPath(mainFileUrlFirstCandidate)}
+${urlToFileSystemPath(mainFileUrlFirstCandidate)}
 --- package.json path ---
 ${packageFilePath}
 --- extensions tried ---
@@ -106,11 +105,13 @@ ${extensionCandidateArray.join(`,`)}
 }
 
 const findMainFileUrlOrNull = async (mainFileUrl) => {
-  if (await fileExists(mainFileUrl)) {
+  const mainStats = await readFileSystemNodeStat(mainFileUrl, { nullIfNotFound: true })
+
+  if (mainStats && mainStats.isFile()) {
     return mainFileUrl
   }
 
-  if (await directoryExists(mainFileUrl)) {
+  if (mainStats && mainStats.isDirectory()) {
     const indexFileUrl = resolveUrl(
       "./index",
       mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`,
@@ -143,8 +144,8 @@ const findExtension = async (fileUrl) => {
     array: extensionCandidateArray,
     start: async (extensionCandidate) => {
       const filePathCandidate = `${fileDirname}/${fileBasename}.${extensionCandidate}`
-      const exists = await fileExists(filePathCandidate)
-      return exists ? extensionCandidate : null
+      const stats = await readFileSystemNodeStat(filePathCandidate, { nullIfNotFound: true })
+      return stats && stats.isFile() ? extensionCandidate : null
     },
     predicate: (extension) => Boolean(extension),
   })

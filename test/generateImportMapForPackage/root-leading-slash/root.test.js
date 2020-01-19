@@ -1,8 +1,9 @@
 import { createLogger } from "@jsenv/logger"
 import { assert } from "@jsenv/assert"
+import { resolveUrl } from '@jsenv/util'
 import { generateImportMapForPackage } from "../../../index.js"
 
-const testDirectoryUrl = import.meta.resolve("./")
+const testDirectoryUrl = resolveUrl('./', import.meta.url)
 
 const actual = await generateImportMapForPackage({
   logger: createLogger(),
