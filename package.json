@@ -1,8 +1,7 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "type": "module",
-  "description": "generate importMap for a project node modules.",
-  "version": "10.0.1",
+  "version": "10.1.0",
+  "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -15,6 +14,8 @@
     "access": "public",
     "registry": "https://npm.pkg.github.com"
   },
+  "type": "module",
+  "exports": "./index.js",
   "module": "index.js",
   "main": "dist/commonjs/main.js",
   "files": [
@@ -26,34 +27,39 @@
     "test": "node ./script/test/test.js",
     "test-with-coverage": "node ./script/test/test.js --coverage",
     "eslint-check": "eslint .",
-    "prettier-check": "node ./script/prettier-check/prettier-check.js",
-    "generate-coverage": "node ./script/generate-coverage/generate-coverage.js",
+    "prettier-format": "node ./script/prettier-format/prettier-format.js",
+    "prettier-format-stage": "npm run prettier-format -- --staged",
+    "prettier-check": "npm run prettier-format -- --dry-run",
     "upload-coverage": "node ./script/upload-coverage/upload-coverage.js",
     "generate-commonjs-bundle": "node ./script/generate-commonjs-bundle/generate-commonjs-bundle.js",
     "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
+    "install-git-hooks": "node ./script/install-git-hooks/install-git-hooks.js",
     "dist": "npm run clean && npm run generate-commonjs-bundle",
     "clean": "rimraf dist && rimraf coverage",
     "reinstall": "npm run clean && rimraf node_modules && npm install",
-    "postinstall": "npm run generate-import-map",
+    "postinstall": "npm run generate-import-map && npm run install-git-hooks",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
-    "postpublish": "node ./script/transform-package/restore-postinstall.js"
+    "postpublish": "node ./script/transform-package/restore-postinstall.js",
+    "git-hook-pre-commit": "npm run prettier-format-stage"
   },
   "dependencies": {
-    "@jsenv/cancellation": "1.1.0",
-    "@jsenv/import-map": "6.6.1",
-    "@jsenv/logger": "3.2.0",
-    "@jsenv/util": "2.1.0"
+    "@jsenv/cancellation": "1.3.0",
+    "@jsenv/import-map": "6.7.0",
+    "@jsenv/logger": "3.3.0",
+    "@jsenv/util": "3.3.2"
   },
   "devDependencies": {
-    "@jsenv/assert": "1.1.1",
+    "@jsenv/assert": "1.2.1",
     "@jsenv/codecov-upload": "3.1.0",
-    "@jsenv/core": "10.3.3",
-    "@jsenv/eslint-config": "12.0.0",
+    "@jsenv/core": "10.5.0",
+    "@jsenv/eslint-config": "12.1.0",
+    "@jsenv/git-hooks": "1.2.0",
     "@jsenv/github-release-package": "1.1.1",
-    "@jsenv/node-module-import-map": "10.0.0",
-    "@jsenv/package-publish": "1.2.0",
-    "@jsenv/prettier-check-project": "4.2.0",
+    "@jsenv/node-module-import-map": "10.0.1",
+    "@jsenv/package-publish": "1.3.1",
+    "@jsenv/prettier-check-project": "5.2.0",
     "@jsenv/prettier-config": "1.1.0",
+    "babel-eslint": "11.0.0-beta.0",
     "eslint": "6.8.0",
     "prettier": "1.19.1",
     "rimraf": "3.0.0"

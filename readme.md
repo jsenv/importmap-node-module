@@ -1,38 +1,35 @@
-# Jsenv node module import map
+# node-module-import-map
+
+Generate importmap for node_modules.
 
 [![github package](https://img.shields.io/github/package-json/v/jsenv/jsenv-node-module-import-map.svg?logo=github&label=package)](https://github.com/jsenv/jsenv-node-module-import-map/packages)
 [![npm package](https://img.shields.io/npm/v/@jsenv/node-module-import-map.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/node-module-import-map)
 [![github ci](https://github.com/jsenv/jsenv-node-module-import-map/workflows/ci/badge.svg)](https://github.com/jsenv/jsenv-node-module-import-map/actions?workflow=ci)
 [![codecov coverage](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
 
-Generate importMap for a project node modules.
-
-## Table of contents
+# Table of contents
 
 - [Presentation](#Presentation)
-- [How it works](#how-it-works)
-- [Code example](#code-example)
-- [API](./docs/api.md)
-- [Concrete example](#concrete-example)
-  - [Step 1 - Setup basic project](#step-1---setup-project)
-  - [Step 2 - Generate project importMap](#step-2---generate-project-importMap)
-- [Custom node module resolution](#custom-node-module-resolution)
-- [Installation](#installation-using-npm)
+- [Installation](#installation)
+  - [Concrete example](#concrete-example)
+    - [Step 1 - Setup basic project](#step-1---setup-project)
+    - [Step 2 - Generate project importMap](#step-2---generate-project-importMap)
+- [Documentation](#Documentation)
+  - [Custom node module resolution](#custom-node-module-resolution)
+  - [generateImportMapForProjectPackage](#generateImportMapForProjectPackage)
+    - [projectDirectoryUrl](#projectDirectoryUrl)
+    - [includeDevDependencies](#includeDevDependencies)
+    - [importMapFile](#importMapFile)
+    - [importMapFileRelativeUrl](#importMapFileRelativeUrl)
+    - [importMapFileLog](#importMapFileLog)
+    - [favoredExports](#favoredExports)
 
-## Presentation
+# Presentation
 
 `@jsenv/node-module-import-map` generates importMap for your project node_modules.<br />
 — see [importMap spec](https://github.com/WICG/import-maps)
 
-## How it works
-
-Reads `package.json` and recursively try to find your dependencies.<br />
-
-Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importMap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.<br />
-
-## Code example
-
-Here is code example using `@jsenv/node-module-import-map` to create an `importMap.json` file.
+It reads `package.json` and recursively try to find your dependencies. Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importMap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
 ```js
 const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
@@ -45,7 +42,11 @@ generateImportMapForProjectPackage({
 })
 ```
 
-For more information check the [api documentation](./docs/api.md).
+# Installation
+
+```console
+npm install --save-dev @jsenv/node-module-import-map@10.1.0
+```
 
 ## Concrete example
 
@@ -74,6 +75,8 @@ Running command below will generate import map file at `docs/basic-project/impor
 node ./generate-import-map.js
 ```
 
+# Documentation
+
 ## Custom node module resolution
 
 `@jsenv/node-module-import-map` uses a custom node module resolution.<br />
@@ -95,16 +98,64 @@ For a web client however `../node_modules/whatever/index.js` resolves to `https:
 
 In practice it does not impact you because node modules are inside your project folder. If not, explicitely write your dependencies in your `package.json` and run `npm install`.
 
-## Installation
+## generateImportMapForProjectPackage
 
-If you never installed a jsenv package, read [Installing a jsenv package](https://github.com/jsenv/jsenv-core/blob/master/docs/installing-jsenv-package.md#installing-a-jsenv-package) before going further.
+`generateImportMapForProjectPackage` is an async function returning an importMap object.
 
-This documentation is up-to-date with a specific version so prefer any of the following commands
+```js
+const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
 
-```console
-npm install --save-dev @jsenv/node-module-import-map@10.0.0
+const importMap = await generateImportMapForProjectPackage({
+  projectDirectoryUrl: __dirname,
+  includeDevDependencies: true,
+  importMapFile: false,
+  importMapFileRelativeUrl: "./importMap.json",
+  importMapFileLog: true,
+})
 ```
 
-```console
-yarn add --dev @jsenv/node-module-import-map@10.0.0
+— source code at [src/generateImportMapForProjectPackage.js](./src/generateImportMapForProjectPackage.js).
+
+### projectDirectoryUrl
+
+`projectDirectoryUrl` parameter is a string url leading to a folder with a package.json. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertAndNormalizeDirectoryUrl
+
+### includeDevDependencies
+
+`includeDevDependencies` parameter is a boolean controling if devDependencies are included in the generated importMap. This parameter is optional with a default value of `process.env.NODE_ENV !== "production"`.
+
+### importMapFile
+
+`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional with a default value of `false`.
+
+### importMapFileRelativeUrl
+
+`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional with a default value of `"./importMap.json"`.
+
+### importMapFileLog
+
+`importMapFileLog` parameter a boolean controlling if there is log in the terminal when importMap file is written. It is optional with a default value of `true`.
+
+### favoredExports
+
+`favoredExports` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameters is optional with a default value of `[]`.
+
+This parameters exists to support conditional exports from Node.js.
+
+— see [Conditional export documentation on Node.js](https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_conditional_exports)
+
+For instance if you want to favor `"browser"` conditional export use the following value.
+
+<!-- prettier-ignore -->
+```js
+["browser"]
 ```
+
+Or if you prefer `"electron"` and fallback to `"browser"` use the following value.
+
+<!-- prettier-ignore -->
+```js
+["electron", "browser"]
+```
+
+When `favoredExports` is empty or none of favored export matches in a package.json and if there is a `"default"` conditional export specified in the package.json it is used and appears in the generated importmap.

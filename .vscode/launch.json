@@ -7,14 +7,16 @@
       "request": "launch",
       "protocol": "inspector",
       "program": "${file}",
+      "runtimeVersion": "13.6.0",
       "autoAttachChildProcesses": true,
       "sourceMaps": true,
       "smartStep": true,
-      // https://github.com/Microsoft/vscode-chrome-debug-core/commit/eb552d621f1f6fbebcfca5d2390020dc7d8877e0#diff-b4f13aa3c326d081dea7875f9c0fe84aR31
       "skipFiles": [
-        // force-multipline
-        "node_modules/**",
-        "<node_internals>/**/*.js"
+        // force-array-multiline
+        // "node_modules/**",
+        "node_modules/@babel/template/**",
+        "node_modules/@dmail/cancellation/**",
+        "<node_internals>/**"
       ]
     },
     {
@@ -28,11 +30,13 @@
       "sourceMaps": true,
       "smartStep": true,
       "skipFiles": [
-        // force-multiline
+        // force-array-multiline
+        // "node_modules/**",
+        "node_modules/@jsenv/core/**",
         "node_modules/@babel/template/**",
         "node_modules/@dmail/cancellation/**",
         "node_modules/rollup/**",
-        "node_modules/rollup-plugin-node-resolve/**",
+        "node_modules/@rollup/**",
         "<node_internals>/**/*.js"
       ]
     },
@@ -44,11 +48,47 @@
       "smartStep": true,
       "sourceMaps": true,
       "skipFiles": [
+        // "node_modules/**",
         "node_modules/@babel/template/**",
         "node_modules/@dmail/cancellation/**",
         "node_modules/rollup/**",
-        "node_modules/rollup-plugin-node-resolve/**",
+        "node_modules/@rollup/**",
         "<node_internals>/**/*.js"
+      ]
+    },
+    {
+      "name": "jsenv-node-attach-subchild",
+      "type": "node",
+      "request": "attach",
+      "port": 40001,
+      "smartStep": true,
+      "sourceMaps": true,
+      "skipFiles": [
+        // "node_modules/**",
+        "node_modules/@babel/template/**",
+        "node_modules/@dmail/cancellation/**",
+        "node_modules/rollup/**",
+        "node_modules/@rollup/**",
+        "<node_internals>/**/*.js"
+      ]
+    },
+    {
+      "name": "jsenv-chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:3456/node_modules/@jsenv/core/src/internal/jsenv-html-file.html?file=${relativeFile}",
+      "runtimeArgs": ["--allow-file-access-from-files", "--disable-web-security"],
+      "sourceMaps": true,
+      "webRoot": "${workspaceFolder}",
+      "smartStep": true,
+      "skipFiles": [
+        // force-multiline
+        "node_modules/@jsenv/core/**",
+        "node_modules/@babel/template/**",
+        "node_modules/@dmail/cancellation/**",
+        "node_modules/rollup/**",
+        "node_modules/@rollup/**",
+        "<node_internals>/**"
       ]
     }
   ]

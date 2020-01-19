@@ -10,8 +10,12 @@ on:
 
 jobs:
   ci:
-    name: node 12 on ubuntu
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+      max-parallel: 1 # to ensure windows failure can prevent ubuntu from publishing package
+    runs-on: ${{ matrix.os }}
+    name: node 12 on ${{ matrix.os }}
     env:
       CI: true
     steps:
@@ -37,13 +41,13 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: publish package
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && runner.os == 'Linux' # runner check to run it once
         run: node ./.github/publish-package.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: ensure github release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && runner.os == 'Linux' # runner check to run it once
         run: node ./.github/ensure-github-release-for-package.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
