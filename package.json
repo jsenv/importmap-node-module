@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "10.1.0",
+  "version": "10.2.0",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
@@ -17,7 +17,7 @@
   "type": "module",
   "exports": "./index.js",
   "module": "index.js",
-  "main": "dist/commonjs/main.js",
+  "main": "dist/commonjs/main.cjs",
   "files": [
     "/src/",
     "/dist/",
@@ -43,22 +43,22 @@
     "git-hook-pre-commit": "npm run prettier-format-stage"
   },
   "dependencies": {
-    "@jsenv/cancellation": "1.3.0",
-    "@jsenv/import-map": "6.7.0",
+    "@jsenv/cancellation": "1.3.1",
+    "@jsenv/import-map": "6.7.1",
     "@jsenv/logger": "3.3.0",
-    "@jsenv/util": "3.3.2"
+    "@jsenv/util": "3.3.3"
   },
   "devDependencies": {
-    "@jsenv/assert": "1.2.1",
-    "@jsenv/codecov-upload": "3.1.0",
-    "@jsenv/core": "10.5.0",
-    "@jsenv/eslint-config": "12.1.0",
+    "@jsenv/assert": "1.2.2",
+    "@jsenv/codecov-upload": "3.2.0",
+    "@jsenv/core": "10.6.0-alpha.0",
+    "@jsenv/eslint-config": "12.2.0",
     "@jsenv/git-hooks": "1.2.0",
     "@jsenv/github-release-package": "1.1.1",
-    "@jsenv/node-module-import-map": "10.0.1",
-    "@jsenv/package-publish": "1.3.1",
-    "@jsenv/prettier-check-project": "5.2.0",
-    "@jsenv/prettier-config": "1.1.0",
+    "@jsenv/node-module-import-map": "10.1.0",
+    "@jsenv/package-publish": "1.4.0",
+    "@jsenv/prettier-check-project": "5.4.0",
+    "@jsenv/prettier-config": "1.2.0",
     "babel-eslint": "11.0.0-beta.0",
     "eslint": "6.8.0",
     "prettier": "1.19.1",

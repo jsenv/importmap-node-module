@@ -1854,4 +1854,4 @@ const generateImportMapForProjectPackage = async ({
 
 exports.generateImportMapForPackage = generateImportMapForPackage;
 exports.generateImportMapForProjectPackage = generateImportMapForProjectPackage;
-//# sourceMappingURL=main.js.map
+//# sourceMappingURL=main.cjs.map

@@ -45,7 +45,7 @@ generateImportMapForProjectPackage({
 # Installation
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map@10.1.0
+npm install --save-dev @jsenv/node-module-import-map@10.2.0
 ```
 
 ## Concrete example
