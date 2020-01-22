@@ -1238,13 +1238,15 @@ const generateImportMapForPackage = async ({
     packageName,
     packageJsonObject,
     importerPackageFileUrl,
+    importerPackageJsonObject,
     includeDevDependencies
   }) => {
     await visitPackage({
       packageFileUrl,
       packageName,
       packageJsonObject,
-      importerPackageFileUrl
+      importerPackageFileUrl,
+      importerPackageJsonObject
     });
     await visitDependencies({
       packageFileUrl,
@@ -1257,7 +1259,8 @@ const generateImportMapForPackage = async ({
     packageFileUrl,
     packageName,
     packageJsonObject,
-    importerPackageFileUrl
+    importerPackageFileUrl,
+    importerPackageJsonObject
   }) => {
     const packageInfo = computePackageInfo({
       packageFileUrl,
@@ -1273,6 +1276,7 @@ const generateImportMapForPackage = async ({
 
     if (includeImports && "imports" in packageJsonObject) {
       const importsForPackageImports = visitPackageImports({
+        logger,
         packageFileUrl,
         packageName,
         packageJsonObject,
@@ -1319,26 +1323,28 @@ const generateImportMapForPackage = async ({
 
     if (selfImport) {
       const {
-        importerIsRoot,
+        packageIsRoot,
         packageDirectoryRelativeUrl
-      } = packageInfo;
+      } = packageInfo; // allow import 'package-name/dir/file.js' in package-name files
 
-      if (importerIsRoot) {
+      if (packageIsRoot) {
         addImportMapping({
           from: `${packageName}/`,
           to: `./${packageDirectoryRelativeUrl}`
         });
-      } else {
-        addScopedImportMapping({
-          scope: `./${packageDirectoryRelativeUrl}`,
-          from: `${packageName}/`,
-          to: `./${packageDirectoryRelativeUrl}`
-        });
-      }
+      } // scoped allow import 'package-name/dir/file.js' in package-name files
+      else {
+          addScopedImportMapping({
+            scope: `./${packageDirectoryRelativeUrl}`,
+            from: `${packageName}/`,
+            to: `./${packageDirectoryRelativeUrl}`
+          });
+        }
     }
 
     if (includeExports && "exports" in packageJsonObject) {
       const importsForPackageExports = visitPackageExports({
+        logger,
         packageFileUrl,
         packageName,
         packageJsonObject,
@@ -1349,8 +1355,9 @@ const generateImportMapForPackage = async ({
         importerIsRoot,
         importerRelativeUrl,
         packageIsRoot,
-        packageDirectoryUrl,
-        packageDirectoryUrlExpected
+        packageDirectoryRelativeUrl // packageDirectoryUrl,
+        // packageDirectoryUrlExpected,
+
       } = packageInfo;
 
       if (packageIsRoot && selfImport) {
@@ -1363,28 +1370,52 @@ const generateImportMapForPackage = async ({
         });
       } else if (packageIsRoot) ; else {
         Object.keys(importsForPackageExports).forEach(from => {
-          const to = importsForPackageExports[from];
+          const to = importsForPackageExports[from]; // own package exports available to himself
 
           if (importerIsRoot) {
-            addImportMapping({
-              from,
-              to
-            });
+            // importer is the package himself, keep exports scoped
+            // otherwise the dependency exports would override the package exports.
+            if (importerPackageJsonObject.name === packageName) {
+              addScopedImportMapping({
+                scope: `./${packageDirectoryRelativeUrl}`,
+                from,
+                to
+              });
+
+              if (from === packageName || from in imports === false) {
+                addImportMapping({
+                  from,
+                  to
+                });
+              }
+            } else {
+              addImportMapping({
+                from,
+                to
+              });
+            }
           } else {
             addScopedImportMapping({
-              scope: `./${importerRelativeUrl}`,
+              scope: `./${packageDirectoryRelativeUrl}`,
               from,
               to
             });
-          }
+          } // now make package exports available to the importer
+          // if importer is root no need because the top level remapping does it
 
-          if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
-            addScopedImportMapping({
-              scope: `./${importerRelativeUrl}`,
-              from,
-              to
-            });
-          }
+
+          if (importerIsRoot) {
+            return;
+          } // now make it available to the importer
+          // here if the importer is himself we could do stuff
+          // we should even handle the case earlier to prevent top level remapping
+
+
+          addScopedImportMapping({
+            scope: `./${importerRelativeUrl}`,
+            from,
+            to
+          });
         });
       }
     }
@@ -1525,7 +1556,8 @@ const generateImportMapForPackage = async ({
       packageFileUrl: dependencyPackageFileUrl,
       packageName: dependencyName,
       packageJsonObject: dependencyPackageJsonObject,
-      importerPackageFileUrl: packageFileUrl
+      importerPackageFileUrl: packageFileUrl,
+      importerPackageJsonObject: packageJsonObject
     });
   };
 
@@ -1639,6 +1671,7 @@ const generateImportMapForPackage = async ({
       packageName: projectPackageJsonObject.name,
       packageJsonObject: projectPackageJsonObject,
       importerPackageFileUrl,
+      importerPackageJsonObject: null,
       includeDevDependencies
     });
   } else {

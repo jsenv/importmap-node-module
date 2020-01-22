@@ -9,9 +9,13 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "@jsenv/core/": "./node_modules/@jsenv/core/",
+    "@jsenv/core/": "./",
     "@jsenv/core": "./node_modules/@jsenv/core/index",
   },
-  scopes: {},
+  scopes: {
+    "./node_modules/@jsenv/core/": {
+      "@jsenv/core/": "./node_modules/@jsenv/core/",
+    },
+  },
 }
 assert({ actual, expected })
