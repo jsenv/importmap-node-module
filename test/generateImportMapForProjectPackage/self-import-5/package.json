@@ -1,0 +1,6 @@
+{
+  "name": "@jsenv/core",
+  "devDependencies": {
+    "@jsenv/core": "*"
+  }
+}
