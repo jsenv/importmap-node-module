@@ -11,9 +11,12 @@ const actual = importMap
 const expected = {
   imports: {
     "root/": "./",
-    "foo/": "./node_modules/foo/",
     "foo": "./node_modules/foo/foo.js",
   },
-  scopes: {},
+  scopes: {
+    "./node_modules/foo/": {
+      "foo/": "./node_modules/foo/",
+    },
+  },
 }
 assert({ actual, expected })
