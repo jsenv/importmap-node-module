@@ -74,7 +74,7 @@ export const generateImportMapForPackage = async ({
     packageName,
     packageJsonObject,
     importerPackageFileUrl,
-    importerPackageJsonObject,
+    // importerPackageJsonObject,
   }) => {
     const packageInfo = computePackageInfo({
       packageFileUrl,
