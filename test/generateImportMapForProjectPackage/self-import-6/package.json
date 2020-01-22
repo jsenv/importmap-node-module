@@ -1,0 +1,11 @@
+{
+  "name": "@jsenv/core",
+  "devDependencies": {
+    "@jsenv/core": "*"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./conflict": "./root.js",
+    "./rootonly": "./rootonly.js"
+  }
+}
