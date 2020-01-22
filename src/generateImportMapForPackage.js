@@ -52,6 +52,7 @@ export const generateImportMapForPackage = async ({
     packageName,
     packageJsonObject,
     importerPackageFileUrl,
+    importerPackageJsonObject,
     includeDevDependencies,
   }) => {
     await visitPackage({
@@ -59,6 +60,7 @@ export const generateImportMapForPackage = async ({
       packageName,
       packageJsonObject,
       importerPackageFileUrl,
+      importerPackageJsonObject,
     })
     await visitDependencies({
       packageFileUrl,
@@ -72,6 +74,7 @@ export const generateImportMapForPackage = async ({
     packageName,
     packageJsonObject,
     importerPackageFileUrl,
+    importerPackageJsonObject,
   }) => {
     const packageInfo = computePackageInfo({
       packageFileUrl,
@@ -134,14 +137,18 @@ export const generateImportMapForPackage = async ({
     }
 
     if (selfImport) {
-      const { importerIsRoot, packageDirectoryRelativeUrl } = packageInfo
+      const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
 
-      if (importerIsRoot) {
+      // allow import 'package-name/dir/file.js' in package-name files
+      if (packageIsRoot) {
         addImportMapping({
           from: `${packageName}/`,
           to: `./${packageDirectoryRelativeUrl}`,
         })
-      } else {
+      }
+      // allow import 'package-name/dir/file.js' in package-name files but
+      // only if scoped
+      else {
         addScopedImportMapping({
           scope: `./${packageDirectoryRelativeUrl}`,
           from: `${packageName}/`,
@@ -323,6 +330,7 @@ export const generateImportMapForPackage = async ({
       packageName: dependencyName,
       packageJsonObject: dependencyPackageJsonObject,
       importerPackageFileUrl: packageFileUrl,
+      importerPackageJsonObject: packageJsonObject,
     })
   }
 
@@ -436,6 +444,7 @@ export const generateImportMapForPackage = async ({
       packageName: projectPackageJsonObject.name,
       packageJsonObject: projectPackageJsonObject,
       importerPackageFileUrl,
+      importerPackageJsonObject: null,
       includeDevDependencies,
     })
   } else {
