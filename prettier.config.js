@@ -1,1 +1,1 @@
-module.exports = require("./node_modules/@jsenv/prettier-config/index.js")
+module.exports = require("@jsenv/prettier-config")

@@ -9,7 +9,6 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "@jsenv/bundling/": "./node_modules/@jsenv/bundling/",
     "@jsenv/bundling": "./node_modules/@jsenv/bundling/whatever.js",
     "root/": "./",
   },
@@ -24,6 +23,7 @@ const expected = {
       "@jsenv/core/": "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/",
     },
     "./node_modules/@jsenv/bundling/": {
+      "@jsenv/bundling/": "./node_modules/@jsenv/bundling/",
       "@jsenv/core": "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/whatever.js",
     },
   },

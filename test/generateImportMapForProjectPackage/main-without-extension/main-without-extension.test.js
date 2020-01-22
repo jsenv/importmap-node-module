@@ -9,10 +9,13 @@ const actual = await generateImportMapForProjectPackage({
 })
 const expected = {
   imports: {
-    "main-without-extension/": "./node_modules/main-without-extension/",
     "main-without-extension": "./node_modules/main-without-extension/file.js",
     "root/": "./",
   },
-  scopes: {},
+  scopes: {
+    "./node_modules/main-without-extension/": {
+      "main-without-extension/": "./node_modules/main-without-extension/",
+    },
+  },
 }
 assert({ actual, expected })

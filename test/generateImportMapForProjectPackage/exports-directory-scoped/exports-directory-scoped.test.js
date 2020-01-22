@@ -11,7 +11,6 @@ const expected = {
   imports: {
     "foo/ding": "./node_modules/foo/dong",
     "root/": "./",
-    "foo/": "./node_modules/foo/",
     "foo": "./node_modules/foo/index.js",
   },
   scopes: {
@@ -21,6 +20,7 @@ const expected = {
     "./node_modules/foo/": {
       "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
       "exporting-folder": "./node_modules/foo/node_modules/exporting-folder/index.js",
+      "foo/": "./node_modules/foo/",
     },
   },
 }
