@@ -32,20 +32,26 @@ Generate importmap for node_modules.
 It reads `package.json` and recursively try to find your dependencies. Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importMap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
 ```js
-const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
+import { generateImportMapForProjectPackage } from "@jsenv/node-module-import-map"
 
 generateImportMapForProjectPackage({
-  projectDirectoryUrl: "file:///Users/you/folder",
+  projectDirectoryUrl: "file:///directory",
   includeDevDependencies: true,
   importMapFile: true,
   importMapFileRelativeUrl: "./importMap.json",
 })
 ```
 
+`@jsenv/node-module-import-map` can also be required.
+
+```js
+const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
+```
+
 # Installation
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map@10.2.0
+npm install --save-dev @jsenv/node-module-import-map@10.3.0
 ```
 
 ## Concrete example
