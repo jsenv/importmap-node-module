@@ -88,6 +88,7 @@ export const generateImportMapForPackage = async ({
 
     if (includeImports && "imports" in packageJsonObject) {
       const importsForPackageImports = visitPackageImports({
+        logger,
         packageFileUrl,
         packageName,
         packageJsonObject,
@@ -151,6 +152,7 @@ export const generateImportMapForPackage = async ({
 
     if (includeExports && "exports" in packageJsonObject) {
       const importsForPackageExports = visitPackageExports({
+        logger,
         packageFileUrl,
         packageName,
         packageJsonObject,
