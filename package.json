@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "10.4.0",
+  "version": "11.0.0",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
@@ -15,8 +15,12 @@
     "registry": "https://npm.pkg.github.com"
   },
   "type": "module",
-  "exports": "./index.js",
-  "module": "index.js",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./dist/commonjs/main.cjs"
+    }
+  },
   "main": "dist/commonjs/main.cjs",
   "files": [
     "/src/",
