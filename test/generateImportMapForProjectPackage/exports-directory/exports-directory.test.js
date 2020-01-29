@@ -1,17 +1,16 @@
 import { assert } from "@jsenv/assert"
+import { resolveUrl } from "@jsenv/util"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
-const testDirectoryUrl = import.meta.resolve("./")
+const testDirectoryUrl = resolveUrl("./", import.meta.url)
 
 const actual = await generateImportMapForProjectPackage({
   projectDirectoryUrl: testDirectoryUrl,
-  includeExports: true,
 })
 const expected = {
   imports: {
     "@jsenv/whatever/": "./node_modules/@jsenv/whatever/",
     "@jsenv/whatever": "./node_modules/@jsenv/whatever/index.js",
-    "root/": "./",
   },
   scopes: {},
 }

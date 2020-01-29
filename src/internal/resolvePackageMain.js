@@ -84,6 +84,14 @@ ${packageFilePath}
     // otherwise the package.json is missing the main field
     // it certainly means it's not important
     if (packageMainFieldName !== "default") {
+      const extensionTried =
+        extname(urlToFileSystemPath(mainFileUrlFirstCandidate)) === ""
+          ? `--- extensions tried ---
+${extensionCandidateArray.join(`,`)}
+`
+          : `
+`
+
       logger.warn(
         `
 cannot find file for package.json ${packageMainFieldName} field
@@ -93,9 +101,7 @@ ${packageMainFieldValue}
 ${urlToFileSystemPath(mainFileUrlFirstCandidate)}
 --- package.json path ---
 ${packageFilePath}
---- extensions tried ---
-${extensionCandidateArray.join(`,`)}
-        `,
+${extensionTried}`,
       )
     }
     return mainFileUrlFirstCandidate

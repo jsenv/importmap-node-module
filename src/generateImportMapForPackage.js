@@ -17,9 +17,9 @@ export const generateImportMapForPackage = async ({
   includeExports = true,
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
-  favoredExports = [],
-  includeImports = true,
-  selfImport = true,
+  favoredExports = ["import", "node", "require"],
+  includeImports = true, // this is not yet standard, should be false by default
+  selfImport = false,
 }) => {
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
   if (typeof rootProjectDirectoryUrl === "undefined") {

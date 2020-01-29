@@ -51,7 +51,7 @@ const { generateImportMapForProjectPackage } = require("@jsenv/node-module-impor
 # Installation
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map@10.3.0
+npm install --save-dev @jsenv/node-module-import-map@11.0.0
 ```
 
 ## Concrete example
@@ -144,7 +144,7 @@ const importMap = await generateImportMapForProjectPackage({
 
 ### favoredExports
 
-`favoredExports` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameters is optional with a default value of `[]`.
+`favoredExports` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameters is optional with a default value of `["import", "node", "require"]`.
 
 This parameters exists to support conditional exports from Node.js.
 
