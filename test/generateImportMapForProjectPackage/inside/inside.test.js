@@ -1,8 +1,9 @@
 import { resolveImport, normalizeImportMap } from "@jsenv/import-map"
 import { assert } from "@jsenv/assert"
+import { resolveUrl } from "@jsenv/util"
 import { generateImportMapForProjectPackage } from "../../../index.js"
 
-const testDirectoryUrl = import.meta.resolve("./")
+const testDirectoryUrl = resolveUrl("./", import.meta.url)
 
 const importMap = await generateImportMapForProjectPackage({
   projectDirectoryUrl: testDirectoryUrl,
@@ -10,20 +11,12 @@ const importMap = await generateImportMapForProjectPackage({
 const actual = importMap
 const expected = {
   imports: {
-    "root/": "./",
-    "bar": "./node_modules/bar/bar.js",
-    "foo": "./node_modules/foo/foo.js",
+    bar: "./node_modules/bar/bar.js",
+    foo: "./node_modules/foo/foo.js",
   },
   scopes: {
-    "./node_modules/foo/node_modules/bar/": {
-      "bar/": "./node_modules/foo/node_modules/bar/",
-    },
-    "./node_modules/bar/": {
-      "bar/": "./node_modules/bar/",
-    },
     "./node_modules/foo/": {
-      "foo/": "./node_modules/foo/",
-      "bar": "./node_modules/foo/node_modules/bar/bar.js",
+      bar: "./node_modules/foo/node_modules/bar/bar.js",
     },
   },
 }
@@ -53,12 +46,18 @@ const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
 }
 
 // import 'bar/file.js' inside 'bar'
-{
-  const actual = resolveImport({
+try {
+  resolveImport({
     specifier: `bar/file.js`,
     importer: `http://example.com/node_modules/foo/node_modules/bar/bar.js`,
     importMap: importMapNormalized,
   })
-  const expected = `http://example.com/node_modules/foo/node_modules/bar/file.js`
+  throw new Error("should throw")
+} catch (actual) {
+  const expected = new Error(`Unmapped bare specifier.
+--- specifier ---
+bar/file.js
+--- importer ---
+http://example.com/node_modules/foo/node_modules/bar/bar.js`)
   assert({ actual, expected })
 }

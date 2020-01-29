@@ -25,6 +25,7 @@ export const generateImportMapForProjectPackage = async ({
   includeExports = true,
   favoredExports,
   includeImports = true, // mot yet standard, shuuld be false by default
+  selfImport = false, // not standard, something that may happen one day
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",
   importMapFileLog = true,
@@ -46,6 +47,7 @@ export const generateImportMapForProjectPackage = async ({
       includeExports,
       includeImports,
       favoredExports,
+      selfImport,
     })
 
     if (importMapFile) {

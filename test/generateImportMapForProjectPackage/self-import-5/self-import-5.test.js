@@ -6,6 +6,7 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
 
 const actual = await generateImportMapForProjectPackage({
   projectDirectoryUrl: testDirectoryUrl,
+  selfImport: true,
 })
 const expected = {
   imports: {
