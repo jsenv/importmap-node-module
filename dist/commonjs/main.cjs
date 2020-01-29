@@ -350,145 +350,6 @@ const readStat = (sourcePath, {
   });
 };
 
-const firstOperationMatching = ({
-  array,
-  start,
-  predicate
-}) => {
-  if (typeof array !== "object") {
-    throw new TypeError(`array must be an object, got ${array}`);
-  }
-
-  if (typeof start !== "function") {
-    throw new TypeError(`start must be a function, got ${start}`);
-  }
-
-  if (typeof predicate !== "function") {
-    throw new TypeError(`predicate must be a function, got ${predicate}`);
-  }
-
-  return new Promise((resolve, reject) => {
-    const visit = index => {
-      if (index >= array.length) {
-        return resolve();
-      }
-
-      const input = array[index];
-      const returnValue = start(input);
-      return Promise.resolve(returnValue).then(output => {
-        if (predicate(output)) {
-          return resolve(output);
-        }
-
-        return visit(index + 1);
-      }, reject);
-    };
-
-    visit(0);
-  });
-};
-
-const createCancelError = reason => {
-  const cancelError = new Error(`canceled because ${reason}`);
-  cancelError.name = "CANCEL_ERROR";
-  cancelError.reason = reason;
-  return cancelError;
-};
-const isCancelError = value => {
-  return value && typeof value === "object" && value.name === "CANCEL_ERROR";
-};
-
-const arrayWithout = (array, item) => {
-  const arrayWithoutItem = [];
-  let i = 0;
-
-  while (i < array.length) {
-    const value = array[i];
-    i++;
-
-    if (value === item) {
-      continue;
-    }
-
-    arrayWithoutItem.push(value);
-  }
-
-  return arrayWithoutItem;
-};
-
-// https://github.com/tc39/proposal-cancellation/tree/master/stage0
-const createCancellationSource = () => {
-  let requested = false;
-  let cancelError;
-  let registrationArray = [];
-
-  const cancel = reason => {
-    if (requested) return;
-    requested = true;
-    cancelError = createCancelError(reason);
-    const registrationArrayCopy = registrationArray.slice();
-    registrationArray.length = 0;
-    registrationArrayCopy.forEach(registration => {
-      registration.callback(cancelError); // const removedDuringCall = registrationArray.indexOf(registration) === -1
-    });
-  };
-
-  const register = callback => {
-    if (typeof callback !== "function") {
-      throw new Error(`callback must be a function, got ${callback}`);
-    }
-
-    const existingRegistration = registrationArray.find(registration => {
-      return registration.callback === callback;
-    }); // don't register twice
-
-    if (existingRegistration) {
-      return existingRegistration;
-    }
-
-    const registration = {
-      callback,
-      unregister: () => {
-        registrationArray = arrayWithout(registrationArray, registration);
-      }
-    };
-    registrationArray = [registration, ...registrationArray];
-    return registration;
-  };
-
-  const throwIfRequested = () => {
-    if (requested) {
-      throw cancelError;
-    }
-  };
-
-  return {
-    token: {
-      register,
-
-      get cancellationRequested() {
-        return requested;
-      },
-
-      throwIfRequested
-    },
-    cancel
-  };
-};
-
-const catchAsyncFunctionCancellation = asyncFunction => {
-  return asyncFunction().catch(error => {
-    if (isCancelError(error)) return;
-    throw error;
-  });
-};
-
-const createCancellationTokenForProcessSIGINT = () => {
-  const SIGINTCancelSource = createCancellationSource();
-  process.on("SIGINT", () => SIGINTCancelSource.cancel("process interruption"));
-  return SIGINTCancelSource.token;
-};
-
 const getCommonPathname = (pathname, otherPathname) => {
   const firstDifferentCharacterIndex = findFirstDifferentCharacterIndex(pathname, otherPathname); // pathname and otherpathname are exactly the same
 
@@ -727,6 +588,145 @@ const composeObject = (leftObject, rightObject) => {
   return composedObject;
 };
 
+const firstOperationMatching = ({
+  array,
+  start,
+  predicate
+}) => {
+  if (typeof array !== "object") {
+    throw new TypeError(`array must be an object, got ${array}`);
+  }
+
+  if (typeof start !== "function") {
+    throw new TypeError(`start must be a function, got ${start}`);
+  }
+
+  if (typeof predicate !== "function") {
+    throw new TypeError(`predicate must be a function, got ${predicate}`);
+  }
+
+  return new Promise((resolve, reject) => {
+    const visit = index => {
+      if (index >= array.length) {
+        return resolve();
+      }
+
+      const input = array[index];
+      const returnValue = start(input);
+      return Promise.resolve(returnValue).then(output => {
+        if (predicate(output)) {
+          return resolve(output);
+        }
+
+        return visit(index + 1);
+      }, reject);
+    };
+
+    visit(0);
+  });
+};
+
+const createCancelError = reason => {
+  const cancelError = new Error(`canceled because ${reason}`);
+  cancelError.name = "CANCEL_ERROR";
+  cancelError.reason = reason;
+  return cancelError;
+};
+const isCancelError = value => {
+  return value && typeof value === "object" && value.name === "CANCEL_ERROR";
+};
+
+const arrayWithout = (array, item) => {
+  const arrayWithoutItem = [];
+  let i = 0;
+
+  while (i < array.length) {
+    const value = array[i];
+    i++;
+
+    if (value === item) {
+      continue;
+    }
+
+    arrayWithoutItem.push(value);
+  }
+
+  return arrayWithoutItem;
+};
+
+// https://github.com/tc39/proposal-cancellation/tree/master/stage0
+const createCancellationSource = () => {
+  let requested = false;
+  let cancelError;
+  let registrationArray = [];
+
+  const cancel = reason => {
+    if (requested) return;
+    requested = true;
+    cancelError = createCancelError(reason);
+    const registrationArrayCopy = registrationArray.slice();
+    registrationArray.length = 0;
+    registrationArrayCopy.forEach(registration => {
+      registration.callback(cancelError); // const removedDuringCall = registrationArray.indexOf(registration) === -1
+    });
+  };
+
+  const register = callback => {
+    if (typeof callback !== "function") {
+      throw new Error(`callback must be a function, got ${callback}`);
+    }
+
+    const existingRegistration = registrationArray.find(registration => {
+      return registration.callback === callback;
+    }); // don't register twice
+
+    if (existingRegistration) {
+      return existingRegistration;
+    }
+
+    const registration = {
+      callback,
+      unregister: () => {
+        registrationArray = arrayWithout(registrationArray, registration);
+      }
+    };
+    registrationArray = [registration, ...registrationArray];
+    return registration;
+  };
+
+  const throwIfRequested = () => {
+    if (requested) {
+      throw cancelError;
+    }
+  };
+
+  return {
+    token: {
+      register,
+
+      get cancellationRequested() {
+        return requested;
+      },
+
+      throwIfRequested
+    },
+    cancel
+  };
+};
+
+const catchAsyncFunctionCancellation = asyncFunction => {
+  return asyncFunction().catch(error => {
+    if (isCancelError(error)) return;
+    throw error;
+  });
+};
+
+const createCancellationTokenForProcessSIGINT = () => {
+  const SIGINTCancelSource = createCancellationSource();
+  process.on("SIGINT", () => SIGINTCancelSource.cancel("process interruption"));
+  return SIGINTCancelSource.token;
+};
+
 const resolveNodeModule = async ({
   logger,
   rootProjectDirectoryUrl,
@@ -887,6 +887,10 @@ ${packageFilePath}
     // otherwise the package.json is missing the main field
     // it certainly means it's not important
     if (packageMainFieldName !== "default") {
+      const extensionTried = path.extname(urlToFileSystemPath(mainFileUrlFirstCandidate)) === "" ? `--- extensions tried ---
+${extensionCandidateArray.join(`,`)}
+` : `
+`;
       logger.warn(`
 cannot find file for package.json ${packageMainFieldName} field
 --- ${packageMainFieldName} ---
@@ -895,9 +899,7 @@ ${packageMainFieldValue}
 ${urlToFileSystemPath(mainFileUrlFirstCandidate)}
 --- package.json path ---
 ${packageFilePath}
---- extensions tried ---
-${extensionCandidateArray.join(`,`)}
-        `);
+${extensionTried}`);
     }
 
     return mainFileUrlFirstCandidate;
@@ -1203,9 +1205,10 @@ const generateImportMapForPackage = async ({
   includeExports = true,
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
-  favoredExports = [],
+  favoredExports = ["import", "node", "require"],
   includeImports = true,
-  selfImport = true
+  // this is not yet standard, should be false by default
+  selfImport = false
 }) => {
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
 
@@ -1823,8 +1826,11 @@ const generateImportMapForProjectPackage = async ({
   manualOverrides,
   includeDevDependencies = process.env.NODE_ENV !== "production",
   includeExports = true,
-  favoredExports = [],
+  favoredExports,
   includeImports = true,
+  // mot yet standard, shuuld be false by default
+  selfImport = false,
+  // not standard, something that may happen one day
   importMapFile = false,
   importMapFileRelativeUrl = "./importMap.json",
   importMapFileLog = true,
@@ -1844,7 +1850,8 @@ const generateImportMapForProjectPackage = async ({
     includeDevDependencies,
     includeExports,
     includeImports,
-    favoredExports
+    favoredExports,
+    selfImport
   });
 
   if (importMapFile) {
