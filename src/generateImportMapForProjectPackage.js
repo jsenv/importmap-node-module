@@ -1,13 +1,11 @@
-import {
-  createCancellationTokenForProcessSIGINT,
-  catchAsyncFunctionCancellation,
-} from "@jsenv/cancellation"
 import { createLogger } from "@jsenv/logger"
 import {
   resolveUrl,
   urlToFileSystemPath,
   assertAndNormalizeDirectoryUrl,
   writeFile,
+  catchCancellation,
+  createCancellationTokenForProcess,
 } from "@jsenv/util"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 import { generateImportMapForPackage } from "./generateImportMapForPackage.js"
@@ -16,7 +14,7 @@ export const generateImportMapForProjectPackage = async ({
   // nothing is actually listening for this cancellationToken for now
   // it's not very important but it would be better to register on it
   // an stops what we are doing if asked to do so
-  cancellationToken = createCancellationTokenForProcessSIGINT(),
+  cancellationToken = createCancellationTokenForProcess(),
   logLevel,
   projectDirectoryUrl,
 
@@ -33,7 +31,7 @@ export const generateImportMapForProjectPackage = async ({
   jsConfigFileLog = true,
   jsConfigLeadingSlash = false,
 }) =>
-  catchAsyncFunctionCancellation(async () => {
+  catchCancellation(async () => {
     projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
     const logger = createLogger({ logLevel })
@@ -81,4 +79,10 @@ export const generateImportMapForProjectPackage = async ({
     }
 
     return importMap
+  }).catch((e) => {
+    // this is required to ensure unhandledRejection will still
+    // set process.exitCode to 1 marking the process execution as errored
+    // preventing further command to run
+    process.exitCode = 1
+    throw e
   })
