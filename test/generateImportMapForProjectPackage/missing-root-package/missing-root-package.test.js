@@ -8,7 +8,7 @@ const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
 try {
   await generateImportMapForProjectPackage({
     projectDirectoryUrl: testDirectoryUrl,
-    throwUnhandled: false,
+    updateProcessExitCode: false,
   })
   throw new Error("should throw")
 } catch (error) {

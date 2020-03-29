@@ -30,6 +30,7 @@ export const generateImportMapForProjectPackage = async ({
   jsConfigFile = false,
   jsConfigFileLog = true,
   jsConfigLeadingSlash = false,
+  updateProcessExitCode = true,
 }) =>
   catchCancellation(async () => {
     projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
@@ -83,6 +84,8 @@ export const generateImportMapForProjectPackage = async ({
     // this is required to ensure unhandledRejection will still
     // set process.exitCode to 1 marking the process execution as errored
     // preventing further command to run
-    process.exitCode = 1
+    if (updateProcessExitCode) {
+      process.exitCode = 1
+    }
     throw e
   })
