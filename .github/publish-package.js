@@ -1,5 +1,5 @@
-const { publishPackage } = require("@jsenv/package-publish")
-const { projectDirectoryUrl } = require("../jsenv.config.js")
+import { publishPackage } from "@jsenv/package-publish"
+import { projectDirectoryUrl } from "../jsenv.config.js"
 
 publishPackage({
   projectDirectoryUrl,

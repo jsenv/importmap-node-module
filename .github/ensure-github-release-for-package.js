@@ -1,5 +1,5 @@
-const { ensureGithubReleaseForPackage } = require("@jsenv/github-release-package")
-const { projectDirectoryUrl } = require("../jsenv.config.js")
+import { ensureGithubReleaseForPackage } from "@jsenv/github-release-package"
+import { projectDirectoryUrl } from "../jsenv.config.js"
 
 ensureGithubReleaseForPackage({
   projectDirectoryUrl,

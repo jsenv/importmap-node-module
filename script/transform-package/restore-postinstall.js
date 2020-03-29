@@ -1,10 +1,10 @@
-const { existsSync, readFileSync, writeFileSync, unlinkSync } = require("fs")
-const { resolve } = require("path")
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from "fs"
 
-const PACKAGE_PATH = resolve(__dirname, "../../package.json")
-const PACKAGE_CACHED_PATH = resolve(__dirname, "../../cached-package.json")
+const PACKAGE_URL = new URL("../../package.json", import.meta.url)
+const PACKAGE_CACHED_URL = new URL("../../package-cached.json", import.meta.url)
 
-if (existsSync(PACKAGE_CACHED_PATH)) {
-  writeFileSync(PACKAGE_PATH, readFileSync(PACKAGE_CACHED_PATH))
-  unlinkSync(PACKAGE_CACHED_PATH)
+if (existsSync(PACKAGE_CACHED_URL)) {
+  // we could also use move right ?
+  writeFileSync(PACKAGE_URL, readFileSync(PACKAGE_CACHED_URL))
+  unlinkSync(PACKAGE_CACHED_URL)
 }
