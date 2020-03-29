@@ -7,7 +7,13 @@
       "request": "launch",
       "protocol": "inspector",
       "program": "${file}",
-      "runtimeVersion": "13.6.0",
+      "runtimeVersion": "13.12.0",
+      "runtimeArgs": [
+        "--unhandled-rejections=strict",
+        "--experimental-json-modules",
+        // this is to disable experimental warning
+        "--no-warnings"
+      ],
       "autoAttachChildProcesses": true,
       "sourceMaps": true,
       "smartStep": true,
@@ -25,9 +31,14 @@
       "request": "launch",
       "protocol": "inspector",
       "program": "${workspaceFolder}/script/run-node/run-node.js",
+      "runtimeArgs": [
+        "--unhandled-rejections=strict",
+        // this is to disable experimental warning
+        "--no-warnings"
+      ],
       "args": ["${relativeFile}"],
       "autoAttachChildProcesses": true,
-      "sourceMaps": true,
+      // "sourceMaps": false,
       "smartStep": true,
       "skipFiles": [
         // force-array-multiline
@@ -70,25 +81,6 @@
         "node_modules/rollup/**",
         "node_modules/@rollup/**",
         "<node_internals>/**/*.js"
-      ]
-    },
-    {
-      "name": "jsenv-chrome",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://127.0.0.1:3456/node_modules/@jsenv/core/src/internal/jsenv-html-file.html?file=${relativeFile}",
-      "runtimeArgs": ["--allow-file-access-from-files", "--disable-web-security"],
-      "sourceMaps": true,
-      "webRoot": "${workspaceFolder}",
-      "smartStep": true,
-      "skipFiles": [
-        // force-multiline
-        "node_modules/@jsenv/core/**",
-        "node_modules/@babel/template/**",
-        "node_modules/@dmail/cancellation/**",
-        "node_modules/rollup/**",
-        "node_modules/@rollup/**",
-        "<node_internals>/**"
       ]
     }
   ]
