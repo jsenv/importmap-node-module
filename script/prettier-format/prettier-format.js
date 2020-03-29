@@ -1,5 +1,5 @@
-const { formatWithPrettier } = require("@jsenv/prettier-check-project")
-const jsenvConfig = require("../../jsenv.config.js")
+import { formatWithPrettier } from "@jsenv/prettier-check-project"
+import * as jsenvConfig from "../../jsenv.config.js"
 
 formatWithPrettier({
   ...jsenvConfig,
