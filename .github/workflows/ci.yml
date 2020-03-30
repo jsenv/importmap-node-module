@@ -14,7 +14,6 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
         node: [13.12.0]
-      max-parallel: 1 # to ensure windows failure can prevent ubuntu from publishing package
     runs-on: ${{ matrix.os }}
     name: node 12 on ${{ matrix.os }}
     env:
@@ -41,6 +40,11 @@ jobs:
         run: npm run upload-coverage
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  release:
+    needs: [ci]
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
       - name: publish package
         if: github.event_name == 'push' && runner.os == 'Linux' # runner check to run it once
         run: node ./.github/publish-package.js
