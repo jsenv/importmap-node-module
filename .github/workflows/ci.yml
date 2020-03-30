@@ -9,17 +9,17 @@ on:
       - master
 
 jobs:
-  ci:
+  test:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
         node: [13.12.0]
     runs-on: ${{ matrix.os }}
-    name: node 12 on ${{ matrix.os }}
+    name: test on ${{ matrix.os }} and node ${{ matrix.node }}
     env:
       CI: true
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
@@ -41,10 +41,20 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   release:
-    needs: [ci]
+    needs: [test]
     if: success()
     runs-on: ubuntu-latest
+    name: release
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "13.x"
+      - name: npm install
+        run: |
+          npm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
+          cd ./.github/release
+          npm install
       - name: publish package
         if: github.event_name == 'push'
         run: node --no-warnings ./.github/release/publish-package.js
