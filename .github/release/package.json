@@ -1,0 +1,11 @@
+{
+  "name": "github-workflow-release",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@jsenv/github-release-package": "1.2.2",
+    "@jsenv/package-publish": "1.5.1"
+  }
+}

@@ -1,3 +1,5 @@
+/.github/release/node_modules/
+/.github/release/package-lock.json
 /.jsenv/
 /.vscode/settings.json
 /coverage/

@@ -1,4 +1,5 @@
 !/.github/
+/.github/**/node_modules/
 /.jsenv/
 /coverage/
 /dist/
