@@ -1,7 +1,12 @@
 /* eslint-disable import/max-dependencies */
 import { basename } from "path"
 import { sortImportMap } from "@jsenv/import-map"
-import { resolveUrl, urlToRelativeUrl, assertAndNormalizeDirectoryUrl } from "@jsenv/util"
+import {
+  resolveUrl,
+  urlToRelativeUrl,
+  assertAndNormalizeDirectoryUrl,
+  urlToFileSystemPath,
+} from "@jsenv/util"
 import { readPackageFile } from "./internal/readPackageFile.js"
 import { resolveNodeModule } from "./internal/resolveNodeModule.js"
 import { resolvePackageMain } from "./internal/resolvePackageMain.js"
@@ -277,9 +282,11 @@ export const generateImportMapForPackage = async ({
     const dependencyMap = {}
 
     const { dependencies = {} } = packageJsonObject
+    // https://npm.github.io/using-pkgs-docs/package-json/types/optionaldependencies.html
+    const { optionalDependencies = {} } = packageJsonObject
     Object.keys(dependencies).forEach((dependencyName) => {
       dependencyMap[dependencyName] = {
-        type: "dependency",
+        type: dependencyName in optionalDependencies ? "optionalDependency" : "dependency",
         versionPattern: dependencies[dependencyName],
       }
     })
@@ -328,12 +335,18 @@ export const generateImportMapForPackage = async ({
   }) => {
     const dependencyData = await findDependency({
       packageFileUrl,
-      packageJsonObject,
       dependencyName,
-      dependencyType,
-      dependencyVersionPattern,
     })
     if (!dependencyData) {
+      logger[dependencyType === "optionalDependency" ? "debug" : "warn"](`
+cannot find a ${dependencyType}.
+--- ${dependencyType} ---
+${dependencyName}@${dependencyVersionPattern}
+--- required by ---
+${packageJsonObject.name}@${packageJsonObject.version}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}
+    `)
       return
     }
 
@@ -425,13 +438,7 @@ export const generateImportMapForPackage = async ({
   }
 
   const dependenciesCache = {}
-  const findDependency = ({
-    packageFileUrl,
-    packageJsonObject,
-    dependencyName,
-    dependencyType,
-    dependencyVersionPattern,
-  }) => {
+  const findDependency = ({ packageFileUrl, dependencyName }) => {
     if (packageFileUrl in dependenciesCache === false) {
       dependenciesCache[packageFileUrl] = {}
     }
@@ -439,14 +446,11 @@ export const generateImportMapForPackage = async ({
       return dependenciesCache[packageFileUrl][dependencyName]
     }
     const dependencyPromise = resolveNodeModule({
+      logger,
       rootProjectDirectoryUrl,
       manualOverrides,
       packageFileUrl,
-      packageJsonObject,
       dependencyName,
-      dependencyType,
-      dependencyVersionPattern,
-      logger,
     })
     dependenciesCache[packageFileUrl][dependencyName] = dependencyPromise
     return dependencyPromise

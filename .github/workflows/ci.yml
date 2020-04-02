@@ -42,7 +42,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   release:
     needs: [test]
-    if: success()
+    if: success() && github.event_name == 'push'
     runs-on: ubuntu-latest
     name: release
     steps:
@@ -53,16 +53,13 @@ jobs:
       - name: npm install
         run: |
           npm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
-          cd ./.github/release
           npm install
       - name: publish package
-        if: github.event_name == 'push'
         run: node --no-warnings ./.github/release/publish-package.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: ensure github release
-        if: github.event_name == 'push'
         run: node --no-warnings ./.github/release/ensure-github-release-for-package.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

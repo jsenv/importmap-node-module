@@ -7,10 +7,7 @@ export const resolveNodeModule = async ({
   rootProjectDirectoryUrl,
   manualOverrides,
   packageFileUrl,
-  packageJsonObject,
   dependencyName,
-  dependencyVersionPattern,
-  dependencyType,
 }) => {
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const nodeModuleCandidateArray = [
@@ -18,7 +15,7 @@ export const resolveNodeModule = async ({
     `node_modules/`,
   ]
 
-  const result = await firstOperationMatching({
+  return firstOperationMatching({
     array: nodeModuleCandidateArray,
     start: async (nodeModuleCandidate) => {
       const packageFileUrl = `${rootProjectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`
@@ -49,20 +46,6 @@ ${urlToFileSystemPath(packageFileUrl)}
     },
     predicate: ({ packageJsonObject }) => Boolean(packageJsonObject),
   })
-
-  if (!result) {
-    logger.warn(`
-cannot find a ${dependencyType}.
---- ${dependencyType} ---
-${dependencyName}@${dependencyVersionPattern}
---- required by ---
-${packageJsonObject.name}@${packageJsonObject.version}
---- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}
-    `)
-  }
-
-  return result
 }
 
 const computeNodeModuleCandidateArray = (packageDirectoryUrl, rootProjectDirectoryUrl) => {
