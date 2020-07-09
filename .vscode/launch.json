@@ -7,10 +7,11 @@
       "request": "launch",
       "protocol": "inspector",
       "program": "${file}",
-      "runtimeVersion": "13.12.0",
+      "runtimeVersion": "14.5.0",
       "runtimeArgs": [
         "--unhandled-rejections=strict",
         "--experimental-json-modules",
+        "--experimental-top-level-await",
         // this is to disable experimental warning
         "--no-warnings"
       ],

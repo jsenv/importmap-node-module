@@ -79,14 +79,16 @@ ${packageFilePath}
     let address
 
     if (typeof value === "object") {
-      const favoredExport = favoredExports.find((key) => key in value)
+      address = readFavoredKey(value, favoredExports)
 
-      if (favoredExport) {
-        address = value[favoredExport]
-      } else if ("default" in value) {
-        address = value.default
-      } else {
+      if (!address) {
         return
+      }
+      if (typeof address === "object") {
+        address = readFavoredKey(address, favoredExports)
+        if (!address) {
+          return
+        }
       }
     } else if (typeof value === "string") {
       address = value
@@ -133,4 +135,15 @@ ${packageFilePath}
   })
 
   return importsForPackageExports
+}
+
+const readFavoredKey = (object, favoredKeys) => {
+  const favoredKey = favoredKeys.find((key) => object.hasOwnProperty(key))
+  if (favoredKey) {
+    return object[favoredKey]
+  }
+  if (object.hasOwnProperty("default")) {
+    return object.default
+  }
+  return undefined
 }
