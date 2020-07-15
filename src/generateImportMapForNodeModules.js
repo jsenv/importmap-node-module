@@ -1,5 +1,6 @@
 /* eslint-disable import/max-dependencies */
 import { basename } from "path"
+import { createLogger } from "@jsenv/logger"
 import { sortImportMap } from "@jsenv/import-map"
 import {
   resolveUrl,
@@ -14,7 +15,7 @@ import { visitPackageImports } from "./internal/visitPackageImports.js"
 import { visitPackageExports } from "./internal/visitPackageExports.js"
 
 export const generateImportMapForNodeModules = async ({
-  logger,
+  logLevel,
   projectDirectoryUrl,
   rootProjectDirectoryUrl,
 
@@ -27,6 +28,8 @@ export const generateImportMapForNodeModules = async ({
   packagesExportsPreference = ["import", "node", "require"],
   packagesSelfImport = false,
 }) => {
+  const logger = createLogger({ logLevel })
+
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
   if (typeof rootProjectDirectoryUrl === "undefined") {
     rootProjectDirectoryUrl = projectDirectoryUrl

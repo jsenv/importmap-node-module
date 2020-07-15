@@ -50,7 +50,7 @@ export const generateImportMapForProject = async ({
       const getImportMapFromNodeModules = () =>
         generateImportMapForNodeModules({
           cancellationToken,
-          logger,
+          logLevel,
 
           projectDirectoryUrl,
           packagesManualOverrides,
