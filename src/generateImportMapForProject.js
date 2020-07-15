@@ -28,7 +28,7 @@ export const generateImportMapForProject = async ({
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
   packagesExportsPreference = ["import", "node", "require"],
-  packagesSelfImport = false,
+  packagesSelfImport = true,
 
   customImportMapFileIncluded = false,
   customImportMapFileRelativeUrl = "./import-map-custom.importmap",

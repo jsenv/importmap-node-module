@@ -26,7 +26,7 @@ export const generateImportMapForNodeModules = async ({
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
   packagesExportsPreference = ["import", "node", "require"],
-  packagesSelfImport = false,
+  packagesSelfImport = true,
 }) => {
   const logger = createLogger({ logLevel })
 
