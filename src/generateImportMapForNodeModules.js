@@ -13,18 +13,19 @@ import { resolvePackageMain } from "./internal/resolvePackageMain.js"
 import { visitPackageImports } from "./internal/visitPackageImports.js"
 import { visitPackageExports } from "./internal/visitPackageExports.js"
 
-export const generateImportMapForPackage = async ({
+export const generateImportMapForNodeModules = async ({
   logger,
   projectDirectoryUrl,
   rootProjectDirectoryUrl,
-  manualOverrides = {},
-  includeDevDependencies = false,
-  includeExports = true,
+
+  projectPackageDevDependenciesIncluded = false,
+  packagesManualOverrides = {},
+  packagesImportsIncluded = true,
+  packagesExportsIncluded = true,
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
-  favoredExports = ["import", "node", "require"],
-  includeImports = true, // this is not yet standard, should be false by default
-  selfImport = false,
+  packagesExportsPreference = ["import", "node", "require"],
+  packagesSelfImport = false,
 }) => {
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
   if (typeof rootProjectDirectoryUrl === "undefined") {
@@ -94,7 +95,7 @@ export const generateImportMapForPackage = async ({
       packageInfo,
     })
 
-    if (includeImports && "imports" in packageJsonObject) {
+    if (packagesImportsIncluded && "imports" in packageJsonObject) {
       const importsForPackageImports = visitPackageImports({
         logger,
         packageFileUrl,
@@ -141,7 +142,7 @@ export const generateImportMapForPackage = async ({
       })
     }
 
-    if (selfImport) {
+    if (packagesSelfImport) {
       const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
 
       // allow import 'package-name/dir/file.js' in package-name files
@@ -161,14 +162,14 @@ export const generateImportMapForPackage = async ({
       }
     }
 
-    if (includeExports && "exports" in packageJsonObject) {
+    if (packagesExportsIncluded && "exports" in packageJsonObject) {
       const importsForPackageExports = visitPackageExports({
         logger,
         packageFileUrl,
         packageName,
         packageJsonObject,
         packageInfo,
-        favoredExports,
+        packagesExportsPreference,
       })
 
       const {
@@ -180,7 +181,7 @@ export const generateImportMapForPackage = async ({
         // packageDirectoryUrlExpected,
       } = packageInfo
 
-      if (packageIsRoot && selfImport) {
+      if (packageIsRoot && packagesSelfImport) {
         Object.keys(importsForPackageExports).forEach((from) => {
           const to = importsForPackageExports[from]
           addImportMapping({
@@ -448,7 +449,7 @@ ${urlToFileSystemPath(packageFileUrl)}
     const dependencyPromise = resolveNodeModule({
       logger,
       rootProjectDirectoryUrl,
-      manualOverrides,
+      packagesManualOverrides,
       packageFileUrl,
       dependencyName,
     })
@@ -456,7 +457,10 @@ ${urlToFileSystemPath(packageFileUrl)}
     return dependencyPromise
   }
 
-  const projectPackageJsonObject = await readPackageFile(projectPackageFileUrl, manualOverrides)
+  const projectPackageJsonObject = await readPackageFile(
+    projectPackageFileUrl,
+    packagesManualOverrides,
+  )
 
   const packageFileUrl = projectPackageFileUrl
   const importerPackageFileUrl = projectPackageFileUrl
@@ -470,7 +474,7 @@ ${urlToFileSystemPath(packageFileUrl)}
       packageJsonObject: projectPackageJsonObject,
       importerPackageFileUrl,
       importerPackageJsonObject: null,
-      includeDevDependencies,
+      includeDevDependencies: projectPackageDevDependenciesIncluded,
     })
   } else {
     logger.warn(`package name field must be a string

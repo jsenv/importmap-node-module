@@ -11,13 +11,16 @@ Generate importmap for node_modules.
 
 - [Presentation](#Presentation)
 - [Installation](#installation)
-- [generateImportMapForProjectPackage](#generateImportMapForProjectPackage)
+- [generateImportMapForProject](#generateImportMapForProject)
   - [projectDirectoryUrl](#projectDirectoryUrl)
-  - [includeDevDependencies](#includeDevDependencies)
+  - [projectNodeModulesIncluded](#projectNodeModulesIncluded)
+  - [projectPackageDevDependenciesIncluded](#projectPackageDevDependenciesIncluded)
+  - [packagesExportsPreference](#packagesExportsPreference)
+  - [customImportMapFileIncluded](#customImportMapFileIncluded)
+  - [customImportMapFileRelativeUrl](#customImportMapFileRelativeUrl)
   - [importMapFile](#importMapFile)
   - [importMapFileRelativeUrl](#importMapFileRelativeUrl)
   - [importMapFileLog](#importMapFileLog)
-  - [favoredExports](#favoredExports)
 - [Concrete example](#concrete-example)
   - [Step 1 - Setup basic project](#step-1---setup-project)
   - [Step 2 - Generate project importMap](#step-2---generate-project-importMap)
@@ -31,11 +34,11 @@ Generate importmap for node_modules.
 It reads `package.json` and recursively try to find your dependencies. Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
 ```js
-import { generateImportMapForProjectPackage } from "@jsenv/node-module-import-map"
+import { generateImportMapForProject } from "@jsenv/node-module-import-map"
 
-generateImportMapForProjectPackage({
+generateImportMapForProject({
   projectDirectoryUrl: "file:///directory",
-  includeDevDependencies: true,
+  projectPackageDevDependenciesIncluded: true,
   importMapFile: true,
   importMapFileRelativeUrl: "./import-map.importmap",
 })
@@ -44,7 +47,7 @@ generateImportMapForProjectPackage({
 `@jsenv/node-module-import-map` can also be required.
 
 ```js
-const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
+const { generateImportMapForProject } = require("@jsenv/node-module-import-map")
 ```
 
 # Installation
@@ -53,47 +56,51 @@ const { generateImportMapForProjectPackage } = require("@jsenv/node-module-impor
 npm install @jsenv/node-module-import-map
 ```
 
-# generateImportMapForProjectPackage
+# generateImportMapForProject
 
-`generateImportMapForProjectPackage` is an async function returning an importMap object.
+`generateImportMapForProject` is an async function returning an importMap object.
 
 ```js
-import { generateImportMapForProjectPackage } from "@jsenv/node-module-import-map"
+import { generateImportMapForProject } from "@jsenv/node-module-import-map"
 
-const importMap = await generateImportMapForProjectPackage({
+const importMap = await generateImportMapForProject({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  includeDevDependencies: true,
+  projectPackageDevDependenciesIncluded: true,
   importMapFile: false,
   importMapFileRelativeUrl: "./import-map.importmap",
   importMapFileLog: true,
 })
 ```
 
-— source code at [src/generateImportMapForProjectPackage.js](./src/generateImportMapForProjectPackage.js).
+— source code at [src/generateImportMapForProject.js](./src/generateImportMapForProject.js).
 
 ## projectDirectoryUrl
 
 `projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertAndNormalizeDirectoryUrl
 
-## includeDevDependencies
+## projectNodeModulesIncluded
 
-`includeDevDependencies` parameter is a boolean controling if devDependencies are included in the generated importMap. This parameter is optional with a default value of `process.env.NODE_ENV !== "production"`.
+`projectNodeModulesIncluded` parameter is a boolean controlling if project `package.json` and `node_modules` remapping will appear in the generated import-map. This parameter is optional and enabled by default.
+
+## projectPackageDevDependenciesIncluded
+
+`projectPackageDevDependenciesIncluded` parameter is a boolean controling if devDependencies from your project `package.json` are included in the generated importMap. This parameter is optional and by default it's disabled when `process.env.NODE_ENV` is `"production"`.
 
 ## importMapFile
 
-`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional with a default value of `false`.
+`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and by default it's disabled.
 
 ## importMapFileRelativeUrl
 
-`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional with a default value of `"./import-map.importmap"`.
+`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./import-map.importmap"`.
 
 ## importMapFileLog
 
-`importMapFileLog` parameter a boolean controlling if there is log in the terminal when importMap file is written. It is optional with a default value of `true`.
+`importMapFileLog` parameter a boolean controlling if there is log in the terminal when importMap file is written. This parameter is optional and by default it's enabled.
 
-## favoredExports
+## packagesExportsPreference
 
-`favoredExports` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameter is optional with a default value of `["import", "node", "require"]`. It exists to support conditional exports from Node.js.
+`packagesExportsPreference` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameter is optional with a default value of `["import", "node", "require"]`. It exists to support conditional exports from Node.js.
 
 — see [Conditional export documentation on Node.js](https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_conditional_exports)
 
@@ -111,7 +118,19 @@ Or if you prefer `"electron"` and fallback to `"browser"` use the following valu
 ["electron", "browser"]
 ```
 
-When none of `favoredExports` is found in a `package.json` and if `"default"` is specified in that `package.json`, `"default"` value is read and appears in the importmap.
+When none of `packagesExportsPreference` is found in a `package.json` and if `"default"` is specified in that `package.json`, `"default"` value is read and appears in the importmap.
+
+## customImportMapFileIncluded
+
+`customImportMapFileIncluded` parameter is a boolean controlling if a custom import map file will be read and appear in the generated import-map. This parameter is optional and disabled by default.
+
+> When a file
+
+## customImportMapFileRelativeUrl
+
+`customImportMapFileRelativeUrl` parameter is a string controlling the location of the custom importmap file. This parameter is optional and it's default value is `"./import-map-custom.importmap"`.
+
+> Note that remapping inside this file takes precedence over import generated for node_modules.
 
 # Concrete example
 
@@ -149,14 +168,6 @@ It behaves as Node.js with one big change:
 
 > A node module will not be found if it is outside your project folder.
 
-We do this because importMap are used on the web where a file outside project folder would fail.<br/>
+We do this because importMap are used on the web where a file outside project folder would cannot be reached.
 
-And here is why:
-
-You have a server at `https://example.com` serving files inside `/Users/you/project`.<br />
-Your project uses a file outside of your project folder like `/Users/you/node_modules/whatever/index.js`.
-
-From a filesystem perspective we could find file using `../node_modules/whatever/index.js`.<br />
-For a web client however `../node_modules/whatever/index.js` resolves to `https://example.com/node_modules/whatever/index.js`. Server would be requested at that url searching for `/Users/you/project/node_modules/whatever/index.js` instead of `/Users/you/node_modules/whatever/index.js`.
-
-In practice it does not impact you because node modules are inside your project folder. If not, explicitely write your dependencies in your `package.json` and run `npm install`.
+In practice it does not impact you because node modules are inside your project folder. If not, write all your dependencies in your `package.json` and re-run `npm install`.

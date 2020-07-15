@@ -1,7 +1,7 @@
-import { generateImportMapForProjectPackage } from "@jsenv/node-module-import-map"
+import { generateImportMapForProject } from "@jsenv/node-module-import-map"
 import * as jsenvConfig from "../../jsenv.config.js"
 
-generateImportMapForProjectPackage({
+generateImportMapForProject({
   ...jsenvConfig,
   importMapFile: true,
   jsConfigFile: true,

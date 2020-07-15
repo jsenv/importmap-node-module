@@ -1,17 +1,17 @@
 import { readFile } from "@jsenv/util"
 
-export const readPackageFile = async (packageFileUrl, manualOverrides) => {
+export const readPackageFile = async (packageFileUrl, packagesManualOverrides) => {
   const packageFileString = await readFile(packageFileUrl)
   const packageJsonObject = JSON.parse(packageFileString)
   const { name, version } = packageJsonObject
 
-  const overrideKey = Object.keys(manualOverrides).find((overrideKeyCandidate) => {
+  const overrideKey = Object.keys(packagesManualOverrides).find((overrideKeyCandidate) => {
     if (name === overrideKeyCandidate) return true
     if (`${name}@${version}` === overrideKeyCandidate) return true
     return false
   })
   if (overrideKey) {
-    return composeObject(packageJsonObject, manualOverrides[overrideKey])
+    return composeObject(packageJsonObject, packagesManualOverrides[overrideKey])
   }
   return packageJsonObject
 }
