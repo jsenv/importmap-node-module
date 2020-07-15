@@ -5,6 +5,7 @@
 /docs/basic-project/package-lock.json
 /docs/basic-project/yarn.lock
 /node_modules/
+/import-map.importmap
 /jsconfig.json
 /package-lock.json
 /secrets.json

@@ -20,7 +20,7 @@ const importMap = await generateImportMapForProjectPackage({
   projectDirectoryUrl: __dirname,
   includeDevDependencies: true,
   importMapFile: false,
-  importMapFileRelativeUrl: "./importMap.json",
+  importMapFileRelativeUrl: "./import-map.importmap",
   importMapFileLog: true,
 })
 ```
@@ -75,7 +75,7 @@ false
 This parameter is optional with a default value of
 
 ```js
-"./importMap.json"
+"./import-map.importmap"
 ```
 
 ---

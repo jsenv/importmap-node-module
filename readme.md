@@ -37,7 +37,7 @@ generateImportMapForProjectPackage({
   projectDirectoryUrl: "file:///directory",
   includeDevDependencies: true,
   importMapFile: true,
-  importMapFileRelativeUrl: "./importMap.json",
+  importMapFileRelativeUrl: "./import-map.importmap",
 })
 ```
 
@@ -64,7 +64,7 @@ const importMap = await generateImportMapForProjectPackage({
   projectDirectoryUrl: new URL("./", import.meta.url),
   includeDevDependencies: true,
   importMapFile: false,
-  importMapFileRelativeUrl: "./importMap.json",
+  importMapFileRelativeUrl: "./import-map.importmap",
   importMapFileLog: true,
 })
 ```
@@ -85,7 +85,7 @@ const importMap = await generateImportMapForProjectPackage({
 
 ## importMapFileRelativeUrl
 
-`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional with a default value of `"./importMap.json"`.
+`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional with a default value of `"./import-map.importmap"`.
 
 ## importMapFileLog
 
@@ -134,7 +134,7 @@ npm install
 
 ## Step 2 - Generate project importMap
 
-Running command below will generate import map file at `docs/basic-project/importMap.json`.
+Running command below will generate import map file at `docs/basic-project/import-map.importmap`.
 
 ```console
 node ./generate-import-map.js

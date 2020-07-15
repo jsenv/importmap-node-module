@@ -4,5 +4,5 @@ generateImportMapForProjectPackage({
   projectDirectoryUrl: __dirname,
   includeDevDependencies: true,
   importMapFile: true,
-  importMapFileRelativeUrl: "./importMap.json",
+  importMapFileRelativeUrl: "./import-map.importmap",
 })
