@@ -11,11 +11,19 @@ const actual = await generateImportMapForNodeModules({
 const expected = {
   imports: {},
   scopes: {
+    "./node_modules/project/node_modules/inside/": {
+      "inside/": "./node_modules/project/node_modules/inside/",
+    },
     "./node_modules/project/": {
       "./node_modules/project/": "./node_modules/project/",
+      "project/": "./node_modules/project/",
+      "project": "./node_modules/project/index.js",
       "inside": "./node_modules/project/node_modules/inside/index.js",
       "shared": "./node_modules/shared/index.js",
       "./": "./node_modules/project/",
+    },
+    "./node_modules/shared/": {
+      "shared/": "./node_modules/shared/",
     },
   },
 }
