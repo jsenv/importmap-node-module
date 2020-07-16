@@ -13,7 +13,6 @@ Generate importmap for node_modules.
 - [Installation](#installation)
 - [generateImportMapForProject](#generateImportMapForProject)
   - [projectDirectoryUrl](#projectDirectoryUrl)
-  - [projectNodeModulesIncluded](#projectNodeModulesIncluded)
   - [projectPackageDevDependenciesIncluded](#projectPackageDevDependenciesIncluded)
   - [packagesExportsPreference](#packagesExportsPreference)
   - [customImportMapFileIncluded](#customImportMapFileIncluded)
@@ -77,10 +76,6 @@ const importMap = await generateImportMapForProject({
 ## projectDirectoryUrl
 
 `projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertAndNormalizeDirectoryUrl
-
-## projectNodeModulesIncluded
-
-`projectNodeModulesIncluded` parameter is a boolean controlling if project `package.json` and `node_modules` remapping will appear in the generated import-map. This parameter is optional and enabled by default.
 
 ## projectPackageDevDependenciesIncluded
 

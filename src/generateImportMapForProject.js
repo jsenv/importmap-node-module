@@ -20,15 +20,18 @@ export const generateImportMapForProject = async ({
   logLevel,
   projectDirectoryUrl,
 
-  projectNodeModulesIncluded = true,
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
-  packagesManualOverrides,
-  packagesImportsIncluded = true,
-  packagesExportsIncluded = true,
   // pass ['browser', 'default'] to read browser first then 'default' if defined
   // in package exports field
   packagesExportsPreference = ["import", "node", "require"],
+  packagesManualOverrides,
+  // imports, exports and self import are now inside Node.js
+  // there are enabled by default
+  packagesExportsIncluded = true,
   packagesSelfImport = true,
+  // (however Node.js spec about package imports talks about #, not sure we behave correctly
+  // regarding those)
+  packagesImportsIncluded = true,
 
   customImportMapFileIncluded = false,
   customImportMapFileRelativeUrl = "./import-map-custom.importmap",
@@ -76,7 +79,7 @@ export const generateImportMapForProject = async ({
       }
 
       const importMaps = await Promise.all([
-        ...(projectNodeModulesIncluded ? [getImportMapFromNodeModules()] : []),
+        getImportMapFromNodeModules(),
         ...(customImportMapFileIncluded ? [getImportMapFromCustomFile()] : []),
       ])
 

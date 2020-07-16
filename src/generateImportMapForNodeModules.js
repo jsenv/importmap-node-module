@@ -20,13 +20,12 @@ export const generateImportMapForNodeModules = async ({
   rootProjectDirectoryUrl,
 
   projectPackageDevDependenciesIncluded = false,
-  packagesManualOverrides = {},
-  packagesImportsIncluded = true,
-  packagesExportsIncluded = true,
-  // pass ['browser', 'default'] to read browser first then 'default' if defined
-  // in package exports field
+  // pass ["import", "browser", "require"] to read browser first if defined
   packagesExportsPreference = ["import", "node", "require"],
+  packagesManualOverrides = {},
+  packagesExportsIncluded = true,
   packagesSelfImport = true,
+  packagesImportsIncluded = true,
 }) => {
   const logger = createLogger({ logLevel })
 
@@ -64,17 +63,17 @@ export const generateImportMapForNodeModules = async ({
     importerPackageJsonObject,
     includeDevDependencies,
   }) => {
+    await visitDependencies({
+      packageFileUrl,
+      packageJsonObject,
+      includeDevDependencies,
+    })
     await visitPackage({
       packageFileUrl,
       packageName,
       packageJsonObject,
       importerPackageFileUrl,
       importerPackageJsonObject,
-    })
-    await visitDependencies({
-      packageFileUrl,
-      packageJsonObject,
-      includeDevDependencies,
     })
   }
 
@@ -250,8 +249,8 @@ export const generateImportMapForNodeModules = async ({
       packageDirectoryUrlExpected,
     },
   }) => {
-    if (packageIsRoot) return
-    if (packageIsProject) return
+    const self = packageIsRoot || packageIsProject
+    if (self && !packagesSelfImport) return
 
     const mainFileUrl = await resolvePackageMain({
       packageFileUrl,
