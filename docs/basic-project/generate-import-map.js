@@ -1,9 +1,9 @@
 import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
-const importMap = await getImportMapFromNodeModules({
-  projectDirectoryUrl: __dirname,
+getImportMapFromNodeModules({
+  projectDirectoryUrl: new URL("./", import.meta.url),
   projectPackageDevDependenciesIncluded: true,
   importMapFileRelativeUrl: "./import-map.importmap",
+}).then((importMap) => {
+  console.log(importMap)
 })
-
-console.log(importMap)

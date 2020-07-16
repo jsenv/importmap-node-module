@@ -33,14 +33,13 @@ import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
 getImportMapFromNodeModules({
   projectDirectoryUrl: "file:///directory",
-  projectPackageDevDependenciesIncluded: true,
 })
 ```
 
 `@jsenv/node-module-import-map` can also be required.
 
 ```js
-const { generateImportMapForProject } = require("@jsenv/node-module-import-map")
+const { getImportMapFromNodeModules } = require("@jsenv/node-module-import-map")
 ```
 
 # Installation
@@ -117,10 +116,10 @@ npm install
 
 Running command below will log importMap generated for that basic project.
 
-> You need node 14+ to run this example
+> You need node 13+ to run this example
 
 ```console
-node --experimental-top-level-await ./generate-import-map.js
+node ./generate-import-map.js
 ```
 
 # Custom node module resolution
