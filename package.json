@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "12.0.0",
+  "version": "12.0.0-alpha.0",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {

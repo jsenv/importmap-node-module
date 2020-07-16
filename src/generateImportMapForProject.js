@@ -26,9 +26,7 @@ export const generateImportMapForProject = async (
     async () => {
       projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
-      const importMaps = await Promise.all([
-        importMapInputs.map((importMapInput) => importMapInput()),
-      ])
+      const importMaps = await Promise.all(importMapInputs)
 
       const importMap = importMaps.reduce((previous, current) => {
         return composeTwoImportMaps(previous, current)
