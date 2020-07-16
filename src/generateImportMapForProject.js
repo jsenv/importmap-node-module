@@ -36,7 +36,7 @@ export const generateImportMapForProject = async ({
   customImportMapFileIncluded = false,
   customImportMapFileRelativeUrl = "./import-map-custom.importmap",
 
-  importMapFile = false,
+  importMapFile = true,
   importMapFileRelativeUrl = "./import-map.importmap",
   importMapFileLog = true,
 

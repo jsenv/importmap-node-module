@@ -83,7 +83,7 @@ const importMap = await generateImportMapForProject({
 
 ## importMapFile
 
-`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and by default it's disabled.
+`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
 
 ## importMapFileRelativeUrl
 

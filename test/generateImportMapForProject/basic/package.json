@@ -1,9 +1,0 @@
-{
-  "name": "root",
-  "module": "index.js",
-  "dependencies": {
-    "bar": "*",
-    "foo": "*",
-    "@dmail/yo": "*"
-  }
-}
