@@ -14,6 +14,7 @@ const expected = {
     "foo/bar": "./node_modules/foo/src/bar.js",
     "root/": "./",
     "foo/": "./node_modules/foo/",
+    "root": "./index.js",
     "foo": "./node_modules/foo/index",
   },
   scopes: {},

@@ -6,7 +6,6 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
 
 const actual = await generateImportMapForNodeModules({
   projectDirectoryUrl: testDirectoryUrl,
-  packagesSelfImport: true,
 })
 const expected = {
   imports: {
@@ -14,12 +13,16 @@ const expected = {
     "@jsenv/core/rootonly": "./rootonly.js",
     "@jsenv/core/deponly": "./node_modules/@jsenv/core/deponly.js",
     "@jsenv/core/": "./",
-    "@jsenv/core": "./node_modules/@jsenv/core/maindep.js",
+    "@jsenv/core": "./index.js",
   },
   scopes: {
     "./node_modules/@jsenv/core/": {
       "@jsenv/core/conflict": "./node_modules/@jsenv/core/dep.js",
       "@jsenv/core/": "./node_modules/@jsenv/core/",
+      "@jsenv/core": "./node_modules/@jsenv/core/maindep.js",
+    },
+    "./self-import-6/": {
+      "@jsenv/core": "./index",
     },
   },
 }

@@ -19,7 +19,7 @@ export const generateImportMapForNodeModules = async ({
   projectDirectoryUrl,
   rootProjectDirectoryUrl,
 
-  projectPackageDevDependenciesIncluded = false,
+  projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   // pass ["import", "browser", "require"] to read browser first if defined
   packagesExportsPreference = ["import", "node", "require"],
   packagesManualOverrides = {},

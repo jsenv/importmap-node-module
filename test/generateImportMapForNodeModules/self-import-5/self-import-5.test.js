@@ -6,12 +6,12 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
 
 const actual = await generateImportMapForNodeModules({
   projectDirectoryUrl: testDirectoryUrl,
-  packagesSelfImport: true,
+  projectPackageDevDependenciesIncluded: true,
 })
 const expected = {
   imports: {
     "@jsenv/core/": "./",
-    "@jsenv/core": "./node_modules/@jsenv/core/index",
+    "@jsenv/core": "./index",
   },
   scopes: {
     "./node_modules/@jsenv/core/": {
