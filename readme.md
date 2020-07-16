@@ -11,21 +11,15 @@ Generate importmap for node_modules.
 
 - [Presentation](#Presentation)
 - [Installation](#installation)
-- [computeImportMapForNodeModules](#computeImportMapForNodeModules)
+- [getImportMapFromNodeModules](#getImportMapFromNodeModules)
   - [projectDirectoryUrl](#projectDirectoryUrl)
   - [projectPackageDevDependenciesIncluded](#projectPackageDevDependenciesIncluded)
   - [packagesExportsPreference](#packagesExportsPreference)
-- [generateImportMapForProject](#generateImportMapForProject)
-  - [shared parameters](#shared-parameters)
-  - [customImportMapFileIncluded](#customImportMapFileIncluded)
-  - [customImportMapFileRelativeUrl](#customImportMapFileRelativeUrl)
-  - [importMapFile](#importMapFile)
-  - [importMapFileRelativeUrl](#importMapFileRelativeUrl)
-  - [importMapFileLog](#importMapFileLog)
 - [Concrete example](#concrete-example)
   - [Step 1 - Setup basic project](#step-1---setup-project)
   - [Step 2 - Generate project importMap](#step-2---generate-project-importMap)
 - [Custom node module resolution](#custom-node-module-resolution)
+- [Advanced usage](#Advanced-usage)
 
 # Presentation
 
@@ -55,20 +49,20 @@ const { generateImportMapForProject } = require("@jsenv/node-module-import-map")
 npm install @jsenv/node-module-import-map
 ```
 
-# computeImportMapForNodeModules
+# getImportMapFromNodeModules
 
-`computeImportMapForNodeModules` is an async function returning an importMap object computed from the content of node_modules directory.
+`getImportMapFromNodeModules` is an async function returning an importMap object computed from the content of node_modules directory.
 
 ```js
-import { computeImportMapForNodeModules } from "@jsenv/node-module-import-map"
+import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
-const importMap = await computeImportMapForNodeModules({
+const importMap = await getImportMapFromNodeModules({
   projectDirectoryUrl: new URL("./", import.meta.url),
   projectPackageDevDependenciesIncluded: true,
 })
 ```
 
-— source code at [src/computeImportMapForNodeModules.js](./src/computeImportMapForNodeModules.js).
+— source code at [src/getImportMapFromNodeModules.js](./src/getImportMapFromNodeModules.js).
 
 ## projectDirectoryUrl
 
@@ -99,45 +93,6 @@ Or if you prefer `"electron"` and fallback to `"browser"` use the following valu
 ```
 
 When none of `packagesExportsPreference` is found in a `package.json` and if `"default"` is specified in that `package.json`, `"default"` value is read and appears in the importmap.
-
-# generateImportMapForProject
-
-`generateImportMapForProject` is an async function generating an importMap from node_modules and an optional custom file and writing the resulting importMap file in your project.
-
-> This function is meant to be responsible of generating an importMap that a project relying on Node.js will use.
-
-```js
-import { computeImportMapForNodeModules } from "@jsenv/node-module-import-map"
-
-const importMap = await computeImportMapForNodeModules({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  projectPackageDevDependenciesIncluded: true,
-})
-```
-
-## importMapFile
-
-`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
-
-## importMapFileRelativeUrl
-
-`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./import-map.importmap"`.
-
-## importMapFileLog
-
-`importMapFileLog` parameter a boolean controlling if there is log in the terminal when importMap file is written. This parameter is optional and by default it's enabled.
-
-## customImportMapFileIncluded
-
-`customImportMapFileIncluded` parameter is a boolean controlling if a custom import map file will be read and appear in the generated import-map. This parameter is optional and disabled by default.
-
-> When a file
-
-## customImportMapFileRelativeUrl
-
-`customImportMapFileRelativeUrl` parameter is a string controlling the location of the custom importmap file. This parameter is optional and it's default value is `"./import-map-custom.importmap"`.
-
-> Note that remapping inside this file takes precedence over import generated for node_modules.
 
 # Concrete example
 
@@ -178,3 +133,9 @@ It behaves as Node.js with one big change:
 We do this because importMap are used on the web where a file outside project folder would cannot be reached.
 
 In practice it does not impact you because node modules are inside your project folder. If not, write all your dependencies in your `package.json` and re-run `npm install`.
+
+# Advanced usage
+
+This repository also provides the ability to compose several import map into a final importmap file.
+
+[docs/advanced.md](./docs/advanced.md)
