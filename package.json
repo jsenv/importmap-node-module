@@ -38,7 +38,7 @@
     "generate-commonjs-bundle": "node --no-warnings ./script/generate-commonjs-bundle/generate-commonjs-bundle.js",
     "generate-import-map": "node --no-warnings ./script/generate-import-map/generate-import-map.js",
     "dist": "npm run generate-commonjs-bundle",
-    "postinstall": "npm run generate-import-map && npm run install-git-hooks",
+    "postinstall": "npm run generate-import-map",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
