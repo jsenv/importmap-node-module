@@ -1,2 +1,2 @@
 export { generateImportMapForProject } from "./src/generateImportMapForProject.js"
-export { generateImportMapForNodeModules } from "./src/generateImportMapForNodeModules.js"
+export { computeImportMapForNodeModules } from "./src/computeImportMapForNodeModules.js"

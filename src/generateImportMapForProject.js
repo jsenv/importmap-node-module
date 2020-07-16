@@ -10,7 +10,7 @@ import {
 } from "@jsenv/util"
 import { composeTwoImportMaps } from "@jsenv/import-map"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
-import { generateImportMapForNodeModules } from "./generateImportMapForNodeModules.js"
+import { computeImportMapForNodeModules } from "./computeImportMapForNodeModules.js"
 
 export const generateImportMapForProject = async ({
   // nothing is actually listening for this cancellationToken for now
@@ -51,7 +51,7 @@ export const generateImportMapForProject = async ({
       const logger = createLogger({ logLevel })
 
       const getImportMapFromNodeModules = () =>
-        generateImportMapForNodeModules({
+        computeImportMapForNodeModules({
           cancellationToken,
           logLevel,
 
