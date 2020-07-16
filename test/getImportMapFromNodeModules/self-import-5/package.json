@@ -1,0 +1,7 @@
+{
+  "name": "@jsenv/core",
+  "type": "module",
+  "devDependencies": {
+    "@jsenv/core": "*"
+  }
+}

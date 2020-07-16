@@ -9,7 +9,7 @@ export const visitPackageExports = ({
   packageName,
   packageJsonObject,
   packageInfo: { packageDirectoryRelativeUrl },
-  favoredExports,
+  packagesExportsPreference,
 }) => {
   const importsForPackageExports = {}
 
@@ -79,13 +79,13 @@ ${packageFilePath}
     let address
 
     if (typeof value === "object") {
-      address = readFavoredKey(value, favoredExports)
+      address = readFavoredKey(value, packagesExportsPreference)
 
       if (!address) {
         return
       }
       if (typeof address === "object") {
-        address = readFavoredKey(address, favoredExports)
+        address = readFavoredKey(address, packagesExportsPreference)
         if (!address) {
           return
         }

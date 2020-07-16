@@ -1,0 +1,8 @@
+{
+  "name": "root",
+  "type": "module",
+  "dependencies": {
+    "bar": "*",
+    "foo": "*"
+  }
+}

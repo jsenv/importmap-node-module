@@ -1,7 +1,0 @@
-{
-  "name": "whatever",
-  "dependencies": {
-    "bar": "",
-    "foo": ""
-  }
-}

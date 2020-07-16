@@ -1,8 +1,9 @@
-const { generateImportMapForProjectPackage } = require("@jsenv/node-module-import-map")
+import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
-generateImportMapForProjectPackage({
+const importMap = await getImportMapFromNodeModules({
   projectDirectoryUrl: __dirname,
-  includeDevDependencies: true,
-  importMapFile: true,
-  importMapFileRelativeUrl: "./importMap.json",
+  projectPackageDevDependenciesIncluded: true,
+  importMapFileRelativeUrl: "./import-map.importmap",
 })
+
+console.log(importMap)

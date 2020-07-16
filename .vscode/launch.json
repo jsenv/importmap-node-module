@@ -7,7 +7,7 @@
       "request": "launch",
       "protocol": "inspector",
       "program": "${file}",
-      "runtimeVersion": "14.5.0",
+      // "runtimeVersion": "14.5.0",
       "runtimeArgs": [
         "--unhandled-rejections=strict",
         "--experimental-json-modules",
