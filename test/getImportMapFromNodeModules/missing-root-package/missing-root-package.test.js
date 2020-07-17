@@ -8,7 +8,7 @@ const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
 try {
   await getImportMapFromNodeModules({
     projectDirectoryUrl: testDirectoryUrl,
-    packagesSelfImport: false,
+    packagesSelfReference: false,
   })
   throw new Error("should throw")
 } catch (error) {

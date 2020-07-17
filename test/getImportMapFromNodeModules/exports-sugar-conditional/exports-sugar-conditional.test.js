@@ -8,7 +8,7 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
   const importMap = await getImportMapFromNodeModules({
     projectDirectoryUrl: testDirectoryUrl,
     packagesExportsPreference: ["browser"],
-    packagesSelfImport: false,
+    packagesSelfReference: false,
   })
   const actual = importMap
   const expected = {
@@ -23,7 +23,7 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
 {
   const importMap = await getImportMapFromNodeModules({
     projectDirectoryUrl: testDirectoryUrl,
-    packagesSelfImport: false,
+    packagesSelfReference: false,
   })
   const actual = importMap
   const expected = {

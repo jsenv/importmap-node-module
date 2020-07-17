@@ -29,7 +29,7 @@ export const getImportMapFromNodeModules = async ({
   // pass ["import", "browser", "require"] to read browser first if defined
   packagesExportsPreference = ["import", "node", "require"],
   packagesExportsIncluded = true,
-  packagesSelfImport = true,
+  packagesSelfReference = true,
   packagesImportsIncluded = true,
   packagesManualOverrides = {},
 }) =>
@@ -152,7 +152,7 @@ export const getImportMapFromNodeModules = async ({
           })
         }
 
-        if (packagesSelfImport) {
+        if (packagesSelfReference) {
           const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
 
           // allow import 'package-name/dir/file.js' in package-name files
@@ -191,7 +191,7 @@ export const getImportMapFromNodeModules = async ({
             // packageDirectoryUrlExpected,
           } = packageInfo
 
-          if (packageIsRoot && packagesSelfImport) {
+          if (packageIsRoot && packagesSelfReference) {
             Object.keys(importsForPackageExports).forEach((from) => {
               const to = importsForPackageExports[from]
               addImportMapping({
@@ -258,7 +258,7 @@ export const getImportMapFromNodeModules = async ({
         },
       }) => {
         const self = packageIsRoot || packageIsProject
-        if (self && !packagesSelfImport) return
+        if (self && !packagesSelfReference) return
 
         const mainFileUrl = await resolvePackageMain({
           packageFileUrl,

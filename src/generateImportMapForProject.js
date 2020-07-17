@@ -26,6 +26,10 @@ export const generateImportMapForProject = async (
     async () => {
       projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
+      if (importMapInputs.length === 0) {
+        console.warn(`importMapInputs is empty, the generated importmap will be empty`)
+      }
+
       const importMaps = await Promise.all(importMapInputs)
 
       const importMap = importMaps.reduce((previous, current) => {

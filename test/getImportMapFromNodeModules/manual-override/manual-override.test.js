@@ -14,7 +14,7 @@ const actual = await getImportMapFromNodeModules({
       },
     },
   },
-  packagesSelfImport: false,
+  packagesSelfReference: false,
 })
 const expected = {
   imports: {
