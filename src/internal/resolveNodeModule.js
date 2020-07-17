@@ -56,9 +56,7 @@ const computeNodeModuleCandidateArray = (packageDirectoryUrl, rootProjectDirecto
   const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, rootProjectDirectoryUrl)
 
   const candidateArray = []
-  const relativeNodeModuleDirectoryArray = `./${packageDirectoryRelativeUrl}`.split(
-    "/node_modules/",
-  )
+  const relativeNodeModuleDirectoryArray = packageDirectoryRelativeUrl.split("node_modules/")
   // remove the first empty string
   relativeNodeModuleDirectoryArray.shift()
 
@@ -67,7 +65,7 @@ const computeNodeModuleCandidateArray = (packageDirectoryUrl, rootProjectDirecto
     candidateArray.push(
       `node_modules/${relativeNodeModuleDirectoryArray
         .slice(0, i + 1)
-        .join("/node_modules/")}node_modules/`,
+        .join("node_modules/")}node_modules/`,
     )
   }
 
