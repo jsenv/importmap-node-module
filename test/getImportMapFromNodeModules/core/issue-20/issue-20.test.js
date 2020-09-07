@@ -17,11 +17,11 @@ const importMap = await getImportMapFromNodeModules({
       "root": "./index",
     },
     scopes: {
-      "./node_modules/lowclass/": {
-        "lowclass/": "./node_modules/lowclass/",
+      "./node_modules/lume/node_modules/lowclass/": {
+        "lowclass/": "./node_modules/lume/node_modules/lowclass/",
       },
       "./node_modules/lume/": {
-        "lowclass": "./node_modules/lowclass/dist/index.js",
+        "lowclass": "./node_modules/lume/node_modules/lowclass/dist/index.js",
         "lume/": "./node_modules/lume/",
       },
     },
@@ -36,6 +36,6 @@ const importMap = await getImportMapFromNodeModules({
     importer: `http://example.com/node_modules/lume/index.js`,
     importMap: importMapNormalized,
   })
-  const expected = `http://example.com/node_modules/lowclass/dist/index.js`
+  const expected = `http://example.com/node_modules/lume/node_modules/lowclass/dist/index.js`
   assert({ actual, expected })
 }
