@@ -28,15 +28,15 @@
     "/index.js"
   ],
   "scripts": {
-    "test": "node --no-warnings ./script/test/test.js",
+    "test": "node ./script/test/test.js",
     "test-with-coverage": "npm run test -- --coverage",
     "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
-    "prettier-format": "node --no-warnings ./script/prettier-format/prettier-format.js",
+    "prettier-format": "node ./script/prettier-format/prettier-format.js",
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",
-    "upload-coverage": "node --no-warnings ./script/upload-coverage/upload-coverage.js",
-    "generate-commonjs-bundle": "node --no-warnings ./script/generate-commonjs-bundle/generate-commonjs-bundle.js",
-    "generate-import-map": "node --no-warnings ./script/generate-import-map/generate-import-map.js",
+    "upload-coverage": "node ./script/upload-coverage/upload-coverage.js",
+    "generate-commonjs-bundle": "node ./script/generate-commonjs-bundle/generate-commonjs-bundle.js",
+    "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
     "dist": "npm run generate-commonjs-bundle",
     "postinstall": "npm run generate-import-map",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
@@ -50,16 +50,16 @@
   },
   "devDependencies": {
     "@jsenv/assert": "2.2.1",
-    "@jsenv/codecov-upload": "3.4.1",
-    "@jsenv/core": "14.0.0-alpha.10",
-    "@jsenv/eslint-config": "12.4.1",
-    "@jsenv/node-module-import-map": "11.1.2",
-    "@jsenv/prettier-check-project": "5.6.0",
+    "@jsenv/codecov-upload": "3.4.2",
+    "@jsenv/core": "14.2.1",
+    "@jsenv/eslint-config": "12.5.0",
+    "@jsenv/node-module-import-map": "12.0.1",
+    "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/github-release-package": "1.2.2",
     "@jsenv/package-publish": "1.5.1",
     "@jsenv/prettier-config": "1.2.0",
     "babel-eslint": "11.0.0-beta.0",
-    "eslint": "7.4.0",
-    "prettier": "2.0.5"
+    "eslint": "7.8.1",
+    "prettier": "2.1.1"
   }
 }
