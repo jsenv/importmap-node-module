@@ -297,16 +297,21 @@ export const getImportMapFromNodeModules = async ({
         const { optionalDependencies = {} } = packageJsonObject
         Object.keys(dependencies).forEach((dependencyName) => {
           dependencyMap[dependencyName] = {
-            type: dependencyName in optionalDependencies ? "optionalDependency" : "dependency",
+            type: "dependency",
+            isOptional: dependencyName in optionalDependencies,
             versionPattern: dependencies[dependencyName],
           }
         })
 
         const { peerDependencies = {} } = packageJsonObject
+        const { peerDependenciesMeta = {} } = packageJsonObject
         Object.keys(peerDependencies).forEach((dependencyName) => {
           dependencyMap[dependencyName] = {
             type: "peerDependency",
             versionPattern: peerDependencies[dependencyName],
+            isOptional:
+              dependencyName in peerDependenciesMeta &&
+              peerDependenciesMeta[dependencyName].optional,
           }
         })
 
@@ -331,6 +336,7 @@ export const getImportMapFromNodeModules = async ({
               packageJsonObject,
               dependencyName,
               dependencyType: dependency.type,
+              dependencyIsOptional: dependency.isOptional,
               dependencyVersionPattern: dependency.versionPattern,
             })
           }),
@@ -342,6 +348,7 @@ export const getImportMapFromNodeModules = async ({
         packageJsonObject,
         dependencyName,
         dependencyType,
+        dependencyIsOptional,
         dependencyVersionPattern,
       }) => {
         const dependencyData = await findDependency({
@@ -349,8 +356,12 @@ export const getImportMapFromNodeModules = async ({
           dependencyName,
         })
         if (!dependencyData) {
-          logger[dependencyType === "optionalDependency" ? "debug" : "warn"](`
-cannot find a ${dependencyType}.
+          logger[dependencyIsOptional ? "debug" : "warn"](`
+${
+  dependencyIsOptional
+    ? `cannot find an optional ${dependencyType}.`
+    : `cannot find a ${dependencyType}.`
+}
 --- ${dependencyType} ---
 ${dependencyName}@${dependencyVersionPattern}
 --- required by ---
