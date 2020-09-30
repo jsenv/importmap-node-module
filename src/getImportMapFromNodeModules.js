@@ -1,7 +1,7 @@
 /* eslint-disable import/max-dependencies */
 import { basename } from "path"
 import { createLogger } from "@jsenv/logger"
-import { sortImportMap } from "@jsenv/import-map"
+import { makeImportMapRelativeTo, sortImportMap } from "@jsenv/import-map"
 import {
   wrapExternalFunction,
   resolveUrl,
@@ -24,6 +24,7 @@ export const getImportMapFromNodeModules = async ({
   logLevel,
   projectDirectoryUrl,
   rootProjectDirectoryUrl,
+  importMapFileRelativeUrl = "./import-map.importmap",
 
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   // pass ["import", "browser", "require"] to read browser first if defined
@@ -119,7 +120,7 @@ export const getImportMapFromNodeModules = async ({
             const to = importsForPackageImports[from]
 
             if (packageIsRoot) {
-              addImportMapping({ from, to })
+              addTopLevelImportMapping({ from, to })
             } else {
               const toScoped =
                 to[0] === "/"
@@ -157,7 +158,7 @@ export const getImportMapFromNodeModules = async ({
 
           // allow import 'package-name/dir/file.js' in package-name files
           if (packageIsRoot) {
-            addImportMapping({
+            addTopLevelImportMapping({
               from: `${packageName}/`,
               to: `./${packageDirectoryRelativeUrl}`,
             })
@@ -194,7 +195,7 @@ export const getImportMapFromNodeModules = async ({
           if (packageIsRoot && packagesSelfReference) {
             Object.keys(importsForPackageExports).forEach((from) => {
               const to = importsForPackageExports[from]
-              addImportMapping({
+              addTopLevelImportMapping({
                 from,
                 to,
               })
@@ -216,10 +217,10 @@ export const getImportMapFromNodeModules = async ({
                     to,
                   })
                   if (from === packageName || from in imports === false) {
-                    addImportMapping({ from, to })
+                    addTopLevelImportMapping({ from, to })
                   }
                 } else {
-                  addImportMapping({ from, to })
+                  addTopLevelImportMapping({ from, to })
                 }
               } else {
                 addScopedImportMapping({
@@ -276,7 +277,7 @@ export const getImportMapFromNodeModules = async ({
         const to = `./${mainFileRelativeUrl}`
 
         if (importerIsRoot) {
-          addImportMapping({ from, to })
+          addTopLevelImportMapping({ from, to })
         } else {
           addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
         }
@@ -431,7 +432,7 @@ ${urlToFileSystemPath(packageFileUrl)}
         }
       }
 
-      const addImportMapping = ({ from, to }) => {
+      const addTopLevelImportMapping = ({ from, to }) => {
         // we could think it's useless to remap from with to
         // however it can be used to ensure a weaker remapping
         // does not win over this specific file or folder
@@ -521,7 +522,21 @@ ${packageFileUrl}`)
         }
       })
 
-      return sortImportMap({ imports, scopes })
+      // The importmap generated at this point is relative to the project directory url
+      // In other words if you want to use that importmap you have to put it
+      // inside projectDirectoryUrl (it cannot be nested in a subdirectory).
+      let importMap = { imports, scopes }
+      if (importMapFileRelativeUrl) {
+        // When there is an importMapFileRelativeUrl we will make remapping relative
+        // to the importmap file future location (where user will write it).
+        // This allows to put the importmap anywhere inside the projectDirectoryUrl.
+        // (If possible prefer to have it top level to avoid too many ../
+        const importMapFileAbsoluteUrl = resolveUrl(importMapFileRelativeUrl, "file:///")
+        importMap = makeImportMapRelativeTo(importMap, importMapFileAbsoluteUrl)
+      }
+      importMap = sortImportMap(importMap)
+
+      return importMap
     },
     { catchCancellation: true, unhandledRejectionStrict: false },
   )
