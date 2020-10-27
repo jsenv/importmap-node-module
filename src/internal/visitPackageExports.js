@@ -17,7 +17,9 @@ export const visitPackageExports = ({
   const { exports: packageExports } = packageJsonObject
 
   // false is allowed as laternative to exports: {}
-  if (packageExports === false) return importsForPackageExports
+  if (packageExports === false) {
+    return importsForPackageExports
+  }
 
   const addressToDestination = (address) => {
     if (address[0] === "/") {

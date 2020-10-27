@@ -21,12 +21,11 @@ await generateImportMapForProject(
     // importMapFileLog: false,
   },
 )
-const actual = JSON.parse(await readFile(importMapFileUrl))
+const actual = await readFile(importMapFileUrl, { as: "json" })
 const expected = {
   imports: {
     foo: "./whatever.js",
     bar: "./hello.js",
   },
-  scopes: {},
 }
 assert({ actual, expected })

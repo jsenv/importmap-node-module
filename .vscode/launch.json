@@ -51,38 +51,6 @@
         "node_modules/@rollup/**",
         "<node_internals>/**/*.js"
       ]
-    },
-    {
-      "name": "jsenv-node-attach-child",
-      "type": "node",
-      "request": "attach",
-      "port": 40000,
-      "smartStep": true,
-      "sourceMaps": true,
-      "skipFiles": [
-        // "node_modules/**",
-        "node_modules/@babel/template/**",
-        "node_modules/@dmail/cancellation/**",
-        "node_modules/rollup/**",
-        "node_modules/@rollup/**",
-        "<node_internals>/**/*.js"
-      ]
-    },
-    {
-      "name": "jsenv-node-attach-subchild",
-      "type": "node",
-      "request": "attach",
-      "port": 40001,
-      "smartStep": true,
-      "sourceMaps": true,
-      "skipFiles": [
-        // "node_modules/**",
-        "node_modules/@babel/template/**",
-        "node_modules/@dmail/cancellation/**",
-        "node_modules/rollup/**",
-        "node_modules/@rollup/**",
-        "<node_internals>/**/*.js"
-      ]
     }
   ]
 }

@@ -1,13 +1,12 @@
-/* eslint-disable import/max-dependencies */
-import { basename } from "path"
 import { createLogger } from "@jsenv/logger"
-import { makeImportMapRelativeTo, sortImportMap } from "@jsenv/import-map"
+import { moveImportMap, sortImportMap } from "@jsenv/import-map"
 import {
   wrapExternalFunction,
   resolveUrl,
   urlToRelativeUrl,
   assertAndNormalizeDirectoryUrl,
   urlToFileSystemPath,
+  urlToBasename,
   // createCancellationTokenForProcess,
 } from "@jsenv/util"
 import { readPackageFile } from "./internal/readPackageFile.js"
@@ -399,7 +398,7 @@ ${urlToFileSystemPath(packageFileUrl)}
         const importerPackageDirectoryUrl = resolveUrl("./", importerPackageFileUrl)
 
         const importerRelativeUrl = importerIsRoot
-          ? `${basename(rootProjectDirectoryUrl)}/`
+          ? `${urlToBasename(rootProjectDirectoryUrl.slice(0, -1))}/`
           : urlToRelativeUrl(importerPackageDirectoryUrl, rootProjectDirectoryUrl)
 
         const packageIsRoot = packageFileUrl === rootProjectPackageFileUrl
@@ -531,8 +530,9 @@ ${packageFileUrl}`)
         // to the importmap file future location (where user will write it).
         // This allows to put the importmap anywhere inside the projectDirectoryUrl.
         // (If possible prefer to have it top level to avoid too many ../
-        const importMapFileAbsoluteUrl = resolveUrl(importMapFileRelativeUrl, "file:///")
-        importMap = makeImportMapRelativeTo(importMap, importMapFileAbsoluteUrl)
+        const importMapProjectUrl = resolveUrl("project.importmap", projectDirectoryUrl)
+        const importMapRealUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl)
+        importMap = moveImportMap(importMap, importMapProjectUrl, importMapRealUrl)
       }
       importMap = sortImportMap(importMap)
 
