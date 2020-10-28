@@ -912,99 +912,6 @@ const firstOperationMatching = ({
   return visit(0);
 };
 
-const isCancelError = value => {
-  return value && typeof value === "object" && value.name === "CANCEL_ERROR";
-};
-
-const getCommandArgument = (argv, name) => {
-  let i = 0;
-
-  while (i < argv.length) {
-    const arg = argv[i];
-
-    if (arg === name) {
-      return {
-        name,
-        index: i,
-        value: ""
-      };
-    }
-
-    if (arg.startsWith(`${name}=`)) {
-      return {
-        name,
-        index: i,
-        value: arg.slice(`${name}=`.length)
-      };
-    }
-
-    i++;
-  }
-
-  return null;
-};
-
-const wrapExternalFunction = (fn, {
-  catchCancellation = false,
-  unhandledRejectionStrict = false
-} = {}) => {
-  if (catchCancellation) {
-    const previousFn = fn;
-
-    fn = async () => {
-      try {
-        const value = await previousFn();
-        return value;
-      } catch (error) {
-        if (isCancelError(error)) {
-          // it means consume of the function will resolve with a cancelError
-          // but when you cancel it means you're not interested in the result anymore
-          // thanks to this it avoid unhandledRejection
-          return error;
-        }
-
-        throw error;
-      }
-    };
-  }
-
-  if (unhandledRejectionStrict) {
-    const previousFn = fn;
-
-    fn = async () => {
-      const uninstall = installUnhandledRejectionStrict();
-
-      try {
-        const value = await previousFn();
-        uninstall();
-        return value;
-      } catch (e) {
-        // don't remove it immediatly to let nodejs emit the unhandled rejection
-        setTimeout(() => {
-          uninstall();
-        });
-        throw e;
-      }
-    };
-  }
-
-  return fn();
-};
-
-const installUnhandledRejectionStrict = () => {
-  const unhandledRejectionArg = getCommandArgument(process.execArgv, "--unhandled-rejections");
-  if (unhandledRejectionArg === "strict") return () => {};
-
-  const onUnhandledRejection = reason => {
-    throw reason;
-  };
-
-  process.once("unhandledRejection", onUnhandledRejection);
-  return () => {
-    process.removeListener("unhandledRejection", onUnhandledRejection);
-  };
-};
-
 const getCommonPathname$1 = (pathname, otherPathname) => {
   const firstDifferentCharacterIndex = findFirstDifferentCharacterIndex$1(pathname, otherPathname); // pathname and otherpathname are exactly the same
 
@@ -1798,7 +1705,7 @@ const getImportMapFromNodeModules = async ({
   packagesSelfReference = true,
   packagesImportsIncluded = true,
   packagesManualOverrides = {}
-}) => wrapExternalFunction(async () => {
+}) => {
   const logger = createLogger({
     logLevel
   });
@@ -2321,10 +2228,7 @@ ${packageFileUrl}`);
 
   importMap = sortImportMap(importMap);
   return importMap;
-}, {
-  catchCancellation: true,
-  unhandledRejectionStrict: false
-});
+};
 
 const getImportMapFromFile = async importMapFilePath => {
   const importMapFileUrl = assertAndNormalizeFileUrl(importMapFilePath);
@@ -2375,7 +2279,7 @@ const generateImportMapForProject = async (importMapInputs = [], {
   // not yet documented, makes vscode aware of the import remapping
   jsConfigFileLog = true,
   jsConfigLeadingSlash = false
-}) => wrapExternalFunction(async () => {
+}) => {
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
 
   if (importMapInputs.length === 0) {
@@ -2423,10 +2327,7 @@ const generateImportMapForProject = async (importMapInputs = [], {
   }
 
   return importMap;
-}, {
-  catchCancellation: true,
-  unhandledRejectionStrict: false
-});
+};
 
 exports.generateImportMapForProject = generateImportMapForProject;
 exports.getImportMapFromFile = getImportMapFromFile;
