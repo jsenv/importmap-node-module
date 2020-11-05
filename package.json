@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "12.1.2",
+  "version": "12.2.0",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
@@ -51,7 +51,7 @@
   "devDependencies": {
     "@jsenv/assert": "2.2.1",
     "@jsenv/codecov-upload": "3.4.2",
-    "@jsenv/core": "16.3.0",
+    "@jsenv/core": "16.5.1",
     "@jsenv/eslint-config": "12.6.0",
     "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/github-release-package": "1.2.2",

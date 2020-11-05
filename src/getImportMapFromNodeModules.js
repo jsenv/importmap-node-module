@@ -30,6 +30,7 @@ export const getImportMapFromNodeModules = async ({
   packagesSelfReference = true,
   packagesImportsIncluded = true,
   packagesManualOverrides = {},
+  packageIncludedPredicate = () => true,
 }) => {
   const logger = createLogger({ logLevel })
 
@@ -67,6 +68,10 @@ export const getImportMapFromNodeModules = async ({
     importerPackageJsonObject,
     includeDevDependencies,
   }) => {
+    if (!packageIncludedPredicate({ packageName, packageFileUrl, packageJsonObject })) {
+      return
+    }
+
     await visitDependencies({
       packageFileUrl,
       packageJsonObject,
