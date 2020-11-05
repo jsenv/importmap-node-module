@@ -11,9 +11,7 @@
       "runtimeArgs": [
         "--unhandled-rejections=strict",
         "--experimental-json-modules",
-        "--experimental-top-level-await",
-        // this is to disable experimental warning
-        "--no-warnings"
+        "--experimental-top-level-await"
       ],
       "autoAttachChildProcesses": true,
       "sourceMaps": true,
