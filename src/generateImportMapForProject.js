@@ -19,6 +19,7 @@ export const generateImportMapForProject = async (
     jsConfigFile = false, // not yet documented, makes vscode aware of the import remapping
     jsConfigFileLog = true,
     jsConfigLeadingSlash = false,
+    jsConfigBase = {},
   },
 ) => {
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
@@ -46,6 +47,7 @@ export const generateImportMapForProject = async (
       const jsConfig = {
         compilerOptions: {
           baseUrl: ".",
+          ...jsConfigBase,
           paths: {
             ...(jsConfigLeadingSlash ? { "/*": ["./*"] } : {}),
             ...importMapToVsCodeConfigPaths(importMap),
