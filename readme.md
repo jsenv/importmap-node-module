@@ -29,9 +29,9 @@ This repository generates [import map](https://github.com/WICG/import-maps) for 
 import lodash from "lodash"
 ```
 
-> The code above is expecting that Node.js will find an actual file out of `"lodash"` using [node module resolution algorith](https://nodejs.org/api/modules.html#modules_all_together).
+> The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node module resolution algorith](https://nodejs.org/api/modules.html#modules_all_together).
 
-> If a browser tries to execute this code, it will fetch `http://example.com/lodash` and likely receives `404 File Not Found` from server.
+> Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in `404 File Not Found` from server.
 
 </details>
 
