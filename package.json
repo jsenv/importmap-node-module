@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "12.2.1",
+  "version": "12.2.2",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
@@ -43,22 +43,21 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
-    "@jsenv/cancellation": "2.0.1",
-    "@jsenv/import-map": "6.9.0",
+    "@jsenv/cancellation": "2.0.3",
+    "@jsenv/import-map": "6.9.2",
     "@jsenv/logger": "3.4.0",
-    "@jsenv/util": "3.10.0"
+    "@jsenv/util": "4.0.4"
   },
   "devDependencies": {
     "@jsenv/assert": "2.2.1",
-    "@jsenv/codecov-upload": "3.4.2",
-    "@jsenv/core": "16.5.1",
-    "@jsenv/eslint-config": "12.6.0",
+    "@jsenv/codecov-upload": "3.4.3",
+    "@jsenv/core": "17.3.2",
+    "@jsenv/eslint-config": "12.8.0",
     "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/github-release-package": "1.2.2",
     "@jsenv/package-publish": "1.5.1",
     "@jsenv/prettier-config": "1.2.0",
-    "babel-eslint": "11.0.0-beta.0",
-    "eslint": "7.12.1",
-    "prettier": "2.1.2"
+    "eslint": "7.15.0",
+    "prettier": "2.2.1"
   }
 }
