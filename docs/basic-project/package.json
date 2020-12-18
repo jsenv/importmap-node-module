@@ -10,6 +10,6 @@
     "generate-import-map": "node ./generate-import-map.js"
   },
   "devDependencies": {
-    "@jsenv/node-module-import-map": "12.0.0-alpha.0"
+    "@jsenv/node-module-import-map": "12.2.1"
   }
 }
