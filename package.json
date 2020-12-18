@@ -35,9 +35,9 @@
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",
     "upload-coverage": "node ./script/upload-coverage/upload-coverage.js",
-    "generate-commonjs-bundle": "node ./script/generate-commonjs-bundle/generate-commonjs-bundle.js",
+    "generate-commonjs-build": "node ./script/generate-commonjs-build/generate-commonjs-build.js",
     "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
-    "dist": "npm run generate-commonjs-bundle",
+    "dist": "npm run generate-commonjs-build",
     "postinstall": "npm run generate-import-map",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
