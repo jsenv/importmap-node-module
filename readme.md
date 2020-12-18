@@ -10,33 +10,39 @@ Generate importmap for node_modules.
 # Table of contents
 
 - [Presentation](#Presentation)
+- [Usage](#Usage)
 - [Installation](#installation)
 - [getImportMapFromNodeModules](#getImportMapFromNodeModules)
-  - [projectDirectoryUrl](#projectDirectoryUrl)
-  - [projectPackageDevDependenciesIncluded](#projectPackageDevDependenciesIncluded)
-  - [packagesExportsPreference](#packagesExportsPreference)
-- [Concrete example](#concrete-example)
-  - [Step 1 - Setup basic project](#step-1---setup-project)
-  - [Step 2 - Generate project importMap](#step-2---generate-project-importMap)
-- [Custom node module resolution](#custom-node-module-resolution)
 - [generateImportMapForProject](#generateImportMapForProject)
-  - [importMapFile](#importMapFile)
-  - [importMapFileRelativeUrl](#importMapFileRelativeUrl)
-  - [importMapFileLog](#importMapFileLog)
 - [getImportMapFromFile](#getImportMapFromFile)
-  - [importMapFileUrl](#importMapFileUrl)
+- [Custom node module resolution](#custom-node-module-resolution)
+- [Concrete example](#concrete-example)
 
 # Presentation
 
-`@jsenv/node-module-import-map` generates importMap for your project node_modules.<br />
-— see [importMap spec](https://github.com/WICG/import-maps)
+This repository generates [import map](https://github.com/WICG/import-maps) for node modules. The generated importmap can be used to make code dependent of node module executable in a browser.
 
-It reads `package.json` and recursively try to find your dependencies. Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
+<details>
+  <summary>See code relying on node module resolution</summary>
+
+```js
+import lodash from "lodash"
+```
+
+> The code above is expecting that Node.js will find an actual file out of `"lodash"` using [node module resolution algorith](https://nodejs.org/api/modules.html#modules_all_together).
+
+> If a browser tries to execute this code, it will fetch `http://example.com/lodash` and likely receives `404 File Not Found` from server.
+
+</details>
+
+# Usage
+
+Use `getImportMapFromNodeModules` to get your importmap.
 
 ```js
 import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
-getImportMapFromNodeModules({
+const importMap = await getImportMapFromNodeModules({
   projectDirectoryUrl: "file:///directory",
 })
 ```
@@ -55,7 +61,12 @@ npm install @jsenv/node-module-import-map
 
 # getImportMapFromNodeModules
 
-`getImportMapFromNodeModules` is an async function returning an importMap object computed from the content of node_modules directory.
+`getImportMapFromNodeModules` is an async function returning an importMap object computed from the content of node_modules directory. It reads your project `package.json` and recursively try to find your dependencies.
+
+> Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
+
+<details>
+  <summary>getImportMapFromNodeModules code example</summary>
 
 ```js
 import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
@@ -66,11 +77,13 @@ const importMap = await getImportMapFromNodeModules({
 })
 ```
 
-— source code at [src/getImportMapFromNodeModules.js](./src/getImportMapFromNodeModules.js).
+— source code at [src/getImportMapFromNodeModules.js](./src/getImportMapFromNodeModules.js)
+
+</details>
 
 ## projectDirectoryUrl
 
-`projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertAndNormalizeDirectoryUrl
+`projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl
 
 ## projectPackageDevDependenciesIncluded
 
@@ -78,67 +91,58 @@ const importMap = await getImportMapFromNodeModules({
 
 ## packagesExportsPreference
 
-`packagesExportsPreference` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameter is optional with a default value of `["import", "node", "require"]`. It exists to support conditional exports from Node.js.
+`packagesExportsPreference` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameter is optional with a default value of `["import", "node", "require"]`.
 
-— see [Conditional export documentation on Node.js](https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_conditional_exports)
+It exists to support [conditional exports from Node.js](https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_conditional_exports).
 
-For instance if you want to favor `"browser"` conditional export use the following value.
+<details>
+  <summary>package.json with conditional exports</summary>
 
-<!-- prettier-ignore -->
-```js
-["browser"]
+```json
+{
+  "type": "module",
+  "main": "dist/commonjs/main.cjs",
+  "exports": {
+    ".": {
+      "require": "./dist/main.cjs",
+      "browser": "./main.browser.js",
+      "node": "./main.node.js",
+      "import": "./main.node.js"
+    }
+  }
+}
 ```
 
-Or if you prefer `"electron"` and fallback to `"browser"` use the following value.
-
-<!-- prettier-ignore -->
-```js
-["electron", "browser"]
-```
+</details>
 
 When none of `packagesExportsPreference` is found in a `package.json` and if `"default"` is specified in that `package.json`, `"default"` value is read and appears in the importmap.
 
-# Concrete example
+<details>
+  <summary>packagesExportsPreference code example</summary>
 
-This part explains how to setup a real environment to see `@jsenv/node-module-import-map` in action.
-It reuses a preconfigured project where you can generate import map file.
+Favoring `"browser"` export:
 
-## Step 1 - Setup basic project
+```js
+import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
-```console
-git clone https://github.com/jsenv/jsenv-node-module-import-map.git
+const importMap = await getImportMapFromNodeModules({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  packagesExportsPreference: ["browser"],
+})
 ```
 
-```console
-cd ./jsenv-node-module-import-map/docs/basic-project
+Favoring `"electron"` and fallback to `"browser"`:
+
+```js
+import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
+
+const importMap = await getImportMapFromNodeModules({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  packagesExportsPreference: ["electron", "browser"],
+})
 ```
 
-```console
-npm install
-```
-
-## Step 2 - Generate project importMap
-
-Running command below will log importMap generated for that basic project.
-
-> You need node 13+ to run this example
-
-```console
-node ./generate-import-map.js
-```
-
-# Custom node module resolution
-
-`@jsenv/node-module-import-map` uses a custom node module resolution.<br />
-— see [node module resolution on node.js](https://nodejs.org/api/modules.html#modules_all_together)
-
-It behaves as Node.js with one big change:
-
-> A node module will not be found if it is outside your project folder.
-
-We do this because importMap are used on the web where a file outside project folder would cannot be reached.
-
-In practice it does not impact you because node modules are inside your project folder. If not, write all your dependencies in your `package.json` and re-run `npm install`.
+</details>
 
 # generateImportMapForProject
 
@@ -146,7 +150,10 @@ In practice it does not impact you because node modules are inside your project 
 
 > This function is meant to be responsible of generating the final importMap file that a project uses.
 
-For example code below will generate an import map from node_modules + a file + an inline importmap.
+<details>
+  <summary>generateImportMapForProject code example</summary>
+
+Code below generate an import map from node_modules + a file + an inline importmap.
 
 ```js
 import {
@@ -176,7 +183,9 @@ await generateImportMapForProject(importMapInputs, {
 })
 ```
 
-— source code at [src/generateImportMapForProject.js](./src/generateImportMapForProject.js).
+— source code at [src/generateImportMapForProject.js](./src/generateImportMapForProject.js)
+
+</details>
 
 ## importMapInputs
 
@@ -192,13 +201,12 @@ await generateImportMapForProject(importMapInputs, {
 
 `importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./import-map.importmap"`.
 
-## importMapFileLog
-
-`importMapFileLog` parameter a boolean controlling if there is log in the terminal when importMap file is written. This parameter is optional and by default it's enabled.
-
 # getImportMapFromFile
 
 `getImportMapFromFile` is an async function reading importmap from a file.
+
+<details>
+  <summary>getImportMapFromFile code example</summary>
 
 ```js
 import { getImportMapFromFile } from "@jsenv/node-module-import-map"
@@ -207,8 +215,51 @@ const importMapFileUrl = new URL("./import-map.importmap", import.meta.url)
 const importMap = await getImportMapFromFile(importMapFileUrl)
 ```
 
-— source code at [src/getImportMapFromFile.js](../src/getImportMapFromFile.js).
+— source code at [src/getImportMapFromFile.js](../src/getImportMapFromFile.js)
+
+</details>
 
 ## importMapFileUrl
 
 `importMapFileUrl` parameter a string or an url leading to the importmap file. This parameter is **required**.
+
+# Custom node module resolution
+
+`@jsenv/node-module-import-map` uses a custom node module resolution
+
+It behaves as Node.js with one big change:
+
+**A node module will not be found if it is outside your project directory.**
+
+We do this because import map are used on the web where a file outside project directory cannot be reached.
+
+In practice, it has no impact because node modules are inside your project directory. If they are not, ensure all your dependencies are in your `package.json` and re-run `npm install`.
+
+# Concrete example
+
+This part explains how to setup a real environment to see `@jsenv/node-module-import-map` in action.
+It reuses a preconfigured project where you can generate import map file.
+
+## Step 1 - Setup basic project
+
+```console
+git clone https://github.com/jsenv/jsenv-node-module-import-map.git
+```
+
+```console
+cd ./jsenv-node-module-import-map/docs/basic-project
+```
+
+```console
+npm install
+```
+
+## Step 2 - Generate project importMap
+
+Running command below will log importMap generated for that basic project.
+
+> You need node 13+ to run this example
+
+```console
+node ./generate-import-map.js
+```
