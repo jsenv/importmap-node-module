@@ -37,7 +37,7 @@ import lodash from "lodash"
 # Usage
 
 <details>
-  <summary>Install <code>@jsenv/node-module-import-map</code></summary>
+  <summary>1 - Install <code>@jsenv/node-module-import-map</code></summary>
 
 ```console
 npm install --save-dev @jsenv/node-module-import-map
@@ -46,7 +46,7 @@ npm install --save-dev @jsenv/node-module-import-map
 </details>
 
 <details>
-  <summary>Create <code>generate-import-map.js</code></summary>
+  <summary>2 - Create <code>generate-import-map.js</code></summary>
 
 ```js
 import {
@@ -69,7 +69,8 @@ await generateImportMapForProject(
 )
 ```
 
-> See code below if you prefer to use commonjs
+<details>
+  <summary>See commonjs equivalent of code above</summary>
 
 ```js
 const {
@@ -87,14 +88,17 @@ await generateImportMapForProject(
   ],
   {
     projectDirectoryUrl,
+    importMapFileRelativeUrl: "./project.importmap",
   },
 )
 ```
 
 </details>
 
+</details>
+
 <details>
-  <summary>Generate <code>project.importmap</code></summary>
+  <summary>3 - Generate <code>project.importmap</code></summary>
 
 ```console
 node generate-import-map.js
@@ -103,7 +107,7 @@ node generate-import-map.js
 </details>
 
 <details>
-  <summary>Add <code>project.importmap</code> to your html</summary>
+  <summary>4 - Add <code>project.importmap</code> to your html</summary>
 
 ```html
 <!DOCTYPE html>
@@ -312,7 +316,10 @@ In practice, it has no impact because node modules are inside your project direc
 This part explains how to setup a real environment to see `@jsenv/node-module-import-map` in action.
 It reuses a preconfigured project where you can generate import map file.
 
-## Step 1 - Setup basic project
+> You need node 13+ to run this example
+
+<details>
+  <summary>Step 1 - Setup basic project</summary>
 
 ```console
 git clone https://github.com/jsenv/jsenv-node-module-import-map.git
@@ -326,12 +333,15 @@ cd ./jsenv-node-module-import-map/docs/basic-project
 npm install
 ```
 
-## Step 2 - Generate project importMap
+</details>
+
+<details>
+  <summary>Step 2 - Generate project importMap</summary>
 
 Running command below will log importMap generated for that basic project.
-
-> You need node 13+ to run this example
 
 ```console
 node ./generate-import-map.js
 ```
+
+</details>
