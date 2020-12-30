@@ -224,7 +224,7 @@ const importMap = await getImportMapFromNodeModules({
 
 ## packagesExportsPreference
 
-`packagesExportsPreference` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameter is optional with a default value of `["import", "node", "require"]`.
+`packagesExportsPreference` parameter is an array of string representing what conditional export you prefer to pick from package.json. This parameter is optional with a default value of `["import", "browser"]`.
 
 It exists to support [conditional exports from Node.js](https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_conditional_exports).
 

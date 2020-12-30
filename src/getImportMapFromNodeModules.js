@@ -24,8 +24,7 @@ export const getImportMapFromNodeModules = async ({
   importMapFileRelativeUrl = "./import-map.importmap",
 
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
-  // pass ["import", "browser", "require"] to read browser first if defined
-  packagesExportsPreference = ["import", "node", "require"],
+  packagesExportsPreference = ["import", "browser"],
   packagesExportsIncluded = true,
   packagesSelfReference = true,
   packagesImportsIncluded = true,
