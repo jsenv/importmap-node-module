@@ -4,15 +4,64 @@ import { getImportMapFromNodeModules } from "../../../../index.js"
 
 const testDirectoryUrl = resolveUrl("./", import.meta.url)
 
-const actual = await getImportMapFromNodeModules({
-  projectDirectoryUrl: testDirectoryUrl,
-  packagesSelfReference: false,
-})
-const expected = {
-  imports: {
-    "foo/dist/": "./node_modules/foo/dist/",
-    "foo": "./node_modules/foo/dist/es/rollup.js",
-  },
-  scopes: {},
+const getImportMap = async ({ packagesExportsPreference } = {}) => {
+  return getImportMapFromNodeModules({
+    projectDirectoryUrl: testDirectoryUrl,
+    packagesSelfReference: false,
+    packagesExportsPreference,
+  })
 }
-assert({ actual, expected })
+
+{
+  const actual = await getImportMap({
+    packagesExportsPreference: ["node", "import", "require"],
+  })
+  const expected = {
+    imports: {
+      "foo/dist/": "./node_modules/foo/dist/",
+      "foo": "./node_modules/foo/dist/es/rollup.js",
+    },
+    scopes: {},
+  }
+  assert({ actual, expected })
+}
+
+{
+  const actual = await getImportMap({
+    packagesExportsPreference: ["node", "require"],
+  })
+  const expected = {
+    imports: {
+      "foo/dist/": "./node_modules/foo/dist/",
+      "foo": "./node_modules/foo/dist/rollup.js",
+    },
+    scopes: {},
+  }
+  assert({ actual, expected })
+}
+
+{
+  const actual = await getImportMap({
+    packagesExportsPreference: ["node"],
+  })
+  const expected = {
+    imports: {
+      "foo/dist/": "./node_modules/foo/dist/",
+      "foo": "./node_modules/foo/file.cjs",
+    },
+    scopes: {},
+  }
+  assert({ actual, expected })
+}
+
+{
+  const actual = await getImportMap()
+  const expected = {
+    imports: {
+      "foo/dist/": "./node_modules/foo/dist/",
+      "foo": "./node_modules/foo/dist/es/rollup.browser.js",
+    },
+    scopes: {},
+  }
+  assert({ actual, expected })
+}
