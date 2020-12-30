@@ -7,13 +7,13 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
 {
   const importMap = await getImportMapFromNodeModules({
     projectDirectoryUrl: testDirectoryUrl,
-    packagesExportsPreference: ["browser"],
+    packagesExportsPreference: ["node"],
     packagesSelfReference: false,
   })
   const actual = importMap
   const expected = {
     imports: {
-      foo: "./node_modules/foo/index.browser.js",
+      foo: "./node_modules/foo/index.default.js",
     },
     scopes: {},
   }
@@ -23,12 +23,13 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
 {
   const importMap = await getImportMapFromNodeModules({
     projectDirectoryUrl: testDirectoryUrl,
+    packagesExportsPreference: ["browser"],
     packagesSelfReference: false,
   })
   const actual = importMap
   const expected = {
     imports: {
-      foo: "./node_modules/foo/index.default.js",
+      foo: "./node_modules/foo/index.browser.js",
     },
     scopes: {},
   }
