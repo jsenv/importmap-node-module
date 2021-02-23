@@ -139,7 +139,7 @@ If you use a bundler, be sure it's compatible with import maps.
 
 # Extensionless import warning
 
-If the code you wants to run contains one ore more extensionless path specifier, it will likely fail with `404 not found` in your browser (and even in Node.js).
+If the code you wants to run contains one ore more extensionless path specifier, it will not be found by your browser (not even by Node.js).
 
 <details>
   <summary>Extensionless path specifier example</summary>
