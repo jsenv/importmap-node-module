@@ -214,7 +214,17 @@ Becomes the following importmap
 }
 ```
 
-However using `*` to add file extension (`"./feature/*": "./feature/*.js"`) **is not supported in importmap**. This is tracked in https://github.com/WICG/import-maps/issues/232.
+However using `*` to add file extension as in
+
+```json
+{
+  "exports": {
+    "./feature/*": "./feature/*.js"
+  }
+}
+```
+
+**is not supported in importmap**. This is tracked in https://github.com/WICG/import-maps/issues/232.
 
 # generateImportMapForProject
 
