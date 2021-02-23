@@ -21,21 +21,41 @@ export const visitPackageExports = ({
     return importsForPackageExports
   }
 
-  const addressToDestination = (address) => {
-    if (address[0] === "/") {
-      return address
+  const addRemapping = ({ from, to }) => {
+    if (from.indexOf("*") === -1) {
+      importsForPackageExports[from] = to
+      return
     }
-    if (address.startsWith("./")) {
-      return `./${packageDirectoryRelativeUrl}${address.slice(2)}`
+
+    if (
+      from.endsWith("/*") &&
+      to.endsWith("/*") &&
+      // ensure ends with '*' AND there is only one '*' occurence
+      to.indexOf("*") === to.length - 1
+    ) {
+      const fromWithouTrailingStar = from.slice(0, -1)
+      const toWithoutTrailingStar = to.slice(0, -1)
+      importsForPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
+      return
     }
-    return `./${packageDirectoryRelativeUrl}${address}`
+
+    logger.warn(`Ignoring export using "*" because it is not supported by importmap.
+--- key ---
+${from}
+--- value ---
+${to}
+--- package.json path ---
+${packageFilePath}
+--- see also ---
+https://github.com/WICG/import-maps/issues/232`)
   }
 
   // exports used to indicate the main file
   if (typeof packageExports === "string") {
-    const from = packageName
-    const to = addressToDestination(packageExports)
-    importsForPackageExports[from] = to
+    addRemapping({
+      from: packageName,
+      to: addressToDestination(packageExports, packageDirectoryRelativeUrl),
+    })
     return importsForPackageExports
   }
 
@@ -120,23 +140,41 @@ ${packageFilePath}
       return
     }
 
-    let from
-    if (specifier === ".") {
-      from = packageName
-    } else if (specifier[0] === "/") {
-      from = specifier
-    } else if (specifier.startsWith("./")) {
-      from = `${packageName}${specifier.slice(1)}`
-    } else {
-      from = `${packageName}/${specifier}`
-    }
-
-    const to = addressToDestination(address)
-
-    importsForPackageExports[from] = to
+    addRemapping({
+      from: specifierToSource(specifier, packageName),
+      to: addressToDestination(address, packageDirectoryRelativeUrl),
+    })
   })
 
   return importsForPackageExports
+}
+
+const specifierToSource = (specifier, packageName) => {
+  if (specifier === ".") {
+    return packageName
+  }
+
+  if (specifier[0] === "/") {
+    return specifier
+  }
+
+  if (specifier.startsWith("./")) {
+    return `${packageName}${specifier.slice(1)}`
+  }
+
+  return `${packageName}/${specifier}`
+}
+
+const addressToDestination = (address, packageDirectoryRelativeUrl) => {
+  if (address[0] === "/") {
+    return address
+  }
+
+  if (address.startsWith("./")) {
+    return `./${packageDirectoryRelativeUrl}${address.slice(2)}`
+  }
+
+  return `./${packageDirectoryRelativeUrl}${address}`
 }
 
 const readFavoredKey = (object, favoredKeys) => {
@@ -144,8 +182,10 @@ const readFavoredKey = (object, favoredKeys) => {
   if (favoredKey) {
     return object[favoredKey]
   }
+
   if (object.hasOwnProperty("default")) {
     return object.default
   }
+
   return undefined
 }

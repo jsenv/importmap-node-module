@@ -11,6 +11,8 @@ Generate importmap for node_modules.
 
 - [Presentation](#Presentation)
 - [Usage](#Usage)
+- [Extensionless import warning](#Extensionless-import-warning)
+- [Subpath import warning](#Subpath-import-warning)
 - [generateImportMapForProject](#generateImportMapForProject)
 - [getImportMapFromNodeModules](#getImportMapFromNodeModules)
 - [getImportMapFromFile](#getImportMapFromFile)
@@ -134,6 +136,85 @@ If you use a bundler, be sure it's compatible with import maps.
 > [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, unit testing and when building for production.
 
 </details>
+
+# Extensionless import warning
+
+If the code you wants to run contains one ore more extensionless path specifier, it will result in `404 not found`.
+
+<details>
+  <summary>Example of extensionless specifier</summary>
+
+```js
+import { foo } from "./file" // extensionless path specifier
+```
+
+</details>
+
+In this situation, you can:
+
+1. Add extension in the source file
+2. If there is a build step, ensure extension are added during the build
+3. Add remapping in `exports` field of your `package.json`
+
+```json
+{
+  "exports": {
+    "./file": "./file.js"
+  }
+}
+```
+
+4. Maintain an importmap with remappings you need and pass it in [importMapInputs](#importMapInputs)
+
+# Subpath import warning
+
+The generation of importmap takes into account `exports` field from `package.json`. These `exports` field are used to allow subpath imports.
+
+<details>
+  <summary>subpath import example</summary>
+
+```js
+import { foo } from "my-module/feature/index.js"
+import { bar } from "my-module/feature-b"
+```
+
+For the above import to work, `my-module/package.json` must contain the following `exports` field.
+
+```json
+{
+  "name": "my-module",
+  "exports": {
+    "./*": "./*",
+    "./feature-b": "./feature-b/index.js"
+  }
+}
+```
+
+Read more in [Node.js documentation about package entry points](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_package_entry_points)
+
+</details>
+
+Node.js allows to put `*` in `exports` field. There is an importmap equivalent when `*` is used for directory/folder remapping.
+
+```json
+{
+  "exports": {
+    "./feature/*": "./feature/*"
+  }
+}
+```
+
+Becomes the following importmap
+
+```json
+{
+  "imports": {
+    "./feature/": "./feature/"
+  }
+}
+```
+
+However using `*` to add file extension (`"./feature/*": "./feature/*.js"`) **is not supported in importmap**. This is tracked in https://github.com/WICG/import-maps/issues/232.
 
 # generateImportMapForProject
 

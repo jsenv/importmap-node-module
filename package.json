@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "12.3.0",
+  "version": "12.4.0",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,7 @@
       "import": "./index.js",
       "require": "./dist/commonjs/main.cjs"
     },
-    "./": "./"
+    "./*": "./*"
   },
   "main": "dist/commonjs/main.cjs",
   "files": [
