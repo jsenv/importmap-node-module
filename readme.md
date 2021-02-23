@@ -139,13 +139,13 @@ If you use a bundler, be sure it's compatible with import maps.
 
 # Extensionless import warning
 
-If the code you wants to run contains one ore more extensionless path specifier, it will result in `404 not found`.
+If the code you wants to run contains one ore more extensionless path specifier, it will likely fail with `404 not found` in your browser (and even in Node.js).
 
 <details>
-  <summary>Example of extensionless specifier</summary>
+  <summary>Extensionless path specifier example</summary>
 
 ```js
-import { foo } from "./file" // extensionless path specifier
+import { foo } from "./file"
 ```
 
 </details>
@@ -164,7 +164,7 @@ In this situation, you can:
 }
 ```
 
-4. Maintain an importmap with remappings you need and pass it in [importMapInputs](#importMapInputs)
+4. Remap manually each extensionless import and pass that importmap in [importMapInputs](#importMapInputs)
 
 # Subpath import warning
 
