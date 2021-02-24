@@ -142,7 +142,7 @@ If you use a bundler, be sure it's compatible with import maps.
 If the code you wants to run contains one ore more extensionless path specifier, it will not be found by a browser (not even by Node.js).
 
 <details>
-  <summary>Extensionless path specifier example</summary>
+  <summary>extensionless import example</summary>
 
 ```js
 import { foo } from "./file"
@@ -150,7 +150,7 @@ import { foo } from "./file"
 
 </details>
 
-In this situation, you can:
+In this situation, you can do one of the following:
 
 1. Add extension in the source file
 2. If there is a build step, ensure extension are added during the build
