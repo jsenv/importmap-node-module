@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "12.4.1",
+  "version": "13.0.0",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
@@ -43,6 +43,8 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
+    "@babel/parser": "7.13.9",
+    "@babel/traverse": "7.13.0",
     "@jsenv/cancellation": "2.0.3",
     "@jsenv/import-map": "6.11.1",
     "@jsenv/logger": "4.0.0",

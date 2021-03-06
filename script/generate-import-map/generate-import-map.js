@@ -8,6 +8,8 @@ generateImportMapForProject(
   [
     getImportMapFromNodeModules({
       projectDirectoryUrl,
+      target: "node",
+      dev: true,
     }),
   ],
   {
