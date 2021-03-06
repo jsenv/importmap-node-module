@@ -1,4 +1,4 @@
-import { createLogger } from "@jsenv/logger"
+import { createLogger, createDetailedMessage } from "@jsenv/logger"
 import { moveImportMap, sortImportMap } from "@jsenv/import-map"
 import {
   resolveUrl,
@@ -291,53 +291,18 @@ export const getImportMapFromNodeModules = async ({
     packageJsonObject,
     includeDevDependencies,
   }) => {
-    const dependencyMap = {}
-
-    const { dependencies = {} } = packageJsonObject
-    // https://npm.github.io/using-pkgs-docs/package-json/types/optionaldependencies.html
-    const { optionalDependencies = {} } = packageJsonObject
-    Object.keys(dependencies).forEach((dependencyName) => {
-      dependencyMap[dependencyName] = {
-        type: "dependency",
-        isOptional: dependencyName in optionalDependencies,
-        versionPattern: dependencies[dependencyName],
-      }
+    const dependencyMap = packageDependenciesFromPackageObject(packageJsonObject, {
+      includeDevDependencies,
     })
-
-    const { peerDependencies = {} } = packageJsonObject
-    const { peerDependenciesMeta = {} } = packageJsonObject
-    Object.keys(peerDependencies).forEach((dependencyName) => {
-      dependencyMap[dependencyName] = {
-        type: "peerDependency",
-        versionPattern: peerDependencies[dependencyName],
-        isOptional:
-          dependencyName in peerDependenciesMeta && peerDependenciesMeta[dependencyName].optional,
-      }
-    })
-
-    const isProjectPackage = packageFileUrl === projectPackageFileUrl
-    if (includeDevDependencies && isProjectPackage) {
-      const { devDependencies = {} } = packageJsonObject
-      Object.keys(devDependencies).forEach((dependencyName) => {
-        if (!dependencyMap.hasOwnProperty(dependencyName)) {
-          dependencyMap[dependencyName] = {
-            type: "devDependency",
-            versionPattern: devDependencies[dependencyName],
-          }
-        }
-      })
-    }
 
     await Promise.all(
       Object.keys(dependencyMap).map(async (dependencyName) => {
-        const dependency = dependencyMap[dependencyName]
+        const dependencyInfo = dependencyMap[dependencyName]
         await visitDependency({
           packageFileUrl,
           packageJsonObject,
           dependencyName,
-          dependencyType: dependency.type,
-          dependencyIsOptional: dependency.isOptional,
-          dependencyVersionPattern: dependency.versionPattern,
+          dependencyInfo,
         })
       }),
     )
@@ -347,28 +312,21 @@ export const getImportMapFromNodeModules = async ({
     packageFileUrl,
     packageJsonObject,
     dependencyName,
-    dependencyType,
-    dependencyIsOptional,
-    dependencyVersionPattern,
+    dependencyInfo,
   }) => {
     const dependencyData = await findDependency({
       packageFileUrl,
       dependencyName,
     })
     if (!dependencyData) {
-      logger[dependencyIsOptional ? "debug" : "warn"](`
-${
-  dependencyIsOptional
-    ? `cannot find an optional ${dependencyType}.`
-    : `cannot find a ${dependencyType}.`
-}
---- ${dependencyType} ---
-${dependencyName}@${dependencyVersionPattern}
---- required by ---
-${packageJsonObject.name}@${packageJsonObject.version}
---- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}
-    `)
+      logger[dependencyInfo.isOptional ? "debug" : "warn"](
+        formatCannotFindPackageLog({
+          dependencyName,
+          dependencyInfo,
+          packageFileUrl,
+        }),
+      )
+
       return
     }
 
@@ -481,22 +439,21 @@ ${urlToFileSystemPath(packageFileUrl)}
   markPackageAsSeen(projectPackageFileUrl, importerPackageFileUrl)
 
   const packageName = projectPackageJsonObject.name
-  if (typeof packageName === "string") {
-    await visit({
-      packageFileUrl: projectPackageFileUrl,
-      packageName: projectPackageJsonObject.name,
-      packageJsonObject: projectPackageJsonObject,
-      importerPackageFileUrl,
-      importerPackageJsonObject: null,
-      includeDevDependencies: projectPackageDevDependenciesIncluded,
-    })
-  } else {
-    logger.warn(`package name field must be a string
---- package name field ---
-${packageName}
---- package.json file path ---
-${projectPackageFileUrl}`)
+  if (typeof packageName !== "string") {
+    logger.warn(
+      formatUnexpectedPackageNameLog({ packageName, packageFileUrl: projectPackageFileUrl }),
+    )
+    return {}
   }
+
+  await visit({
+    packageFileUrl: projectPackageFileUrl,
+    packageName: projectPackageJsonObject.name,
+    packageJsonObject: projectPackageJsonObject,
+    importerPackageFileUrl,
+    importerPackageJsonObject: null,
+    includeDevDependencies: projectPackageDevDependenciesIncluded,
+  })
 
   // remove useless duplicates (scoped key+value already defined on imports)
   Object.keys(scopes).forEach((key) => {
@@ -530,4 +487,72 @@ ${projectPackageFileUrl}`)
   importMap = sortImportMap(importMap)
 
   return importMap
+}
+
+const packageDependenciesFromPackageObject = (packageObject, { includeDevDependencies }) => {
+  const packageDependencies = {}
+
+  const { dependencies = {} } = packageObject
+  // https://npm.github.io/using-pkgs-docs/package-json/types/optionaldependencies.html
+  const { optionalDependencies = {} } = packageObject
+  Object.keys(dependencies).forEach((dependencyName) => {
+    packageDependencies[dependencyName] = {
+      type: "dependency",
+      isOptional: dependencyName in optionalDependencies,
+      versionPattern: dependencies[dependencyName],
+    }
+  })
+
+  const { peerDependencies = {} } = packageObject
+  const { peerDependenciesMeta = {} } = packageObject
+  Object.keys(peerDependencies).forEach((dependencyName) => {
+    packageDependencies[dependencyName] = {
+      type: "peerDependency",
+      versionPattern: peerDependencies[dependencyName],
+      isOptional:
+        dependencyName in peerDependenciesMeta && peerDependenciesMeta[dependencyName].optional,
+    }
+  })
+
+  if (includeDevDependencies) {
+    const { devDependencies = {} } = packageObject
+    Object.keys(devDependencies).forEach((dependencyName) => {
+      if (!packageDependencies.hasOwnProperty(dependencyName)) {
+        packageDependencies[dependencyName] = {
+          type: "devDependency",
+          versionPattern: devDependencies[dependencyName],
+        }
+      }
+    })
+  }
+
+  return packageDependencies
+}
+
+const formatUnexpectedPackageNameLog = ({ packageName, packageFileUrl }) => {
+  return `
+package name field must be a string
+--- package name field ---
+${packageName}
+--- package.json file path ---
+${packageFileUrl}
+`
+}
+
+const formatCannotFindPackageLog = ({ dependencyName, dependencyInfo, packageFileUrl }) => {
+  const dependencyIsOptional = dependencyInfo.isOptional
+  const dependencyType = dependencyInfo.type
+  const dependencyVersionPattern = dependencyInfo.versionPattern
+  const detailedMessage = createDetailedMessage(
+    dependencyIsOptional
+      ? `cannot find an optional ${dependencyType}.`
+      : `cannot find a ${dependencyType}.`,
+    {
+      [dependencyType]: `${dependencyName}@${dependencyVersionPattern}`,
+      "required by": urlToFileSystemPath(packageFileUrl),
+    },
+  )
+  return `
+${detailedMessage}
+`
 }
