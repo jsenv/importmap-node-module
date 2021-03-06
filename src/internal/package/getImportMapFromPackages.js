@@ -172,13 +172,47 @@ export const getImportMapFromPackages = async ({
     }
 
     if (packagesExportsIncluded && "exports" in packageJsonObject) {
-      const importsForPackageExports = visitPackageExports({
-        logger,
+      const importsForPackageExports = {}
+      visitPackageExports({
         packageFileUrl,
-        packageName,
         packageJsonObject,
-        packageInfo,
+        packageName,
+        projectDirectoryUrl,
         packagesExportsPreference,
+        onExport: ({ key, value }) => {
+          const from = key
+          const to = value
+
+          if (from.indexOf("*") === -1) {
+            importsForPackageExports[from] = to
+            return
+          }
+
+          if (
+            from.endsWith("/*") &&
+            to.endsWith("/*") &&
+            // ensure ends with '*' AND there is only one '*' occurence
+            to.indexOf("*") === to.length - 1
+          ) {
+            const fromWithouTrailingStar = from.slice(0, -1)
+            const toWithoutTrailingStar = to.slice(0, -1)
+            importsForPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
+            return
+          }
+
+          logger.warn(
+            formatWilcardExportsIgnoredWarning({
+              key,
+              value,
+              packageFileUrl,
+            }),
+          )
+        },
+        onWarn: (warning) => {
+          logger.warn(`
+      ${warning}
+      `)
+        },
       })
 
       const {
@@ -510,6 +544,18 @@ const packageDependenciesFromPackageObject = (packageObject, { includeDevDepende
   }
 
   return packageDependencies
+}
+
+const formatWilcardExportsIgnoredWarning = ({ key, value, packageFileUrl }) => {
+  return `Ignoring export using "*" because it is not supported by importmap.
+--- key ---
+${key}
+--- value ---
+${value}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}
+--- see also ---
+https://github.com/WICG/import-maps/issues/232`
 }
 
 const formatUnexpectedPackageNameLog = ({ packageName, packageFileUrl }) => {

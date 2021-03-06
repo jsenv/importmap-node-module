@@ -1,73 +1,38 @@
 // https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
 
-import { urlToFileSystemPath } from "@jsenv/util"
+import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/util"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({
-  logger,
   packageFileUrl,
-  packageName,
   packageJsonObject,
-  packageInfo: { packageDirectoryRelativeUrl },
+  packageExports = packageJsonObject.exports,
+  packageName = packageJsonObject.name,
+  projectDirectoryUrl,
   packagesExportsPreference,
+  onExport,
+  onWarn,
 }) => {
-  const importsForPackageExports = {}
-
-  const packageFilePath = urlToFileSystemPath(packageFileUrl)
-  const { exports: packageExports } = packageJsonObject
-
-  // false is allowed as laternative to exports: {}
+  // false is allowed as alternative to exports: {}
   if (packageExports === false) {
-    return importsForPackageExports
+    return
   }
 
-  const addRemapping = ({ from, to }) => {
-    if (from.indexOf("*") === -1) {
-      importsForPackageExports[from] = to
-      return
-    }
-
-    if (
-      from.endsWith("/*") &&
-      to.endsWith("/*") &&
-      // ensure ends with '*' AND there is only one '*' occurence
-      to.indexOf("*") === to.length - 1
-    ) {
-      const fromWithouTrailingStar = from.slice(0, -1)
-      const toWithoutTrailingStar = to.slice(0, -1)
-      importsForPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
-      return
-    }
-
-    logger.warn(`Ignoring export using "*" because it is not supported by importmap.
---- key ---
-${from}
---- value ---
-${to}
---- package.json path ---
-${packageFilePath}
---- see also ---
-https://github.com/WICG/import-maps/issues/232`)
-  }
+  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
+  const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
 
   // exports used to indicate the main file
   if (typeof packageExports === "string") {
-    addRemapping({
-      from: packageName,
-      to: addressToDestination(packageExports, packageDirectoryRelativeUrl),
+    onExport({
+      key: packageName,
+      value: addressToDestination(packageExports, packageDirectoryRelativeUrl),
     })
-    return importsForPackageExports
+    return
   }
 
   if (typeof packageExports !== "object" || packageExports === null) {
-    logger.warn(`
-exports of package.json must be an object.
---- package.json exports ---
-${packageExports}
---- package.json path ---
-${packageFilePath}
-`)
-    return importsForPackageExports
+    onWarn(formatUnexpectedExportsWarning({ packageExports, packageFileUrl }))
+    return
   }
 
   const packageExportsKeys = Object.keys(packageExports)
@@ -76,28 +41,18 @@ ${packageFilePath}
     const someSpecifierDoesNotStartsWithDot = packageExportsKeys.some((key) => !key.startsWith("."))
     if (someSpecifierDoesNotStartsWithDot) {
       // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
-      logger.error(`
-exports of package.json mixes conditional exports and direct exports.
---- package.json path ---
-${packageFilePath}
-`)
-      return importsForPackageExports
+      onWarn(formatMixedExportsWarning({ packageFileUrl }))
+      return
     }
   }
 
-  packageExportsKeys.forEach((specifier) => {
-    if (!specifierIsRelative(specifier)) {
-      logger.warn(`
-found unexpected specifier in exports of package.json, it must be relative to package.json.
---- specifier ---
-${specifier}
---- package.json path ---
-${packageFilePath}
-`)
+  packageExportsKeys.forEach((key) => {
+    if (!specifierIsRelative(key)) {
+      onWarn(formatAbsoluteKeyInExportsWarning({ key, packageFileUrl }))
       return
     }
 
-    const value = packageExports[specifier]
+    const value = packageExports[key]
     let address
 
     if (typeof value === "object") {
@@ -115,38 +70,32 @@ ${packageFilePath}
     } else if (typeof value === "string") {
       address = value
     } else {
-      logger.warn(`
-found unexpected address in exports of package.json, it must be a string.
---- address ---
-${address}
---- specifier ---
-${specifier}
---- package.json path ---
-${packageFilePath}
-`)
+      onWarn(
+        formatUnexpectedValueInExportsWarning({
+          value,
+          key,
+          packageFileUrl,
+        }),
+      )
       return
     }
 
     if (!specifierIsRelative(address)) {
-      logger.warn(`
-found unexpected address in exports of package.json, it must be relative to package.json.
---- address ---
-${address}
---- specifier ---
-${specifier}
---- package.json path ---
-${packageFilePath}
-`)
+      onWarn(
+        formatAbsoluteValueInExportsWarning({
+          value: address,
+          key,
+          packageFileUrl,
+        }),
+      )
       return
     }
 
-    addRemapping({
-      from: specifierToSource(specifier, packageName),
-      to: addressToDestination(address, packageDirectoryRelativeUrl),
+    onExport({
+      key: specifierToSource(key, packageName),
+      value: addressToDestination(address, packageDirectoryRelativeUrl),
     })
   })
-
-  return importsForPackageExports
 }
 
 const specifierToSource = (specifier, packageName) => {
@@ -188,4 +137,47 @@ const readFavoredKey = (object, favoredKeys) => {
   }
 
   return undefined
+}
+
+const formatUnexpectedExportsWarning = ({ packageExports, packageFileUrl }) => {
+  return `exports of package.json must be an object.
+--- package.json exports ---
+${packageExports}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}
+`
+}
+
+const formatMixedExportsWarning = ({ packageFileUrl }) => {
+  return `exports of package.json mixes conditional exports and direct exports.
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}`
+}
+
+const formatAbsoluteKeyInExportsWarning = ({ key, packageFileUrl }) => {
+  return `found unexpected key in exports of package.json, key must be relative to package.json.
+--- key ---
+${key}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}`
+}
+
+const formatUnexpectedValueInExportsWarning = ({ value, key, packageFileUrl }) => {
+  return `found unexpected value in exports of package.json, it must be a string.
+--- value ---
+${value}
+--- key ---
+${key}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}`
+}
+
+const formatAbsoluteValueInExportsWarning = ({ value, key, packageFileUrl }) => {
+  return `found unexpected value in exports of package.json, value must be relative to package.json.
+--- value ---
+${value}
+--- key ---
+${key}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}`
 }
