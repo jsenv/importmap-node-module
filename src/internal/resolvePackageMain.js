@@ -87,23 +87,23 @@ ${packageFilePath}
     if (packageMainFieldName !== "default") {
       logger.warn(
         formatFileNotFoundLog({
+          specifier: packageMainFieldValue,
+          importedIn: `${packageFileUrl}#${packageMainFieldName}`,
           fileUrl: mainFileUrlFirstCandidate,
           magicExtensions,
         }),
       )
-      return mainFileUrlFirstCandidate
     }
+    return mainFileUrlFirstCandidate
   }
 
   return mainFileUrl
 }
 
-const formatFileNotFoundLog = ({ specifier, expectedUrl, magicExtensions, importedIn }) => {
+const formatFileNotFoundLog = ({ specifier, importedIn, fileUrl, magicExtensions }) => {
   return createDetailedMessage(`Cannot find file for "${specifier}"`, {
     "imported in": importedIn,
-    "file url": expectedUrl,
-    ...(urlToExtension(expectedUrl) === ""
-      ? { ["extensions tried"]: magicExtensions.join(`,`) }
-      : {}),
+    "file url": fileUrl,
+    ...(urlToExtension(fileUrl) === "" ? { ["extensions tried"]: magicExtensions.join(`,`) } : {}),
   })
 }
