@@ -1,38 +1,33 @@
-import { readFile } from "@jsenv/util"
+import { readFile, urlToFileSystemPath } from "@jsenv/util"
+import { applyPackageManualOverride } from "./applyPackageManualOverride.js"
+
+export const PACKAGE_NOT_FOUND = {}
+export const PACKAGE_WITH_SYNTAX_ERROR = {}
 
 export const readPackageFile = async (packageFileUrl, packagesManualOverrides) => {
-  const packageFileString = await readFile(packageFileUrl)
-  const packageJsonObject = JSON.parse(packageFileString)
-  const { name, version } = packageJsonObject
+  try {
+    const packageObject = await readFile(packageFileUrl, { as: "json" })
+    return applyPackageManualOverride(packageObject, packagesManualOverrides)
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      return PACKAGE_NOT_FOUND
+    }
 
-  const overrideKey = Object.keys(packagesManualOverrides).find((overrideKeyCandidate) => {
-    if (name === overrideKeyCandidate) return true
-    if (`${name}@${version}` === overrideKeyCandidate) return true
-    return false
-  })
-  if (overrideKey) {
-    return composeObject(packageJsonObject, packagesManualOverrides[overrideKey])
+    if (e.name === "SyntaxError") {
+      console.error(formatPackageSyntaxErrorLog({ syntaxError: e, packageFileUrl }))
+      return PACKAGE_WITH_SYNTAX_ERROR
+    }
+
+    throw e
   }
-  return packageJsonObject
 }
 
-const composeObject = (leftObject, rightObject) => {
-  const composedObject = {
-    ...leftObject,
-  }
-  Object.keys(rightObject).forEach((key) => {
-    const rightValue = rightObject[key]
-
-    if (rightValue === null || typeof rightValue !== "object" || key in leftObject === false) {
-      composedObject[key] = rightValue
-    } else {
-      const leftValue = leftObject[key]
-      if (leftValue === null || typeof leftValue !== "object") {
-        composedObject[key] = rightValue
-      } else {
-        composedObject[key] = composeObject(leftValue, rightValue)
-      }
-    }
-  })
-  return composedObject
+const formatPackageSyntaxErrorLog = ({ syntaxError, packageFileUrl }) => {
+  return `
+error while parsing package.json.
+--- syntax error message ---
+${syntaxError.message}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}
+`
 }

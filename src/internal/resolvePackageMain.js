@@ -1,6 +1,8 @@
-import { dirname, extname, basename } from "path"
-import { firstOperationMatching } from "@jsenv/cancellation"
-import { resolveUrl, urlToFileSystemPath, readFileSystemNodeStat } from "@jsenv/util"
+import { createDetailedMessage } from "@jsenv/logger"
+import { resolveUrl, urlToFileSystemPath, urlToExtension } from "@jsenv/util"
+import { resolveFile } from "./resolveFile.js"
+
+const magicExtensions = ["js", "json", "node"]
 
 export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
   if ("module" in packageJsonObject) {
@@ -38,8 +40,6 @@ export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }
   })
 }
 
-const extensionCandidateArray = ["js", "json", "node"]
-
 const resolveMainFile = async ({
   logger,
   packageFileUrl,
@@ -73,35 +73,25 @@ ${packageFilePath}
     return null
   }
 
-  const mainFileUrl = await findMainFileUrlOrNull(mainFileUrlFirstCandidate)
+  const mainFileUrl = await resolveFile(mainFileUrlFirstCandidate, {
+    magicExtensions,
+  })
 
-  if (mainFileUrl === null) {
+  if (!mainFileUrl) {
     // we know in advance this remapping does not lead to an actual file.
     // we only warn because we have no guarantee this remapping will actually be used
     // in the codebase.
-
     // warn only if there is actually a main field
     // otherwise the package.json is missing the main field
     // it certainly means it's not important
     if (packageMainFieldName !== "default") {
-      const extensionTried =
-        extname(urlToFileSystemPath(mainFileUrlFirstCandidate)) === ""
-          ? `--- extensions tried ---
-${extensionCandidateArray.join(`,`)}
-`
-          : `
-`
-
       logger.warn(
-        `
-cannot find file for package.json ${packageMainFieldName} field
---- ${packageMainFieldName} ---
-${packageMainFieldValue}
---- file path ---
-${urlToFileSystemPath(mainFileUrlFirstCandidate)}
---- package.json path ---
-${packageFilePath}
-${extensionTried}`,
+        formatFileNotFoundLog({
+          specifier: packageMainFieldValue,
+          importedIn: `${packageFileUrl}#${packageMainFieldName}`,
+          fileUrl: mainFileUrlFirstCandidate,
+          magicExtensions,
+        }),
       )
     }
     return mainFileUrlFirstCandidate
@@ -110,50 +100,10 @@ ${extensionTried}`,
   return mainFileUrl
 }
 
-const findMainFileUrlOrNull = async (mainFileUrl) => {
-  const mainStats = await readFileSystemNodeStat(mainFileUrl, { nullIfNotFound: true })
-
-  if (mainStats && mainStats.isFile()) {
-    return mainFileUrl
-  }
-
-  if (mainStats && mainStats.isDirectory()) {
-    const indexFileUrl = resolveUrl(
-      "./index",
-      mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`,
-    )
-    const extensionLeadingToAFile = await findExtension(indexFileUrl)
-    if (extensionLeadingToAFile === null) {
-      return null
-    }
-    return `${indexFileUrl}.${extensionLeadingToAFile}`
-  }
-
-  const mainFilePath = urlToFileSystemPath(mainFileUrl)
-  const extension = extname(mainFilePath)
-
-  if (extension === "") {
-    const extensionLeadingToAFile = await findExtension(mainFileUrl)
-    if (extensionLeadingToAFile === null) {
-      return null
-    }
-    return `${mainFileUrl}.${extensionLeadingToAFile}`
-  }
-  return null
-}
-
-const findExtension = async (fileUrl) => {
-  const filePath = urlToFileSystemPath(fileUrl)
-  const fileDirname = dirname(filePath)
-  const fileBasename = basename(filePath)
-  const extensionLeadingToFile = await firstOperationMatching({
-    array: extensionCandidateArray,
-    start: async (extensionCandidate) => {
-      const filePathCandidate = `${fileDirname}/${fileBasename}.${extensionCandidate}`
-      const stats = await readFileSystemNodeStat(filePathCandidate, { nullIfNotFound: true })
-      return stats && stats.isFile() ? extensionCandidate : null
-    },
-    predicate: (extension) => Boolean(extension),
+const formatFileNotFoundLog = ({ specifier, importedIn, fileUrl, magicExtensions }) => {
+  return createDetailedMessage(`Cannot find file for "${specifier}"`, {
+    "imported in": importedIn,
+    "file url": fileUrl,
+    ...(urlToExtension(fileUrl) === "" ? { ["extensions tried"]: magicExtensions.join(`,`) } : {}),
   })
-  return extensionLeadingToFile || null
 }
