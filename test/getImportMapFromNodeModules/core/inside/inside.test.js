@@ -3,7 +3,7 @@ import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/util"
 import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
-const testDirectoryUrl = resolveUrl("./", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const importMap = await getImportMapFromNodeModules({
   projectDirectoryUrl: testDirectoryUrl,

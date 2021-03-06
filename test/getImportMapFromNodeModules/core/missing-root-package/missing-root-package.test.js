@@ -2,7 +2,7 @@ import { assert } from "@jsenv/assert"
 import { resolveUrl, urlToFileSystemPath } from "@jsenv/util"
 import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
 
-const testDirectoryUrl = resolveUrl("./", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
 
 try {
