@@ -1,4 +1,4 @@
-import { parseSpecifiersFromFile } from "../src/internal/codebase/parseSpecifiersFromFile.js"
+import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
 import { writeFile, ensureEmptyDirectory, resolveUrl } from "@jsenv/util"
 import { assert } from "@jsenv/assert"
 

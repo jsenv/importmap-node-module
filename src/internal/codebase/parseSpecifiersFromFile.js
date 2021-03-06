@@ -5,6 +5,7 @@ import { readFile, urlToFileSystemPath } from "@jsenv/util"
 export const parseSpecifiersFromFile = async (
   fileUrl,
   {
+    fileContent,
     sourceType = "module",
     allowImportExportEverywhere = true,
     allowAwaitOutsideFunction = true,
@@ -15,7 +16,7 @@ export const parseSpecifiersFromFile = async (
     ...options
   } = {},
 ) => {
-  const fileContent = await readFile(fileUrl, { as: "string" })
+  fileContent = fileContent === undefined ? await readFile(fileUrl, { as: "string" }) : fileContent
 
   const ast = parser.parse(fileContent, {
     sourceType,
