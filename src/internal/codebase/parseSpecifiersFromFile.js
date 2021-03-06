@@ -1,8 +1,9 @@
 import parser from "@babel/parser"
 import traverse from "@babel/traverse"
+import { readFile, urlToFileSystemPath } from "@jsenv/util"
 
-export const parseSpecifiersFromString = async (
-  string,
+export const parseSpecifiersFromFile = async (
+  fileUrl,
   {
     sourceType = "module",
     allowImportExportEverywhere = true,
@@ -14,8 +15,11 @@ export const parseSpecifiersFromString = async (
     ...options
   } = {},
 ) => {
-  const ast = parser.parse(string, {
+  const fileContent = await readFile(fileUrl, { as: "string" })
+
+  const ast = parser.parse(fileContent, {
     sourceType,
+    sourceFilename: urlToFileSystemPath(fileUrl),
     allowImportExportEverywhere,
     allowAwaitOutsideFunction,
     ranges,

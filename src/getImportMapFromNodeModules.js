@@ -10,9 +10,6 @@ export const getImportMapFromNodeModules = async ({
   dev = false,
   ...rest
 }) => {
-  // The importmap generated at this point is relative to the project directory url
-  // In other words if you want to use that importmap you have to put it
-  // inside projectDirectoryUrl (it cannot be nested in a subdirectory).
   const importMapForPackages = moveAndSort(
     await getImportMapFromPackages({
       logLevel,
@@ -33,6 +30,7 @@ const targetExportsPreferences = {
 }
 
 const moveAndSort = (importmap, importMapFileRelativeUrl) => {
+  // At this point, importmap is relative to the project directory url
   if (!importMapFileRelativeUrl) {
     return sortImportMap(importmap)
   }
@@ -40,7 +38,8 @@ const moveAndSort = (importmap, importMapFileRelativeUrl) => {
   // When there is an importMapFileRelativeUrl we will make remapping relative
   // to the importmap file future location (where user will write it).
   // This allows to put the importmap anywhere inside the projectDirectoryUrl.
-  // (If possible prefer to have it top level to avoid too many ../)
+  // If possible prefer top level because nesting importmap
+  // can lead to many relative path like ./file.js -> ../../file.js
   const importMapProjectUrl = resolveUrl("project.importmap", "file://")
   const importMapRealUrl = resolveUrl(importMapFileRelativeUrl, "file://")
   const importmapMoved = moveImportMap(importmap, importMapProjectUrl, importMapRealUrl)
