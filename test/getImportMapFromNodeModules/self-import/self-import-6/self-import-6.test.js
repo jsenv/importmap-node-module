@@ -6,6 +6,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const actual = await getImportMapFromNodeModules({
   projectDirectoryUrl: testDirectoryUrl,
+  dev: true,
 })
 const expected = {
   imports: {
@@ -21,7 +22,7 @@ const expected = {
       "@jsenv/core/": "./node_modules/@jsenv/core/",
       "@jsenv/core": "./node_modules/@jsenv/core/maindep.js",
     },
-    "./self-import-6/": {
+    "./root/": {
       "@jsenv/core": "./index",
     },
   },
