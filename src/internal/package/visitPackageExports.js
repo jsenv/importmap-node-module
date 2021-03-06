@@ -13,89 +13,147 @@ export const visitPackageExports = ({
   onExport,
   onWarn,
 }) => {
-  // false is allowed as alternative to exports: {}
-  if (packageExports === false) {
-    return
-  }
-
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
 
-  // exports used to indicate the main file
-  if (typeof packageExports === "string") {
-    onExport({
-      key: packageName,
-      value: addressToDestination(packageExports, packageDirectoryRelativeUrl),
-    })
-    return
-  }
-
-  if (typeof packageExports !== "object" || packageExports === null) {
-    onWarn(formatUnexpectedExportsWarning({ packageExports, packageFileUrl }))
-    return
-  }
-
-  const packageExportsKeys = Object.keys(packageExports)
-  const someSpecifierStartsWithDot = packageExportsKeys.some((key) => key.startsWith("."))
-  if (someSpecifierStartsWithDot) {
-    const someSpecifierDoesNotStartsWithDot = packageExportsKeys.some((key) => !key.startsWith("."))
-    if (someSpecifierDoesNotStartsWithDot) {
+  visitExportsSubpath(packageExports, packagesExportsPreference, {
+    onUnexpectedPackageExports: ({ packageExportsValue, packageExportsValuePath }) => {
+      onWarn(
+        formatExportsIsUnexpectedWarning({
+          packageExportsValue,
+          packageExportsValuePath,
+          packageFileUrl,
+        }),
+      )
+    },
+    onMixedPackageExports: ({ packageExportsValue, packageExportsValuePath }) => {
       // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
-      onWarn(formatMixedExportsWarning({ packageFileUrl }))
-      return
-    }
-  }
-
-  packageExportsKeys.forEach((key) => {
-    if (!specifierIsRelative(key)) {
-      onWarn(formatAbsoluteKeyInExportsWarning({ key, packageFileUrl }))
-      return
-    }
-
-    const value = packageExports[key]
-    let address
-
-    if (typeof value === "object") {
-      address = readFavoredKey(value, packagesExportsPreference)
-
-      if (!address) {
+      onWarn(
+        formatExportsUnexpectedMixWarning({
+          packageExportsValue,
+          packageExportsValuePath,
+          packageFileUrl,
+        }),
+      )
+    },
+    onSubpathPackageExport: ({ key, value, valuePath }) => {
+      if (!specifierIsRelative(key)) {
+        onWarn(
+          formatExportsKeyMustBeRelativeWarning({
+            key,
+            keyPath: valuePath.slice(0, -1),
+            packageFileUrl,
+          }),
+        )
         return
       }
-      if (typeof address === "object") {
-        address = readFavoredKey(address, packagesExportsPreference)
-        if (!address) {
-          return
-        }
+      if (typeof value !== "string") {
+        onWarn(
+          formatExportsValueMustBeStringWarning({
+            value,
+            valuePath,
+            packageFileUrl,
+          }),
+        )
+        return
       }
-    } else if (typeof value === "string") {
-      address = value
-    } else {
-      onWarn(
-        formatUnexpectedValueInExportsWarning({
-          value,
-          key,
-          packageFileUrl,
-        }),
-      )
-      return
-    }
+      if (!specifierIsRelative(value)) {
+        onWarn(
+          formatExportsValueMustBeRelativeWarning({
+            value,
+            valuePath,
+            packageFileUrl,
+          }),
+        )
+        return
+      }
 
-    if (!specifierIsRelative(address)) {
-      onWarn(
-        formatAbsoluteValueInExportsWarning({
-          value: address,
-          key,
-          packageFileUrl,
-        }),
-      )
-      return
-    }
-
-    onExport({
-      key: specifierToSource(key, packageName),
-      value: addressToDestination(address, packageDirectoryRelativeUrl),
-    })
+      onExport({
+        key: specifierToSource(key, packageName),
+        value: addressToDestination(value, packageDirectoryRelativeUrl),
+      })
+    },
   })
+}
+
+const visitExportsSubpath = (
+  packageExports,
+  packageExportsConditions,
+  { onUnexpectedPackageExports, onMixedPackageExports, onSubpathPackageExport },
+) => {
+  const visitValue = (packageExportsValue, { valuePath }) => {
+    // false is allowed as alternative to exports: {}
+    if (packageExportsValue === false) {
+      return
+    }
+
+    if (typeof packageExportsValue === "string") {
+      const firstNonConditionKey = valuePath
+        .slice()
+        .reverse()
+        .find((key) => key.startsWith("."))
+      const key = firstNonConditionKey || "."
+      onSubpathPackageExport({
+        value: packageExportsValue,
+        valuePath,
+        key,
+      })
+      return
+    }
+
+    if (typeof packageExportsValue !== "object" && packageExportsValue !== null) {
+      onUnexpectedPackageExports({
+        packageExportsValue,
+        packageExportsValuePath: valuePath,
+      })
+      return
+    }
+
+    const keys = Object.keys(packageExportsValue)
+    const everyKeyDoesNotStartsWithDot = keys.every((key) => !key.startsWith("."))
+    if (everyKeyDoesNotStartsWithDot) {
+      const bestConditionKey = findBestConditionKey(keys, packageExportsConditions)
+      if (!bestConditionKey) {
+        return
+      }
+      const bestExports = packageExportsValue[bestConditionKey]
+      visitValue(bestExports, {
+        valuePath: [...valuePath, bestConditionKey],
+      })
+      return
+    }
+
+    const everyKeyStartsWithDot = keys.every((key) => key.startsWith("."))
+    if (everyKeyStartsWithDot) {
+      keys.forEach((key) => {
+        visitValue(packageExportsValue[key], {
+          valuePath: [...valuePath, key],
+        })
+      })
+      return
+    }
+
+    onMixedPackageExports({
+      packageExportsValue,
+      packageExportsValuePath: valuePath,
+    })
+  }
+  visitValue(packageExports, {
+    valuePath: ["exports"],
+  })
+}
+
+const findBestConditionKey = (availableKeys, exportsConditions) => {
+  const conditionKey = exportsConditions.find((key) => availableKeys.includes(key))
+  if (conditionKey) {
+    return conditionKey
+  }
+
+  if (availableKeys.includes("default")) {
+    return "default"
+  }
+
+  return undefined
 }
 
 const specifierToSource = (specifier, packageName) => {
@@ -126,58 +184,60 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
   return `./${packageDirectoryRelativeUrl}${address}`
 }
 
-const readFavoredKey = (object, favoredKeys) => {
-  const favoredKey = favoredKeys.find((key) => object.hasOwnProperty(key))
-  if (favoredKey) {
-    return object[favoredKey]
-  }
-
-  if (object.hasOwnProperty("default")) {
-    return object.default
-  }
-
-  return undefined
-}
-
-const formatUnexpectedExportsWarning = ({ packageExports, packageFileUrl }) => {
-  return `exports of package.json must be an object.
---- package.json exports ---
-${packageExports}
---- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}
-`
-}
-
-const formatMixedExportsWarning = ({ packageFileUrl }) => {
-  return `exports of package.json mixes conditional exports and direct exports.
+const formatExportsIsUnexpectedWarning = ({
+  packageExportsValue,
+  packageExportsValuePath,
+  packageFileUrl,
+}) => {
+  return `unexpected value in package.json exports field: value must be an object or a string.
+--- value ---
+${packageExportsValue}
+--- value path ---
+${packageExportsValuePath.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`
 }
 
-const formatAbsoluteKeyInExportsWarning = ({ key, packageFileUrl }) => {
-  return `found unexpected key in exports of package.json, key must be relative to package.json.
+const formatExportsUnexpectedMixWarning = ({
+  packageExportsValue,
+  packageExportsValuePath,
+  packageFileUrl,
+}) => {
+  return `unexpected package.json exports field: cannot mix conditional and subpath exports.
+--- value ---
+${JSON.stringify(packageExportsValue, null, "  ")}
+--- value path ---
+${packageExportsValuePath.join(".")}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}`
+}
+
+const formatExportsKeyMustBeRelativeWarning = ({ key, keyPath, packageFileUrl }) => {
+  return `unexpected key in package.json exports field: key must be relative.
 --- key ---
 ${key}
+--- key path ---
+${keyPath.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`
 }
 
-const formatUnexpectedValueInExportsWarning = ({ value, key, packageFileUrl }) => {
-  return `found unexpected value in exports of package.json, it must be a string.
+const formatExportsValueMustBeStringWarning = ({ value, valuePath, packageFileUrl }) => {
+  return `unexpected value in package.json exports field: value must be a string.
 --- value ---
 ${value}
---- key ---
-${key}
+--- value path ---
+${valuePath.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`
 }
 
-const formatAbsoluteValueInExportsWarning = ({ value, key, packageFileUrl }) => {
-  return `found unexpected value in exports of package.json, value must be relative to package.json.
+const formatExportsValueMustBeRelativeWarning = ({ value, valuePath, packageFileUrl }) => {
+  return `unexpected value in package.json exports field: value must be relative.
 --- value ---
 ${value}
---- key ---
-${key}
+--- value path ---
+${valuePath.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`
 }
