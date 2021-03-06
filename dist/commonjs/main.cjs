@@ -6,113 +6,66 @@ var logger = require('@jsenv/logger');
 var importMap = require('@jsenv/import-map');
 var util = require('@jsenv/util');
 var cancellation = require('@jsenv/cancellation');
-var path = require('path');
 
-const readPackageFile = async (packageFileUrl, packagesManualOverrides) => {
-  const packageFileString = await util.readFile(packageFileUrl);
-  const packageJsonObject = JSON.parse(packageFileString);
-  const {
-    name,
-    version
-  } = packageJsonObject;
-  const overrideKey = Object.keys(packagesManualOverrides).find(overrideKeyCandidate => {
-    if (name === overrideKeyCandidate) return true;
-    if (`${name}@${version}` === overrideKeyCandidate) return true;
-    return false;
-  });
-
-  if (overrideKey) {
-    return composeObject(packageJsonObject, packagesManualOverrides[overrideKey]);
-  }
-
-  return packageJsonObject;
-};
-
-const composeObject = (leftObject, rightObject) => {
-  const composedObject = { ...leftObject
-  };
-  Object.keys(rightObject).forEach(key => {
-    const rightValue = rightObject[key];
-
-    if (rightValue === null || typeof rightValue !== "object" || key in leftObject === false) {
-      composedObject[key] = rightValue;
-    } else {
-      const leftValue = leftObject[key];
-
-      if (leftValue === null || typeof leftValue !== "object") {
-        composedObject[key] = rightValue;
-      } else {
-        composedObject[key] = composeObject(leftValue, rightValue);
-      }
-    }
-  });
-  return composedObject;
-};
-
-const resolveNodeModule = async ({
-  logger,
-  rootProjectDirectoryUrl,
-  packagesManualOverrides,
-  packageFileUrl,
-  dependencyName
+const resolveFile = async (fileUrl, {
+  magicExtensions
 }) => {
-  const packageDirectoryUrl = util.resolveUrl("./", packageFileUrl);
-  const nodeModuleCandidateArray = [...computeNodeModuleCandidateArray(packageDirectoryUrl, rootProjectDirectoryUrl), `node_modules/`];
-  return cancellation.firstOperationMatching({
-    array: nodeModuleCandidateArray,
-    start: async nodeModuleCandidate => {
-      const packageFileUrl = `${rootProjectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`;
+  const fileStat = await util.readFileSystemNodeStat(fileUrl, {
+    nullIfNotFound: true
+  }); // file found
 
-      try {
-        const packageJsonObject = await readPackageFile(packageFileUrl, packagesManualOverrides);
-        return {
-          packageFileUrl,
-          packageJsonObject
-        };
-      } catch (e) {
-        if (e.code === "ENOENT") {
-          return {};
-        }
+  if (fileStat && fileStat.isFile()) {
+    return fileUrl;
+  } // directory found
 
-        if (e.name === "SyntaxError") {
-          logger.error(`
-error while parsing dependency package.json.
---- parsing error message ---
-${e.message}
---- package.json path ---
-${util.urlToFileSystemPath(packageFileUrl)}
-`);
-          return {};
-        }
 
-        throw e;
-      }
+  if (fileStat && fileStat.isDirectory()) {
+    const indexFileSuffix = fileUrl.endsWith("/") ? "index" : "/index";
+    const indexFileUrl = `${fileUrl}${indexFileSuffix}`;
+    const extensionLeadingToAFile = await findExtensionLeadingToFile(indexFileUrl, magicExtensions);
+
+    if (extensionLeadingToAFile === null) {
+      return null;
+    }
+
+    return `${indexFileUrl}.${extensionLeadingToAFile}`;
+  } // file not found and it has an extension
+
+
+  const extension = util.urlToExtension(fileUrl);
+
+  if (extension !== "") {
+    return null;
+  }
+
+  const extensionLeadingToAFile = await findExtensionLeadingToFile(fileUrl, magicExtensions); // magic extension not found
+
+  if (extensionLeadingToAFile === null) {
+    return null;
+  } // magic extension worked
+
+
+  return `${fileUrl}.${extensionLeadingToAFile}`;
+};
+
+const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
+  const fileDirectoryUrl = util.resolveUrl("./", fileUrl);
+  const fileBasename = util.urlToBasename(fileUrl);
+  const extensionLeadingToFile = await cancellation.firstOperationMatching({
+    array: magicExtensions,
+    start: async extensionCandidate => {
+      const filePathCandidate = `${fileDirectoryUrl}/${fileBasename}.${extensionCandidate}`;
+      const stats = await util.readFileSystemNodeStat(filePathCandidate, {
+        nullIfNotFound: true
+      });
+      return stats && stats.isFile() ? extensionCandidate : null;
     },
-    predicate: ({
-      packageJsonObject
-    }) => Boolean(packageJsonObject)
+    predicate: extension => Boolean(extension)
   });
+  return extensionLeadingToFile || null;
 };
 
-const computeNodeModuleCandidateArray = (packageDirectoryUrl, rootProjectDirectoryUrl) => {
-  if (packageDirectoryUrl === rootProjectDirectoryUrl) {
-    return [];
-  }
-
-  const packageDirectoryRelativeUrl = util.urlToRelativeUrl(packageDirectoryUrl, rootProjectDirectoryUrl);
-  const candidateArray = [];
-  const relativeNodeModuleDirectoryArray = packageDirectoryRelativeUrl.split("node_modules/"); // remove the first empty string
-
-  relativeNodeModuleDirectoryArray.shift();
-  let i = relativeNodeModuleDirectoryArray.length;
-
-  while (i--) {
-    candidateArray.push(`node_modules/${relativeNodeModuleDirectoryArray.slice(0, i + 1).join("node_modules/")}node_modules/`);
-  }
-
-  return candidateArray;
-};
-
+const magicExtensions = ["js", "json", "node"];
 const resolvePackageMain = ({
   logger,
   packageFileUrl,
@@ -152,7 +105,6 @@ const resolvePackageMain = ({
     packageMainFieldValue: "index"
   });
 };
-const extensionCandidateArray = ["js", "json", "node"];
 
 const resolveMainFile = async ({
   logger,
@@ -182,9 +134,11 @@ ${packageFilePath}
     return null;
   }
 
-  const mainFileUrl = await findMainFileUrlOrNull(mainFileUrlFirstCandidate);
+  const mainFileUrl = await resolveFile(mainFileUrlFirstCandidate, {
+    magicExtensions
+  });
 
-  if (mainFileUrl === null) {
+  if (!mainFileUrl) {
     // we know in advance this remapping does not lead to an actual file.
     // we only warn because we have no guarantee this remapping will actually be used
     // in the codebase.
@@ -192,19 +146,12 @@ ${packageFilePath}
     // otherwise the package.json is missing the main field
     // it certainly means it's not important
     if (packageMainFieldName !== "default") {
-      const extensionTried = path.extname(util.urlToFileSystemPath(mainFileUrlFirstCandidate)) === "" ? `--- extensions tried ---
-${extensionCandidateArray.join(`,`)}
-` : `
-`;
-      logger.warn(`
-cannot find file for package.json ${packageMainFieldName} field
---- ${packageMainFieldName} ---
-${packageMainFieldValue}
---- file path ---
-${util.urlToFileSystemPath(mainFileUrlFirstCandidate)}
---- package.json path ---
-${packageFilePath}
-${extensionTried}`);
+      logger.warn(formatFileNotFoundLog({
+        specifier: packageMainFieldValue,
+        importedIn: `${packageFileUrl}#${packageMainFieldName}`,
+        fileUrl: mainFileUrlFirstCandidate,
+        magicExtensions
+      }));
     }
 
     return mainFileUrlFirstCandidate;
@@ -213,58 +160,19 @@ ${extensionTried}`);
   return mainFileUrl;
 };
 
-const findMainFileUrlOrNull = async mainFileUrl => {
-  const mainStats = await util.readFileSystemNodeStat(mainFileUrl, {
-    nullIfNotFound: true
+const formatFileNotFoundLog = ({
+  specifier,
+  importedIn,
+  fileUrl,
+  magicExtensions
+}) => {
+  return logger.createDetailedMessage(`Cannot find file for "${specifier}"`, {
+    "imported in": importedIn,
+    "file url": fileUrl,
+    ...(util.urlToExtension(fileUrl) === "" ? {
+      ["extensions tried"]: magicExtensions.join(`,`)
+    } : {})
   });
-
-  if (mainStats && mainStats.isFile()) {
-    return mainFileUrl;
-  }
-
-  if (mainStats && mainStats.isDirectory()) {
-    const indexFileUrl = util.resolveUrl("./index", mainFileUrl.endsWith("/") ? mainFileUrl : `${mainFileUrl}/`);
-    const extensionLeadingToAFile = await findExtension(indexFileUrl);
-
-    if (extensionLeadingToAFile === null) {
-      return null;
-    }
-
-    return `${indexFileUrl}.${extensionLeadingToAFile}`;
-  }
-
-  const mainFilePath = util.urlToFileSystemPath(mainFileUrl);
-  const extension = path.extname(mainFilePath);
-
-  if (extension === "") {
-    const extensionLeadingToAFile = await findExtension(mainFileUrl);
-
-    if (extensionLeadingToAFile === null) {
-      return null;
-    }
-
-    return `${mainFileUrl}.${extensionLeadingToAFile}`;
-  }
-
-  return null;
-};
-
-const findExtension = async fileUrl => {
-  const filePath = util.urlToFileSystemPath(fileUrl);
-  const fileDirname = path.dirname(filePath);
-  const fileBasename = path.basename(filePath);
-  const extensionLeadingToFile = await cancellation.firstOperationMatching({
-    array: extensionCandidateArray,
-    start: async extensionCandidate => {
-      const filePathCandidate = `${fileDirname}/${fileBasename}.${extensionCandidate}`;
-      const stats = await util.readFileSystemNodeStat(filePathCandidate, {
-        nullIfNotFound: true
-      });
-      return stats && stats.isFile() ? extensionCandidate : null;
-    },
-    predicate: extension => Boolean(extension)
-  });
-  return extensionLeadingToFile || null;
 };
 
 const specifierIsRelative = specifier => {
@@ -383,23 +291,40 @@ const visitPackageExports = ({
     return importsForPackageExports;
   }
 
-  const addressToDestination = address => {
-    if (address[0] === "/") {
-      return address;
+  const addRemapping = ({
+    from,
+    to
+  }) => {
+    if (from.indexOf("*") === -1) {
+      importsForPackageExports[from] = to;
+      return;
     }
 
-    if (address.startsWith("./")) {
-      return `./${packageDirectoryRelativeUrl}${address.slice(2)}`;
+    if (from.endsWith("/*") && to.endsWith("/*") && // ensure ends with '*' AND there is only one '*' occurence
+    to.indexOf("*") === to.length - 1) {
+      const fromWithouTrailingStar = from.slice(0, -1);
+      const toWithoutTrailingStar = to.slice(0, -1);
+      importsForPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar;
+      return;
     }
 
-    return `./${packageDirectoryRelativeUrl}${address}`;
+    logger.warn(`Ignoring export using "*" because it is not supported by importmap.
+--- key ---
+${from}
+--- value ---
+${to}
+--- package.json path ---
+${packageFilePath}
+--- see also ---
+https://github.com/WICG/import-maps/issues/232`);
   }; // exports used to indicate the main file
 
 
   if (typeof packageExports === "string") {
-    const from = packageName;
-    const to = addressToDestination(packageExports);
-    importsForPackageExports[from] = to;
+    addRemapping({
+      from: packageName,
+      to: addressToDestination(packageExports, packageDirectoryRelativeUrl)
+    });
     return importsForPackageExports;
   }
 
@@ -488,22 +413,40 @@ ${packageFilePath}
       return;
     }
 
-    let from;
-
-    if (specifier === ".") {
-      from = packageName;
-    } else if (specifier[0] === "/") {
-      from = specifier;
-    } else if (specifier.startsWith("./")) {
-      from = `${packageName}${specifier.slice(1)}`;
-    } else {
-      from = `${packageName}/${specifier}`;
-    }
-
-    const to = addressToDestination(address);
-    importsForPackageExports[from] = to;
+    addRemapping({
+      from: specifierToSource(specifier, packageName),
+      to: addressToDestination(address, packageDirectoryRelativeUrl)
+    });
   });
   return importsForPackageExports;
+};
+
+const specifierToSource = (specifier, packageName) => {
+  if (specifier === ".") {
+    return packageName;
+  }
+
+  if (specifier[0] === "/") {
+    return specifier;
+  }
+
+  if (specifier.startsWith("./")) {
+    return `${packageName}${specifier.slice(1)}`;
+  }
+
+  return `${packageName}/${specifier}`;
+};
+
+const addressToDestination = (address, packageDirectoryRelativeUrl) => {
+  if (address[0] === "/") {
+    return address;
+  }
+
+  if (address.startsWith("./")) {
+    return `./${packageDirectoryRelativeUrl}${address.slice(2)}`;
+  }
+
+  return `./${packageDirectoryRelativeUrl}${address}`;
 };
 
 const readFavoredKey = (object, favoredKeys) => {
@@ -520,6 +463,179 @@ const readFavoredKey = (object, favoredKeys) => {
   return undefined;
 };
 
+const memoizeAsyncFunctionByUrl = fn => {
+  const cache = {};
+  return async (url, ...args) => {
+    const promiseFromCache = cache[url];
+
+    if (promiseFromCache) {
+      return promiseFromCache;
+    }
+
+    let _resolve;
+
+    let _reject;
+
+    const promise = new Promise((resolve, reject) => {
+      _resolve = resolve;
+      _reject = reject;
+    });
+    cache[url] = promise;
+    let value;
+    let error;
+
+    try {
+      value = fn(url, ...args);
+      error = false;
+    } catch (e) {
+      value = e;
+      error = true;
+      delete cache[url];
+    }
+
+    if (error) {
+      _reject(error);
+    } else {
+      _resolve(value);
+    }
+
+    return promise;
+  };
+};
+
+const applyPackageManualOverride = (packageObject, packagesManualOverrides) => {
+  const {
+    name,
+    version
+  } = packageObject;
+  const overrideKey = Object.keys(packagesManualOverrides).find(overrideKeyCandidate => {
+    if (name === overrideKeyCandidate) {
+      return true;
+    }
+
+    if (`${name}@${version}` === overrideKeyCandidate) {
+      return true;
+    }
+
+    return false;
+  });
+
+  if (overrideKey) {
+    return composeObject(packageObject, packagesManualOverrides[overrideKey]);
+  }
+
+  return packageObject;
+};
+
+const composeObject = (leftObject, rightObject) => {
+  const composedObject = { ...leftObject
+  };
+  Object.keys(rightObject).forEach(key => {
+    const rightValue = rightObject[key];
+
+    if (rightValue === null || typeof rightValue !== "object" || key in leftObject === false) {
+      composedObject[key] = rightValue;
+    } else {
+      const leftValue = leftObject[key];
+
+      if (leftValue === null || typeof leftValue !== "object") {
+        composedObject[key] = rightValue;
+      } else {
+        composedObject[key] = composeObject(leftValue, rightValue);
+      }
+    }
+  });
+  return composedObject;
+};
+
+const PACKAGE_NOT_FOUND = {};
+const PACKAGE_WITH_SYNTAX_ERROR = {};
+const readPackageFile = async (packageFileUrl, packagesManualOverrides) => {
+  try {
+    const packageObject = await util.readFile(packageFileUrl, {
+      as: "json"
+    });
+    return applyPackageManualOverride(packageObject, packagesManualOverrides);
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      return PACKAGE_NOT_FOUND;
+    }
+
+    if (e.name === "SyntaxError") {
+      console.error(formatPackageSyntaxErrorLog({
+        syntaxError: e,
+        packageFileUrl
+      }));
+      return PACKAGE_WITH_SYNTAX_ERROR;
+    }
+
+    throw e;
+  }
+};
+
+const formatPackageSyntaxErrorLog = ({
+  syntaxError,
+  packageFileUrl
+}) => {
+  return `
+error while parsing package.json.
+--- syntax error message ---
+${syntaxError.message}
+--- package.json path ---
+${util.urlToFileSystemPath(packageFileUrl)}
+`;
+};
+
+const createFindNodeModulePackage = packagesManualOverrides => {
+  const readPackageFileMemoized = memoizeAsyncFunctionByUrl(packageFileUrl => {
+    return readPackageFile(packageFileUrl, packagesManualOverrides);
+  });
+  return ({
+    projectDirectoryUrl,
+    packageFileUrl,
+    dependencyName
+  }) => {
+    const nodeModuleCandidates = getNodeModuleCandidates(packageFileUrl, projectDirectoryUrl);
+    return cancellation.firstOperationMatching({
+      array: nodeModuleCandidates,
+      start: async nodeModuleCandidate => {
+        const packageFileUrlCandidate = `${projectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`;
+        const packageObjectCandidate = await readPackageFileMemoized(packageFileUrlCandidate);
+        return {
+          packageFileUrl: packageFileUrlCandidate,
+          packageJsonObject: packageObjectCandidate
+        };
+      },
+      predicate: ({
+        packageJsonObject
+      }) => {
+        return packageJsonObject !== PACKAGE_NOT_FOUND && packageJsonObject !== PACKAGE_WITH_SYNTAX_ERROR;
+      }
+    });
+  };
+};
+
+const getNodeModuleCandidates = (fileUrl, projectDirectoryUrl) => {
+  const fileDirectoryUrl = util.resolveUrl("./", fileUrl);
+
+  if (fileDirectoryUrl === projectDirectoryUrl) {
+    return [`node_modules/`];
+  }
+
+  const fileDirectoryRelativeUrl = util.urlToRelativeUrl(fileDirectoryUrl, projectDirectoryUrl);
+  const candidates = [];
+  const relativeNodeModuleDirectoryArray = fileDirectoryRelativeUrl.split("node_modules/"); // remove the first empty string
+
+  relativeNodeModuleDirectoryArray.shift();
+  let i = relativeNodeModuleDirectoryArray.length;
+
+  while (i--) {
+    candidates.push(`node_modules/${relativeNodeModuleDirectoryArray.slice(0, i + 1).join("node_modules/")}node_modules/`);
+  }
+
+  return [...candidates, "node_modules/"];
+};
+
 const getImportMapFromNodeModules = async ({
   // nothing is actually listening for this cancellationToken for now
   // it's not very important but it would be better to register on it
@@ -530,8 +646,7 @@ const getImportMapFromNodeModules = async ({
   rootProjectDirectoryUrl,
   importMapFileRelativeUrl = "./import-map.importmap",
   projectPackageDevDependenciesIncluded = "undefined" !== "production",
-  // pass ["import", "browser", "require"] to read browser first if defined
-  packagesExportsPreference = ["import", "node", "require"],
+  packagesExportsPreference = ["import", "browser"],
   packagesExportsIncluded = true,
   packagesSelfReference = true,
   packagesImportsIncluded = true,
@@ -551,6 +666,7 @@ const getImportMapFromNodeModules = async ({
 
   const projectPackageFileUrl = util.resolveUrl("./package.json", projectDirectoryUrl);
   const rootProjectPackageFileUrl = util.resolveUrl("./package.json", rootProjectDirectoryUrl);
+  const findNodeModulePackage = createFindNodeModulePackage(packagesManualOverrides);
   const imports = {};
   const scopes = {};
   const seen = {};
@@ -818,59 +934,16 @@ const getImportMapFromNodeModules = async ({
     packageJsonObject,
     includeDevDependencies
   }) => {
-    const dependencyMap = {};
-    const {
-      dependencies = {}
-    } = packageJsonObject; // https://npm.github.io/using-pkgs-docs/package-json/types/optionaldependencies.html
-
-    const {
-      optionalDependencies = {}
-    } = packageJsonObject;
-    Object.keys(dependencies).forEach(dependencyName => {
-      dependencyMap[dependencyName] = {
-        type: "dependency",
-        isOptional: dependencyName in optionalDependencies,
-        versionPattern: dependencies[dependencyName]
-      };
+    const dependencyMap = packageDependenciesFromPackageObject(packageJsonObject, {
+      includeDevDependencies
     });
-    const {
-      peerDependencies = {}
-    } = packageJsonObject;
-    const {
-      peerDependenciesMeta = {}
-    } = packageJsonObject;
-    Object.keys(peerDependencies).forEach(dependencyName => {
-      dependencyMap[dependencyName] = {
-        type: "peerDependency",
-        versionPattern: peerDependencies[dependencyName],
-        isOptional: dependencyName in peerDependenciesMeta && peerDependenciesMeta[dependencyName].optional
-      };
-    });
-    const isProjectPackage = packageFileUrl === projectPackageFileUrl;
-
-    if (includeDevDependencies && isProjectPackage) {
-      const {
-        devDependencies = {}
-      } = packageJsonObject;
-      Object.keys(devDependencies).forEach(dependencyName => {
-        if (!dependencyMap.hasOwnProperty(dependencyName)) {
-          dependencyMap[dependencyName] = {
-            type: "devDependency",
-            versionPattern: devDependencies[dependencyName]
-          };
-        }
-      });
-    }
-
     await Promise.all(Object.keys(dependencyMap).map(async dependencyName => {
-      const dependency = dependencyMap[dependencyName];
+      const dependencyInfo = dependencyMap[dependencyName];
       await visitDependency({
         packageFileUrl,
         packageJsonObject,
         dependencyName,
-        dependencyType: dependency.type,
-        dependencyIsOptional: dependency.isOptional,
-        dependencyVersionPattern: dependency.versionPattern
+        dependencyInfo
       });
     }));
   };
@@ -879,9 +952,7 @@ const getImportMapFromNodeModules = async ({
     packageFileUrl,
     packageJsonObject,
     dependencyName,
-    dependencyType,
-    dependencyIsOptional,
-    dependencyVersionPattern
+    dependencyInfo
   }) => {
     const dependencyData = await findDependency({
       packageFileUrl,
@@ -889,15 +960,11 @@ const getImportMapFromNodeModules = async ({
     });
 
     if (!dependencyData) {
-      logger$1[dependencyIsOptional ? "debug" : "warn"](`
-${dependencyIsOptional ? `cannot find an optional ${dependencyType}.` : `cannot find a ${dependencyType}.`}
---- ${dependencyType} ---
-${dependencyName}@${dependencyVersionPattern}
---- required by ---
-${packageJsonObject.name}@${packageJsonObject.version}
---- package.json path ---
-${util.urlToFileSystemPath(packageFileUrl)}
-    `);
+      logger$1[dependencyInfo.isOptional ? "debug" : "warn"](formatCannotFindPackageLog({
+        dependencyName,
+        dependencyInfo,
+        packageFileUrl
+      }));
       return;
     }
 
@@ -1001,10 +1068,8 @@ ${util.urlToFileSystemPath(packageFileUrl)}
       return dependenciesCache[packageFileUrl][dependencyName];
     }
 
-    const dependencyPromise = resolveNodeModule({
-      logger: logger$1,
-      rootProjectDirectoryUrl,
-      packagesManualOverrides,
+    const dependencyPromise = findNodeModulePackage({
+      projectDirectoryUrl: rootProjectDirectoryUrl,
       packageFileUrl,
       dependencyName
     });
@@ -1012,29 +1077,29 @@ ${util.urlToFileSystemPath(packageFileUrl)}
     return dependencyPromise;
   };
 
-  const projectPackageJsonObject = await readPackageFile(projectPackageFileUrl, packagesManualOverrides);
-  const packageFileUrl = projectPackageFileUrl;
+  const projectPackageJsonObject = await util.readFile(projectPackageFileUrl, {
+    as: "json"
+  });
   const importerPackageFileUrl = projectPackageFileUrl;
-  markPackageAsSeen(packageFileUrl, importerPackageFileUrl);
+  markPackageAsSeen(projectPackageFileUrl, importerPackageFileUrl);
   const packageName = projectPackageJsonObject.name;
 
-  if (typeof packageName === "string") {
-    await visit({
-      packageFileUrl,
-      packageName: projectPackageJsonObject.name,
-      packageJsonObject: projectPackageJsonObject,
-      importerPackageFileUrl,
-      importerPackageJsonObject: null,
-      includeDevDependencies: projectPackageDevDependenciesIncluded
-    });
-  } else {
-    logger$1.warn(`package name field must be a string
---- package name field ---
-${packageName}
---- package.json file path ---
-${packageFileUrl}`);
-  } // remove useless duplicates (scoped key+value already defined on imports)
+  if (typeof packageName !== "string") {
+    logger$1.warn(formatUnexpectedPackageNameLog({
+      packageName,
+      packageFileUrl: projectPackageFileUrl
+    }));
+    return {};
+  }
 
+  await visit({
+    packageFileUrl: projectPackageFileUrl,
+    packageName: projectPackageJsonObject.name,
+    packageJsonObject: projectPackageJsonObject,
+    importerPackageFileUrl,
+    importerPackageJsonObject: null,
+    includeDevDependencies: projectPackageDevDependenciesIncluded
+  }); // remove useless duplicates (scoped key+value already defined on imports)
 
   Object.keys(scopes).forEach(key => {
     const scopedImports = scopes[key];
@@ -1068,6 +1133,85 @@ ${packageFileUrl}`);
 
   importMap$1 = importMap.sortImportMap(importMap$1);
   return importMap$1;
+};
+
+const packageDependenciesFromPackageObject = (packageObject, {
+  includeDevDependencies
+}) => {
+  const packageDependencies = {};
+  const {
+    dependencies = {}
+  } = packageObject; // https://npm.github.io/using-pkgs-docs/package-json/types/optionaldependencies.html
+
+  const {
+    optionalDependencies = {}
+  } = packageObject;
+  Object.keys(dependencies).forEach(dependencyName => {
+    packageDependencies[dependencyName] = {
+      type: "dependency",
+      isOptional: dependencyName in optionalDependencies,
+      versionPattern: dependencies[dependencyName]
+    };
+  });
+  const {
+    peerDependencies = {}
+  } = packageObject;
+  const {
+    peerDependenciesMeta = {}
+  } = packageObject;
+  Object.keys(peerDependencies).forEach(dependencyName => {
+    packageDependencies[dependencyName] = {
+      type: "peerDependency",
+      versionPattern: peerDependencies[dependencyName],
+      isOptional: dependencyName in peerDependenciesMeta && peerDependenciesMeta[dependencyName].optional
+    };
+  });
+
+  if (includeDevDependencies) {
+    const {
+      devDependencies = {}
+    } = packageObject;
+    Object.keys(devDependencies).forEach(dependencyName => {
+      if (!packageDependencies.hasOwnProperty(dependencyName)) {
+        packageDependencies[dependencyName] = {
+          type: "devDependency",
+          versionPattern: devDependencies[dependencyName]
+        };
+      }
+    });
+  }
+
+  return packageDependencies;
+};
+
+const formatUnexpectedPackageNameLog = ({
+  packageName,
+  packageFileUrl
+}) => {
+  return `
+package name field must be a string
+--- package name field ---
+${packageName}
+--- package.json file path ---
+${packageFileUrl}
+`;
+};
+
+const formatCannotFindPackageLog = ({
+  dependencyName,
+  dependencyInfo,
+  packageFileUrl
+}) => {
+  const dependencyIsOptional = dependencyInfo.isOptional;
+  const dependencyType = dependencyInfo.type;
+  const dependencyVersionPattern = dependencyInfo.versionPattern;
+  const detailedMessage = logger.createDetailedMessage(dependencyIsOptional ? `cannot find an optional ${dependencyType}.` : `cannot find a ${dependencyType}.`, {
+    [dependencyType]: `${dependencyName}@${dependencyVersionPattern}`,
+    "required by": util.urlToFileSystemPath(packageFileUrl)
+  });
+  return `
+${detailedMessage}
+`;
 };
 
 const getImportMapFromFile = async importMapFilePath => {
