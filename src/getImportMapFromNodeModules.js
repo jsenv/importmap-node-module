@@ -14,7 +14,11 @@ export const getImportMapFromNodeModules = async ({
     await getImportMapFromPackages({
       logLevel,
       projectDirectoryUrl,
-      packagesExportsPreference: ["import", ...(targetExportsPreferences[target] || [])],
+      packagesExportsPreference: [
+        "import",
+        ...(targetExportsPreferences[target] || []),
+        ...(dev ? "development" : "production"),
+      ],
       projectPackageDevDependenciesIncluded: dev,
       ...rest,
     }),
