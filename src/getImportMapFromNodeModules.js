@@ -6,12 +6,12 @@ import {
   assertAndNormalizeDirectoryUrl,
   urlToFileSystemPath,
   urlToBasename,
+  readFile,
 } from "@jsenv/util"
-import { readPackageFile } from "./internal/readPackageFile.js"
-import { resolveNodeModule } from "./internal/resolveNodeModule.js"
 import { resolvePackageMain } from "./internal/resolvePackageMain.js"
 import { visitPackageImports } from "./internal/visitPackageImports.js"
 import { visitPackageExports } from "./internal/visitPackageExports.js"
+import { createFindNodeModulePackage } from "./internal/node-module-resolution.js"
 
 export const getImportMapFromNodeModules = async ({
   // nothing is actually listening for this cancellationToken for now
@@ -42,6 +42,7 @@ export const getImportMapFromNodeModules = async ({
 
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
   const rootProjectPackageFileUrl = resolveUrl("./package.json", rootProjectDirectoryUrl)
+  const findNodeModulePackage = createFindNodeModulePackage(packagesManualOverrides)
 
   const imports = {}
   const scopes = {}
@@ -466,10 +467,8 @@ ${urlToFileSystemPath(packageFileUrl)}
     if (dependencyName in dependenciesCache[packageFileUrl]) {
       return dependenciesCache[packageFileUrl][dependencyName]
     }
-    const dependencyPromise = resolveNodeModule({
-      logger,
-      rootProjectDirectoryUrl,
-      packagesManualOverrides,
+    const dependencyPromise = findNodeModulePackage({
+      projectDirectoryUrl: rootProjectDirectoryUrl,
       packageFileUrl,
       dependencyName,
     })
@@ -477,19 +476,14 @@ ${urlToFileSystemPath(packageFileUrl)}
     return dependencyPromise
   }
 
-  const projectPackageJsonObject = await readPackageFile(
-    projectPackageFileUrl,
-    packagesManualOverrides,
-  )
-
-  const packageFileUrl = projectPackageFileUrl
+  const projectPackageJsonObject = await readFile(projectPackageFileUrl, { as: "json" })
   const importerPackageFileUrl = projectPackageFileUrl
-  markPackageAsSeen(packageFileUrl, importerPackageFileUrl)
+  markPackageAsSeen(projectPackageFileUrl, importerPackageFileUrl)
 
   const packageName = projectPackageJsonObject.name
   if (typeof packageName === "string") {
     await visit({
-      packageFileUrl,
+      packageFileUrl: projectPackageFileUrl,
       packageName: projectPackageJsonObject.name,
       packageJsonObject: projectPackageJsonObject,
       importerPackageFileUrl,
@@ -501,7 +495,7 @@ ${urlToFileSystemPath(packageFileUrl)}
 --- package name field ---
 ${packageName}
 --- package.json file path ---
-${packageFileUrl}`)
+${projectPackageFileUrl}`)
   }
 
   // remove useless duplicates (scoped key+value already defined on imports)
