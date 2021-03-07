@@ -10,6 +10,7 @@ import {
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageExports } from "./visitPackageExports.js"
 import { createFindNodeModulePackage } from "./node-module-resolution.js"
+// import { visitPackageImportMap } from "./visitPackageImportmap.js"
 
 export const getImportMapFromPackageFiles = async ({
   // nothing is actually listening for this cancellationToken for now
@@ -18,8 +19,6 @@ export const getImportMapFromPackageFiles = async ({
   // cancellationToken = createCancellationTokenForProcess(),
   logLevel,
   projectDirectoryUrl,
-  rootProjectDirectoryUrl,
-
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   packagesExportsPreference = ["import", "browser"],
   packagesExportsIncluded = true,
@@ -30,20 +29,40 @@ export const getImportMapFromPackageFiles = async ({
   const logger = createLogger({ logLevel })
 
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
-  if (typeof rootProjectDirectoryUrl === "undefined") {
-    rootProjectDirectoryUrl = projectDirectoryUrl
-  } else {
-    rootProjectDirectoryUrl = assertAndNormalizeDirectoryUrl(rootProjectDirectoryUrl)
-  }
 
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
-  const rootProjectPackageFileUrl = resolveUrl("./package.json", rootProjectDirectoryUrl)
   const findNodeModulePackage = createFindNodeModulePackage(packagesManualOverrides)
 
   const imports = {}
   const scopes = {}
-  const seen = {}
+  const addTopLevelImportMapping = ({ from, to }) => {
+    // we could think it's useless to remap from with to
+    // however it can be used to ensure a weaker remapping
+    // does not win over this specific file or folder
+    if (from === to) {
+      /**
+       * however remapping '/' to '/' is truly useless
+       * moreover it would make wrapImportMap create something like
+       * {
+       *   imports: {
+       *     "/": "/.dist/best/"
+       *   }
+       * }
+       * that would append the wrapped folder twice
+       * */
+      if (from === "/") return
+    }
 
+    imports[from] = to
+  }
+  const addScopedImportMapping = ({ scope, from, to }) => {
+    scopes[scope] = {
+      ...(scopes[scope] || {}),
+      [from]: to,
+    }
+  }
+
+  const seen = {}
   const markPackageAsSeen = (packageFileUrl, importerPackageFileUrl) => {
     if (packageFileUrl in seen) {
       seen[packageFileUrl].push(importerPackageFileUrl)
@@ -51,7 +70,6 @@ export const getImportMapFromPackageFiles = async ({
       seen[packageFileUrl] = [importerPackageFileUrl]
     }
   }
-
   const packageIsSeen = (packageFileUrl, importerPackageFileUrl) => {
     return packageFileUrl in seen && seen[packageFileUrl].includes(importerPackageFileUrl)
   }
@@ -101,6 +119,13 @@ export const getImportMapFromPackageFiles = async ({
       packageJsonObject,
       packageInfo,
     })
+
+    // const importsForPackageImportmap = await visitPackageImportMap({
+    //   logger,
+    //   packageFileUrl,
+    //   packageJsonObject,
+    //   projectDirectoryUrl,
+    // })
 
     if (packagesSelfReference) {
       const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
@@ -236,13 +261,14 @@ export const getImportMapFromPackageFiles = async ({
       importerIsRoot,
       importerRelativeUrl,
       packageIsRoot,
-      packageIsProject,
       packageDirectoryUrl,
       packageDirectoryUrlExpected,
     },
   }) => {
-    const self = packageIsRoot || packageIsProject
-    if (self && !packagesSelfReference) return
+    const self = packageIsRoot
+    if (self && !packagesSelfReference) {
+      return
+    }
 
     const mainFileUrl = await resolvePackageMain({
       packageFileUrl,
@@ -255,7 +281,7 @@ export const getImportMapFromPackageFiles = async ({
     // or a main that does not lead to an actual file
     if (mainFileUrl === null) return
 
-    const mainFileRelativeUrl = urlToRelativeUrl(mainFileUrl, rootProjectDirectoryUrl)
+    const mainFileRelativeUrl = urlToRelativeUrl(mainFileUrl, projectDirectoryUrl)
     const from = packageName
     const to = `./${mainFileRelativeUrl}`
 
@@ -332,71 +358,29 @@ export const getImportMapFromPackageFiles = async ({
   }
 
   const computePackageInfo = ({ packageFileUrl, packageName, importerPackageFileUrl }) => {
-    const importerIsRoot = importerPackageFileUrl === rootProjectPackageFileUrl
-
-    const importerIsProject = importerPackageFileUrl === projectPackageFileUrl
+    const importerIsRoot = importerPackageFileUrl === projectPackageFileUrl
 
     const importerPackageDirectoryUrl = resolveUrl("./", importerPackageFileUrl)
 
     const importerRelativeUrl = importerIsRoot
-      ? `${urlToBasename(rootProjectDirectoryUrl.slice(0, -1))}/`
-      : urlToRelativeUrl(importerPackageDirectoryUrl, rootProjectDirectoryUrl)
+      ? `${urlToBasename(projectDirectoryUrl.slice(0, -1))}/`
+      : urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl)
 
-    const packageIsRoot = packageFileUrl === rootProjectPackageFileUrl
-
-    const packageIsProject = packageFileUrl === projectPackageFileUrl
+    const packageIsRoot = packageFileUrl === projectPackageFileUrl
 
     const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
 
-    let packageDirectoryUrlExpected
-    if (packageIsProject && !packageIsRoot) {
-      packageDirectoryUrlExpected = importerPackageDirectoryUrl
-    } else {
-      packageDirectoryUrlExpected = `${importerPackageDirectoryUrl}node_modules/${packageName}/`
-    }
+    const packageDirectoryUrlExpected = `${importerPackageDirectoryUrl}node_modules/${packageName}/`
 
-    const packageDirectoryRelativeUrl = urlToRelativeUrl(
-      packageDirectoryUrl,
-      rootProjectDirectoryUrl,
-    )
+    const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
 
     return {
       importerIsRoot,
-      importerIsProject,
       importerRelativeUrl,
       packageIsRoot,
-      packageIsProject,
       packageDirectoryUrl,
       packageDirectoryUrlExpected,
       packageDirectoryRelativeUrl,
-    }
-  }
-
-  const addTopLevelImportMapping = ({ from, to }) => {
-    // we could think it's useless to remap from with to
-    // however it can be used to ensure a weaker remapping
-    // does not win over this specific file or folder
-    if (from === to) {
-      /**
-       * however remapping '/' to '/' is truly useless
-       * moreover it would make wrapImportMap create something like
-       * {
-       *   imports: {
-       *     "/": "/.dist/best/"
-       *   }
-       * }
-       * that would append the wrapped folder twice
-       * */
-      if (from === "/") return
-    }
-
-    imports[from] = to
-  }
-
-  const addScopedImportMapping = ({ scope, from, to }) => {
-    scopes[scope] = {
-      ...(scopes[scope] || {}),
-      [from]: to,
     }
   }
 
@@ -409,7 +393,7 @@ export const getImportMapFromPackageFiles = async ({
       return dependenciesCache[packageFileUrl][dependencyName]
     }
     const dependencyPromise = findNodeModulePackage({
-      projectDirectoryUrl: rootProjectDirectoryUrl,
+      projectDirectoryUrl,
       packageFileUrl,
       dependencyName,
     })
