@@ -8,7 +8,6 @@ import {
   readFile,
 } from "@jsenv/util"
 import { resolvePackageMain } from "./resolvePackageMain.js"
-import { visitPackageImports } from "./visitPackageImports.js"
 import { visitPackageExports } from "./visitPackageExports.js"
 import { createFindNodeModulePackage } from "./node-module-resolution.js"
 
@@ -25,7 +24,6 @@ export const getImportMapFromPackages = async ({
   packagesExportsPreference = ["import", "browser"],
   packagesExportsIncluded = true,
   packagesSelfReference = true,
-  packagesImportsIncluded = true,
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
 }) => {
@@ -103,53 +101,6 @@ export const getImportMapFromPackages = async ({
       packageJsonObject,
       packageInfo,
     })
-
-    if (packagesImportsIncluded && "imports" in packageJsonObject) {
-      const importsForPackageImports = visitPackageImports({
-        logger,
-        packageFileUrl,
-        packageName,
-        packageJsonObject,
-        packageInfo,
-      })
-
-      const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
-      Object.keys(importsForPackageImports).forEach((from) => {
-        const to = importsForPackageImports[from]
-
-        if (packageIsRoot) {
-          addTopLevelImportMapping({ from, to })
-        } else {
-          const toScoped =
-            to[0] === "/"
-              ? to
-              : `./${packageDirectoryRelativeUrl}${to.startsWith("./") ? to.slice(2) : to}`
-
-          addScopedImportMapping({
-            scope: `./${packageDirectoryRelativeUrl}`,
-            from,
-            to: toScoped,
-          })
-
-          // when a package says './' maps to './'
-          // we must add something to say if we are already inside the package
-          // no need to ensure leading slash are scoped to the package
-          if (from === "./" && to === "./") {
-            addScopedImportMapping({
-              scope: `./${packageDirectoryRelativeUrl}`,
-              from: `./${packageDirectoryRelativeUrl}`,
-              to: `./${packageDirectoryRelativeUrl}`,
-            })
-          } else if (from === "/" && to === "/") {
-            addScopedImportMapping({
-              scope: `./${packageDirectoryRelativeUrl}`,
-              from: `./${packageDirectoryRelativeUrl}`,
-              to: `./${packageDirectoryRelativeUrl}`,
-            })
-          }
-        }
-      })
-    }
 
     if (packagesSelfReference) {
       const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
