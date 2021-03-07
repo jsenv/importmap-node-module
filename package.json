@@ -28,9 +28,9 @@
     "/index.js"
   ],
   "scripts": {
+    "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
     "test": "node ./script/test/test.js",
     "test-with-coverage": "npm run test -- --coverage",
-    "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
     "prettier-format": "node ./script/prettier-format/prettier-format.js",
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",

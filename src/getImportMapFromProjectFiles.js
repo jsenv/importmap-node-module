@@ -1,10 +1,10 @@
 import { sortImportMap } from "@jsenv/import-map"
-import { getImportMapFromPackageFiles } from "./internal/package/getImportMapFromPackageFiles.js"
+import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"
 
 export const getImportMapFromProjectFiles = async ({
   logLevel,
   projectDirectoryUrl,
-  target = "browser",
+  runtime = "browser",
   dev = false,
   ...rest
 }) => {
@@ -15,7 +15,7 @@ export const getImportMapFromProjectFiles = async ({
       projectDirectoryUrl,
       packagesExportsPreference: [
         "import",
-        ...(targetExportsPreferences[target] || []),
+        ...(runtimeExportsPreferences[runtime] || [runtime]),
         ...(dev ? "development" : "production"),
       ],
       projectPackageDevDependenciesIncluded: dev,
@@ -26,7 +26,7 @@ export const getImportMapFromProjectFiles = async ({
   return importMapFromPackageFiles
 }
 
-const targetExportsPreferences = {
+const runtimeExportsPreferences = {
   browser: ["browser"],
   node: ["node", "require"],
 }
