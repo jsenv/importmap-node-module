@@ -7,7 +7,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 {
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
-    target: "node",
+    runtime: "node",
     packagesSelfReference: false,
   })
   const actual = importMap
@@ -23,7 +23,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 {
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
-    target: "browser",
+    runtime: "browser",
     packagesSelfReference: false,
   })
   const actual = importMap

@@ -8,7 +8,7 @@ generateImportMapForProject(
   [
     getImportMapFromProjectFiles({
       projectDirectoryUrl,
-      target: "node",
+      runtime: "node",
       dev: true,
     }),
   ],
