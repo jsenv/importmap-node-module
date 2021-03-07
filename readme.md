@@ -287,7 +287,15 @@ await generateImportMapForProject(importMapInputs, {
 
 # getImportMapFromProjectFiles
 
-`getImportMapFromProjectFiles` is an async function returning an importMap object computed from infos found in `package.json` files and js files. Your `package.json`, your js files and all the one found in `node_modules` directory are used.
+`getImportMapFromProjectFiles` is an async function returning an importMap object computed from infos found in `package.json` files and source files.
+
+The following source of information are used to create complete and coherent mappings in the importmap.
+
+- Your `package.json`.
+- All your `package.json` `dependencies` are searched into `node_modules`, recursively.
+- All file imported by your main entry file (declared in your `package.json`), recursively.
+
+
 
 <details>
   <summary>getImportMapFromProjectFiles code example</summary>
