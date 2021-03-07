@@ -8,6 +8,7 @@ import {
   readFile,
 } from "@jsenv/util"
 import { resolvePackageMain } from "./resolvePackageMain.js"
+import { visitPackageImportMap } from "./visitPackageImportMap.js"
 import { visitPackageExports } from "./visitPackageExports.js"
 import { createFindNodeModulePackage } from "./node-module-resolution.js"
 
@@ -58,18 +59,11 @@ export const getImportMapFromPackageFiles = async ({
     // when a package says './' maps to './'
     // we must add something to say if we are already inside the package
     // no need to ensure leading slash are scoped to the package
-    if (from === "./" && to === "./") {
+    if (from === "./" && to === scope) {
       addScopedImportMapping({
         scope,
         from: scope,
         to: scope,
-      })
-    }
-    if (from === "/" && to === "/") {
-      addScopedImportMapping({
-        scope,
-        from,
-        to,
       })
     }
 
@@ -146,6 +140,54 @@ export const getImportMapFromPackageFiles = async ({
       // packageDirectoryUrlExpected,
     } = packageInfo
 
+    const addImportMapForPackage = (importMap) => {
+      if (packageIsRoot) {
+        const { imports = {}, scopes = {} } = importMap
+        Object.keys(imports).forEach((from) => {
+          addTopLevelImportMapping({
+            from,
+            to: imports[from],
+          })
+        })
+        Object.keys(scopes).forEach((scope) => {
+          const scopeMappings = scopes[scope]
+          Object.keys(scopeMappings).forEach((key) => {
+            addScopedImportMapping({
+              scope,
+              from: key,
+              to: scopeMappings[key],
+            })
+          })
+        })
+        return
+      }
+
+      const { imports = {}, scopes = {} } = importMap
+      const scope = `./${packageDirectoryRelativeUrl}`
+      Object.keys(imports).forEach((from) => {
+        const to = imports[from]
+        const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl)
+        addScopedImportMapping({
+          scope,
+          from,
+          to: toMoved,
+        })
+      })
+      Object.keys(scopes).forEach((scope) => {
+        const scopeMappings = scopes[scope]
+        const scopeMoved = moveMappingValue(scope, packageFileUrl, projectDirectoryUrl)
+        Object.keys(scopeMappings).forEach((key) => {
+          const to = scopeMappings[key]
+          const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl)
+          addScopedImportMapping({
+            scope: scopeMoved,
+            from: key,
+            to: toMoved,
+          })
+        })
+      })
+    }
+
     const addMappingsForPackageAndImporter = (mappings) => {
       if (packageIsRoot) {
         if (!packagesSelfReference) {
@@ -203,6 +245,14 @@ export const getImportMapFromPackageFiles = async ({
         addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
       })
     }
+
+    const importsFromPackageField = await visitPackageImportMap({
+      logger,
+      packageFileUrl,
+      packageJsonObject,
+      projectDirectoryUrl,
+    })
+    addImportMapForPackage(importsFromPackageField)
 
     if (packagesSelfReference) {
       const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
@@ -497,6 +547,22 @@ const packageDependenciesFromPackageObject = (packageObject, { includeDevDepende
   }
 
   return packageDependencies
+}
+
+const moveMappingValue = (address, from, to) => {
+  const url = resolveUrl(address, from)
+  const relativeUrl = urlToRelativeUrl(url, to)
+  if (relativeUrl.startsWith("../")) {
+    return relativeUrl
+  }
+  if (relativeUrl.startsWith("./")) {
+    return relativeUrl
+  }
+  if (/^[a-zA-Z]{2,}:/.test(relativeUrl)) {
+    // has sheme
+    return relativeUrl
+  }
+  return `./${relativeUrl}`
 }
 
 const formatWilcardExportsIgnoredWarning = ({ key, value, packageFileUrl }) => {
