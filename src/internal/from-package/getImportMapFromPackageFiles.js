@@ -10,7 +10,6 @@ import {
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageExports } from "./visitPackageExports.js"
 import { createFindNodeModulePackage } from "./node-module-resolution.js"
-// import { visitPackageImportMap } from "./visitPackageImportmap.js"
 
 export const getImportMapFromPackageFiles = async ({
   // nothing is actually listening for this cancellationToken for now
@@ -56,6 +55,24 @@ export const getImportMapFromPackageFiles = async ({
     imports[from] = to
   }
   const addScopedImportMapping = ({ scope, from, to }) => {
+    // when a package says './' maps to './'
+    // we must add something to say if we are already inside the package
+    // no need to ensure leading slash are scoped to the package
+    if (from === "./" && to === "./") {
+      addScopedImportMapping({
+        scope,
+        from: scope,
+        to: scope,
+      })
+    }
+    if (from === "/" && to === "/") {
+      addScopedImportMapping({
+        scope,
+        from,
+        to,
+      })
+    }
+
     scopes[scope] = {
       ...(scopes[scope] || {}),
       [from]: to,
@@ -120,12 +137,72 @@ export const getImportMapFromPackageFiles = async ({
       packageInfo,
     })
 
-    // const importsForPackageImportmap = await visitPackageImportMap({
-    //   logger,
-    //   packageFileUrl,
-    //   packageJsonObject,
-    //   projectDirectoryUrl,
-    // })
+    const {
+      importerIsRoot,
+      importerRelativeUrl,
+      packageIsRoot,
+      packageDirectoryRelativeUrl,
+      // packageDirectoryUrl,
+      // packageDirectoryUrlExpected,
+    } = packageInfo
+
+    const addMappingsForPackageAndImporter = (mappings) => {
+      if (packageIsRoot) {
+        if (!packagesSelfReference) {
+          // ignore exports
+          return
+        }
+
+        Object.keys(mappings).forEach((from) => {
+          const to = mappings[from]
+          addTopLevelImportMapping({
+            from,
+            to,
+          })
+        })
+        return
+      }
+
+      if (importerIsRoot) {
+        // own package mappings available to himself
+        Object.keys(mappings).forEach((from) => {
+          const to = mappings[from]
+          // importer is the package himself, keep exports scoped
+          // otherwise the dependency mappings would override the importer mappings.
+          if (importerPackageJsonObject.name === packageName) {
+            addScopedImportMapping({
+              scope: `./${packageDirectoryRelativeUrl}`,
+              from,
+              to,
+            })
+            if (from === packageName || from in imports === false) {
+              addTopLevelImportMapping({ from, to })
+            }
+          } else {
+            addTopLevelImportMapping({ from, to })
+          }
+        })
+
+        // if importer is root no need to make package mappings available to the importer
+        // because they are already on top level mappings
+        return
+      }
+
+      Object.keys(mappings).forEach((from) => {
+        const to = mappings[from]
+
+        // own package exports available to himself
+        addScopedImportMapping({
+          scope: `./${packageDirectoryRelativeUrl}`,
+          from,
+          to,
+        })
+        // now make package exports available to the importer
+        // here if the importer is himself we could do stuff
+        // we should even handle the case earlier to prevent top level remapping
+        addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
+      })
+    }
 
     if (packagesSelfReference) {
       const { packageIsRoot, packageDirectoryRelativeUrl } = packageInfo
@@ -148,7 +225,7 @@ export const getImportMapFromPackageFiles = async ({
     }
 
     if (packagesExportsIncluded && "exports" in packageJsonObject) {
-      const importsForPackageExports = {}
+      const mappingsFromPackageExports = {}
       visitPackageExports({
         packageFileUrl,
         packageJsonObject,
@@ -160,7 +237,7 @@ export const getImportMapFromPackageFiles = async ({
           const to = value
 
           if (from.indexOf("*") === -1) {
-            importsForPackageExports[from] = to
+            mappingsFromPackageExports[from] = to
             return
           }
 
@@ -172,7 +249,7 @@ export const getImportMapFromPackageFiles = async ({
           ) {
             const fromWithouTrailingStar = from.slice(0, -1)
             const toWithoutTrailingStar = to.slice(0, -1)
-            importsForPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
+            mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
             return
           }
 
@@ -190,66 +267,7 @@ export const getImportMapFromPackageFiles = async ({
       `)
         },
       })
-
-      const {
-        importerIsRoot,
-        importerRelativeUrl,
-        packageIsRoot,
-        packageDirectoryRelativeUrl,
-        // packageDirectoryUrl,
-        // packageDirectoryUrlExpected,
-      } = packageInfo
-
-      if (packageIsRoot && packagesSelfReference) {
-        Object.keys(importsForPackageExports).forEach((from) => {
-          const to = importsForPackageExports[from]
-          addTopLevelImportMapping({
-            from,
-            to,
-          })
-        })
-      } else if (packageIsRoot) {
-        // ignore exports
-      } else {
-        Object.keys(importsForPackageExports).forEach((from) => {
-          const to = importsForPackageExports[from]
-
-          // own package exports available to himself
-          if (importerIsRoot) {
-            // importer is the package himself, keep exports scoped
-            // otherwise the dependency exports would override the package exports.
-            if (importerPackageJsonObject.name === packageName) {
-              addScopedImportMapping({
-                scope: `./${packageDirectoryRelativeUrl}`,
-                from,
-                to,
-              })
-              if (from === packageName || from in imports === false) {
-                addTopLevelImportMapping({ from, to })
-              }
-            } else {
-              addTopLevelImportMapping({ from, to })
-            }
-          } else {
-            addScopedImportMapping({
-              scope: `./${packageDirectoryRelativeUrl}`,
-              from,
-              to,
-            })
-          }
-
-          // now make package exports available to the importer
-          // if importer is root no need because the top level remapping does it
-          if (importerIsRoot) {
-            return
-          }
-
-          // now make it available to the importer
-          // here if the importer is himself we could do stuff
-          // we should even handle the case earlier to prevent top level remapping
-          addScopedImportMapping({ scope: `./${importerRelativeUrl}`, from, to })
-        })
-      }
+      addMappingsForPackageAndImporter(mappingsFromPackageExports)
     }
   }
 
