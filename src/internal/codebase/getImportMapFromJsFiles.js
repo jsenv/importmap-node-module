@@ -34,7 +34,7 @@ import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunctionByUrl.js"
 import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
 import { showSource } from "./showSource.js"
 
-export const getImportMapFromCodebase = async ({
+export const getImportMapFromJsFiles = async ({
   logger,
   projectDirectoryUrl,
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
