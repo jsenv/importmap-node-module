@@ -224,7 +224,7 @@ However using `*` to add file extension as in
 }
 ```
 
-**is not supported in importmap**. This is tracked in https://github.com/WICG/import-maps/issues/232.
+**is not supported in importmap**. Nothing suggests it will be supported for now, read more in https://github.com/WICG/import-maps/issues/232.
 
 # generateImportMapForProject
 
@@ -294,8 +294,6 @@ The following source of information are used to create complete and coherent map
 - Your `package.json`.
 - All your `package.json` `dependencies` are searched into `node_modules`, recursively.
 - All file imported by your main entry file (declared in your `package.json`), recursively.
-
-
 
 <details>
   <summary>getImportMapFromProjectFiles code example</summary>
