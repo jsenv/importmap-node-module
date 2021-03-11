@@ -44,8 +44,8 @@ export const parseSpecifiersFromFile = async (
   const addSpecifier = ({ path, type }) => {
     const specifier = path.node.value
     specifiers[specifier] = {
-      // TODO: pass path.node.range as well, or dieally something like
-      // line + column
+      line: path.node.loc.start.line,
+      column: path.node.loc.start.column,
       type,
     }
   }

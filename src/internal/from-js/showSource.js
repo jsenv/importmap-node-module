@@ -86,11 +86,11 @@ const showSourceLocation = (
       if (column === undefined) {
         return `${mark(">")} ${lineFormatted}`
       }
-      const spacing = stringToSpaces(
-        `${asideSource} ${lineSourceTruncated.slice(0, column - columnRange.start - 1)}`,
-      )
-      return `${mark(">")} ${lineFormatted}
-  ${spacing}${mark("^")}`
+      const lineSourceUntilColumn = lineSourceTruncated.slice(0, column - columnRange.start)
+      const spacing = stringToSpaces(lineSourceUntilColumn)
+      const mainLineFormatted = `${mark(">")} ${lineFormatted}
+  ${" ".repeat(lineNumberWidth)} ${aside("|")}${spacing}${mark("^")}`
+      return mainLineFormatted
     }
     return `  ${lineFormatted}`
   }).join(`

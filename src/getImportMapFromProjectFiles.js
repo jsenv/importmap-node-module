@@ -40,7 +40,7 @@ export const getImportMapFromProjectFiles = async ({
     : {}
   importMapFromJsFiles = sortImportMap(importMapFromJsFiles)
 
-  return composeTwoImportMaps(importMapFromPackageFiles, importMapFromJsFiles)
+  return sortImportMap(composeTwoImportMaps(importMapFromPackageFiles, importMapFromJsFiles))
 }
 
 const runtimeExportsPreferences = {

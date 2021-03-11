@@ -1,4 +1,4 @@
-import { resolveUrl, readFileSystemNodeStat, urlToBasename, urlToExtension } from "@jsenv/util"
+import { resolveUrl, readFileSystemNodeStat, urlToFilename, urlToExtension } from "@jsenv/util"
 import { firstOperationMatching } from "@jsenv/cancellation"
 
 export const resolveFile = async (fileUrl, { magicExtensions }) => {
@@ -19,7 +19,7 @@ export const resolveFile = async (fileUrl, { magicExtensions }) => {
     if (extensionLeadingToAFile === null) {
       return null
     }
-    return `${indexFileUrl}.${extensionLeadingToAFile}`
+    return `${indexFileUrl}${extensionLeadingToAFile}`
   }
 
   // file not found and it has an extension
@@ -35,17 +35,17 @@ export const resolveFile = async (fileUrl, { magicExtensions }) => {
   }
 
   // magic extension worked
-  return `${fileUrl}.${extensionLeadingToAFile}`
+  return `${fileUrl}${extensionLeadingToAFile}`
 }
 
 const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
-  const fileDirectoryUrl = resolveUrl("./", fileUrl)
-  const fileBasename = urlToBasename(fileUrl)
+  const urlDirectoryUrl = resolveUrl("./", fileUrl)
+  const urlFilename = urlToFilename(fileUrl)
   const extensionLeadingToFile = await firstOperationMatching({
     array: magicExtensions,
     start: async (extensionCandidate) => {
-      const filePathCandidate = `${fileDirectoryUrl}/${fileBasename}.${extensionCandidate}`
-      const stats = await readFileSystemNodeStat(filePathCandidate, { nullIfNotFound: true })
+      const urlCandidate = `${urlDirectoryUrl}${urlFilename}${extensionCandidate}`
+      const stats = await readFileSystemNodeStat(urlCandidate, { nullIfNotFound: true })
       return stats && stats.isFile() ? extensionCandidate : null
     },
     predicate: (extension) => Boolean(extension),

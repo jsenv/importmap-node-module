@@ -1,8 +1,8 @@
 import { createDetailedMessage } from "@jsenv/logger"
 import { resolveUrl, urlToFileSystemPath, urlToExtension } from "@jsenv/util"
-import { resolveFile } from "./resolveFile.js"
+import { resolveFile } from "../resolveFile.js"
 
-const magicExtensions = ["js", "json", "node"]
+const magicExtensions = [".js", ".json", ".node"]
 
 export const resolvePackageMain = ({
   logger,
@@ -118,6 +118,6 @@ const formatFileNotFoundLog = ({ specifier, importedIn, fileUrl, magicExtensions
   return createDetailedMessage(`Cannot find file for "${specifier}"`, {
     "imported in": importedIn,
     "file url": fileUrl,
-    ...(urlToExtension(fileUrl) === "" ? { ["extensions tried"]: magicExtensions.join(`,`) } : {}),
+    ...(urlToExtension(fileUrl) === "" ? { ["extensions tried"]: magicExtensions.join(`, `) } : {}),
   })
 }

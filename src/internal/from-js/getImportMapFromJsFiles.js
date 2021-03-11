@@ -23,14 +23,15 @@ si c'est pas un bare specifier et que le fichier est pas trouvé
 */
 
 import { createLogger, createDetailedMessage } from "@jsenv/logger"
-import { readFile, urlToExtension } from "@jsenv/util"
-import { resolveImport } from "@jsenv/import-map"
+import { resolveUrl, readFile, urlToExtension, urlToRelativeUrl } from "@jsenv/util"
+import { normalizeImportMap, resolveImport } from "@jsenv/import-map"
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
 } from "../memoizeAsyncFunction.js"
 import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
 import { showSource } from "./showSource.js"
+import { resolveFile } from "../resolveFile.js"
 
 const BARE_SPECIFIER_ERROR = {}
 
@@ -41,10 +42,26 @@ export const getImportMapFromJsFiles = async ({
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
 }) => {
   const logger = createLogger({ logLevel })
+  const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
+
+  importMap = normalizeImportMap(importMap, projectDirectoryUrl)
+
+  const imports = {}
+  const scopes = {}
+  const addMapping = ({ scope, from, to }) => {
+    if (scope) {
+      scopes[scope] = {
+        ...(scopes[scope] || {}),
+        [from]: to,
+      }
+    } else {
+      imports[from] = to
+    }
+  }
 
   const visitFile = async (specifier, importer, { importedBy }) => {
     let fileUrl
-    let bareSpecifier = false
+    let gotBareSpecifierError = false
 
     try {
       fileUrl = resolveImport({
@@ -58,41 +75,58 @@ export const getImportMapFromJsFiles = async ({
       if (e !== BARE_SPECIFIER_ERROR) {
         throw e
       }
-      bareSpecifier = true
+      gotBareSpecifierError = true
     }
 
-    // TODO: auto ajouter importer extension dans les magic extensions
+    const fileUrlOnFileSystem = await resolveFile(fileUrl, {
+      magicExtensions: magicExtensionWithImporterExtension(magicExtensions, importer),
+    })
 
-    if (bareSpecifier) {
-      // - s'il existe un fichier avec le meme nom
-      // -> suggerer un remapping et lajouter de force
-      // - si magic extension
-      // -> suggerer un remapping et l'ajouter de force
-    } else {
-      // - si magic extension
-      // -> suggerer un remapping et l'ajouter de force
-    }
-
-    if (!fileUrl) {
+    if (!fileUrlOnFileSystem) {
       logger.warn(
         formatFileNotFoundLog({
           specifier,
           importedBy,
+          fileUrl,
           magicExtensions,
         }),
       )
       return
     }
 
-    const fileContent = await readFileContent(fileUrl)
-    const specifiers = await parseSpecifiersFromFile(fileUrl, { fileContent })
+    const needsAutoMapping = fileUrlOnFileSystem !== fileUrl || gotBareSpecifierError
+    if (needsAutoMapping) {
+      const packageDirectoryUrl = packageDirectoryUrlFromUrl(fileUrl, projectDirectoryUrl)
+      const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
+      const autoMapping = {
+        scope:
+          packageFileUrl === projectPackageFileUrl
+            ? undefined
+            : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`,
+        from: specifier,
+        to: `./${urlToRelativeUrl(fileUrlOnFileSystem, projectDirectoryUrl)}`,
+      }
+      addMapping(autoMapping)
+      logger.warn(
+        formatAutoMappingSpecifierWarning({
+          specifier,
+          importedBy,
+          autoMapping,
+          closestPackageDirectoryUrl: packageDirectoryUrl,
+          closestPackageObject: await readFile(packageFileUrl, { as: "json" }),
+        }),
+      )
+    }
+
+    const fileContent = await readFileContent(fileUrlOnFileSystem)
+    const specifiers = await parseSpecifiersFromFile(fileUrlOnFileSystem, { fileContent })
 
     await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
-        await visitFileMemoized(specifier, fileUrl, {
+        await visitFileMemoized(specifier, fileUrlOnFileSystem, {
           importedBy: showSource({
-            url: fileUrl,
+            url: fileUrlOnFileSystem,
             line: specifierInfo.line,
             column: specifierInfo.column,
             source: fileContent,
@@ -107,19 +141,129 @@ export const getImportMapFromJsFiles = async ({
     return readFile(fileUrl, { as: "string" })
   })
 
-  // TODO: it's not ./ but the packagename
-  // found in package.json to get the main file
-  await visitFileMemoized("./", projectDirectoryUrl, {
-    importedBy: `getImportMapFromJsFiles`,
+  const projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
+  await visitFileMemoized(projectPackageObject.name, projectPackageFileUrl, {
+    importedBy: projectPackageObject.exports
+      ? `${projectPackageFileUrl}#exports`
+      : `${projectPackageFileUrl}`,
+  })
+
+  return { imports, scopes }
+}
+
+const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
+  const relativeUrl = urlToRelativeUrl(url, projectDirectoryUrl)
+
+  const lastNodeModulesDirectoryStartIndex = relativeUrl.lastIndexOf("node_modules/")
+  if (lastNodeModulesDirectoryStartIndex === -1) {
+    return projectDirectoryUrl
+  }
+
+  const lastNodeModulesDirectoryEndIndex =
+    lastNodeModulesDirectoryStartIndex + `node_modules/`.length
+
+  const beforeNodeModulesLastDirectory = relativeUrl.slice(0, lastNodeModulesDirectoryEndIndex)
+  const afterLastNodeModulesDirectory = relativeUrl.slice(lastNodeModulesDirectoryEndIndex)
+  const remainingDirectories = afterLastNodeModulesDirectory.split("/")
+
+  if (afterLastNodeModulesDirectory[0] === "@") {
+    // scoped package
+    return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories
+      .slice(0, 2)
+      .join("/")}`
+  }
+  return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories[0]}/`
+}
+
+const magicExtensionWithImporterExtension = (magicExtensions, importer) => {
+  const importerExtension = urlToExtension(importer)
+  const magicExtensionsWithoutImporterExtension = magicExtensions.filter(
+    (ext) => ext !== importerExtension,
+  )
+  return [importerExtension, ...magicExtensionsWithoutImporterExtension]
+}
+
+const formatFileNotFoundLog = ({ specifier, importedBy, fileUrl, magicExtensions }) => {
+  return createDetailedMessage(`Cannot find file for "${specifier}"`, {
+    "imported by": importedBy,
+    "file url": fileUrl,
+    ...(urlToExtension(fileUrl) === "" ? { ["extensions tried"]: magicExtensions.join(`, `) } : {}),
   })
 }
 
-const formatFileNotFoundLog = ({ specifier, expectedUrl, magicExtensions, importedBy }) => {
-  return createDetailedMessage(`Cannot find file for "${specifier}"`, {
-    "imported by": importedBy,
-    "file url": expectedUrl,
-    ...(urlToExtension(expectedUrl) === ""
-      ? { ["extensions tried"]: magicExtensions.join(`,`) }
-      : {}),
-  })
+const formatAutoMappingSpecifierWarning = ({
+  importedBy,
+  autoMapping,
+  closestPackageDirectoryUrl,
+  closestPackageObject,
+}) => {
+  return `
+${createDetailedMessage(`Auto mapping ${autoMapping.from} to ${autoMapping.to}.`, {
+  "specifier origin": importedBy,
+  "suggestion": decideAutoMappingSuggestion({
+    autoMapping,
+    closestPackageDirectoryUrl,
+    closestPackageObject,
+  }),
+})}
+`
+}
+
+const decideAutoMappingSuggestion = ({
+  autoMapping,
+  closestPackageDirectoryUrl,
+  closestPackageObject,
+}) => {
+  if (typeof closestPackageObject.importmap === "string") {
+    const packageImportmapFileUrl = resolveUrl(
+      closestPackageObject.importmap,
+      closestPackageDirectoryUrl,
+    )
+
+    return `Add
+${mappingToImportmapString(autoMapping)}
+into ${packageImportmapFileUrl}.`
+  }
+
+  return `Add
+${mappingToExportsFieldString(autoMapping)}
+into ${closestPackageDirectoryUrl}package.json.`
+}
+
+const mappingToImportmapString = ({ scope, from, to }) => {
+  if (scope) {
+    return JSON.stringify(
+      {
+        scopes: {
+          [scope]: {
+            [from]: to,
+          },
+        },
+      },
+      null,
+      "  ",
+    )
+  }
+
+  return JSON.stringify(
+    {
+      imports: {
+        [from]: to,
+      },
+    },
+    null,
+    "  ",
+  )
+}
+
+const mappingToExportsFieldString = ({ from, to }) => {
+  return JSON.stringify(
+    {
+      exports: {
+        [from]: to,
+      },
+    },
+    null,
+    "  ",
+  )
 }
