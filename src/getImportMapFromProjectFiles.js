@@ -9,6 +9,7 @@ export const getImportMapFromProjectFiles = async ({
   moduleFormat = "esm",
   dev = false,
   jsFiles = false,
+  removeUnusedMappings = !dev,
   magicExtensions,
   ...rest
 }) => {
@@ -32,6 +33,7 @@ export const getImportMapFromProjectFiles = async ({
     ? await getImportMapFromJsFiles({
         logLevel,
         importMap: importMapFromPackageFiles,
+        removeUnusedMappings,
         projectDirectoryUrl,
         magicExtensions,
         packagesExportsPreference,

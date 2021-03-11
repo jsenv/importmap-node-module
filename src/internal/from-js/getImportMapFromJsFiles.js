@@ -1,25 +1,5 @@
 /*
 
-IL SERAIT BIEN DE CONNAITRE TOUTES LES IMPORTMAPS
-POUR PAS DIRE DE BETISES:
-- que ce soit parce que un bare specifier n'a pas de remapping
--> on pourrait ne pas log de warning dans ce cas
-mais c'est dommage
-
-- ou parce que on trouve pas un fichier (parce qu'il serait remap ailleurs sans etre un bare specifier)
--> use case rare mais pourquoi pas
-
-pour chaque bare specifier error
-(donc pas dans importmap des node_modules)
-
-- sinon
-  -> suggerer que c'est une dépendance qu'il faut ajouter au package.json
-  non plutot un log de type debug
-
-si c'est pas un bare specifier et que le fichier est pas trouvé
-
--> warning et puis c'est tout
-
 */
 
 import { createLogger, createDetailedMessage } from "@jsenv/logger"
@@ -39,12 +19,11 @@ export const getImportMapFromJsFiles = async ({
   logLevel,
   importMap,
   projectDirectoryUrl,
+  removeUnusedMappings,
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
 }) => {
   const logger = createLogger({ logLevel })
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
-
-  importMap = normalizeImportMap(importMap, projectDirectoryUrl)
 
   const imports = {}
   const scopes = {}
@@ -59,18 +38,43 @@ export const getImportMapFromJsFiles = async ({
     }
   }
 
+  const topLevelMappingsUsed = []
+  const scopedMappingsUsed = {}
+  const markMappingAsUsed = ({ scope, from, to }) => {
+    if (scope) {
+      if (scope in scopedMappingsUsed) {
+        scopedMappingsUsed[scope].push({ from, to })
+      } else {
+        scopedMappingsUsed[scope] = [{ from, to }]
+      }
+    } else {
+      topLevelMappingsUsed.push({ from, to })
+    }
+  }
+  const importMapNormalized = normalizeImportMap(importMap, projectDirectoryUrl)
+  const trackAndResolveImport = (specifier, importer) => {
+    return resolveImport({
+      specifier,
+      importer,
+      importMap: importMapNormalized,
+      defaultExtension: false,
+      onImportMapping: ({ scope, from }) => {
+        markMappingAsUsed({
+          scope,
+          from,
+          to: scope ? importMap.scopes[scope][from] : importMap.imports[from],
+        })
+      },
+      createBareSpecifierError: () => BARE_SPECIFIER_ERROR,
+    })
+  }
+
   const visitFile = async (specifier, importer, { importedBy }) => {
     let fileUrl
     let gotBareSpecifierError = false
 
     try {
-      fileUrl = resolveImport({
-        specifier,
-        importer,
-        importMap,
-        defaultExtension: false,
-        createBareSpecifierError: () => BARE_SPECIFIER_ERROR,
-      })
+      fileUrl = trackAndResolveImport(specifier, importer)
     } catch (e) {
       if (e !== BARE_SPECIFIER_ERROR) {
         throw e
@@ -107,6 +111,7 @@ export const getImportMapFromJsFiles = async ({
         to: `./${urlToRelativeUrl(fileUrlOnFileSystem, projectDirectoryUrl)}`,
       }
       addMapping(autoMapping)
+      markMappingAsUsed(autoMapping)
       logger.warn(
         formatAutoMappingSpecifierWarning({
           specifier,
@@ -147,6 +152,26 @@ export const getImportMapFromJsFiles = async ({
       ? `${projectPackageFileUrl}#exports`
       : `${projectPackageFileUrl}`,
   })
+
+  if (removeUnusedMappings) {
+    const importsUsed = {}
+    topLevelMappingsUsed.forEach(({ from, to }) => {
+      importsUsed[from] = to
+    })
+    const scopesUsed = {}
+    Object.keys(scopedMappingsUsed).forEach((scope) => {
+      const mappingsUsed = scopedMappingsUsed[scope]
+      const scopedMappings = {}
+      mappingsUsed.forEach(({ from, to }) => {
+        scopedMappings[from] = to
+      })
+      scopesUsed[scope] = scopedMappings
+    })
+    return {
+      imports: importsUsed,
+      scopes: scopesUsed,
+    }
+  }
 
   return { imports, scopes }
 }
