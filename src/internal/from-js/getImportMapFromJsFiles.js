@@ -12,41 +12,65 @@ mais c'est dommage
 pour chaque bare specifier error
 (donc pas dans importmap des node_modules)
 
-- s'il existe un fichier avec le meme nom
-  -> suggerer un remapping et lajouter de force
-- si en ajoutant une extension
-  -> suggerer un remapping et l'ajouter de force
 - sinon
   -> suggerer que c'est une dépendance qu'il faut ajouter au package.json
   non plutot un log de type debug
 
 si c'est pas un bare specifier et que le fichier est pas trouvé
-- si magic extension
-  -> suggerer un remapping et l'ajouter de force
+
 -> warning et puis c'est tout
 
 */
 
-import { createDetailedMessage } from "@jsenv/logger"
+import { createLogger, createDetailedMessage } from "@jsenv/logger"
 import { readFile, resolveUrl, urlToExtension } from "@jsenv/util"
-// import { resolveImport } from "@jsenv/import-map"
+import { resolveImport } from "@jsenv/import-map"
 import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunctionByUrl.js"
 import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
 import { showSource } from "./showSource.js"
 
+const BARE_SPECIFIER_ERROR = {}
+
 export const getImportMapFromJsFiles = async ({
-  logger,
+  logLevel,
+  importMap,
   projectDirectoryUrl,
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
-  target,
+  runtime,
   packagePreferences,
 }) => {
+  const logger = createLogger({ logLevel })
+
   const visitFile = async (specifier, importer, { importedIn }) => {
-    const fileUrl = await resolveUrl({
-      specifier,
-      importer,
-      magicExtensions,
-    })
+    let fileUrl
+    let bareSpecifier = false
+
+    try {
+      fileUrl = resolveImport({
+        specifier,
+        importer,
+        importMap,
+        defaultExtension: false,
+        createBareSpecifierError: () => BARE_SPECIFIER_ERROR,
+      })
+    } catch (e) {
+      if (e !== BARE_SPECIFIER_ERROR) {
+        throw e
+      }
+      bareSpecifier = true
+    }
+
+    // TODO: auto ajouter importer extension dans les magic extensions
+
+    if (bareSpecifier) {
+      // - s'il existe un fichier avec le meme nom
+      // -> suggerer un remapping et lajouter de force
+      // - si magic extension
+      // -> suggerer un remapping et l'ajouter de force
+    } else {
+      // - si magic extension
+      // -> suggerer un remapping et l'ajouter de force
+    }
 
     if (!fileUrl) {
       logger.warn(
@@ -87,7 +111,7 @@ export const getImportMapFromJsFiles = async ({
   const rootMainInfo = mainFromPackageObject({
     packageObject: rootPackageObject,
     packageFileUrl: rootPackageFileUrl,
-    target,
+    runtime,
     packagePreferences,
   })
   await visitFileMemoized(rootMainInfo.specifier, rootPackageFileUrl, {
@@ -95,7 +119,7 @@ export const getImportMapFromJsFiles = async ({
   })
 }
 
-const mainFromPackageObject = ({ packageObject, packageFileUrl, target }) => {
+const mainFromPackageObject = ({ packageObject, packageFileUrl, runtime }) => {
   // idéalement on lirait aussi package.exports
   // pour y trouver le point d'entrée principal
   // soit ".", soit la chaine directe
@@ -114,7 +138,7 @@ const mainFromPackageObject = ({ packageObject, packageFileUrl, target }) => {
     }
   }
 
-  if (target === "browser" && "browser" in packageObject) {
+  if (runtime === "browser" && "browser" in packageObject) {
     return {
       specifier: packageObject.browser,
       importedIn: `${packageFileUrl}#browser`,
