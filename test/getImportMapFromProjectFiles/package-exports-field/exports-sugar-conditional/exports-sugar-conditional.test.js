@@ -2,17 +2,17 @@ import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/util"
 import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
-const testDirectoryUrl = resolveUrl("./", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 {
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
-    packagesExportsPreference: ["node"],
-    packagesSelfReference: false,
+    runtime: "node",
   })
   const actual = importMap
   const expected = {
     imports: {
+      root: "./index",
       foo: "./node_modules/foo/index.default.js",
     },
     scopes: {},
@@ -23,12 +23,12 @@ const testDirectoryUrl = resolveUrl("./", import.meta.url)
 {
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
-    packagesExportsPreference: ["browser"],
-    packagesSelfReference: false,
+    runtime: "browser",
   })
   const actual = importMap
   const expected = {
     imports: {
+      root: "./index",
       foo: "./node_modules/foo/index.browser.js",
     },
     scopes: {},

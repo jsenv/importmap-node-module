@@ -6,12 +6,13 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const actual = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  projectPackageDevDependenciesIncluded: true,
-  packagesSelfReference: false,
+  dev: true,
+  jsFiles: false,
 })
 const expected = {
   imports: {
     "@jsenv/bundling": "./node_modules/@jsenv/bundling/whatever.js",
+    "root": "./index",
   },
   scopes: {
     "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/": {

@@ -6,11 +6,12 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const actual = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  packagesSelfReference: false,
+  jsFiles: false,
 })
 const expected = {
   imports: {
     "foo/ding": "./node_modules/foo/dong",
+    "root": "./index",
     "foo": "./node_modules/foo/index.js",
   },
   scopes: {

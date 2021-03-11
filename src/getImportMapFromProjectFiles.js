@@ -6,40 +6,49 @@ export const getImportMapFromProjectFiles = async ({
   logLevel,
   projectDirectoryUrl,
   runtime = "browser",
+  moduleFormat = "esm",
   dev = false,
+  jsFiles = false,
   magicExtensions,
   ...rest
 }) => {
   const packagesExportsPreference = [
-    "import",
+    ...(moduleFormatPreferences[moduleFormat] || [moduleFormat]),
     ...(runtimeExportsPreferences[runtime] || [runtime]),
     ...(dev ? "development" : "production"),
   ]
 
   // At this point, importmap is relative to the project directory url
-  const importMapFromPackageFiles = sortImportMap(
-    await getImportMapFromPackageFiles({
-      logLevel,
-      projectDirectoryUrl,
-      packagesExportsPreference,
-      projectPackageDevDependenciesIncluded: dev,
-      ...rest,
-    }),
-  )
-
-  const importMapFromJsFiles = await getImportMapFromJsFiles({
+  let importMapFromPackageFiles = await getImportMapFromPackageFiles({
     logLevel,
-    importMap: importMapFromPackageFiles,
     projectDirectoryUrl,
-    magicExtensions,
     packagesExportsPreference,
-    runtime,
+    projectPackageDevDependenciesIncluded: dev,
+    ...rest,
   })
+  importMapFromPackageFiles = sortImportMap(importMapFromPackageFiles)
+
+  let importMapFromJsFiles = jsFiles
+    ? await getImportMapFromJsFiles({
+        logLevel,
+        importMap: importMapFromPackageFiles,
+        projectDirectoryUrl,
+        magicExtensions,
+        packagesExportsPreference,
+        runtime,
+      })
+    : {}
+  importMapFromJsFiles = sortImportMap(importMapFromJsFiles)
 
   return composeTwoImportMaps(importMapFromPackageFiles, importMapFromJsFiles)
 }
 
 const runtimeExportsPreferences = {
   browser: ["browser"],
-  node: ["node", "require"],
+  node: ["node"],
+}
+
+const moduleFormatPreferences = {
+  esm: ["import"],
+  cjs: ["require"],
 }

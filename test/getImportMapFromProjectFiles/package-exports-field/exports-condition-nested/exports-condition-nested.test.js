@@ -8,11 +8,12 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
     runtime: "node",
-    packagesSelfReference: false,
+    jsFiles: false,
   })
   const actual = importMap
   const expected = {
     imports: {
+      root: "./index",
       foo: "./node_modules/foo/feature-node.mjs",
     },
     scopes: {},
@@ -24,11 +25,12 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
     runtime: "browser",
-    packagesSelfReference: false,
+    jsFiles: false,
   })
   const actual = importMap
   const expected = {
     imports: {
+      root: "./index",
       foo: "./node_modules/foo/feature.mjs",
     },
     scopes: {},

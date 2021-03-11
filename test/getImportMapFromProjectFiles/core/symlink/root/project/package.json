@@ -1,6 +1,0 @@
-{
-  "module": "index.js",
-  "dependencies": {
-    "foo": "*"
-  }
-}

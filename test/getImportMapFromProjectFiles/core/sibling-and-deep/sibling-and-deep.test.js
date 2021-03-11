@@ -9,6 +9,7 @@ const actual = await getImportMapFromProjectFiles({
 })
 const expected = {
   imports: {
+    "nested/": "./node_modules/nested/",
     "nested": "./node_modules/nested/index",
     "root/": "./",
     "root": "./index.js",
@@ -18,11 +19,13 @@ const expected = {
       "bar/": "./node_modules/nested/node_modules/bar/",
     },
     "./node_modules/nested/node_modules/foo/": {
+      "bar/": "./node_modules/nested/node_modules/bar/",
       "foo/": "./node_modules/nested/node_modules/foo/",
       "bar": "./node_modules/nested/node_modules/bar/bar.js",
     },
     "./node_modules/nested/": {
-      "nested/": "./node_modules/nested/",
+      "bar/": "./node_modules/nested/node_modules/bar/",
+      "foo/": "./node_modules/nested/node_modules/foo/",
       "bar": "./node_modules/nested/node_modules/bar/bar.js",
       "foo": "./node_modules/nested/node_modules/foo/foo.js",
     },

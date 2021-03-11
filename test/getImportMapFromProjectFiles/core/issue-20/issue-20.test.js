@@ -12,17 +12,12 @@ const importMap = await getImportMapFromProjectFiles({
   const actual = importMap
   const expected = {
     imports: {
-      "root/": "./",
-      "lume": "./node_modules/lume/lume.js",
-      "root": "./index",
+      lume: "./node_modules/lume/lume.js",
+      root: "./index",
     },
     scopes: {
-      "./node_modules/lume/node_modules/lowclass/": {
-        "lowclass/": "./node_modules/lume/node_modules/lowclass/",
-      },
       "./node_modules/lume/": {
-        "lowclass": "./node_modules/lume/node_modules/lowclass/dist/index.js",
-        "lume/": "./node_modules/lume/",
+        lowclass: "./node_modules/lume/node_modules/lowclass/dist/index.js",
       },
     },
   }

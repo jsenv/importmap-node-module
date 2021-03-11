@@ -2,23 +2,25 @@ import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/util"
 import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
-const testDirectoryUrl = resolveUrl("./", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const getImportMap = async ({ packagesExportsPreference } = {}) => {
+const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   return getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
-    packagesSelfReference: false,
-    packagesExportsPreference,
+    jsFiles: false,
+    moduleFormat,
+    runtime,
   })
 }
 
 {
   const actual = await getImportMap({
-    packagesExportsPreference: ["node", "import", "require"],
+    runtime: "node",
   })
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever": "./index",
       "foo": "./node_modules/foo/dist/es/rollup.js",
     },
     scopes: {},
@@ -28,11 +30,13 @@ const getImportMap = async ({ packagesExportsPreference } = {}) => {
 
 {
   const actual = await getImportMap({
-    packagesExportsPreference: ["node", "require"],
+    runtime: "node",
+    moduleFormat: "cjs",
   })
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.js",
     },
     scopes: {},
@@ -42,11 +46,13 @@ const getImportMap = async ({ packagesExportsPreference } = {}) => {
 
 {
   const actual = await getImportMap({
-    packagesExportsPreference: ["node"],
+    runtime: "node",
+    moduleFormat: "other",
   })
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever": "./index",
       "foo": "./node_modules/foo/file.cjs",
     },
     scopes: {},
@@ -59,6 +65,7 @@ const getImportMap = async ({ packagesExportsPreference } = {}) => {
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever": "./index",
       "foo": "./node_modules/foo/dist/es/rollup.browser.js",
     },
     scopes: {},

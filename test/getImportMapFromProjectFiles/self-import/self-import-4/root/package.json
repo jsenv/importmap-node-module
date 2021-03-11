@@ -3,5 +3,8 @@
   "type": "module",
   "devDependencies": {
     "@jsenv/core": "*"
+  },
+  "exports": {
+    "./": "./"
   }
 }

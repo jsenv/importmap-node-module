@@ -1,7 +1,9 @@
 {
   "name": "root",
   "module": "index.js",
-  "type": "module",
+  "exports": {
+    "./": "./"
+  },
   "dependencies": {
     "nested": "*"
   }

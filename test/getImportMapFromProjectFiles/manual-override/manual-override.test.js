@@ -2,7 +2,7 @@ import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/util"
 import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
-const testDirectoryUrl = resolveUrl("./", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const actual = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
@@ -14,11 +14,12 @@ const actual = await getImportMapFromProjectFiles({
       },
     },
   },
-  packagesSelfReference: false,
+  jsFiles: false,
 })
 const expected = {
   imports: {
     "bar/": "./node_modules/bar/",
+    "root": "./index",
     "bar": "./node_modules/bar/bar.js",
   },
   scopes: {},

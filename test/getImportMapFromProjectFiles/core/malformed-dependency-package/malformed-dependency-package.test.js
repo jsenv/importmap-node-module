@@ -7,10 +7,12 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const actual = await getImportMapFromProjectFiles({
   logLevel: "off",
   projectDirectoryUrl: testDirectoryUrl,
-  packagesSelfReference: false,
+  jsFiles: false,
 })
 const expected = {
-  imports: {},
+  imports: {
+    root: "./index",
+  },
   scopes: {},
 }
 // we could/should also expect a console.warn occurs

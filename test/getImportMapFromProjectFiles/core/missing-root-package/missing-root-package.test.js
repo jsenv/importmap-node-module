@@ -8,7 +8,7 @@ const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
 try {
   await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
-    packagesSelfReference: false,
+    jsFiles: false,
   })
   throw new Error("should throw")
 } catch (error) {

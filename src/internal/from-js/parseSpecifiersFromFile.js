@@ -1,6 +1,10 @@
-import parser from "@babel/parser"
-import traverse from "@babel/traverse"
+import { createRequire } from "module"
 import { readFile, urlToFileSystemPath } from "@jsenv/util"
+
+const require = createRequire(import.meta.url)
+
+const parser = require("@babel/parser")
+const traverse = require("@babel/traverse")
 
 export const parseSpecifiersFromFile = async (
   fileUrl,
