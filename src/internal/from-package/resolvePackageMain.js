@@ -4,8 +4,13 @@ import { resolveFile } from "./resolveFile.js"
 
 const magicExtensions = ["js", "json", "node"]
 
-export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }) => {
-  if ("module" in packageJsonObject) {
+export const resolvePackageMain = ({
+  logger,
+  packagesExportsPreference,
+  packageFileUrl,
+  packageJsonObject,
+}) => {
+  if (packagesExportsPreference.includes("import") && "module" in packageJsonObject) {
     return resolveMainFile({
       logger,
       packageFileUrl,
@@ -14,12 +19,21 @@ export const resolvePackageMain = ({ logger, packageFileUrl, packageJsonObject }
     })
   }
 
-  if ("jsnext:main" in packageJsonObject) {
+  if (packagesExportsPreference.includes("import") && "jsnext:main" in packageJsonObject) {
     return resolveMainFile({
       logger,
       packageFileUrl,
       packageMainFieldName: "jsnext:main",
       packageMainFieldValue: packageJsonObject["jsnext:main"],
+    })
+  }
+
+  if (packagesExportsPreference.includes("browser") && "browser" in packageJsonObject) {
+    return resolveMainFile({
+      logger,
+      packageFileUrl,
+      packageMainFieldName: "browser",
+      packageMainFieldValue: packageJsonObject.browser,
     })
   }
 

@@ -307,9 +307,10 @@ export const getImportMapFromPackageFiles = async ({
     },
   }) => {
     const mainFileUrl = await resolvePackageMain({
+      logger,
+      packagesExportsPreference,
       packageFileUrl,
       packageJsonObject,
-      logger,
     })
 
     // it's possible to have no main

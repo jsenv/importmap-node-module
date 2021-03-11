@@ -23,9 +23,12 @@ si c'est pas un bare specifier et que le fichier est pas trouvé
 */
 
 import { createLogger, createDetailedMessage } from "@jsenv/logger"
-import { readFile, resolveUrl, urlToExtension } from "@jsenv/util"
+import { readFile, urlToExtension } from "@jsenv/util"
 import { resolveImport } from "@jsenv/import-map"
-import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunctionByUrl.js"
+import {
+  memoizeAsyncFunctionByUrl,
+  memoizeAsyncFunctionBySpecifierAndImporter,
+} from "../memoizeAsyncFunction.js"
 import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
 import { showSource } from "./showSource.js"
 
@@ -36,12 +39,10 @@ export const getImportMapFromJsFiles = async ({
   importMap,
   projectDirectoryUrl,
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
-  runtime,
-  packagePreferences,
 }) => {
   const logger = createLogger({ logLevel })
 
-  const visitFile = async (specifier, importer, { importedIn }) => {
+  const visitFile = async (specifier, importer, { importedBy }) => {
     let fileUrl
     let bareSpecifier = false
 
@@ -76,7 +77,7 @@ export const getImportMapFromJsFiles = async ({
       logger.warn(
         formatFileNotFoundLog({
           specifier,
-          importedIn,
+          importedBy,
           magicExtensions,
         }),
       )
@@ -89,8 +90,8 @@ export const getImportMapFromJsFiles = async ({
     await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
-        await visitFile(specifier, fileUrl, {
-          importedIn: showSource({
+        await visitFileMemoized(specifier, fileUrl, {
+          importedBy: showSource({
             url: fileUrl,
             line: specifierInfo.line,
             column: specifierInfo.column,
@@ -100,67 +101,22 @@ export const getImportMapFromJsFiles = async ({
       }),
     )
   }
-  const visitFileMemoized = memoizeAsyncFunctionByUrl(visitFile)
+  const visitFileMemoized = memoizeAsyncFunctionBySpecifierAndImporter(visitFile)
 
   const readFileContent = memoizeAsyncFunctionByUrl((fileUrl) => {
     return readFile(fileUrl, { as: "string" })
   })
 
-  const rootPackageFileUrl = resolveUrl("package.json", projectDirectoryUrl)
-  const rootPackageObject = await readFileContent(rootPackageFileUrl)
-  const rootMainInfo = mainFromPackageObject({
-    packageObject: rootPackageObject,
-    packageFileUrl: rootPackageFileUrl,
-    runtime,
-    packagePreferences,
-  })
-  await visitFileMemoized(rootMainInfo.specifier, rootPackageFileUrl, {
-    importedIn: rootMainInfo.importedIn,
+  // TODO: it's not ./ but the packagename
+  // found in package.json to get the main file
+  await visitFileMemoized("./", projectDirectoryUrl, {
+    importedBy: `getImportMapFromJsFiles`,
   })
 }
 
-const mainFromPackageObject = ({ packageObject, packageFileUrl, runtime }) => {
-  // idéalement on lirait aussi package.exports
-  // pour y trouver le point d'entrée principal
-  // soit ".", soit la chaine directe
-
-  if ("module" in packageObject) {
-    return {
-      specifier: packageObject.module,
-      importedIn: `${packageFileUrl}#module`,
-    }
-  }
-
-  if ("jsnext:main" in packageObject) {
-    return {
-      specifier: packageObject["jsnext:main"],
-      importedIn: `${packageFileUrl}#jsnext:main`,
-    }
-  }
-
-  if (runtime === "browser" && "browser" in packageObject) {
-    return {
-      specifier: packageObject.browser,
-      importedIn: `${packageFileUrl}#browser`,
-    }
-  }
-
-  if ("main" in packageObject) {
-    return {
-      specifier: packageObject.main,
-      importedIn: `${packageFileUrl}#main`,
-    }
-  }
-
-  return {
-    specifier: "index",
-    importedIn: `${packageFileUrl}#default`,
-  }
-}
-
-const formatFileNotFoundLog = ({ specifier, expectedUrl, magicExtensions, importedIn }) => {
+const formatFileNotFoundLog = ({ specifier, expectedUrl, magicExtensions, importedBy }) => {
   return createDetailedMessage(`Cannot find file for "${specifier}"`, {
-    "imported in": importedIn,
+    "imported by": importedBy,
     "file url": expectedUrl,
     ...(urlToExtension(expectedUrl) === ""
       ? { ["extensions tried"]: magicExtensions.join(`,`) }
