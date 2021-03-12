@@ -67,8 +67,7 @@ await writeImportMapFile(
 )
 ```
 
-<details>
-  <summary>See commonjs equivalent of code above</summary>
+Or use the commonjs equivalent if you need (or want):
 
 ```js
 const {
@@ -90,8 +89,6 @@ await writeImportMapFile(
   },
 )
 ```
-
-</details>
 
 </details>
 
