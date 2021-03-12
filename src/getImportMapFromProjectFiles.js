@@ -11,6 +11,7 @@ export const getImportMapFromProjectFiles = async ({
   jsFiles = false,
   removeUnusedMappings = !dev,
   magicExtensions,
+  onWarn,
   ...rest
 }) => {
   const packagesExportsPreference = [
@@ -32,6 +33,7 @@ export const getImportMapFromProjectFiles = async ({
   let importMapFromJsFiles = jsFiles
     ? await getImportMapFromJsFiles({
         logLevel,
+        onWarn,
         importMap: importMapFromPackageFiles,
         removeUnusedMappings,
         projectDirectoryUrl,

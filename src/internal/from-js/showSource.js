@@ -20,12 +20,10 @@ export const showSource = ({ url, line, column, source }) => {
   }
 
   return `${message}
-
 ${showSourceLocation(source, {
   line,
   column,
-})}
-`
+})}`
 }
 
 const red = "\x1b[31m"
