@@ -13,7 +13,6 @@ const importMap = await getImportMapFromProjectFiles({
   const expected = {
     imports: {
       lume: "./node_modules/lume/lume.js",
-      root: "./index",
     },
     scopes: {
       "./node_modules/lume/": {

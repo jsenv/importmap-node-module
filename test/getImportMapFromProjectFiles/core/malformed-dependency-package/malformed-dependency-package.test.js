@@ -4,16 +4,23 @@ import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const actual = await getImportMapFromProjectFiles({
+const warnings = []
+const importMap = await getImportMapFromProjectFiles({
   logLevel: "off",
   projectDirectoryUrl: testDirectoryUrl,
-  jsFiles: false,
-})
-const expected = {
-  imports: {
-    root: "./index",
+  onWarn: (warning) => {
+    warnings.push(warning)
   },
-  scopes: {},
+})
+const actual = {
+  warnings,
+  importMap,
 }
-// we could/should also expect a console.warn occurs
+const expected = {
+  warnings: [],
+  importMap: {
+    imports: {},
+    scopes: {},
+  },
+}
 assert({ actual, expected })

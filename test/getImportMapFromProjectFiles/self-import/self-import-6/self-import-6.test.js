@@ -20,9 +20,6 @@ const expected = {
       "@jsenv/core/conflict": "./node_modules/@jsenv/core/dep.js",
       "@jsenv/core": "./node_modules/@jsenv/core/maindep.js",
     },
-    "./root/": {
-      "@jsenv/core": "./index",
-    },
   },
 }
 assert({ actual, expected })

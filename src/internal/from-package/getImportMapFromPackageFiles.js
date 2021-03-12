@@ -34,47 +34,47 @@ export const getImportMapFromPackageFiles = async ({
 
   const imports = {}
   const scopes = {}
-  const addTopLevelImportMapping = ({ from, to }) => {
-    // we could think it's useless to remap from with to
-    // however it can be used to ensure a weaker remapping
-    // does not win over this specific file or folder
-    if (from === to) {
-      /**
-       * however remapping '/' to '/' is truly useless
-       * moreover it would make wrapImportMap create something like
-       * {
-       *   imports: {
-       *     "/": "/.dist/best/"
-       *   }
-       * }
-       * that would append the wrapped folder twice
-       * */
-      if (from === "/") return
-    }
+  const addMapping = ({ scope, from, to }) => {
+    if (scope) {
+      // when a package says './' maps to './'
+      // we must add something to say if we are already inside the package
+      // no need to ensure leading slash are scoped to the package
+      if (from === "./" && to === scope) {
+        addMapping({
+          scope,
+          from: scope,
+          to: scope,
+        })
+        const packageName = scope.slice(scope.lastIndexOf("node_modules/") + `node_modules/`.length)
+        addMapping({
+          scope,
+          from: packageName,
+          to: scope,
+        })
+      }
 
-    imports[from] = to
-  }
-  const addScopedImportMapping = ({ scope, from, to }) => {
-    // when a package says './' maps to './'
-    // we must add something to say if we are already inside the package
-    // no need to ensure leading slash are scoped to the package
-    if (from === "./" && to === scope) {
-      addScopedImportMapping({
-        scope,
-        from: scope,
-        to: scope,
-      })
-      const packageName = scope.slice(scope.lastIndexOf("node_modules/") + `node_modules/`.length)
-      addScopedImportMapping({
-        scope,
-        from: packageName,
-        to: scope,
-      })
-    }
-
-    scopes[scope] = {
-      ...(scopes[scope] || {}),
-      [from]: to,
+      scopes[scope] = {
+        ...(scopes[scope] || {}),
+        [from]: to,
+      }
+    } else {
+      // we could think it's useless to remap from with to
+      // however it can be used to ensure a weaker remapping
+      // does not win over this specific file or folder
+      if (from === to) {
+        /**
+         * however remapping '/' to '/' is truly useless
+         * moreover it would make wrapImportMap create something like
+         * {
+         *   imports: {
+         *     "/": "/.dist/best/"
+         *   }
+         * }
+         * that would append the wrapped folder twice
+         * */
+        if (from === "/") return
+      }
+      imports[from] = to
     }
   }
 
@@ -148,7 +148,7 @@ export const getImportMapFromPackageFiles = async ({
       if (packageIsRoot) {
         const { imports = {}, scopes = {} } = importMap
         Object.keys(imports).forEach((from) => {
-          addTopLevelImportMapping({
+          addMapping({
             from,
             to: imports[from],
           })
@@ -156,7 +156,7 @@ export const getImportMapFromPackageFiles = async ({
         Object.keys(scopes).forEach((scope) => {
           const scopeMappings = scopes[scope]
           Object.keys(scopeMappings).forEach((key) => {
-            addScopedImportMapping({
+            addMapping({
               scope,
               from: key,
               to: scopeMappings[key],
@@ -171,7 +171,7 @@ export const getImportMapFromPackageFiles = async ({
       Object.keys(imports).forEach((from) => {
         const to = imports[from]
         const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl)
-        addScopedImportMapping({
+        addMapping({
           scope,
           from,
           to: toMoved,
@@ -183,7 +183,7 @@ export const getImportMapFromPackageFiles = async ({
         Object.keys(scopeMappings).forEach((key) => {
           const to = scopeMappings[key]
           const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl)
-          addScopedImportMapping({
+          addMapping({
             scope: scopeMoved,
             from: key,
             to: toMoved,
@@ -196,7 +196,7 @@ export const getImportMapFromPackageFiles = async ({
       if (packageIsRoot) {
         Object.keys(mappings).forEach((from) => {
           const to = mappings[from]
-          addTopLevelImportMapping({
+          addMapping({
             from,
             to,
           })
@@ -208,12 +208,12 @@ export const getImportMapFromPackageFiles = async ({
         // own package mappings available to himself
         Object.keys(mappings).forEach((from) => {
           const to = mappings[from]
-          addScopedImportMapping({
+          addMapping({
             scope: `./${packageDirectoryRelativeUrl}`,
             from,
             to,
           })
-          addTopLevelImportMapping({ from, to })
+          addMapping({ from, to })
         })
 
         // if importer is root no need to make package mappings available to the importer
@@ -224,7 +224,7 @@ export const getImportMapFromPackageFiles = async ({
       Object.keys(mappings).forEach((from) => {
         const to = mappings[from]
         // own package exports available to himself
-        addScopedImportMapping({
+        addMapping({
           scope: `./${packageDirectoryRelativeUrl}`,
           from,
           to,
@@ -232,7 +232,7 @@ export const getImportMapFromPackageFiles = async ({
         // now make package exports available to the importer
         // here if the importer is himself we could do stuff
         // we should even handle the case earlier to prevent top level remapping
-        addScopedImportMapping({
+        addMapping({
           scope: `./${importerRelativeUrl}`,
           from,
           to,
@@ -321,16 +321,16 @@ export const getImportMapFromPackageFiles = async ({
     const to = `./${mainFileRelativeUrl}`
 
     if (importerIsRoot) {
-      addTopLevelImportMapping({ from, to })
+      addMapping({ from, to })
     } else {
-      addScopedImportMapping({
+      addMapping({
         scope: `./${importerRelativeUrl}`,
         from,
         to,
       })
     }
     if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
-      addScopedImportMapping({
+      addMapping({
         scope: `./${importerRelativeUrl}`,
         from,
         to,
@@ -384,6 +384,9 @@ export const getImportMapFromPackageFiles = async ({
 
       return
     }
+    if (dependencyData.syntaxError) {
+      return
+    }
 
     const {
       packageFileUrl: dependencyPackageFileUrl,
@@ -408,9 +411,7 @@ export const getImportMapFromPackageFiles = async ({
 
     const importerPackageDirectoryUrl = resolveUrl("./", importerPackageFileUrl)
 
-    const importerRelativeUrl = importerIsRoot
-      ? `${urlToBasename(projectDirectoryUrl.slice(0, -1))}/`
-      : urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl)
+    const importerRelativeUrl = urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl)
 
     const packageIsRoot = packageFileUrl === projectPackageFileUrl
 

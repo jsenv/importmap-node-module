@@ -9,7 +9,7 @@ export const getImportMapFromProjectFiles = async ({
   runtime = "browser",
   moduleFormat = "esm",
   dev = false,
-  jsFiles = false,
+  jsFiles = true,
   removeUnusedMappings = !dev,
   magicExtensions,
   onWarn = (warning, warn) => {

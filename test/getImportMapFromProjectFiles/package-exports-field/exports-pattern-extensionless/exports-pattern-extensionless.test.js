@@ -1,17 +1,41 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/util"
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/util"
 import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const actual = await getImportMapFromProjectFiles({
+const warnings = []
+const importMap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-})
-const expected = {
-  imports: {
-    root: "./index",
-    foo: "./node_modules/foo/index",
+  onWarn: (warning) => {
+    warnings.push(warning)
   },
-  scopes: {},
+})
+const actual = {
+  warnings,
+  importMap,
+}
+const expected = {
+  warnings: [
+    {
+      code: "EXPORTS_WILDCARD",
+      message: `Ignoring export using "*" because it is not supported by importmap.
+--- key ---
+foo/*
+--- value ---
+./node_modules/foo/*.js
+--- package.json path ---
+${urlToFileSystemPath(`${testDirectoryUrl}node_modules/foo/package.json`)}
+--- see also ---
+https://github.com/WICG/import-maps/issues/232`,
+    },
+  ],
+  importMap: {
+    imports: {
+      root: "./index.js",
+      foo: "./node_modules/foo/index",
+    },
+    scopes: {},
+  },
 }
 assert({ actual, expected })

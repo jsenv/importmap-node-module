@@ -74,6 +74,11 @@ export const getImportMapFromJsFiles = async ({
       if (e !== BARE_SPECIFIER_ERROR) {
         throw e
       }
+      if (importer === projectPackageFileUrl) {
+        // cannot find package main file (package.main is "" for instance)
+        // we can't discover main file and parse dependencies
+        return
+      }
       gotBareSpecifierError = true
       fileUrl = resolveUrl(specifier, importer)
     }

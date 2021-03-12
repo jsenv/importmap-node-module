@@ -28,7 +28,14 @@ export const resolvePackageMain = ({
     })
   }
 
-  if (packagesExportsPreference.includes("browser") && "browser" in packageJsonObject) {
+  if (
+    packagesExportsPreference.includes("browser") &&
+    "browser" in packageJsonObject &&
+    // when it's an object it means some files
+    // should be replaced with an other, let's ignore this when we are searching
+    // for the main file
+    typeof packageJsonObject.browser === "string"
+  ) {
     return resolveMainFile({
       warn,
       packageFileUrl,
@@ -134,7 +141,7 @@ const createPackageMainFileNotFoundWarning = ({
 }) => {
   return {
     code: "PACKAGE_MAIN_FILE_NOT_FOUND",
-    message: createDetailedMessage(`Cannot find file for "${specifier}"`, {
+    message: createDetailedMessage(`Cannot find package main file "${specifier}"`, {
       "imported in": importedIn,
       "file url tried": fileUrl,
       ...(urlToExtension(fileUrl) === ""

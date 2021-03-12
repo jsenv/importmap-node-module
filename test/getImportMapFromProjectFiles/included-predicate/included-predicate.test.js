@@ -10,7 +10,6 @@ const actual = await getImportMapFromProjectFiles({
 })
 const expected = {
   imports: {
-    root: "./index",
     bar: "./node_modules/bar/index",
   },
   scopes: {},

@@ -4,14 +4,24 @@ import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const actual = await getImportMapFromProjectFiles({
+const warnings = []
+const importMap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  jsFiles: false,
-})
-const expected = {
-  imports: {
-    root: "./index.js",
+  onWarn: (warning) => {
+    warnings.push(warning)
   },
-  scopes: {},
+})
+const actual = {
+  warnings,
+  importMap,
+}
+const expected = {
+  warnings: [],
+  importMap: {
+    imports: {
+      root: "./index.js",
+    },
+    scopes: {},
+  },
 }
 assert({ actual, expected })

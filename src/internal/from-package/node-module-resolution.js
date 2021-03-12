@@ -19,12 +19,11 @@ export const createFindNodeModulePackage = (packagesManualOverrides) => {
         return {
           packageFileUrl: packageFileUrlCandidate,
           packageJsonObject: packageObjectCandidate,
+          syntaxError: packageObjectCandidate === PACKAGE_WITH_SYNTAX_ERROR,
         }
       },
       predicate: ({ packageJsonObject }) => {
-        return (
-          packageJsonObject !== PACKAGE_NOT_FOUND && packageJsonObject !== PACKAGE_WITH_SYNTAX_ERROR
-        )
+        return packageJsonObject !== PACKAGE_NOT_FOUND
       },
     })
   }
