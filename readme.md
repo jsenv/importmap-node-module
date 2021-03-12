@@ -11,12 +11,12 @@ Generate importmap for node_modules.
 
 - [Presentation](#Presentation)
 - [Usage](#Usage)
-- [Extensionless import warning](#Extensionless-import-warning)
-- [Subpath import warning](#Subpath-import-warning)
-- [generateImportMapForProject](#generateImportMapForProject)
+- [writeImportMapFile](#writeImportMapFile)
 - [getImportMapFromProjectFiles](#getImportMapFromProjectFiles)
 - [getImportMapFromFile](#getImportMapFromFile)
 - [Custom node module resolution](#custom-node-module-resolution)
+- [Extensionless import warning](#Extensionless-import-warning)
+- [Subpath import warning](#Subpath-import-warning)
 - [Concrete example](#concrete-example)
 
 # Presentation
@@ -51,14 +51,11 @@ npm install --save-dev @jsenv/node-module-import-map
   <summary>2 - Create <code>generate-import-map.js</code></summary>
 
 ```js
-import {
-  getImportMapFromNodeModules,
-  generateImportMapForProject,
-} from "@jsenv/node-module-import-map"
+import { getImportMapFromNodeModules, writeImportMapFile } from "@jsenv/node-module-import-map"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
 
-await generateImportMapForProject(
+await writeImportMapFile(
   [
     getImportMapFromProjectFiles({
       projectDirectoryUrl,
@@ -75,14 +72,11 @@ await generateImportMapForProject(
   <summary>See commonjs equivalent of code above</summary>
 
 ```js
-const {
-  getImportMapFromNodeModules,
-  generateImportMapForProject,
-} = require("@jsenv/node-module-import-map")
+const { getImportMapFromNodeModules, writeImportMapFile } = require("@jsenv/node-module-import-map")
 
 const projectDirectoryUrl = __dirname
 
-await generateImportMapForProject(
+await writeImportMapFile(
   [
     getImportMapFromProjectFiles({
       projectDirectoryUrl,
@@ -136,6 +130,151 @@ If you use a bundler, be sure it's compatible with import maps.
 > [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, unit testing and when building for production.
 
 </details>
+
+# writeImportMapFile
+
+`writeImportMapFile` is an async function receiving an array of promise resolving to importmaps. It awaits for every importmap, compose them into one and write it into a file.
+
+> This function is meant to be responsible of generating the final importMap file that a project uses.
+
+<details>
+  <summary>writeImportMapFile code example</summary>
+
+Code below generate an import map from node_modules + a file + an inline importmap.
+
+```js
+import {
+  getImportMapFromProjectFiles,
+  getImportMapFromFile,
+  writeImportMapFile,
+} from "@jsenv/node-module-import-map"
+
+const projectDirectoryUrl = new URL("./", import.meta.url)
+const importMapInputs = [
+  getImportMapFromProjectFiles({
+    projectDirectoryUrl,
+    dev: true,
+  }),
+  getImportMapFromFile({
+    projectDirectoryUrl,
+    importMapFileRelativeUrl: "./import-map-custom.importmap",
+  }),
+  {
+    imports: {
+      foo: "./bar.js",
+    },
+  },
+]
+
+await writeImportMapFile(importMapInputs, {
+  projectDirectoryUrl,
+  importMapFileRelativeUrl: "./import-map.importmap",
+})
+```
+
+— source code at [src/writeImportMapFile.js](./src/writeImportMapFile.js)
+
+</details>
+
+## importMapInputs
+
+`importMapInputs` is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
+
+> When `importMapInputs` is empty a warning is emitted and `generateImportMapForProject` write an empty importmap file.
+
+## importMapFile
+
+`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
+
+## importMapFileRelativeUrl
+
+`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./import-map.importmap"`.
+
+# getImportMapFromProjectFiles
+
+`getImportMapFromProjectFiles` is an async function returning an importMap object computed from infos found in `package.json` files and source files.
+
+The following source of information are used to create complete and coherent mappings in the importmap.
+
+- Your `package.json`.
+- All your `package.json` `dependencies` are searched into `node_modules`, recursively.
+- All file imported by your main entry file (declared in your `package.json`), recursively.
+
+<details>
+  <summary>getImportMapFromProjectFiles code example</summary>
+
+```js
+import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+
+const importMap = await getImportMapFromProjectFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  dev: false,
+  runtime: "browser",
+})
+```
+
+> Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
+
+— source code at [src/getImportMapFromProjectFiles.js](./src/getImportMapFromProjectFiles.js)
+
+</details>
+
+## projectDirectoryUrl
+
+`projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl
+
+## dev
+
+`dev` parameter is a boolean indicating if the importmap will be used for development or production. This parameter is optional and by default it's disabled.
+
+When enabled the following happens:
+
+1. Your `package.json` `devDependencies` are included in the generated importMap.
+2. `"development"` is favored over `"production"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+
+## runtime
+
+`runtime` parameter is a string indicating where the importmap will be used. This parameter is optional with a default of `"browser"`.
+
+When `runtime` is `"browser"`, `"browser"` is favored over `"node"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+
+When it is `"node"`, `"node"` is favored.
+
+# getImportMapFromFile
+
+`getImportMapFromFile` is an async function reading importmap from a file.
+
+<details>
+  <summary>getImportMapFromFile code example</summary>
+
+```js
+import { getImportMapFromFile } from "@jsenv/node-module-import-map"
+
+const importMap = await getImportMapFromFile({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapRelativeUrl: "./import-map.importmap",
+})
+```
+
+— source code at [src/getImportMapFromFile.js](./src/getImportMapFromFile.js)
+
+</details>
+
+## importMapFileRelativeUrl
+
+`importMapFileUrl` parameter an url relative to [projectDirectoryUrl](#projectDirectoryUrl) leading to the importmap file. This parameter is **required**.
+
+# Custom node module resolution
+
+`@jsenv/node-module-import-map` uses a custom node module resolution
+
+It behaves as Node.js with one big change:
+
+**A node module will not be found if it is outside your project directory.**
+
+We do this because import map are used on the web where a file outside project directory cannot be reached.
+
+In practice, it has no impact because node modules are inside your project directory. If they are not, ensure all your dependencies are in your `package.json` and re-run `npm install`.
 
 # Extensionless import warning
 
@@ -225,150 +364,6 @@ However using `*` to add file extension as in
 ```
 
 **is not supported in importmap**. Nothing suggests it will be supported for now, read more in https://github.com/WICG/import-maps/issues/232.
-
-# generateImportMapForProject
-
-`generateImportMapForProject` is an async function receiving an array of promise resolving to importmaps. It awaits for every importmap, compose them into one and write it into a file.
-
-> This function is meant to be responsible of generating the final importMap file that a project uses.
-
-<details>
-  <summary>generateImportMapForProject code example</summary>
-
-Code below generate an import map from node_modules + a file + an inline importmap.
-
-```js
-import {
-  getImportMapFromProjectFiles,
-  getImportMapFromFile,
-  generateImportMapForProject,
-} from "@jsenv/node-module-import-map"
-
-const projectDirectoryUrl = new URL("./", import.meta.url)
-const importMapInputs = [
-  getImportMapFromProjectFiles({
-    projectDirectoryUrl,
-    dev: true,
-  }),
-  getImportMapFromFile({
-    projectDirectoryUrl,
-    importMapFileRelativeUrl: "./import-map-custom.importmap",
-  }),
-  {
-    imports: {
-      foo: "./bar.js",
-    },
-  },
-]
-
-await generateImportMapForProject(importMapInputs, {
-  projectDirectoryUrl,
-  importMapFileRelativeUrl: "./import-map.importmap",
-})
-```
-
-— source code at [src/generateImportMapForProject.js](./src/generateImportMapForProject.js)
-
-</details>
-
-## importMapInputs
-
-`importMapInputs` is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
-
-> When `importMapInputs` is empty a warning is emitted and `generateImportMapForProject` write an empty importmap file.
-
-## importMapFile
-
-`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
-
-## importMapFileRelativeUrl
-
-`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./import-map.importmap"`.
-
-# getImportMapFromProjectFiles
-
-`getImportMapFromProjectFiles` is an async function returning an importMap object computed from infos found in `package.json` files and source files.
-
-The following source of information are used to create complete and coherent mappings in the importmap.
-
-- Your `package.json`.
-- All your `package.json` `dependencies` are searched into `node_modules`, recursively.
-- All file imported by your main entry file (declared in your `package.json`), recursively.
-
-<details>
-  <summary>getImportMapFromProjectFiles code example</summary>
-
-```js
-import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
-
-const importMap = await getImportMapFromProjectFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  dev: true,
-})
-```
-
-> Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
-
-— source code at [src/getImportMapFromProjectFiles.js](./src/getImportMapFromProjectFiles.js)
-
-</details>
-
-## projectDirectoryUrl
-
-`projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl
-
-## dev
-
-`dev` parameter is a boolean indicating if the importmap will be used for development or production. This parameter is optional and by default it's disabled.
-
-When enabled the following happens:
-
-1. Your `package.json` `devDependencies` are included in the generated importMap.
-2. `"development"` is favored over `"production"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
-
-## runtime
-
-`runtime` parameter is a string indicating where the importmap will be used. This parameter is optional with a default of `"browser"`.
-
-When `runtime` is `"browser"`, `"browser"` is favored over `"node"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
-
-When it is `"node"`, `"node"` is favored.
-
-# getImportMapFromFile
-
-`getImportMapFromFile` is an async function reading importmap from a file.
-
-<details>
-  <summary>getImportMapFromFile code example</summary>
-
-```js
-import { getImportMapFromFile } from "@jsenv/node-module-import-map"
-
-const importMap = await getImportMapFromFile({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapRelativeUrl: "./import-map.importmap",
-})
-```
-
-— source code at [src/getImportMapFromFile.js](./src/getImportMapFromFile.js)
-
-</details>
-
-## importMapFileRelativeUrl
-
-`importMapFileUrl` parameter an url relative to [projectDirectoryUrl](#projectDirectoryUrl) leading to the importmap file. This parameter is **required**.
-
-# Custom node module resolution
-
-`@jsenv/node-module-import-map` uses a custom node module resolution
-
-It behaves as Node.js with one big change:
-
-**A node module will not be found if it is outside your project directory.**
-
-We do this because import map are used on the web where a file outside project directory cannot be reached.
-
-In practice, it has no impact because node modules are inside your project directory. If they are not, ensure all your dependencies are in your `package.json` and re-run `npm install`.
 
 # Concrete example
 

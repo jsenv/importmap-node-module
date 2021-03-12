@@ -7,7 +7,7 @@ import {
 import { composeTwoImportMaps } from "@jsenv/import-map"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 
-export const generateImportMapForProject = async (
+export const writeImportMapFile = async (
   importMapInputs = [],
   {
     projectDirectoryUrl,
