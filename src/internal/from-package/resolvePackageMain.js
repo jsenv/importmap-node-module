@@ -5,14 +5,14 @@ import { resolveFile } from "../resolveFile.js"
 const magicExtensions = [".js", ".json", ".node"]
 
 export const resolvePackageMain = ({
-  logger,
+  warn,
   packagesExportsPreference,
   packageFileUrl,
   packageJsonObject,
 }) => {
   if (packagesExportsPreference.includes("import") && "module" in packageJsonObject) {
     return resolveMainFile({
-      logger,
+      warn,
       packageFileUrl,
       packageMainFieldName: "module",
       packageMainFieldValue: packageJsonObject.module,
@@ -21,7 +21,7 @@ export const resolvePackageMain = ({
 
   if (packagesExportsPreference.includes("import") && "jsnext:main" in packageJsonObject) {
     return resolveMainFile({
-      logger,
+      warn,
       packageFileUrl,
       packageMainFieldName: "jsnext:main",
       packageMainFieldValue: packageJsonObject["jsnext:main"],
@@ -30,7 +30,7 @@ export const resolvePackageMain = ({
 
   if (packagesExportsPreference.includes("browser") && "browser" in packageJsonObject) {
     return resolveMainFile({
-      logger,
+      warn,
       packageFileUrl,
       packageMainFieldName: "browser",
       packageMainFieldValue: packageJsonObject.browser,
@@ -39,7 +39,7 @@ export const resolvePackageMain = ({
 
   if ("main" in packageJsonObject) {
     return resolveMainFile({
-      logger,
+      warn,
       packageFileUrl,
       packageMainFieldName: "main",
       packageMainFieldValue: packageJsonObject.main,
@@ -47,7 +47,7 @@ export const resolvePackageMain = ({
   }
 
   return resolveMainFile({
-    logger,
+    warn,
     packageFileUrl,
     packageMainFieldName: "default",
     packageMainFieldValue: "index",
@@ -55,7 +55,7 @@ export const resolvePackageMain = ({
 }
 
 const resolveMainFile = async ({
-  logger,
+  warn,
   packageFileUrl,
   packageMainFieldName,
   packageMainFieldValue,
@@ -66,7 +66,6 @@ const resolveMainFile = async ({
     return null
   }
 
-  const packageFilePath = urlToFileSystemPath(packageFileUrl)
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const mainFileRelativeUrl = packageMainFieldValue.endsWith("/")
     ? `${packageMainFieldValue}index`
@@ -75,14 +74,12 @@ const resolveMainFile = async ({
   const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativeUrl, packageFileUrl)
 
   if (!mainFileUrlFirstCandidate.startsWith(packageDirectoryUrl)) {
-    logger.warn(
-      `
-${packageMainFieldName} field in package.json must be inside package.json folder.
---- ${packageMainFieldName} ---
-${packageMainFieldValue}
---- package.json path ---
-${packageFilePath}
-`,
+    warn(
+      createPackageMainFileMustBeRelativeWarning({
+        packageMainFieldName,
+        packageMainFieldValue,
+        packageFileUrl,
+      }),
     )
     return null
   }
@@ -99,8 +96,8 @@ ${packageFilePath}
     // otherwise the package.json is missing the main field
     // it certainly means it's not important
     if (packageMainFieldName !== "default") {
-      logger.warn(
-        formatFileNotFoundLog({
+      warn(
+        createPackageMainFileNotFoundWarning({
           specifier: packageMainFieldValue,
           importedIn: `${packageFileUrl}#${packageMainFieldName}`,
           fileUrl: mainFileUrlFirstCandidate,
@@ -114,10 +111,35 @@ ${packageFilePath}
   return mainFileUrl
 }
 
-const formatFileNotFoundLog = ({ specifier, importedIn, fileUrl, magicExtensions }) => {
-  return createDetailedMessage(`Cannot find file for "${specifier}"`, {
-    "imported in": importedIn,
-    "file url": fileUrl,
-    ...(urlToExtension(fileUrl) === "" ? { ["extensions tried"]: magicExtensions.join(`, `) } : {}),
-  })
+const createPackageMainFileMustBeRelativeWarning = ({
+  packageMainFieldName,
+  packageMainFieldValue,
+  packageFileUrl,
+}) => {
+  return {
+    code: "PACKAGE_MAIN_FILE_MUST_BE_RELATIVE",
+    message: `${packageMainFieldName} field in package.json must be inside package.json folder.
+--- ${packageMainFieldName} ---
+${packageMainFieldValue}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}`,
+  }
+}
+
+const createPackageMainFileNotFoundWarning = ({
+  specifier,
+  importedIn,
+  fileUrl,
+  magicExtensions,
+}) => {
+  return {
+    code: "PACKAGE_MAIN_FILE_NOT_FOUND",
+    message: createDetailedMessage(`Cannot find file for "${specifier}"`, {
+      "imported in": importedIn,
+      "file url tried": fileUrl,
+      ...(urlToExtension(fileUrl) === ""
+        ? { ["extensions tried"]: magicExtensions.join(`, `) }
+        : {}),
+    }),
+  }
 }

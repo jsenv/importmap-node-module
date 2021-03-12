@@ -1,4 +1,4 @@
-import { createLogger, createDetailedMessage } from "@jsenv/logger"
+import { createDetailedMessage } from "@jsenv/logger"
 import {
   resolveUrl,
   urlToRelativeUrl,
@@ -18,7 +18,8 @@ export const getImportMapFromPackageFiles = async ({
   // it's not very important but it would be better to register on it
   // an stops what we are doing if asked to do so
   // cancellationToken = createCancellationTokenForProcess(),
-  logLevel,
+  logger,
+  warn,
   projectDirectoryUrl,
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   packagesExportsPreference = ["import", "browser"],
@@ -26,8 +27,6 @@ export const getImportMapFromPackageFiles = async ({
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
 }) => {
-  const logger = createLogger({ logLevel })
-
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
@@ -242,7 +241,7 @@ export const getImportMapFromPackageFiles = async ({
     }
 
     const importsFromPackageField = await visitPackageImportMap({
-      logger,
+      warn,
       packageFileUrl,
       packageJsonObject,
       projectDirectoryUrl,
@@ -252,6 +251,7 @@ export const getImportMapFromPackageFiles = async ({
     if (packagesExportsIncluded && "exports" in packageJsonObject) {
       const mappingsFromPackageExports = {}
       visitPackageExports({
+        warn,
         packageFileUrl,
         packageJsonObject,
         packageName,
@@ -278,18 +278,13 @@ export const getImportMapFromPackageFiles = async ({
             return
           }
 
-          logger.warn(
-            formatWilcardExportsIgnoredWarning({
+          warn(
+            createExportsWildcardIgnoredWarning({
               key,
               value,
               packageFileUrl,
             }),
           )
-        },
-        onWarn: (warning) => {
-          logger.warn(`
-      ${warning}
-      `)
         },
       })
       addMappingsForPackageAndImporter(mappingsFromPackageExports)
@@ -308,7 +303,7 @@ export const getImportMapFromPackageFiles = async ({
     },
   }) => {
     const mainFileUrl = await resolvePackageMain({
-      logger,
+      warn,
       packagesExportsPreference,
       packageFileUrl,
       packageJsonObject,
@@ -376,13 +371,16 @@ export const getImportMapFromPackageFiles = async ({
       dependencyName,
     })
     if (!dependencyData) {
-      logger[dependencyInfo.isOptional ? "debug" : "warn"](
-        formatCannotFindPackageLog({
-          dependencyName,
-          dependencyInfo,
-          packageFileUrl,
-        }),
-      )
+      const cannotFindPackageWarning = createCannotFindPackageWarning({
+        dependencyName,
+        dependencyInfo,
+        packageFileUrl,
+      })
+      if (dependencyInfo.isOptional) {
+        logger.debug(cannotFindPackageWarning.message)
+      } else {
+        warn(cannotFindPackageWarning)
+      }
 
       return
     }
@@ -455,8 +453,11 @@ export const getImportMapFromPackageFiles = async ({
 
   const packageName = projectPackageJsonObject.name
   if (typeof packageName !== "string") {
-    logger.warn(
-      formatUnexpectedPackageNameLog({ packageName, packageFileUrl: projectPackageFileUrl }),
+    warn(
+      createPackageNameMustBeAStringWarning({
+        packageName,
+        packageFileUrl: projectPackageFileUrl,
+      }),
     )
     return {}
   }
@@ -529,8 +530,10 @@ const moveMappingValue = (address, from, to) => {
   return `./${relativeUrl}`
 }
 
-const formatWilcardExportsIgnoredWarning = ({ key, value, packageFileUrl }) => {
-  return `Ignoring export using "*" because it is not supported by importmap.
+const createExportsWildcardIgnoredWarning = ({ key, value, packageFileUrl }) => {
+  return {
+    code: "EXPORTS_WILDCARD",
+    message: `Ignoring export using "*" because it is not supported by importmap.
 --- key ---
 ${key}
 --- value ---
@@ -538,33 +541,35 @@ ${value}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}
 --- see also ---
-https://github.com/WICG/import-maps/issues/232`
+https://github.com/WICG/import-maps/issues/232`,
+  }
 }
 
-const formatUnexpectedPackageNameLog = ({ packageName, packageFileUrl }) => {
-  return `
-package name field must be a string
+const createPackageNameMustBeAStringWarning = ({ packageName, packageFileUrl }) => {
+  return {
+    code: "PACKAGE_NAME_MUST_BE_A_STRING",
+    message: `package name field must be a string
 --- package name field ---
 ${packageName}
 --- package.json file path ---
-${packageFileUrl}
-`
+${packageFileUrl}`,
+  }
 }
 
-const formatCannotFindPackageLog = ({ dependencyName, dependencyInfo, packageFileUrl }) => {
+const createCannotFindPackageWarning = ({ dependencyName, dependencyInfo, packageFileUrl }) => {
   const dependencyIsOptional = dependencyInfo.isOptional
   const dependencyType = dependencyInfo.type
   const dependencyVersionPattern = dependencyInfo.versionPattern
-  const detailedMessage = createDetailedMessage(
-    dependencyIsOptional
-      ? `cannot find an optional ${dependencyType}.`
-      : `cannot find a ${dependencyType}.`,
-    {
-      [dependencyType]: `${dependencyName}@${dependencyVersionPattern}`,
-      "required by": urlToFileSystemPath(packageFileUrl),
-    },
-  )
-  return `
-${detailedMessage}
-`
+  return {
+    code: "CANNOT_FIND_PACKAGE",
+    message: createDetailedMessage(
+      dependencyIsOptional
+        ? `cannot find an optional ${dependencyType}.`
+        : `cannot find a ${dependencyType}.`,
+      {
+        [dependencyType]: `${dependencyName}@${dependencyVersionPattern}`,
+        "required by": urlToFileSystemPath(packageFileUrl),
+      },
+    ),
+  }
 }

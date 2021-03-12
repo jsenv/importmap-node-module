@@ -2,7 +2,7 @@ import { resolveUrl, moveImportMap } from "@jsenv/import-map"
 import { readFile, urlToFileSystemPath } from "@jsenv/util"
 
 export const visitPackageImportMap = async ({
-  logger,
+  warn,
   packageFileUrl,
   packageJsonObject,
   packageImportmap = packageJsonObject.importmap,
@@ -22,8 +22,8 @@ export const visitPackageImportMap = async ({
     return packageImportmap
   }
 
-  logger.warn(
-    formatUnexpectedPackageImportmapWarning({
+  warn(
+    createPackageImportMapUnexpectedWarning({
       packageImportmap,
       packageFileUrl,
     }),
@@ -31,10 +31,13 @@ export const visitPackageImportMap = async ({
   return {}
 }
 
-const formatUnexpectedPackageImportmapWarning = ({ packageImportmap, packageFileUrl }) => {
-  return `unexpected value in package.json importmap field: value must be a string or an object.
+const createPackageImportMapUnexpectedWarning = ({ packageImportmap, packageFileUrl }) => {
+  return {
+    code: "PACKAGE_IMPORTMAP_UNEXPECTED",
+    message: `unexpected value in package.json importmap field: value must be a string or an object.
 --- value ---
 ${packageImportmap}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`
+${urlToFileSystemPath(packageFileUrl)}`,
+  }
 }

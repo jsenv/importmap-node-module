@@ -4,6 +4,7 @@ import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/util"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({
+  warn,
   packageFileUrl,
   packageJsonObject,
   packageExports = packageJsonObject.exports,
@@ -11,15 +12,14 @@ export const visitPackageExports = ({
   projectDirectoryUrl,
   packagesExportsPreference,
   onExport,
-  onWarn,
 }) => {
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
 
   visitExportsSubpath(packageExports, packagesExportsPreference, {
     onUnexpectedPackageExports: ({ packageExportsValue, packageExportsValuePath }) => {
-      onWarn(
-        formatExportsIsUnexpectedWarning({
+      warn(
+        createExportsValueWarning({
           packageExportsValue,
           packageExportsValuePath,
           packageFileUrl,
@@ -28,8 +28,8 @@ export const visitPackageExports = ({
     },
     onMixedPackageExports: ({ packageExportsValue, packageExportsValuePath }) => {
       // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
-      onWarn(
-        formatExportsUnexpectedMixWarning({
+      warn(
+        createExportsMixedWarning({
           packageExportsValue,
           packageExportsValuePath,
           packageFileUrl,
@@ -38,8 +38,8 @@ export const visitPackageExports = ({
     },
     onSubpathPackageExport: ({ key, value, valuePath }) => {
       if (!specifierIsRelative(key)) {
-        onWarn(
-          formatExportsKeyMustBeRelativeWarning({
+        warn(
+          createExportsMappingKeyMustBeRelativeWarning({
             key,
             keyPath: valuePath.slice(0, -1),
             packageFileUrl,
@@ -48,8 +48,8 @@ export const visitPackageExports = ({
         return
       }
       if (typeof value !== "string") {
-        onWarn(
-          formatExportsValueMustBeStringWarning({
+        warn(
+          createExportsMappingValueMustBeAStringWarning({
             value,
             valuePath,
             packageFileUrl,
@@ -58,8 +58,8 @@ export const visitPackageExports = ({
         return
       }
       if (!specifierIsRelative(value)) {
-        onWarn(
-          formatExportsValueMustBeRelativeWarning({
+        warn(
+          createExportsMappingValueMustBeRelativeWarning({
             value,
             valuePath,
             packageFileUrl,
@@ -184,60 +184,75 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
   return `./${packageDirectoryRelativeUrl}${address}`
 }
 
-const formatExportsIsUnexpectedWarning = ({
+const createExportsValueWarning = ({
   packageExportsValue,
   packageExportsValuePath,
   packageFileUrl,
 }) => {
-  return `unexpected value in package.json exports field: value must be an object or a string.
+  return {
+    code: "EXPORTS_VALUE",
+    message: `unexpected value in package.json exports field: value must be an object or a string.
 --- value ---
 ${packageExportsValue}
 --- value path ---
 ${packageExportsValuePath.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`
+${urlToFileSystemPath(packageFileUrl)}`,
+  }
 }
 
-const formatExportsUnexpectedMixWarning = ({
+const createExportsMixedWarning = ({
   packageExportsValue,
   packageExportsValuePath,
   packageFileUrl,
 }) => {
-  return `unexpected package.json exports field: cannot mix conditional and subpath exports.
+  return {
+    code: "EXPORTS_MIXED",
+    message: `unexpected package.json exports field: cannot mix conditional and subpath exports.
 --- value ---
 ${JSON.stringify(packageExportsValue, null, "  ")}
 --- value path ---
 ${packageExportsValuePath.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`
+${urlToFileSystemPath(packageFileUrl)}`,
+  }
 }
 
-const formatExportsKeyMustBeRelativeWarning = ({ key, keyPath, packageFileUrl }) => {
-  return `unexpected key in package.json exports field: key must be relative.
+const createExportsMappingKeyMustBeRelativeWarning = ({ key, keyPath, packageFileUrl }) => {
+  return {
+    code: "EXPORTS_MAPPING_KEY_MUST_BE_RELATIVE",
+    message: `unexpected key in package.json exports field: key must be relative.
 --- key ---
 ${key}
 --- key path ---
 ${keyPath.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`
+${urlToFileSystemPath(packageFileUrl)}`,
+  }
 }
 
-const formatExportsValueMustBeStringWarning = ({ value, valuePath, packageFileUrl }) => {
-  return `unexpected value in package.json exports field: value must be a string.
+const createExportsMappingValueMustBeAStringWarning = ({ value, valuePath, packageFileUrl }) => {
+  return {
+    code: "EXPORTS_MAPPING_VALUE_MUST_BE_A_STRING",
+    message: `unexpected value in package.json exports field: value must be a string.
 --- value ---
 ${value}
 --- value path ---
 ${valuePath.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`
+${urlToFileSystemPath(packageFileUrl)}`,
+  }
 }
 
-const formatExportsValueMustBeRelativeWarning = ({ value, valuePath, packageFileUrl }) => {
-  return `unexpected value in package.json exports field: value must be relative.
+const createExportsMappingValueMustBeRelativeWarning = ({ value, valuePath, packageFileUrl }) => {
+  return {
+    code: "EXPORTS_MAPPING_VALUE_MUST_BE_RELATIVE",
+    message: `unexpected value in package.json exports field: value must be relative.
 --- value ---
 ${value}
 --- value path ---
 ${valuePath.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`
+${urlToFileSystemPath(packageFileUrl)}`,
+  }
 }

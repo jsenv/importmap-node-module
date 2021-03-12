@@ -1,4 +1,5 @@
 import { sortImportMap, composeTwoImportMaps } from "@jsenv/import-map"
+import { createLogger } from "@jsenv/logger"
 import { getImportMapFromJsFiles } from "./internal/from-js/getImportMapFromJsFiles.js"
 import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"
 
@@ -11,7 +12,9 @@ export const getImportMapFromProjectFiles = async ({
   jsFiles = false,
   removeUnusedMappings = !dev,
   magicExtensions,
-  onWarn,
+  onWarn = (warning, warn) => {
+    warn(warning)
+  },
   ...rest
 }) => {
   const packagesExportsPreference = [
@@ -20,9 +23,17 @@ export const getImportMapFromProjectFiles = async ({
     ...(dev ? "development" : "production"),
   ]
 
+  const logger = createLogger({ logLevel })
+  const warn = (warning) => {
+    onWarn(warning, () => {
+      logger.warn(`\n${warning.message}\n`)
+    })
+  }
+
   // At this point, importmap is relative to the project directory url
   let importMapFromPackageFiles = await getImportMapFromPackageFiles({
-    logLevel,
+    logger,
+    warn,
     projectDirectoryUrl,
     packagesExportsPreference,
     projectPackageDevDependenciesIncluded: dev,
@@ -33,7 +44,7 @@ export const getImportMapFromProjectFiles = async ({
   let importMapFromJsFiles = jsFiles
     ? await getImportMapFromJsFiles({
         logLevel,
-        onWarn,
+        warn,
         importMap: importMapFromPackageFiles,
         removeUnusedMappings,
         projectDirectoryUrl,

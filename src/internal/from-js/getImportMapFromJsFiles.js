@@ -1,4 +1,4 @@
-import { createLogger, createDetailedMessage } from "@jsenv/logger"
+import { createDetailedMessage } from "@jsenv/logger"
 import { resolveUrl, readFile, urlToExtension, urlToRelativeUrl } from "@jsenv/util"
 import { normalizeImportMap, resolveImport } from "@jsenv/import-map"
 import {
@@ -12,23 +12,13 @@ import { resolveFile } from "../resolveFile.js"
 const BARE_SPECIFIER_ERROR = {}
 
 export const getImportMapFromJsFiles = async ({
-  logLevel,
+  warn,
   importMap,
   projectDirectoryUrl,
   removeUnusedMappings,
-  onWarn = (warning, warn) => {
-    warn(warning)
-  },
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
 }) => {
-  const logger = createLogger({ logLevel })
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
-
-  const warn = (warning) => {
-    onWarn(warning, () => {
-      logger.warn(`\n${warning.message}\n`)
-    })
-  }
 
   const imports = {}
   const scopes = {}
