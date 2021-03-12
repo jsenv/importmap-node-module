@@ -50,7 +50,7 @@ npm install --save-dev @jsenv/node-module-import-map
   <summary>2 - Create <code>generate-import-map.js</code></summary>
 
 ```js
-import { getImportMapFromNodeModules, writeImportMapFile } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/node-module-import-map"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
 
@@ -71,7 +71,10 @@ await writeImportMapFile(
   <summary>See commonjs equivalent of code above</summary>
 
 ```js
-const { getImportMapFromNodeModules, writeImportMapFile } = require("@jsenv/node-module-import-map")
+const {
+  getImportMapFromProjectFiles,
+  writeImportMapFile,
+} = require("@jsenv/node-module-import-map")
 
 const projectDirectoryUrl = __dirname
 
