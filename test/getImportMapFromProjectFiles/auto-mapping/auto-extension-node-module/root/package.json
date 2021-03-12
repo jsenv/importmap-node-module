@@ -1,0 +1,9 @@
+{
+  "name": "root",
+  "type": "module",
+  "module": "main.js",
+  "main": "main.cjs",
+  "dependencies": {
+    "leftpad": "*"
+  }
+}

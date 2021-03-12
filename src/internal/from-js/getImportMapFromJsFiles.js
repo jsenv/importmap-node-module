@@ -75,6 +75,7 @@ export const getImportMapFromJsFiles = async ({
         throw e
       }
       gotBareSpecifierError = true
+      fileUrl = resolveUrl(specifier, importer)
     }
 
     const fileUrlOnFileSystem = await resolveFile(fileUrl, {
@@ -282,7 +283,13 @@ const mappingToImportmapString = ({ scope, from, to }) => {
   )
 }
 
-const mappingToExportsFieldString = ({ from, to }) => {
+const mappingToExportsFieldString = ({ scope, from, to }) => {
+  if (scope) {
+    const scopeUrl = resolveUrl(scope, "file://")
+    const toUrl = resolveUrl(to, "file://")
+    to = `./${urlToRelativeUrl(toUrl, scopeUrl)}`
+  }
+
   return JSON.stringify(
     {
       exports: {
