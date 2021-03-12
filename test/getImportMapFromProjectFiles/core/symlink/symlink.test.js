@@ -16,7 +16,6 @@ const expected = {
     "./node_modules/foo/": {
       "./node_modules/foo/": "./node_modules/foo/",
       "foo/": "./node_modules/foo/",
-      "./": "./node_modules/foo/",
     },
   },
 }

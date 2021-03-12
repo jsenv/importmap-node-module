@@ -10,7 +10,7 @@ const actual = await getImportMapFromProjectFiles({
 const expected = {
   imports: {
     "nested/": "./node_modules/nested/",
-    "nested": "./node_modules/nested/index",
+    "nested": "./node_modules/nested/index.js",
     "root/": "./",
     "root": "./index.js",
   },

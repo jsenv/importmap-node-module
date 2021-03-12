@@ -62,6 +62,10 @@ export const getImportMapFromJsFiles = async ({
         if (scope) {
           // make scope relative again
           scope = `./${urlToRelativeUrl(scope, projectDirectoryUrl)}`
+          // make from relative again
+          if (from.startsWith(projectDirectoryUrl)) {
+            from = `./${urlToRelativeUrl(from, projectDirectoryUrl)}`
+          }
         }
 
         markMappingAsUsed({

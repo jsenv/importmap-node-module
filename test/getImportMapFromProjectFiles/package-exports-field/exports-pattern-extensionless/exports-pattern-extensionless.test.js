@@ -33,7 +33,7 @@ https://github.com/WICG/import-maps/issues/232`,
   importMap: {
     imports: {
       root: "./index.js",
-      foo: "./node_modules/foo/index",
+      foo: "./node_modules/foo/index.js",
     },
     scopes: {},
   },
