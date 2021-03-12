@@ -69,77 +69,79 @@ export const getImportMapFromJsFiles = async ({
     })
   }
 
-  const visitFile = async (specifier, importer, { importedBy }) => {
-    let fileUrl
-    let gotBareSpecifierError = false
+  const resolveFileSystemUrl = memoizeAsyncFunctionBySpecifierAndImporter(
+    async (specifier, importer, { importedBy }) => {
+      let fileUrl
+      let gotBareSpecifierError = false
 
-    try {
-      fileUrl = trackAndResolveImport(specifier, importer)
-    } catch (e) {
-      if (e !== BARE_SPECIFIER_ERROR) {
-        throw e
+      try {
+        fileUrl = trackAndResolveImport(specifier, importer)
+      } catch (e) {
+        if (e !== BARE_SPECIFIER_ERROR) {
+          throw e
+        }
+        if (importer === projectPackageFileUrl) {
+          // cannot find package main file (package.main is "" for instance)
+          // we can't discover main file and parse dependencies
+          return null
+        }
+        gotBareSpecifierError = true
+        fileUrl = resolveUrl(specifier, importer)
       }
-      if (importer === projectPackageFileUrl) {
-        // cannot find package main file (package.main is "" for instance)
-        // we can't discover main file and parse dependencies
-        return
+
+      const fileUrlOnFileSystem = await resolveFile(fileUrl, {
+        magicExtensions: magicExtensionWithImporterExtension(magicExtensions, importer),
+      })
+
+      if (!fileUrlOnFileSystem) {
+        warn(
+          createFileNotFoundWarning({
+            specifier,
+            importedBy,
+            fileUrl,
+            magicExtensions,
+          }),
+        )
+        return null
       }
-      gotBareSpecifierError = true
-      fileUrl = resolveUrl(specifier, importer)
-    }
 
-    const fileUrlOnFileSystem = await resolveFile(fileUrl, {
-      magicExtensions: magicExtensionWithImporterExtension(magicExtensions, importer),
-    })
-
-    if (!fileUrlOnFileSystem) {
-      warn(
-        createFileNotFoundWarning({
-          specifier,
-          importedBy,
-          fileUrl,
-          magicExtensions,
-        }),
-      )
-      return
-    }
-
-    const needsAutoMapping = fileUrlOnFileSystem !== fileUrl || gotBareSpecifierError
-    if (needsAutoMapping) {
-      const packageDirectoryUrl = packageDirectoryUrlFromUrl(fileUrl, projectDirectoryUrl)
-      const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
-      const autoMapping = {
-        scope:
-          packageFileUrl === projectPackageFileUrl
-            ? undefined
-            : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`,
-        from: specifier,
-        to: `./${urlToRelativeUrl(fileUrlOnFileSystem, projectDirectoryUrl)}`,
+      const needsAutoMapping = fileUrlOnFileSystem !== fileUrl || gotBareSpecifierError
+      if (needsAutoMapping) {
+        const packageDirectoryUrl = packageDirectoryUrlFromUrl(fileUrl, projectDirectoryUrl)
+        const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
+        const autoMapping = {
+          scope:
+            packageFileUrl === projectPackageFileUrl
+              ? undefined
+              : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`,
+          from: specifier,
+          to: `./${urlToRelativeUrl(fileUrlOnFileSystem, projectDirectoryUrl)}`,
+        }
+        addMapping(autoMapping)
+        markMappingAsUsed(autoMapping)
+        warn(
+          formatAutoMappingSpecifierWarning({
+            specifier,
+            importedBy,
+            autoMapping,
+            closestPackageDirectoryUrl: packageDirectoryUrl,
+            closestPackageObject: await readFile(packageFileUrl, { as: "json" }),
+          }),
+        )
       }
-      addMapping(autoMapping)
-      markMappingAsUsed(autoMapping)
-      warn(
-        formatAutoMappingSpecifierWarning({
-          specifier,
-          importedBy,
-          autoMapping,
-          closestPackageDirectoryUrl: packageDirectoryUrl,
-          closestPackageObject: await readFile(packageFileUrl, { as: "json" }),
-        }),
-      )
-    }
 
-    await visitFileContent(fileUrlOnFileSystem)
-  }
+      return fileUrlOnFileSystem
+    },
+  )
 
-  const visitFileContent = memoizeAsyncFunctionByUrl(async (fileUrl) => {
-    const fileContent = await readFileContent(fileUrl)
+  const visitFile = memoizeAsyncFunctionByUrl(async (fileUrl) => {
+    const fileContent = await readFile(fileUrl, { as: "string" })
     const specifiers = await parseSpecifiersFromFile(fileUrl, { fileContent })
 
-    await Promise.all(
+    const dependencies = await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
-        await visitFileMemoized(specifier, fileUrl, {
+        const dependencyUrlOnFileSystem = await resolveFileSystemUrl(specifier, fileUrl, {
           importedBy: showSource({
             url: fileUrl,
             line: specifierInfo.line,
@@ -147,21 +149,32 @@ export const getImportMapFromJsFiles = async ({
             source: fileContent,
           }),
         })
+        return dependencyUrlOnFileSystem
+      }),
+    )
+    const dependenciesToVisit = dependencies.filter((dependency) => {
+      return dependency && !visitFile.isInMemory(dependency)
+    })
+    await Promise.all(
+      dependenciesToVisit.map((dependency) => {
+        return visitFile(dependency)
       }),
     )
   })
-  const visitFileMemoized = memoizeAsyncFunctionBySpecifierAndImporter(visitFile)
-
-  const readFileContent = memoizeAsyncFunctionByUrl((fileUrl) => {
-    return readFile(fileUrl, { as: "string" })
-  })
 
   const projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
-  await visitFileMemoized(projectPackageObject.name, projectPackageFileUrl, {
-    importedBy: projectPackageObject.exports
-      ? `${projectPackageFileUrl}#exports`
-      : `${projectPackageFileUrl}`,
-  })
+  const projectMainFileUrlOnFileSystem = await resolveFileSystemUrl(
+    projectPackageObject.name,
+    projectPackageFileUrl,
+    {
+      importedBy: projectPackageObject.exports
+        ? `${projectPackageFileUrl}#exports`
+        : `${projectPackageFileUrl}`,
+    },
+  )
+  if (projectMainFileUrlOnFileSystem) {
+    await visitFile(projectMainFileUrlOnFileSystem)
+  }
 
   if (removeUnusedMappings) {
     const importsUsed = {}
@@ -177,10 +190,10 @@ export const getImportMapFromJsFiles = async ({
       })
       scopesUsed[scope] = scopedMappings
     })
-    return {
+    return sortImportMap({
       imports: importsUsed,
       scopes: scopesUsed,
-    }
+    })
   }
 
   return sortImportMap(composeTwoImportMaps(importMap, { imports, scopes }))

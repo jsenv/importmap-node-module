@@ -48,7 +48,7 @@ export const memoizeAsyncFunctionBySpecifierAndImporter = (fn) => {
 }
 
 const memoizeAsyncFunction = (fn, { getMemoryEntryFromArguments }) => {
-  return async (...args) => {
+  const memoized = async (...args) => {
     const memoryEntry = getMemoryEntryFromArguments(args)
     const promiseFromMemory = memoryEntry.get()
     if (promiseFromMemory) {
@@ -73,6 +73,10 @@ const memoizeAsyncFunction = (fn, { getMemoryEntryFromArguments }) => {
     }
     return promise
   }
+  memoized.isInMemory = (...args) => {
+    return Boolean(getMemoryEntryFromArguments(args).get())
+  }
+  return memoized
 }
 
 const createControllablePromise = () => {
