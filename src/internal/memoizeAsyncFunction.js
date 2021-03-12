@@ -1,16 +1,16 @@
 export const memoizeAsyncFunctionByUrl = (fn) => {
-  const map = new WeakMap()
+  const cache = {}
   return memoizeAsyncFunction(fn, {
     getMemoryEntryFromArguments: ([url]) => {
       return {
         get: () => {
-          return map.get(url)
+          return cache[url]
         },
         set: (promise) => {
-          map.set(url, promise)
+          cache[url] = promise
         },
         delete: () => {
-          map.delete(url)
+          delete cache[url]
         },
       }
     },

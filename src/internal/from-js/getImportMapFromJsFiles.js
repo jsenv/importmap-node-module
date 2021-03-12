@@ -1,6 +1,11 @@
 import { createDetailedMessage } from "@jsenv/logger"
 import { resolveUrl, readFile, urlToExtension, urlToRelativeUrl } from "@jsenv/util"
-import { normalizeImportMap, resolveImport } from "@jsenv/import-map"
+import {
+  normalizeImportMap,
+  resolveImport,
+  sortImportMap,
+  composeTwoImportMaps,
+} from "@jsenv/import-map"
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
@@ -178,7 +183,7 @@ export const getImportMapFromJsFiles = async ({
     }
   }
 
-  return { imports, scopes }
+  return sortImportMap(composeTwoImportMaps(importMap, { imports, scopes }))
 }
 
 const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {

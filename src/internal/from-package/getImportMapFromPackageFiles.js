@@ -4,7 +4,6 @@ import {
   urlToRelativeUrl,
   assertAndNormalizeDirectoryUrl,
   urlToFileSystemPath,
-  urlToBasename,
   readFile,
 } from "@jsenv/util"
 import { optimizeImportMap } from "../optimizeImportMap.js"

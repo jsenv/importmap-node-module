@@ -1,4 +1,4 @@
-import { sortImportMap, composeTwoImportMaps } from "@jsenv/import-map"
+import { sortImportMap } from "@jsenv/import-map"
 import { createLogger } from "@jsenv/logger"
 import { getImportMapFromJsFiles } from "./internal/from-js/getImportMapFromJsFiles.js"
 import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"
@@ -40,22 +40,21 @@ export const getImportMapFromProjectFiles = async ({
     ...rest,
   })
   importMapFromPackageFiles = sortImportMap(importMapFromPackageFiles)
+  if (!jsFiles) {
+    return importMapFromPackageFiles
+  }
 
-  let importMapFromJsFiles = jsFiles
-    ? await getImportMapFromJsFiles({
-        logLevel,
-        warn,
-        importMap: importMapFromPackageFiles,
-        removeUnusedMappings,
-        projectDirectoryUrl,
-        magicExtensions,
-        packagesExportsPreference,
-        runtime,
-      })
-    : {}
+  let importMapFromJsFiles = await getImportMapFromJsFiles({
+    warn,
+    importMap: importMapFromPackageFiles,
+    removeUnusedMappings,
+    projectDirectoryUrl,
+    magicExtensions,
+    packagesExportsPreference,
+    runtime,
+  })
   importMapFromJsFiles = sortImportMap(importMapFromJsFiles)
-
-  return sortImportMap(composeTwoImportMaps(importMapFromPackageFiles, importMapFromJsFiles))
+  return importMapFromJsFiles
 }
 
 const runtimeExportsPreferences = {
