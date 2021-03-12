@@ -15,7 +15,7 @@ export const parseSpecifiersFromFile = async (
     allowAwaitOutsideFunction = true,
     ranges = true,
     jsx = true,
-    typescript = true,
+    typescript = fileUrl.endsWith(".ts") || fileUrl.endsWith(".tsx"),
     flow = false,
     ...options
   } = {},
@@ -34,7 +34,7 @@ export const parseSpecifiersFromFile = async (
       "exportDefaultFrom",
       ...(jsx ? ["jsx"] : []),
       ...(typescript ? ["typescript"] : []),
-      ...(flow ? ["jsx"] : []),
+      ...(flow ? ["flow"] : []),
     ],
     ...options,
   })

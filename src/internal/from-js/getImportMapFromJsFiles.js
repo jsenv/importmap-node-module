@@ -124,15 +124,19 @@ export const getImportMapFromJsFiles = async ({
       )
     }
 
-    const fileContent = await readFileContent(fileUrlOnFileSystem)
-    const specifiers = await parseSpecifiersFromFile(fileUrlOnFileSystem, { fileContent })
+    await visitFileContent(fileUrlOnFileSystem)
+  }
+
+  const visitFileContent = memoizeAsyncFunctionByUrl(async (fileUrl) => {
+    const fileContent = await readFileContent(fileUrl)
+    const specifiers = await parseSpecifiersFromFile(fileUrl, { fileContent })
 
     await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
-        await visitFileMemoized(specifier, fileUrlOnFileSystem, {
+        await visitFileMemoized(specifier, fileUrl, {
           importedBy: showSource({
-            url: fileUrlOnFileSystem,
+            url: fileUrl,
             line: specifierInfo.line,
             column: specifierInfo.column,
             source: fileContent,
@@ -140,7 +144,7 @@ export const getImportMapFromJsFiles = async ({
         })
       }),
     )
-  }
+  })
   const visitFileMemoized = memoizeAsyncFunctionBySpecifierAndImporter(visitFile)
 
   const readFileContent = memoizeAsyncFunctionByUrl((fileUrl) => {

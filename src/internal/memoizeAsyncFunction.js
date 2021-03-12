@@ -1,16 +1,16 @@
 export const memoizeAsyncFunctionByUrl = (fn) => {
-  const cache = {}
+  const map = new WeakMap()
   return memoizeAsyncFunction(fn, {
     getMemoryEntryFromArguments: ([url]) => {
       return {
         get: () => {
-          return cache[url]
+          return map.get(url)
         },
         set: (promise) => {
-          cache[url] = promise
+          map.set(url, promise)
         },
         delete: () => {
-          delete cache[url]
+          map.delete(url)
         },
       }
     },
@@ -54,12 +54,7 @@ const memoizeAsyncFunction = (fn, { getMemoryEntryFromArguments }) => {
     if (promiseFromMemory) {
       return promiseFromMemory
     }
-    let _resolve
-    let _reject
-    const promise = new Promise((resolve, reject) => {
-      _resolve = resolve
-      _reject = reject
-    })
+    const { promise, resolve, reject } = createControllablePromise()
     memoryEntry.set(promise)
     let value
     let error
@@ -72,10 +67,20 @@ const memoizeAsyncFunction = (fn, { getMemoryEntryFromArguments }) => {
       memoryEntry.delete()
     }
     if (error) {
-      _reject(error)
+      reject(error)
     } else {
-      _resolve(value)
+      resolve(value)
     }
     return promise
   }
+}
+
+const createControllablePromise = () => {
+  let resolve
+  let reject
+  const promise = new Promise((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
 }

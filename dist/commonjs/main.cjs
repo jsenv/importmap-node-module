@@ -9,18 +9,18 @@ var module$1 = require('module');
 var cancellation = require('@jsenv/cancellation');
 
 const memoizeAsyncFunctionByUrl = fn => {
-  const cache = {};
+  const map = new WeakMap();
   return memoizeAsyncFunction(fn, {
     getMemoryEntryFromArguments: ([url]) => {
       return {
         get: () => {
-          return cache[url];
+          return map.get(url);
         },
         set: promise => {
-          cache[url] = promise;
+          map.set(url, promise);
         },
         delete: () => {
-          delete cache[url];
+          map.delete(url);
         }
       };
     }
@@ -69,14 +69,11 @@ const memoizeAsyncFunction = (fn, {
       return promiseFromMemory;
     }
 
-    let _resolve;
-
-    let _reject;
-
-    const promise = new Promise((resolve, reject) => {
-      _resolve = resolve;
-      _reject = reject;
-    });
+    const {
+      promise,
+      resolve,
+      reject
+    } = createControllablePromise();
     memoryEntry.set(promise);
     let value;
     let error;
@@ -91,12 +88,26 @@ const memoizeAsyncFunction = (fn, {
     }
 
     if (error) {
-      _reject(error);
+      reject(error);
     } else {
-      _resolve(value);
+      resolve(value);
     }
 
     return promise;
+  };
+};
+
+const createControllablePromise = () => {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return {
+    promise,
+    resolve,
+    reject
   };
 };
 
@@ -117,7 +128,7 @@ const parseSpecifiersFromFile = async (fileUrl, {
   allowAwaitOutsideFunction = true,
   ranges = true,
   jsx = true,
-  typescript = true,
+  typescript = fileUrl.endsWith(".ts") || fileUrl.endsWith(".tsx"),
   flow = false,
   ...options
 } = {}) => {
@@ -131,7 +142,7 @@ const parseSpecifiersFromFile = async (fileUrl, {
     allowAwaitOutsideFunction,
     ranges,
     plugins: [// "estree",
-    "topLevelAwait", "exportDefaultFrom", ...(jsx ? ["jsx"] : []), ...(typescript ? ["typescript"] : []), ...(flow ? ["jsx"] : [])],
+    "topLevelAwait", "exportDefaultFrom", ...(jsx ? ["jsx"] : []), ...(typescript ? ["typescript"] : []), ...(flow ? ["flow"] : [])],
     ...options
   });
   const specifiers = {};
@@ -549,6 +560,12 @@ const getImportMapFromJsFiles = async ({
         throw e;
       }
 
+      if (importer === projectPackageFileUrl) {
+        // cannot find package main file (package.main is "" for instance)
+        // we can't discover main file and parse dependencies
+        return;
+      }
+
       gotBareSpecifierError = true;
       fileUrl = util.resolveUrl(specifier, importer);
     }
@@ -590,23 +607,26 @@ const getImportMapFromJsFiles = async ({
       }));
     }
 
-    const fileContent = await readFileContent(fileUrlOnFileSystem);
-    const specifiers = await parseSpecifiersFromFile(fileUrlOnFileSystem, {
+    await visitFileContent(fileUrlOnFileSystem);
+  };
+
+  const visitFileContent = memoizeAsyncFunctionByUrl(async fileUrl => {
+    const fileContent = await readFileContent(fileUrl);
+    const specifiers = await parseSpecifiersFromFile(fileUrl, {
       fileContent
     });
     await Promise.all(Object.keys(specifiers).map(async specifier => {
       const specifierInfo = specifiers[specifier];
-      await visitFileMemoized(specifier, fileUrlOnFileSystem, {
+      await visitFileMemoized(specifier, fileUrl, {
         importedBy: showSource({
-          url: fileUrlOnFileSystem,
+          url: fileUrl,
           line: specifierInfo.line,
           column: specifierInfo.column,
           source: fileContent
         })
       });
     }));
-  };
-
+  });
   const visitFileMemoized = memoizeAsyncFunctionBySpecifierAndImporter(visitFile);
   const readFileContent = memoizeAsyncFunctionByUrl(fileUrl => {
     return util.readFile(fileUrl, {
@@ -929,7 +949,7 @@ const createPackageMainFileNotFoundWarning = ({
 }) => {
   return {
     code: "PACKAGE_MAIN_FILE_NOT_FOUND",
-    message: logger.createDetailedMessage(`Cannot find file for "${specifier}"`, {
+    message: logger.createDetailedMessage(`Cannot find package main file "${specifier}"`, {
       "imported in": importedIn,
       "file url tried": fileUrl,
       ...(util.urlToExtension(fileUrl) === "" ? {
@@ -1373,13 +1393,14 @@ const createFindNodeModulePackage = packagesManualOverrides => {
         const packageObjectCandidate = await readPackageFileMemoized(packageFileUrlCandidate);
         return {
           packageFileUrl: packageFileUrlCandidate,
-          packageJsonObject: packageObjectCandidate
+          packageJsonObject: packageObjectCandidate,
+          syntaxError: packageObjectCandidate === PACKAGE_WITH_SYNTAX_ERROR
         };
       },
       predicate: ({
         packageJsonObject
       }) => {
-        return packageJsonObject !== PACKAGE_NOT_FOUND && packageJsonObject !== PACKAGE_WITH_SYNTAX_ERROR;
+        return packageJsonObject !== PACKAGE_NOT_FOUND;
       }
     });
   };
@@ -1426,55 +1447,52 @@ const getImportMapFromPackageFiles = async ({
   const imports = {};
   const scopes = {};
 
-  const addTopLevelImportMapping = ({
-    from,
-    to
-  }) => {
-    // we could think it's useless to remap from with to
-    // however it can be used to ensure a weaker remapping
-    // does not win over this specific file or folder
-    if (from === to) {
-      /**
-       * however remapping '/' to '/' is truly useless
-       * moreover it would make wrapImportMap create something like
-       * {
-       *   imports: {
-       *     "/": "/.dist/best/"
-       *   }
-       * }
-       * that would append the wrapped folder twice
-       * */
-      if (from === "/") return;
-    }
-
-    imports[from] = to;
-  };
-
-  const addScopedImportMapping = ({
+  const addMapping = ({
     scope,
     from,
     to
   }) => {
-    // when a package says './' maps to './'
-    // we must add something to say if we are already inside the package
-    // no need to ensure leading slash are scoped to the package
-    if (from === "./" && to === scope) {
-      addScopedImportMapping({
-        scope,
-        from: scope,
-        to: scope
-      });
-      const packageName = scope.slice(scope.lastIndexOf("node_modules/") + `node_modules/`.length);
-      addScopedImportMapping({
-        scope,
-        from: packageName,
-        to: scope
-      });
-    }
+    if (scope) {
+      // when a package says './' maps to './'
+      // we must add something to say if we are already inside the package
+      // no need to ensure leading slash are scoped to the package
+      if (from === "./" && to === scope) {
+        addMapping({
+          scope,
+          from: scope,
+          to: scope
+        });
+        const packageName = scope.slice(scope.lastIndexOf("node_modules/") + `node_modules/`.length);
+        addMapping({
+          scope,
+          from: packageName,
+          to: scope
+        });
+      }
 
-    scopes[scope] = { ...(scopes[scope] || {}),
-      [from]: to
-    };
+      scopes[scope] = { ...(scopes[scope] || {}),
+        [from]: to
+      };
+    } else {
+      // we could think it's useless to remap from with to
+      // however it can be used to ensure a weaker remapping
+      // does not win over this specific file or folder
+      if (from === to) {
+        /**
+         * however remapping '/' to '/' is truly useless
+         * moreover it would make wrapImportMap create something like
+         * {
+         *   imports: {
+         *     "/": "/.dist/best/"
+         *   }
+         * }
+         * that would append the wrapped folder twice
+         * */
+        if (from === "/") return;
+      }
+
+      imports[from] = to;
+    }
   };
 
   const seen = {};
@@ -1554,7 +1572,7 @@ const getImportMapFromPackageFiles = async ({
           scopes = {}
         } = importMap;
         Object.keys(imports).forEach(from => {
-          addTopLevelImportMapping({
+          addMapping({
             from,
             to: imports[from]
           });
@@ -1562,7 +1580,7 @@ const getImportMapFromPackageFiles = async ({
         Object.keys(scopes).forEach(scope => {
           const scopeMappings = scopes[scope];
           Object.keys(scopeMappings).forEach(key => {
-            addScopedImportMapping({
+            addMapping({
               scope,
               from: key,
               to: scopeMappings[key]
@@ -1580,7 +1598,7 @@ const getImportMapFromPackageFiles = async ({
       Object.keys(imports).forEach(from => {
         const to = imports[from];
         const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl);
-        addScopedImportMapping({
+        addMapping({
           scope,
           from,
           to: toMoved
@@ -1592,7 +1610,7 @@ const getImportMapFromPackageFiles = async ({
         Object.keys(scopeMappings).forEach(key => {
           const to = scopeMappings[key];
           const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl);
-          addScopedImportMapping({
+          addMapping({
             scope: scopeMoved,
             from: key,
             to: toMoved
@@ -1605,7 +1623,7 @@ const getImportMapFromPackageFiles = async ({
       if (packageIsRoot) {
         Object.keys(mappings).forEach(from => {
           const to = mappings[from];
-          addTopLevelImportMapping({
+          addMapping({
             from,
             to
           });
@@ -1617,12 +1635,12 @@ const getImportMapFromPackageFiles = async ({
         // own package mappings available to himself
         Object.keys(mappings).forEach(from => {
           const to = mappings[from];
-          addScopedImportMapping({
+          addMapping({
             scope: `./${packageDirectoryRelativeUrl}`,
             from,
             to
           });
-          addTopLevelImportMapping({
+          addMapping({
             from,
             to
           });
@@ -1635,7 +1653,7 @@ const getImportMapFromPackageFiles = async ({
       Object.keys(mappings).forEach(from => {
         const to = mappings[from]; // own package exports available to himself
 
-        addScopedImportMapping({
+        addMapping({
           scope: `./${packageDirectoryRelativeUrl}`,
           from,
           to
@@ -1643,7 +1661,7 @@ const getImportMapFromPackageFiles = async ({
         // here if the importer is himself we could do stuff
         // we should even handle the case earlier to prevent top level remapping
 
-        addScopedImportMapping({
+        addMapping({
           scope: `./${importerRelativeUrl}`,
           from,
           to
@@ -1728,12 +1746,12 @@ const getImportMapFromPackageFiles = async ({
     const to = `./${mainFileRelativeUrl}`;
 
     if (importerIsRoot) {
-      addTopLevelImportMapping({
+      addMapping({
         from,
         to
       });
     } else {
-      addScopedImportMapping({
+      addMapping({
         scope: `./${importerRelativeUrl}`,
         from,
         to
@@ -1741,7 +1759,7 @@ const getImportMapFromPackageFiles = async ({
     }
 
     if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
-      addScopedImportMapping({
+      addMapping({
         scope: `./${importerRelativeUrl}`,
         from,
         to
@@ -1795,6 +1813,10 @@ const getImportMapFromPackageFiles = async ({
       return;
     }
 
+    if (dependencyData.syntaxError) {
+      return;
+    }
+
     const {
       packageFileUrl: dependencyPackageFileUrl,
       packageJsonObject: dependencyPackageJsonObject
@@ -1821,7 +1843,7 @@ const getImportMapFromPackageFiles = async ({
   }) => {
     const importerIsRoot = importerPackageFileUrl === projectPackageFileUrl;
     const importerPackageDirectoryUrl = util.resolveUrl("./", importerPackageFileUrl);
-    const importerRelativeUrl = importerIsRoot ? `${util.urlToBasename(projectDirectoryUrl.slice(0, -1))}/` : util.urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl);
+    const importerRelativeUrl = util.urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl);
     const packageIsRoot = packageFileUrl === projectPackageFileUrl;
     const packageDirectoryUrl = util.resolveUrl("./", packageFileUrl);
     const packageDirectoryUrlExpected = `${importerPackageDirectoryUrl}node_modules/${packageName}/`;
@@ -2013,7 +2035,7 @@ const getImportMapFromProjectFiles = async ({
   runtime = "browser",
   moduleFormat = "esm",
   dev = false,
-  jsFiles = false,
+  jsFiles = true,
   removeUnusedMappings = !dev,
   magicExtensions,
   onWarn = (warning, warn) => {
