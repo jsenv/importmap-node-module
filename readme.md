@@ -17,7 +17,6 @@ Generate importmap for node_modules.
 - [Custom node module resolution](#custom-node-module-resolution)
 - [Extensionless import warning](#Extensionless-import-warning)
 - [Subpath import warning](#Subpath-import-warning)
-- [Concrete example](#concrete-example)
 
 # Presentation
 
@@ -196,9 +195,10 @@ await writeImportMapFile(importMapInputs, {
 
 The following source of information are used to create complete and coherent mappings in the importmap.
 
-- Your `package.json`.
-- All your `package.json` `dependencies` are searched into `node_modules`, recursively.
-- All file imported by your main entry file (declared in your `package.json`), recursively.
+- Your `package.json`
+- All `dependencies` declared in `package.json` are searched into `node_modules`, recursively.
+- The main file declared in your `package.json`
+- All static and dynamic import found in files, recursively.
 
 <details>
   <summary>getImportMapFromProjectFiles code example</summary>
@@ -229,7 +229,7 @@ const importMap = await getImportMapFromProjectFiles({
 
 When enabled the following happens:
 
-1. Your `package.json` `devDependencies` are included in the generated importMap.
+1. `devDependencies` declared in your `package.json` are included in the generated importMap.
 2. `"development"` is favored over `"production"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
 ## runtime
@@ -364,38 +364,3 @@ However using `*` to add file extension as in
 ```
 
 **is not supported in importmap**. Nothing suggests it will be supported for now, read more in https://github.com/WICG/import-maps/issues/232.
-
-# Concrete example
-
-This part explains how to setup a real environment to see `@jsenv/node-module-import-map` in action.
-It reuses a preconfigured project where you can generate import map file.
-
-> You need node 13+ to run this example
-
-<details>
-  <summary>Step 1 - Setup basic project</summary>
-
-```console
-git clone https://github.com/jsenv/jsenv-node-module-import-map.git
-```
-
-```console
-cd ./jsenv-node-module-import-map/docs/basic-project
-```
-
-```console
-npm install
-```
-
-</details>
-
-<details>
-  <summary>Step 2 - Generate project importMap</summary>
-
-Running command below will log importMap generated for that basic project.
-
-```console
-node ./generate-import-map.js
-```
-
-</details>
