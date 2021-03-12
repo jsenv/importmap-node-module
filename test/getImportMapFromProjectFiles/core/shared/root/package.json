@@ -1,7 +1,6 @@
 {
   "name": "root",
   "type": "module",
-  "main": "",
   "dependencies": {
     "bar": "*",
     "foo": "*"

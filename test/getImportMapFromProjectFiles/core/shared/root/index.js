@@ -1,5 +1,4 @@
 /* eslint-disable import/no-unresolved */
 import "bar"
+import "bar/bar.js"
 import "foo"
-import "@dmail/yo"
-import "root/index.js"

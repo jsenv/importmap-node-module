@@ -1,7 +1,5 @@
 {
   "name": "root",
-  "type": "module",
-  "main": "",
   "dependencies": {
     "lume": "*"
   }
