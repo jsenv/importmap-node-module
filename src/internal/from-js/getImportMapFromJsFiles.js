@@ -1,7 +1,3 @@
-/*
-
-*/
-
 import { createLogger, createDetailedMessage } from "@jsenv/logger"
 import { resolveUrl, readFile, urlToExtension, urlToRelativeUrl } from "@jsenv/util"
 import { normalizeImportMap, resolveImport } from "@jsenv/import-map"
@@ -20,10 +16,19 @@ export const getImportMapFromJsFiles = async ({
   importMap,
   projectDirectoryUrl,
   removeUnusedMappings,
+  onWarn = (warning, warn) => {
+    warn(warning)
+  },
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
 }) => {
   const logger = createLogger({ logLevel })
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
+
+  const warn = (warning) => {
+    onWarn(warning, () => {
+      logger.warn(`\n${warning.message}\n`)
+    })
+  }
 
   const imports = {}
   const scopes = {}
@@ -87,8 +92,8 @@ export const getImportMapFromJsFiles = async ({
     })
 
     if (!fileUrlOnFileSystem) {
-      logger.warn(
-        formatFileNotFoundLog({
+      warn(
+        createFileNotFoundWarning({
           specifier,
           importedBy,
           fileUrl,
@@ -112,7 +117,7 @@ export const getImportMapFromJsFiles = async ({
       }
       addMapping(autoMapping)
       markMappingAsUsed(autoMapping)
-      logger.warn(
+      warn(
         formatAutoMappingSpecifierWarning({
           specifier,
           importedBy,
@@ -208,12 +213,17 @@ const magicExtensionWithImporterExtension = (magicExtensions, importer) => {
   return [importerExtension, ...magicExtensionsWithoutImporterExtension]
 }
 
-const formatFileNotFoundLog = ({ specifier, importedBy, fileUrl, magicExtensions }) => {
-  return createDetailedMessage(`Cannot find file for "${specifier}"`, {
-    "imported by": importedBy,
-    "file url": fileUrl,
-    ...(urlToExtension(fileUrl) === "" ? { ["extensions tried"]: magicExtensions.join(`, `) } : {}),
-  })
+const createFileNotFoundWarning = ({ specifier, importedBy, fileUrl, magicExtensions }) => {
+  return {
+    code: "FILE_NOT_FOUND",
+    message: createDetailedMessage(`Cannot find file for "${specifier}"`, {
+      "specifier origin": importedBy,
+      "file url tried": fileUrl,
+      ...(urlToExtension(fileUrl) === ""
+        ? { ["extensions tried"]: magicExtensions.join(`, `) }
+        : {}),
+    }),
+  }
 }
 
 const formatAutoMappingSpecifierWarning = ({
@@ -222,16 +232,17 @@ const formatAutoMappingSpecifierWarning = ({
   closestPackageDirectoryUrl,
   closestPackageObject,
 }) => {
-  return `
-${createDetailedMessage(`Auto mapping ${autoMapping.from} to ${autoMapping.to}.`, {
-  "specifier origin": importedBy,
-  "suggestion": decideAutoMappingSuggestion({
-    autoMapping,
-    closestPackageDirectoryUrl,
-    closestPackageObject,
-  }),
-})}
-`
+  return {
+    code: "AUTO_MAPPING",
+    message: createDetailedMessage(`Auto mapping ${autoMapping.from} to ${autoMapping.to}.`, {
+      "specifier origin": importedBy,
+      "suggestion": decideAutoMappingSuggestion({
+        autoMapping,
+        closestPackageDirectoryUrl,
+        closestPackageObject,
+      }),
+    }),
+  }
 }
 
 const decideAutoMappingSuggestion = ({
@@ -245,12 +256,12 @@ const decideAutoMappingSuggestion = ({
       closestPackageDirectoryUrl,
     )
 
-    return `Add
+    return `To get rid of this warning, add an explicit mapping into importmap file.
 ${mappingToImportmapString(autoMapping)}
 into ${packageImportmapFileUrl}.`
   }
 
-  return `Add
+  return `To get rid of this warning, add an explicit mapping into package.json.
 ${mappingToExportsFieldString(autoMapping)}
 into ${closestPackageDirectoryUrl}package.json.`
 }

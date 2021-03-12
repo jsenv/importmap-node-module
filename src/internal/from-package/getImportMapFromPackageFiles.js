@@ -7,6 +7,7 @@ import {
   urlToBasename,
   readFile,
 } from "@jsenv/util"
+import { optimizeImportMap } from "../optimizeImportMap.js"
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"
 import { visitPackageExports } from "./visitPackageExports.js"
@@ -469,23 +470,7 @@ export const getImportMapFromPackageFiles = async ({
     includeDevDependencies: projectPackageDevDependenciesIncluded,
   })
 
-  // remove useless duplicates (scoped key+value already defined on imports)
-  Object.keys(scopes).forEach((key) => {
-    const scopedImports = scopes[key]
-    Object.keys(scopedImports).forEach((scopedImportKey) => {
-      if (
-        scopedImportKey in imports &&
-        imports[scopedImportKey] === scopedImports[scopedImportKey]
-      ) {
-        delete scopedImports[scopedImportKey]
-      }
-    })
-    if (Object.keys(scopedImports).length === 0) {
-      delete scopes[key]
-    }
-  })
-
-  return { imports, scopes }
+  return optimizeImportMap({ imports, scopes })
 }
 
 const packageDependenciesFromPackageObject = (packageObject, { includeDevDependencies }) => {
