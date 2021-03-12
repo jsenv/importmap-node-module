@@ -180,7 +180,7 @@ await writeImportMapFile(importMapInputs, {
 
 `importMapInputs` is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
 
-> When `importMapInputs` is empty a warning is emitted and `generateImportMapForProject` write an empty importmap file.
+> When `importMapInputs` is empty a warning is emitted and `writeImportMapFile` write an empty importmap file.
 
 ## importMapFile
 

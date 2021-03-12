@@ -8,7 +8,7 @@ export const getImportMapFromFile = async ({ projectDirectoryUrl, importMapFileR
   const importmap = await readFile(importmapFileUrl, { as: "json" })
 
   // ensure the importmap is now relative to the project directory url
-  // we do that because generateImportMapForProject expect all importmap
+  // we do that because writeImportMapFile expect all importmap
   // to be relative to the projectDirectoryUrl
   const importmapFakeRootUrl = resolveUrl("whatever.importmap", projectDirectoryUrl)
   const importmapRelativeToProject = moveImportMap(

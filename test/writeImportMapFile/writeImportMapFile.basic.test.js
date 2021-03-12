@@ -1,12 +1,12 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl, readFile } from "@jsenv/util"
-import { generateImportMapForProject } from "../../index.js"
+import { writeImportMapFile } from "@jsenv/node-module-import-map"
 
 const testDirectoryUrl = resolveUrl("./", import.meta.url)
 const importMapFileRelativeUrl = "test.importmap"
 const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, testDirectoryUrl)
 
-await generateImportMapForProject(
+await writeImportMapFile(
   [
     {
       imports: { foo: "./bar.js", bar: "./hello.js" },
