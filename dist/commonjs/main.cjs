@@ -9,18 +9,18 @@ var module$1 = require('module');
 var cancellation = require('@jsenv/cancellation');
 
 const memoizeAsyncFunctionByUrl = fn => {
-  const map = new WeakMap();
+  const cache = {};
   return memoizeAsyncFunction(fn, {
     getMemoryEntryFromArguments: ([url]) => {
       return {
         get: () => {
-          return map.get(url);
+          return cache[url];
         },
         set: promise => {
-          map.set(url, promise);
+          cache[url] = promise;
         },
         delete: () => {
-          map.delete(url);
+          delete cache[url];
         }
       };
     }
@@ -61,7 +61,7 @@ const memoizeAsyncFunctionBySpecifierAndImporter = fn => {
 const memoizeAsyncFunction = (fn, {
   getMemoryEntryFromArguments
 }) => {
-  return async (...args) => {
+  const memoized = async (...args) => {
     const memoryEntry = getMemoryEntryFromArguments(args);
     const promiseFromMemory = memoryEntry.get();
 
@@ -95,6 +95,12 @@ const memoizeAsyncFunction = (fn, {
 
     return promise;
   };
+
+  memoized.isInMemory = (...args) => {
+    return Boolean(getMemoryEntryFromArguments(args).get());
+  };
+
+  return memoized;
 };
 
 const createControllablePromise = () => {
@@ -537,6 +543,15 @@ const getImportMapFromJsFiles = async ({
         scope,
         from
       }) => {
+        if (scope) {
+          // make scope relative again
+          scope = `./${util.urlToRelativeUrl(scope, projectDirectoryUrl)}`; // make from relative again
+
+          if (from.startsWith(projectDirectoryUrl)) {
+            from = `./${util.urlToRelativeUrl(from, projectDirectoryUrl)}`;
+          }
+        }
+
         markMappingAsUsed({
           scope,
           from,
@@ -547,7 +562,7 @@ const getImportMapFromJsFiles = async ({
     });
   };
 
-  const visitFile = async (specifier, importer, {
+  const resolveFileSystemUrl = memoizeAsyncFunctionBySpecifierAndImporter(async (specifier, importer, {
     importedBy
   }) => {
     let fileUrl;
@@ -563,7 +578,7 @@ const getImportMapFromJsFiles = async ({
       if (importer === projectPackageFileUrl) {
         // cannot find package main file (package.main is "" for instance)
         // we can't discover main file and parse dependencies
-        return;
+        return null;
       }
 
       gotBareSpecifierError = true;
@@ -581,7 +596,7 @@ const getImportMapFromJsFiles = async ({
         fileUrl,
         magicExtensions
       }));
-      return;
+      return null;
     }
 
     const needsAutoMapping = fileUrlOnFileSystem !== fileUrl || gotBareSpecifierError;
@@ -607,17 +622,18 @@ const getImportMapFromJsFiles = async ({
       }));
     }
 
-    await visitFileContent(fileUrlOnFileSystem);
-  };
-
-  const visitFileContent = memoizeAsyncFunctionByUrl(async fileUrl => {
-    const fileContent = await readFileContent(fileUrl);
+    return fileUrlOnFileSystem;
+  });
+  const visitFile = memoizeAsyncFunctionByUrl(async fileUrl => {
+    const fileContent = await util.readFile(fileUrl, {
+      as: "string"
+    });
     const specifiers = await parseSpecifiersFromFile(fileUrl, {
       fileContent
     });
-    await Promise.all(Object.keys(specifiers).map(async specifier => {
+    const dependencies = await Promise.all(Object.keys(specifiers).map(async specifier => {
       const specifierInfo = specifiers[specifier];
-      await visitFileMemoized(specifier, fileUrl, {
+      const dependencyUrlOnFileSystem = await resolveFileSystemUrl(specifier, fileUrl, {
         importedBy: showSource({
           url: fileUrl,
           line: specifierInfo.line,
@@ -625,20 +641,25 @@ const getImportMapFromJsFiles = async ({
           source: fileContent
         })
       });
+      return dependencyUrlOnFileSystem;
     }));
-  });
-  const visitFileMemoized = memoizeAsyncFunctionBySpecifierAndImporter(visitFile);
-  const readFileContent = memoizeAsyncFunctionByUrl(fileUrl => {
-    return util.readFile(fileUrl, {
-      as: "string"
+    const dependenciesToVisit = dependencies.filter(dependency => {
+      return dependency && !visitFile.isInMemory(dependency);
     });
+    await Promise.all(dependenciesToVisit.map(dependency => {
+      return visitFile(dependency);
+    }));
   });
   const projectPackageObject = await util.readFile(projectPackageFileUrl, {
     as: "json"
   });
-  await visitFileMemoized(projectPackageObject.name, projectPackageFileUrl, {
+  const projectMainFileUrlOnFileSystem = await resolveFileSystemUrl(projectPackageObject.name, projectPackageFileUrl, {
     importedBy: projectPackageObject.exports ? `${projectPackageFileUrl}#exports` : `${projectPackageFileUrl}`
   });
+
+  if (projectMainFileUrlOnFileSystem) {
+    await visitFile(projectMainFileUrlOnFileSystem);
+  }
 
   if (removeUnusedMappings) {
     const importsUsed = {};
@@ -660,16 +681,16 @@ const getImportMapFromJsFiles = async ({
       });
       scopesUsed[scope] = scopedMappings;
     });
-    return {
+    return importMap.sortImportMap({
       imports: importsUsed,
       scopes: scopesUsed
-    };
+    });
   }
 
-  return {
+  return importMap.sortImportMap(importMap.composeTwoImportMaps(importMap$1, {
     imports,
     scopes
-  };
+  }));
 };
 
 const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
@@ -2064,8 +2085,12 @@ const getImportMapFromProjectFiles = async ({
     ...rest
   });
   importMapFromPackageFiles = importMap.sortImportMap(importMapFromPackageFiles);
-  let importMapFromJsFiles = jsFiles ? await getImportMapFromJsFiles({
-    logLevel,
+
+  if (!jsFiles) {
+    return importMapFromPackageFiles;
+  }
+
+  let importMapFromJsFiles = await getImportMapFromJsFiles({
     warn,
     importMap: importMapFromPackageFiles,
     removeUnusedMappings,
@@ -2073,9 +2098,9 @@ const getImportMapFromProjectFiles = async ({
     magicExtensions,
     packagesExportsPreference,
     runtime
-  }) : {};
+  });
   importMapFromJsFiles = importMap.sortImportMap(importMapFromJsFiles);
-  return importMap.sortImportMap(importMap.composeTwoImportMaps(importMapFromPackageFiles, importMapFromJsFiles));
+  return importMapFromJsFiles;
 };
 const runtimeExportsPreferences = {
   browser: ["browser"],
