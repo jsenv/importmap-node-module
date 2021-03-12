@@ -1,7 +1,0 @@
-{
-  "name": "root",
-  "type": "module",
-  "dependencies": {
-    "lume": "*"
-  }
-}

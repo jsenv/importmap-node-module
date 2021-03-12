@@ -5,7 +5,7 @@
 /docs/basic-project/package-lock.json
 /docs/basic-project/yarn.lock
 /node_modules/
-/test/generateImportMapForProject/**/*.importmap
+/test/writeImportMapFile/**/*.importmap
 /import-map.importmap
 /jsconfig.json
 /package-lock.json

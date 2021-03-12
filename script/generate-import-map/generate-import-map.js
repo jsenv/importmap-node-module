@@ -1,13 +1,12 @@
-import {
-  getImportMapFromNodeModules,
-  generateImportMapForProject,
-} from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/node-module-import-map"
 import { projectDirectoryUrl, importMapFileRelativeUrl } from "../../jsenv.config.js"
 
-generateImportMapForProject(
+writeImportMapFile(
   [
-    getImportMapFromNodeModules({
+    getImportMapFromProjectFiles({
       projectDirectoryUrl,
+      runtime: "node",
+      dev: true,
     }),
   ],
   {

@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/node-module-import-map",
-  "version": "12.4.1",
+  "version": "13.0.0",
   "description": "Generate importmap for node_modules.",
   "license": "MIT",
   "repository": {
@@ -28,9 +28,9 @@
     "/index.js"
   ],
   "scripts": {
+    "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
     "test": "node ./script/test/test.js",
     "test-with-coverage": "npm run test -- --coverage",
-    "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
     "prettier-format": "node ./script/prettier-format/prettier-format.js",
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",
@@ -43,8 +43,10 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
+    "@babel/parser": "7.13.9",
+    "@babel/traverse": "7.13.0",
     "@jsenv/cancellation": "2.0.3",
-    "@jsenv/import-map": "6.11.1",
+    "@jsenv/import-map": "6.12.0",
     "@jsenv/logger": "4.0.0",
     "@jsenv/util": "4.0.6"
   },

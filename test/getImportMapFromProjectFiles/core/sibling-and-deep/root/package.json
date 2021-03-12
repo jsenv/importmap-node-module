@@ -1,0 +1,10 @@
+{
+  "name": "root",
+  "module": "index.js",
+  "exports": {
+    "./": "./"
+  },
+  "dependencies": {
+    "nested": "*"
+  }
+}

@@ -1,6 +1,6 @@
-import { getImportMapFromNodeModules } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
-getImportMapFromNodeModules({
+getImportMapFromProjectFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   projectPackageDevDependenciesIncluded: true,
   importMapFileRelativeUrl: "./import-map.importmap",
