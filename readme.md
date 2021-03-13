@@ -122,9 +122,9 @@ node generate-import-map.js
 </html>
 ```
 
-If you use a bundler, be sure it's compatible with import maps.
+If you use a bundler or an other tool, be sure it's compatible with import maps.
 
-> Because import map are standard, you can expect your bundler to be already compatible or to become compatible without plugin in a near future.
+> Because import map are standard, you can expect your bundler/tools to be already compatible or to become compatible without plugin in a near future.
 
 > [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, unit testing and when building for production.
 
@@ -139,24 +139,16 @@ If you use a bundler, be sure it's compatible with import maps.
 <details>
   <summary>writeImportMapFile code example</summary>
 
-Code below generate an import map from node_modules + a file + an inline importmap.
+Code below generate an import map from node_modules + an inline importmap.
 
 ```js
-import {
-  getImportMapFromProjectFiles,
-  getImportMapFromFile,
-  writeImportMapFile,
-} from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/node-module-import-map"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
 const importMapInputs = [
   getImportMapFromProjectFiles({
     projectDirectoryUrl,
     dev: true,
-  }),
-  getImportMapFromFile({
-    projectDirectoryUrl,
-    importMapFileRelativeUrl: "./import-map-custom.importmap",
   }),
   {
     imports: {
