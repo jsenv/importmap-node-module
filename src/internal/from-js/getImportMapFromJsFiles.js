@@ -6,6 +6,7 @@ import {
   sortImportMap,
   composeTwoImportMaps,
 } from "@jsenv/import-map"
+import { isSpecifierForNodeCoreModule } from "@jsenv/import-map/src/isSpecifierForNodeCoreModule.js"
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
@@ -18,10 +19,11 @@ const BARE_SPECIFIER_ERROR = {}
 
 export const getImportMapFromJsFiles = async ({
   warn,
-  importMap,
   projectDirectoryUrl,
+  importMap,
+  magicExtensions,
+  runtime,
   removeUnusedMappings,
-  magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
 }) => {
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
 
@@ -80,6 +82,10 @@ export const getImportMapFromJsFiles = async ({
 
   const resolveFileSystemUrl = memoizeAsyncFunctionBySpecifierAndImporter(
     async (specifier, importer, { importedBy }) => {
+      if (runtime === "node" && isSpecifierForNodeCoreModule(specifier)) {
+        return null
+      }
+
       let fileUrl
       let gotBareSpecifierError = false
 

@@ -11,7 +11,7 @@ export const getImportMapFromProjectFiles = async ({
   dev = false,
   jsFiles = true,
   removeUnusedMappings = !dev,
-  magicExtensions,
+  magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   onWarn = (warning, warn) => {
     warn(warning)
   },
@@ -46,12 +46,11 @@ export const getImportMapFromProjectFiles = async ({
 
   let importMapFromJsFiles = await getImportMapFromJsFiles({
     warn,
-    importMap: importMapFromPackageFiles,
-    removeUnusedMappings,
     projectDirectoryUrl,
+    importMap: importMapFromPackageFiles,
     magicExtensions,
-    packagesExportsPreference,
     runtime,
+    removeUnusedMappings,
   })
   importMapFromJsFiles = sortImportMap(importMapFromJsFiles)
   return importMapFromJsFiles
