@@ -12,6 +12,7 @@ Generate importmap for node_modules.
 - [Presentation](#Presentation)
 - [Usage](#Usage)
 - [API](#API)
+- [Configure VSCode and ESLint for importmap](#Configure-vscode-and-eslint-for-importmap)
 - [Advanced documentation](#Advanced-documentation)
 
 # Presentation
@@ -272,6 +273,10 @@ const importMap = await getImportMapFromFile({
 `importMapFileRelativeUrl` parameter is an url relative to `projectDirectoryUrl` leading to the importmap file. This parameter is **required**.
 
 </details>
+
+# Configure VSCode and ESLint for importmap
+
+TODO
 
 # Advanced documentation
 
