@@ -283,7 +283,7 @@ VSCode and ESLint can be configured to understand importmap. This will make ESLi
 - VSCode "go to definition" opens the imported file (cmd + click too)
 - VSCode autocompletion is improved because it can read imported files
 
-The animated image below shows how configuring ESLint and VsCode to understand import helps to fix an import with a typo and navigate to an imported file. This example shows how importing `"demo/log.js"` is remapped to `"src/log.js"`.
+The animated image below shows how configuring ESLint and VsCode helps to fix an import with a typo and navigate to an imported file. This example uses `"demo/log.js"` import that is remapped to `"src/log.js"` by [docs/vscode-importmap-demo/custom.importmap](docs/vscode-importmap-demo/custom.importmap)
 
 ![Animated image showing importmap integration in VSCode and ESLint](./docs/importmap-configured-demo.gif)
 
