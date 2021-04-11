@@ -9,6 +9,7 @@
   },
   "type": "module",
   "main": "main.js",
+  "importmap": "./custom.importmap",
   "scripts": {
     "generate-import-map": "node ./generate-import-map.js"
   }

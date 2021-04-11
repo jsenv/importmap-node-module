@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "anonymous": ["./main.js"],
+      "src/*": ["./src/*"]
+    }
+  }
+}

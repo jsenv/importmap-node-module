@@ -276,7 +276,7 @@ const importMap = await getImportMapFromFile({
 
 # Configure VSCode and ESLint for importmap
 
-TODO
+[![Before configuring vscode](https://img.youtube.com/vi/FFQvU3wheu4/default.jpg)](https://youtu.be/FFQvU3wheu4)
 
 # Advanced documentation
 
