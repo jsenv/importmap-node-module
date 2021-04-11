@@ -3,6 +3,7 @@ import {
   urlToFileSystemPath,
   assertAndNormalizeDirectoryUrl,
   writeFile,
+  readFile,
 } from "@jsenv/util"
 import { composeTwoImportMaps } from "@jsenv/import-map"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
@@ -19,7 +20,6 @@ export const writeImportMapFile = async (
     jsConfigFile = false, // not yet documented, makes vscode aware of the import remapping
     jsConfigFileLog = true,
     jsConfigLeadingSlash = false,
-    jsConfigBase = {},
   },
 ) => {
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
@@ -43,27 +43,40 @@ export const writeImportMapFile = async (
   }
   if (jsConfigFile) {
     const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl)
-    try {
-      const jsConfig = {
-        compilerOptions: {
-          baseUrl: ".",
-          ...jsConfigBase,
-          paths: {
-            ...(jsConfigLeadingSlash ? { "/*": ["./*"] } : {}),
-            ...importMapToVsCodeConfigPaths(importMap),
-          },
+    const jsConfigCurrent = (await readCurrentJsConfig(jsConfigFileUrl)) || { compilerOptions: {} }
+    const jsConfig = {
+      ...jsConfigDefault,
+      ...jsConfigCurrent,
+      compilerOptions: {
+        ...jsConfigDefault.compilerOptions,
+        ...jsConfigCurrent.compilerOptions,
+        paths: {
+          ...(jsConfigLeadingSlash ? { "/*": ["./*"] } : {}),
+          ...importMapToVsCodeConfigPaths(importMap),
         },
-      }
-      await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "))
-      if (jsConfigFileLog) {
-        console.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`)
-      }
-    } catch (e) {
-      if (e.code !== "ENOENT") {
-        throw e
-      }
+      },
+    }
+    await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "))
+    if (jsConfigFileLog) {
+      console.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`)
     }
   }
 
   return importMap
+}
+
+const readCurrentJsConfig = async (jsConfigFileUrl) => {
+  try {
+    const currentJSConfig = await readFile(jsConfigFileUrl, { as: "json" })
+    return currentJSConfig
+  } catch (e) {
+    return null
+  }
+}
+
+const jsConfigDefault = {
+  compilerOptions: {
+    baseUrl: ".",
+    paths: {},
+  },
 }

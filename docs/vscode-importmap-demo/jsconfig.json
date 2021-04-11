@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "anonymous": ["./main.js"],
-      "src/*": ["./src/*"]
+      "demo/*": ["./src/*"]
     }
   }
 }

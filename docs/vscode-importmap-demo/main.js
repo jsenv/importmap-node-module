@@ -1,3 +1,3 @@
-import { logMessage } from "src/log.js"
+import { logMessage } from "demo/log.js"
 
 logMessage()

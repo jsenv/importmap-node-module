@@ -276,7 +276,63 @@ const importMap = await getImportMapFromFile({
 
 # Configure VSCode and ESLint for importmap
 
-[![Before configuring vscode](https://img.youtube.com/vi/FFQvU3wheu4/default.jpg)](https://youtu.be/FFQvU3wheu4)
+VSCode and ESLint can be configured to understand importmap. This will make ESLint and VSCode capable to resolve your imports. Amongst other things it will give you the following:
+
+- ESLint report an error when import cannot be resolved (help to fix typo)
+- ESLint report an error in case named import does not exists (help to fix typo too)
+- VSCode "go to definition" opens the imported file (cmd + click too)
+- VSCode autocompletion is improved because it can read imported files
+
+The animated image below shows how VsCode interacts with code containing a custom import mapping.
+
+![Animated image showing VSCode and ESLint configured to understand importmap](./docs/importmap-configuration-after.gif)
+
+Follow steps below to configure VsCode:
+
+1. Generate importmap using [writeImportMapFile](#writeImportMapFile)
+2. Use `jsConfigFile` parameter
+
+   VSCode import resolution can be configured in a file called [jsconfig.json](https://code.visualstudio.com/docs/languages/jsconfig). Enabling `jsConfigFile` converts import mapping into `paths` and write them into `jsconfig.json`.
+
+   <details>
+      <summary>Code example using jsConfigFile</summary>
+
+   ```js
+   import { writeImportMapFile } from "@jsenv/node-module-import-map"
+
+   const projectDirectoryUrl = new URL("./", import.meta.url)
+
+   await writeImportMapFile(
+     [
+       {
+         imports: {
+           "src/": "./src/",
+         },
+       },
+     ],
+     {
+       projectDirectoryUrl,
+       jsConfigFile: true,
+     },
+   )
+   ```
+
+   Code above would result into the following `jsconfig.json` file
+
+   ```json
+   {
+     "compilerOptions": {
+       "baseUrl": ".",
+       "paths": {
+         "src/*": ["./src/*"]
+       }
+     }
+   }
+   ```
+
+   </details>
+
+At this stage, VSCode is condifured to understand import mappings. If you also want to configure ESLint to understand import mappings, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
 
 # Advanced documentation
 
