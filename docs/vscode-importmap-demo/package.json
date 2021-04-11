@@ -1,0 +1,13 @@
+{
+  "name": "anonymous",
+  "private": true,
+  "devDependencies": {
+    "@jsenv/node-module-import-map": "*"
+  },
+  "type": "module",
+  "main": "main.js",
+  "importmap": "./custom.importmap",
+  "scripts": {
+    "generate-import-map": "node ./generate-import-map.js"
+  }
+}

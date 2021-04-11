@@ -4,6 +4,9 @@
 /docs/basic-project/node_modules/
 /docs/basic-project/package-lock.json
 /docs/basic-project/yarn.lock
+/docs/vscode-importmap-demo/node_modules/
+/docs/vscode-importmap-demo/package-lock.json
+/docs/vscode-importmap-demo/import-map.importmap
 /node_modules/
 /test/writeImportMapFile/**/*.importmap
 /import-map.importmap
