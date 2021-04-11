@@ -32,6 +32,7 @@ await writeImportMapFile(
     projectDirectoryUrl: testDirectoryUrl,
     importMapFile: false,
     jsConfigFile: true,
+    jsConfigFileLog: false,
   },
 )
 // assert
