@@ -278,18 +278,18 @@ const importMap = await getImportMapFromFile({
 
 VSCode and ESLint can be configured to understand importmap. This will make ESLint and VSCode capable to resolve your imports. Amongst other things it will give you the following:
 
-- ESLint report an error when import cannot be resolved (help to fix typo)
-- ESLint report an error in case named import does not exists (help to fix typo too)
+- ESLint tells your when import cannot be resolved (help to fix typo)
+- ESLint tells your when a named import does not exists (help to fix typo too)
 - VSCode "go to definition" opens the imported file (cmd + click too)
 - VSCode autocompletion is improved because it can read imported files
 
-The animated image below shows how VsCode interacts with code containing a custom import mapping.
+The animated image below shows how configuring ESLint and VsCode to understand import helps to fix an import with a typo and navigate to an imported file. This example shows how importing `"demo/log.js"` is remapped to `"src/log.js"`.
 
-![Animated image showing VSCode and ESLint configured to understand importmap](./docs/importmap-configuration-after.gif)
+![Animated image showing importmap integration in VSCode and ESLint](./docs/importmap-configured-demo.gif)
 
 Follow steps below to configure VsCode:
 
-1. Generate importmap using [writeImportMapFile](#writeImportMapFile)
+1. Generate importmap file using [writeImportMapFile](#writeImportMapFile)
 2. Use `jsConfigFile` parameter
 
    VSCode import resolution can be configured in a file called [jsconfig.json](https://code.visualstudio.com/docs/languages/jsconfig). Enabling `jsConfigFile` converts import mapping into `paths` and write them into `jsconfig.json`.
@@ -332,7 +332,9 @@ Follow steps below to configure VsCode:
 
    </details>
 
-At this stage, VSCode is condifured to understand import mappings. If you also want to configure ESLint to understand import mappings, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
+At this stage, VsCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using `cmd+click` keyboard shortcut.
+
+If you also want to configure ESLint to be alerted when an import cannot be found, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
 
 # Advanced documentation
 
