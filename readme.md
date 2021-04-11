@@ -11,12 +11,8 @@ Generate importmap for node_modules.
 
 - [Presentation](#Presentation)
 - [Usage](#Usage)
-- [writeImportMapFile](#writeImportMapFile)
-- [getImportMapFromProjectFiles](#getImportMapFromProjectFiles)
-- [getImportMapFromFile](#getImportMapFromFile)
-- [Custom node module resolution](#custom-node-module-resolution)
-- [Extensionless import warning](#Extensionless-import-warning)
-- [Subpath import warning](#Subpath-import-warning)
+- [API](#API)
+- [Advanced documentation](#Advanced-documentation)
 
 # Presentation
 
@@ -130,11 +126,11 @@ If you use a bundler or an other tool, be sure it's compatible with import maps.
 
 </details>
 
-# writeImportMapFile
+# API
+
+## writeImportMapFile
 
 `writeImportMapFile` is an async function receiving an array of promise resolving to importmaps. It awaits for every importmap, compose them into one and write it into a file.
-
-> This function is meant to be responsible of generating the final importMap file that a project uses.
 
 <details>
   <summary>writeImportMapFile code example</summary>
@@ -163,25 +159,34 @@ await writeImportMapFile(importMapInputs, {
 })
 ```
 
-— source code at [src/writeImportMapFile.js](./src/writeImportMapFile.js)
+[implementation](./src/writeImportMapFile.js)
 
 </details>
 
-## importMapInputs
+<details>
+  <summary>importMapInputs parameter</summary>
 
 `importMapInputs` is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
 
 > When `importMapInputs` is empty a warning is emitted and `writeImportMapFile` write an empty importmap file.
 
-## importMapFile
+</details>
+
+<details>
+  <summary>importMapFile parameter</summary>
 
 `importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
 
-## importMapFileRelativeUrl
+</details>
+
+<details>
+  <summary>importMapFileRelativeUrl parameter</summary>
 
 `importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./import-map.importmap"`.
 
-# getImportMapFromProjectFiles
+</details>
+
+## getImportMapFromProjectFiles
 
 `getImportMapFromProjectFiles` is an async function returning an importMap object computed from infos found in `package.json` files and source files.
 
@@ -207,15 +212,19 @@ const importMap = await getImportMapFromProjectFiles({
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
-— source code at [src/getImportMapFromProjectFiles.js](./src/getImportMapFromProjectFiles.js)
+[implementation](./src/getImportMapFromProjectFiles.js)
 
 </details>
 
-## projectDirectoryUrl
+<details>
+  <summary>projectDirectoryUrl parameter</summary>
 
-`projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl
+`projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in [@jsenv/util#assertAndNormalizeDirectoryUrl](https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl)
 
-## dev
+</details>
+
+<details>
+  <summary>dev parameter</summary>
 
 `dev` parameter is a boolean indicating if the importmap will be used for development or production. This parameter is optional and by default it's disabled.
 
@@ -224,7 +233,10 @@ When enabled the following happens:
 1. `devDependencies` declared in your `package.json` are included in the generated importMap.
 2. `"development"` is favored over `"production"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
-## runtime
+</details>
+
+<details>
+  <summary>runtime parameter</summary>
 
 `runtime` parameter is a string indicating where the importmap will be used. This parameter is optional with a default of `"browser"`.
 
@@ -232,7 +244,9 @@ When `runtime` is `"browser"`, `"browser"` is favored over `"node"` in [package.
 
 When it is `"node"`, `"node"` is favored.
 
-# getImportMapFromFile
+</details>
+
+## getImportMapFromFile
 
 `getImportMapFromFile` is an async function reading importmap from a file.
 
@@ -248,15 +262,20 @@ const importMap = await getImportMapFromFile({
 })
 ```
 
-— source code at [src/getImportMapFromFile.js](./src/getImportMapFromFile.js)
+[implementation](./src/getImportMapFromFile.js)
 
 </details>
 
-## importMapFileRelativeUrl
+<details>
+  <summary>importMapFileRelativeUrl</summary>
 
-`importMapFileUrl` parameter an url relative to [projectDirectoryUrl](#projectDirectoryUrl) leading to the importmap file. This parameter is **required**.
+`importMapFileRelativeUrl` parameter is an url relative to `projectDirectoryUrl` leading to the importmap file. This parameter is **required**.
 
-# Custom node module resolution
+</details>
+
+# Advanced documentation
+
+## Custom node module resolution
 
 `@jsenv/node-module-import-map` uses a custom node module resolution
 
@@ -268,7 +287,7 @@ We do this because import map are used on the web where a file outside project d
 
 In practice, it has no impact because node modules are inside your project directory. If they are not, ensure all your dependencies are in your `package.json` and re-run `npm install`.
 
-# Extensionless import warning
+## Extensionless import warning
 
 If the code you wants to run contains one ore more extensionless path specifier, it will not be found by a browser (not even by Node.js).
 
@@ -297,7 +316,7 @@ In this situation, you can do one of the following:
 
 4. Remap manually each extensionless import and pass that importmap in [importMapInputs](#importMapInputs)
 
-# Subpath import warning
+## Subpath import warning
 
 The generation of importmap takes into account `exports` field from `package.json`. These `exports` field are used to allow subpath imports.
 
