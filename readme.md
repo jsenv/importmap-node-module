@@ -12,6 +12,7 @@ Generate importmap for node_modules.
 - [Presentation](#Presentation)
 - [Usage](#Usage)
 - [API](#API)
+- [Configure VSCode and ESLint for importmap](#Configure-vscode-and-eslint-for-importmap)
 - [Advanced documentation](#Advanced-documentation)
 
 # Presentation
@@ -272,6 +273,68 @@ const importMap = await getImportMapFromFile({
 `importMapFileRelativeUrl` parameter is an url relative to `projectDirectoryUrl` leading to the importmap file. This parameter is **required**.
 
 </details>
+
+# Configure VSCode and ESLint for importmap
+
+VSCode and ESLint can be configured to understand importmap. This will make ESLint and VSCode capable to resolve your imports. Amongst other things it will give you the following:
+
+- ESLint tells your when import cannot be resolved (help to fix typo)
+- ESLint tells your when a named import does not exists (help to fix typo too)
+- VSCode "go to definition" opens the imported file (cmd + click too)
+- VSCode autocompletion is improved because it can read imported files
+
+The animated image below shows how configuring ESLint and VsCode to understand import helps to fix an import with a typo and navigate to an imported file. This example shows how importing `"demo/log.js"` is remapped to `"src/log.js"`.
+
+![Animated image showing importmap integration in VSCode and ESLint](./docs/importmap-configured-demo.gif)
+
+Follow steps below to configure VsCode:
+
+1. Generate importmap file using [writeImportMapFile](#writeImportMapFile)
+2. Use `jsConfigFile` parameter
+
+   VSCode import resolution can be configured in a file called [jsconfig.json](https://code.visualstudio.com/docs/languages/jsconfig). Enabling `jsConfigFile` converts import mapping into `paths` and write them into `jsconfig.json`.
+
+   <details>
+      <summary>Code example using jsConfigFile</summary>
+
+   ```js
+   import { writeImportMapFile } from "@jsenv/node-module-import-map"
+
+   const projectDirectoryUrl = new URL("./", import.meta.url)
+
+   await writeImportMapFile(
+     [
+       {
+         imports: {
+           "src/": "./src/",
+         },
+       },
+     ],
+     {
+       projectDirectoryUrl,
+       jsConfigFile: true,
+     },
+   )
+   ```
+
+   Code above would result into the following `jsconfig.json` file
+
+   ```json
+   {
+     "compilerOptions": {
+       "baseUrl": ".",
+       "paths": {
+         "src/*": ["./src/*"]
+       }
+     }
+   }
+   ```
+
+   </details>
+
+At this stage, VsCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using `cmd+click` keyboard shortcut.
+
+If you also want to configure ESLint to be alerted when an import cannot be found, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
 
 # Advanced documentation
 
