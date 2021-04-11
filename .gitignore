@@ -8,6 +8,7 @@
 /docs/vscode-importmap-demo/package-lock.json
 /node_modules/
 /test/writeImportMapFile/**/*.importmap
+/test/**/jsconfig.json
 /import-map.importmap
 /jsconfig.json
 /package-lock.json
