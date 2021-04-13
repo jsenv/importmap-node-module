@@ -14,8 +14,21 @@ export const visitPackageImportMap = async ({
 
   if (typeof packageImportmap === "string") {
     const importmapFileUrl = resolveUrl(packageImportmap, packageFileUrl)
-    const importmap = await readFile(importmapFileUrl, { as: "json" })
-    return moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl)
+    try {
+      const importmap = await readFile(importmapFileUrl, { as: "json" })
+      return moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl)
+    } catch (e) {
+      if (e.code === "ENOENT") {
+        warn(
+          createPackageImportMapNotFoundWarning({
+            importmapFileUrl,
+            packageFileUrl,
+          }),
+        )
+        return {}
+      }
+      throw e
+    }
   }
 
   if (typeof packageImportmap === "object" && packageImportmap !== null) {
@@ -29,6 +42,17 @@ export const visitPackageImportMap = async ({
     }),
   )
   return {}
+}
+
+const createPackageImportMapNotFoundWarning = ({ importmapFileUrl, packageFileUrl }) => {
+  return {
+    code: "PACKAGE_IMPORTMAP_NOT_FOUND",
+    message: `importmap file specified in a package.json cannot be found,
+--- importmap file path ---
+${importmapFileUrl}
+--- package.json path ---
+${packageFileUrl}`,
+  }
 }
 
 const createPackageImportMapUnexpectedWarning = ({ packageImportmap, packageFileUrl }) => {
