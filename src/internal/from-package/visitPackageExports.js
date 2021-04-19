@@ -9,13 +9,12 @@ export const visitPackageExports = ({
   packageExports = packageJsonObject.exports,
   packageName = packageJsonObject.name,
   projectDirectoryUrl,
-  userConditions,
+  packageConditions,
   warn,
 }) => {
   const exportsSubpaths = {}
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
-
   const onExportsSubpath = ({ key, value, trace }) => {
     if (!specifierIsRelative(key)) {
       warn(
@@ -53,6 +52,8 @@ export const visitPackageExports = ({
 
     exportsSubpaths[keyNormalized] = valueNormalized
   }
+
+  const conditions = [...packageConditions, "default"]
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     // false is allowed as alternative to exports: {}
@@ -92,33 +93,76 @@ export const visitPackageExports = ({
   }
 
   const handleObject = (subpathValue, subpathValueTrace) => {
-    const keys = Object.keys(subpathValue)
-    const everyKeyDoesNotStartsWithDot = keys.every((key) => !key.startsWith("."))
-    if (everyKeyDoesNotStartsWithDot) {
-      const bestConditionKey = findBestConditionKey(keys, userConditions)
-      if (!bestConditionKey) {
-        return
-      }
-      visitSubpathValue(subpathValue[bestConditionKey], [...subpathValueTrace, bestConditionKey])
-      return
-    }
-
-    const everyKeyStartsWithDot = keys.every((key) => key.startsWith("."))
-    if (everyKeyStartsWithDot) {
-      keys.forEach((key) => {
-        visitSubpathValue(subpathValue[key], [...subpathValueTrace, key])
+    // From Node.js documentation:
+    // "If a nested conditional does not have any mapping it will continue
+    // checking the remaining conditions of the parent condition"
+    // https://nodejs.org/docs/latest-v14.x/api/packages.html#packages_nested_conditions
+    //
+    // So it seems what we do here is not sufficient
+    // -> if the condition finally does not lead to something
+    // it should be ignored and an other branch be taken until
+    // something resolves
+    const followConditionBranch = (subpathValue, conditionTrace) => {
+      const relativeKeys = []
+      const conditionalKeys = []
+      Object.keys(subpathValue).forEach((availableKey) => {
+        if (availableKey.startsWith(".")) {
+          relativeKeys.push(availableKey)
+        } else {
+          conditionalKeys.push(availableKey)
+        }
       })
-      return
+
+      if (relativeKeys.length > 0 && conditionalKeys.length > 0) {
+        // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
+        warn(
+          createUnexpectedExportsSubpathWarning({
+            subpathValue,
+            subpathValueTrace: [...subpathValueTrace, ...conditionTrace],
+            packageFileUrl,
+            relativeKeys,
+            conditionalKeys,
+          }),
+        )
+        return null
+      }
+
+      // there is no condition
+      if (conditionalKeys.length === 0) {
+        return {
+          value: subpathValue,
+          trace: subpathValueTrace,
+        }
+      }
+
+      let condition = null
+      conditions.find((keyCandidate) => {
+        if (!conditionalKeys.includes(keyCandidate)) {
+          return false
+        }
+
+        const valueCandidate = subpathValue[keyCandidate]
+        if (typeof valueCandidate === "string") {
+          condition = {
+            value: valueCandidate,
+            trace: conditionTrace,
+          }
+          return true
+        }
+        if (typeof valueCandidate === "object" && valueCandidate !== null) {
+          condition = followConditionBranch(valueCandidate, [...conditionTrace, keyCandidate])
+          return Boolean(condition)
+        }
+        return false
+      })
+      return condition
     }
 
-    // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
-    warn(
-      createUnexpectedExportsSubpathWarning({
-        subpathValue,
-        subpathValueTrace,
-        packageFileUrl,
-      }),
-    )
+    const condition = followConditionBranch(subpathValue, [])
+    if (condition) {
+      visitSubpathValue(condition.value, [...subpathValueTrace, condition.trace])
+      return
+    }
   }
 
   const handleRemaining = (subpathValue, subpathValueTrace) => {
@@ -134,19 +178,6 @@ export const visitPackageExports = ({
   visitSubpathValue(packageExports, ["exports"])
 
   return exportsSubpaths
-}
-
-const findBestConditionKey = (availableKeys, exportsConditions) => {
-  const conditionKey = exportsConditions.find((key) => availableKeys.includes(key))
-  if (conditionKey) {
-    return conditionKey
-  }
-
-  if (availableKeys.includes("default")) {
-    return "default"
-  }
-
-  return undefined
 }
 
 const specifierToSource = (specifier, packageName) => {
