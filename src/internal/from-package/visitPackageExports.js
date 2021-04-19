@@ -126,17 +126,20 @@ export const visitPackageExports = ({
         return false
       }
 
-      // there is no condition
+      // there is no condition, visit all relative keys
       if (conditionalKeys.length === 0) {
-        return relativeKeys.some((key) => {
-          return visitSubpathValue(subpathValue[key], [
+        let someExportAdded = false
+        relativeKeys.forEach((key) => {
+          someExportAdded = visitSubpathValue(subpathValue[key], [
             ...subpathValueTrace,
             ...conditionTrace,
             key,
           ])
         })
+        return someExportAdded
       }
 
+      // there is a condition, keep the first one leading to something
       return conditions.some((keyCandidate) => {
         if (!conditionalKeys.includes(keyCandidate)) {
           return false
