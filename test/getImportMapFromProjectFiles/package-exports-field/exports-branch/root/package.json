@@ -1,0 +1,7 @@
+{
+  "name": "whatever",
+  "type": "module",
+  "dependencies": {
+    "foo": "*"
+  }
+}

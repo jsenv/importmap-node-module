@@ -58,25 +58,23 @@ export const visitPackageExports = ({
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     // false is allowed as alternative to exports: {}
     if (subpathValue === false) {
-      handleFalse()
-      return
+      return handleFalse()
     }
 
     if (typeof subpathValue === "string") {
-      handleString(subpathValue, subpathValueTrace)
-      return
+      return handleString(subpathValue, subpathValueTrace)
     }
 
     if (typeof subpathValue === "object" && subpathValue !== null) {
-      handleObject(subpathValue, subpathValueTrace)
-      return
+      return handleObject(subpathValue, subpathValueTrace)
     }
 
-    handleRemaining(subpathValue, subpathValueTrace)
+    return handleRemaining(subpathValue, subpathValueTrace)
   }
 
   const handleFalse = () => {
     // nothing to do
+    return true
   }
 
   const handleString = (subpathValue, subpathValueTrace) => {
@@ -90,6 +88,7 @@ export const visitPackageExports = ({
       value: subpathValue,
       trace: subpathValueTrace,
     })
+    return true
   }
 
   const handleObject = (subpathValue, subpathValueTrace) => {
@@ -124,45 +123,34 @@ export const visitPackageExports = ({
             conditionalKeys,
           }),
         )
-        return null
+        return false
       }
 
       // there is no condition
       if (conditionalKeys.length === 0) {
-        return {
-          value: subpathValue,
-          trace: subpathValueTrace,
-        }
+        return relativeKeys.some((key) => {
+          return visitSubpathValue(subpathValue[key], [
+            ...subpathValueTrace,
+            ...conditionTrace,
+            key,
+          ])
+        })
       }
 
-      let condition = null
-      conditions.find((keyCandidate) => {
+      return conditions.some((keyCandidate) => {
         if (!conditionalKeys.includes(keyCandidate)) {
           return false
         }
-
         const valueCandidate = subpathValue[keyCandidate]
-        if (typeof valueCandidate === "string") {
-          condition = {
-            value: valueCandidate,
-            trace: conditionTrace,
-          }
-          return true
-        }
-        if (typeof valueCandidate === "object" && valueCandidate !== null) {
-          condition = followConditionBranch(valueCandidate, [...conditionTrace, keyCandidate])
-          return Boolean(condition)
-        }
-        return false
+        return visitSubpathValue(valueCandidate, [
+          ...subpathValueTrace,
+          ...conditionTrace,
+          keyCandidate,
+        ])
       })
-      return condition
     }
 
-    const condition = followConditionBranch(subpathValue, [])
-    if (condition) {
-      visitSubpathValue(condition.value, [...subpathValueTrace, condition.trace])
-      return
-    }
+    return followConditionBranch(subpathValue, [])
   }
 
   const handleRemaining = (subpathValue, subpathValueTrace) => {
@@ -173,6 +161,7 @@ export const visitPackageExports = ({
         packageFileUrl,
       }),
     )
+    return false
   }
 
   visitSubpathValue(packageExports, ["exports"])
