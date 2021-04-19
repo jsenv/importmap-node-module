@@ -249,42 +249,40 @@ export const getImportMapFromPackageFiles = async ({
 
     if (packagesExportsIncluded && "exports" in packageJsonObject) {
       const mappingsFromPackageExports = {}
-      visitPackageExports({
+      const packageExports = visitPackageExports({
         warn,
         packageFileUrl,
         packageJsonObject,
         packageName,
         projectDirectoryUrl,
         packagesExportsPreference,
-        onExport: ({ key, value }) => {
-          const from = key
-          const to = value
+      })
+      Object.keys(packageExports).forEach((from) => {
+        const to = packageExports[from]
+        if (from.indexOf("*") === -1) {
+          mappingsFromPackageExports[from] = to
+          return
+        }
 
-          if (from.indexOf("*") === -1) {
-            mappingsFromPackageExports[from] = to
-            return
-          }
+        if (
+          from.endsWith("/*") &&
+          to.endsWith("/*") &&
+          // ensure ends with '*' AND there is only one '*' occurence
+          to.indexOf("*") === to.length - 1
+        ) {
+          const fromWithouTrailingStar = from.slice(0, -1)
+          const toWithoutTrailingStar = to.slice(0, -1)
+          mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
+          return
+        }
 
-          if (
-            from.endsWith("/*") &&
-            to.endsWith("/*") &&
-            // ensure ends with '*' AND there is only one '*' occurence
-            to.indexOf("*") === to.length - 1
-          ) {
-            const fromWithouTrailingStar = from.slice(0, -1)
-            const toWithoutTrailingStar = to.slice(0, -1)
-            mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
-            return
-          }
-
-          warn(
-            createExportsWildcardIgnoredWarning({
-              key,
-              value,
-              packageFileUrl,
-            }),
-          )
-        },
+        warn(
+          createExportsWildcardIgnoredWarning({
+            key: from,
+            value: to,
+            packageFileUrl,
+          }),
+        )
       })
       addMappingsForPackageAndImporter(mappingsFromPackageExports)
     }

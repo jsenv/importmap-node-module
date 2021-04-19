@@ -4,143 +4,136 @@ import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/util"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({
-  warn,
   packageFileUrl,
   packageJsonObject,
   packageExports = packageJsonObject.exports,
   packageName = packageJsonObject.name,
   projectDirectoryUrl,
-  packagesExportsPreference,
-  onExport,
+  userConditions,
+  warn,
 }) => {
+  const exportsSubpaths = {}
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
 
-  visitExportsSubpath(packageExports, packagesExportsPreference, {
-    onUnexpectedPackageExports: ({ packageExportsValue, packageExportsValuePath }) => {
+  const onExportsSubpath = ({ key, value, trace }) => {
+    if (!specifierIsRelative(key)) {
       warn(
-        createExportsValueWarning({
-          packageExportsValue,
-          packageExportsValuePath,
+        createExportsSubpathKeyMustBeRelativeWarning({
+          key,
+          keyTrace: trace.slice(0, -1),
           packageFileUrl,
         }),
       )
-    },
-    onMixedPackageExports: ({ packageExportsValue, packageExportsValuePath }) => {
-      // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
+      return
+    }
+    if (typeof value !== "string") {
       warn(
-        createExportsMixedWarning({
-          packageExportsValue,
-          packageExportsValuePath,
+        createExportsSubpathValueMustBeAStringWarning({
+          value,
+          valueTrace: trace,
           packageFileUrl,
         }),
       )
-    },
-    onSubpathPackageExport: ({ key, value, valuePath }) => {
-      if (!specifierIsRelative(key)) {
-        warn(
-          createExportsMappingKeyMustBeRelativeWarning({
-            key,
-            keyPath: valuePath.slice(0, -1),
-            packageFileUrl,
-          }),
-        )
-        return
-      }
-      if (typeof value !== "string") {
-        warn(
-          createExportsMappingValueMustBeAStringWarning({
-            value,
-            valuePath,
-            packageFileUrl,
-          }),
-        )
-        return
-      }
-      if (!specifierIsRelative(value)) {
-        warn(
-          createExportsMappingValueMustBeRelativeWarning({
-            value,
-            valuePath,
-            packageFileUrl,
-          }),
-        )
-        return
-      }
+      return
+    }
+    if (!specifierIsRelative(value)) {
+      warn(
+        createExportsSubpathValueMustBeRelativeWarning({
+          value,
+          valueTrace: trace,
+          packageFileUrl,
+        }),
+      )
+      return
+    }
 
-      onExport({
-        key: specifierToSource(key, packageName),
-        value: addressToDestination(value, packageDirectoryRelativeUrl),
-      })
-    },
-  })
-}
+    const keyNormalized = specifierToSource(key, packageName)
+    const valueNormalized = addressToDestination(value, packageDirectoryRelativeUrl)
 
-const visitExportsSubpath = (
-  packageExports,
-  packageExportsConditions,
-  { onUnexpectedPackageExports, onMixedPackageExports, onSubpathPackageExport },
-) => {
-  const visitValue = (packageExportsValue, { valuePath }) => {
+    exportsSubpaths[keyNormalized] = valueNormalized
+  }
+
+  const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     // false is allowed as alternative to exports: {}
-    if (packageExportsValue === false) {
+    if (subpathValue === false) {
+      handleFalse()
       return
     }
 
-    if (typeof packageExportsValue === "string") {
-      const firstNonConditionKey = valuePath
-        .slice()
-        .reverse()
-        .find((key) => key.startsWith("."))
-      const key = firstNonConditionKey || "."
-      onSubpathPackageExport({
-        value: packageExportsValue,
-        valuePath,
-        key,
-      })
+    if (typeof subpathValue === "string") {
+      handleString(subpathValue, subpathValueTrace)
       return
     }
 
-    if (typeof packageExportsValue !== "object" && packageExportsValue !== null) {
-      onUnexpectedPackageExports({
-        packageExportsValue,
-        packageExportsValuePath: valuePath,
-      })
+    if (typeof subpathValue === "object" && subpathValue !== null) {
+      handleObject(subpathValue, subpathValueTrace)
       return
     }
 
-    const keys = Object.keys(packageExportsValue)
+    handleRemaining(subpathValue, subpathValueTrace)
+  }
+
+  const handleFalse = () => {
+    // nothing to do
+  }
+
+  const handleString = (subpathValue, subpathValueTrace) => {
+    const firstNonConditionKey = subpathValueTrace
+      .slice()
+      .reverse()
+      .find((key) => key.startsWith("."))
+    const key = firstNonConditionKey || "."
+    onExportsSubpath({
+      key,
+      value: subpathValue,
+      trace: subpathValueTrace,
+    })
+  }
+
+  const handleObject = (subpathValue, subpathValueTrace) => {
+    const keys = Object.keys(subpathValue)
     const everyKeyDoesNotStartsWithDot = keys.every((key) => !key.startsWith("."))
     if (everyKeyDoesNotStartsWithDot) {
-      const bestConditionKey = findBestConditionKey(keys, packageExportsConditions)
+      const bestConditionKey = findBestConditionKey(keys, userConditions)
       if (!bestConditionKey) {
         return
       }
-      const bestExports = packageExportsValue[bestConditionKey]
-      visitValue(bestExports, {
-        valuePath: [...valuePath, bestConditionKey],
-      })
+      visitSubpathValue(subpathValue[bestConditionKey], [...subpathValueTrace, bestConditionKey])
       return
     }
 
     const everyKeyStartsWithDot = keys.every((key) => key.startsWith("."))
     if (everyKeyStartsWithDot) {
       keys.forEach((key) => {
-        visitValue(packageExportsValue[key], {
-          valuePath: [...valuePath, key],
-        })
+        visitSubpathValue(subpathValue[key], [...subpathValueTrace, key])
       })
       return
     }
 
-    onMixedPackageExports({
-      packageExportsValue,
-      packageExportsValuePath: valuePath,
-    })
+    // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
+    warn(
+      createUnexpectedExportsSubpathWarning({
+        subpathValue,
+        subpathValueTrace,
+        packageFileUrl,
+      }),
+    )
   }
-  visitValue(packageExports, {
-    valuePath: ["exports"],
-  })
+
+  const handleRemaining = (subpathValue, subpathValueTrace) => {
+    warn(
+      createMixedExportsSubpathWarning({
+        subpathValue,
+        subpathValueTrace,
+        packageFileUrl,
+      }),
+    )
+  }
+
+  visitSubpathValue(packageExports, ["exports"])
+
+  return exportsSubpaths
 }
 
 const findBestConditionKey = (availableKeys, exportsConditions) => {
@@ -184,74 +177,70 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
   return `./${packageDirectoryRelativeUrl}${address}`
 }
 
-const createExportsValueWarning = ({
-  packageExportsValue,
-  packageExportsValuePath,
+const createUnexpectedExportsSubpathWarning = ({
+  subpathValue,
+  subpathValueTrace,
   packageFileUrl,
 }) => {
   return {
-    code: "EXPORTS_VALUE",
-    message: `unexpected value in package.json exports field: value must be an object or a string.
+    code: "EXPORTS_SUBPATH_UNEXPECTED",
+    message: `unexpected value in package.json exports: value must be an object or a string.
 --- value ---
-${packageExportsValue}
---- value path ---
-${packageExportsValuePath.join(".")}
+${subpathValue}
+--- value at ---
+${subpathValueTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createExportsMixedWarning = ({
-  packageExportsValue,
-  packageExportsValuePath,
-  packageFileUrl,
-}) => {
+const createMixedExportsSubpathWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_MIXED",
-    message: `unexpected package.json exports field: cannot mix conditional and subpath exports.
+    code: "EXPORTS_SUBPATH_MIXED",
+    message: `unexpected value in package.json exports: cannot mix conditional and subpath.
 --- value ---
-${JSON.stringify(packageExportsValue, null, "  ")}
---- value path ---
-${packageExportsValuePath.join(".")}
+${JSON.stringify(subpathValue, null, "  ")}
+--- value at ---
+${subpathValueTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createExportsMappingKeyMustBeRelativeWarning = ({ key, keyPath, packageFileUrl }) => {
+const createExportsSubpathKeyMustBeRelativeWarning = ({ key, keyTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_MAPPING_KEY_MUST_BE_RELATIVE",
-    message: `unexpected key in package.json exports field: key must be relative.
+    code: "EXPORTS_SUBPATH_KEY_MUST_BE_RELATIVE",
+    message: `unexpected key in package.json exports: key must be relative.
 --- key ---
 ${key}
---- key path ---
-${keyPath.join(".")}
+--- key at ---
+${keyTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createExportsMappingValueMustBeAStringWarning = ({ value, valuePath, packageFileUrl }) => {
+const createExportsSubpathValueMustBeAStringWarning = ({ value, valueTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_MAPPING_VALUE_MUST_BE_A_STRING",
-    message: `unexpected value in package.json exports field: value must be a string.
+    code: "EXPORTS_SUBPATH_VALUE_MUST_BE_A_STRING",
+    message: `unexpected value in package.json exports: value must be a string.
 --- value ---
 ${value}
---- value path ---
-${valuePath.join(".")}
+--- value at ---
+${valueTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createExportsMappingValueMustBeRelativeWarning = ({ value, valuePath, packageFileUrl }) => {
+const createExportsSubpathValueMustBeRelativeWarning = ({ value, valueTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_MAPPING_VALUE_MUST_BE_RELATIVE",
-    message: `unexpected value in package.json exports field: value must be relative.
+    code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
+    message: `unexpected value in package.json exports: value must be relative.
 --- value ---
 ${value}
---- value path ---
-${valuePath.join(".")}
+--- value at ---
+${valueTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageFileUrl)}`,
   }
