@@ -195,7 +195,7 @@ The following source of information are used to create complete and coherent map
 
 - Your `package.json`
 - All `dependencies` declared in `package.json` are searched into `node_modules`, recursively.
-- The main file declared in your `package.json`
+- In every `package.json`, "main", "exports" and "imports" field.
 - All static and dynamic import found in files, recursively.
 
 <details>
@@ -232,7 +232,7 @@ const importMap = await getImportMapFromProjectFiles({
 When enabled the following happens:
 
 1. `devDependencies` declared in your `package.json` are included in the generated importMap.
-2. `"development"` is favored over `"production"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+2. `"development"` is favored over `"production"` in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions)
 
 </details>
 
@@ -241,7 +241,7 @@ When enabled the following happens:
 
 `runtime` parameter is a string indicating where the importmap will be used. This parameter is optional with a default of `"browser"`.
 
-When `runtime` is `"browser"`, `"browser"` is favored over `"node"` in [package.json exports conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+When `runtime` is `"browser"`, `"browser"` is favored over `"node"` in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
 When it is `"node"`, `"node"` is favored.
 
