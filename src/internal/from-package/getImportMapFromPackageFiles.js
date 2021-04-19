@@ -21,7 +21,7 @@ export const getImportMapFromPackageFiles = async ({
   warn,
   projectDirectoryUrl,
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
-  packagesExportsPreference = ["import", "browser"],
+  packageConditions = ["import", "browser"],
   packagesExportsIncluded = true,
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
@@ -255,7 +255,7 @@ export const getImportMapFromPackageFiles = async ({
         packageJsonObject,
         packageName,
         projectDirectoryUrl,
-        packagesExportsPreference,
+        packageConditions,
       })
       Object.keys(packageExports).forEach((from) => {
         const to = packageExports[from]
@@ -301,7 +301,7 @@ export const getImportMapFromPackageFiles = async ({
   }) => {
     const mainFileUrl = await resolvePackageMain({
       warn,
-      packagesExportsPreference,
+      packageConditions,
       packageFileUrl,
       packageJsonObject,
     })
