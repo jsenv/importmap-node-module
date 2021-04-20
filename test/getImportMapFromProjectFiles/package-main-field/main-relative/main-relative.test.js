@@ -11,8 +11,13 @@ const actual = await getImportMapFromProjectFiles({
 const expected = {
   imports: {
     "main-relative": "./node_modules/main-relative/lib/index.js",
+    "root/": "./",
     "root": "./index",
   },
-  scopes: {},
+  scopes: {
+    "./node_modules/main-relative/": {
+      "main-relative/": "./node_modules/main-relative/",
+    },
+  },
 }
 assert({ actual, expected })
