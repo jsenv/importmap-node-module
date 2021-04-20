@@ -127,15 +127,15 @@ export const visitPackageExports = ({
 
       // there is no condition, visit all relative keys
       if (conditionalKeys.length === 0) {
-        let someExportAdded = false
+        let leadsToSomething = false
         relativeKeys.forEach((key) => {
-          someExportAdded = visitSubpathValue(subpathValue[key], [
+          leadsToSomething = visitSubpathValue(subpathValue[key], [
             ...subpathValueTrace,
             ...conditionTrace,
             key,
           ])
         })
-        return someExportAdded
+        return leadsToSomething
       }
 
       // there is a condition, keep the first one leading to something
