@@ -12,6 +12,7 @@ const expected = {
   imports: {
     "@jsenv/whatever/": "./node_modules/@jsenv/whatever/",
     "@jsenv/whatever": "./node_modules/@jsenv/whatever/index.js",
+    "root/": "./",
     "root": "./index",
   },
   scopes: {},
