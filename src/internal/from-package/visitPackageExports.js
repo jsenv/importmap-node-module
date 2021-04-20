@@ -57,11 +57,11 @@ export const visitPackageExports = ({
   }
 
   const handleString = (subpathValue, subpathValueTrace) => {
-    const firstNonConditionKey = subpathValueTrace
+    const firstRelativeKey = subpathValueTrace
       .slice()
       .reverse()
       .find((key) => key.startsWith("."))
-    const key = firstNonConditionKey || "."
+    const key = firstRelativeKey || "."
     onExportsSubpath({
       key,
       value: subpathValue,
@@ -92,7 +92,6 @@ export const visitPackageExports = ({
       })
 
       if (relativeKeys.length > 0 && conditionalKeys.length > 0) {
-        // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
         warn(
           createSubpathKeysAreMixedWarning({
             subpathValue,
@@ -182,7 +181,7 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
 const createSubpathIsUnexpectedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
   return {
     code: "EXPORTS_SUBPATH_UNEXPECTED",
-    message: `unexpected value in package.json exports: value must be an object or a string.
+    message: `unexpected subpath in package.json exports: value must be an object or a string.
 --- value ---
 ${subpathValue}
 --- value at ---
@@ -195,7 +194,7 @@ ${urlToFileSystemPath(packageFileUrl)}`,
 const createSubpathKeysAreMixedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
   return {
     code: "EXPORTS_SUBPATH_MIXED_KEYS",
-    message: `unexpected subpath keys in package.json exports: cannot mix conditional and relative keys.
+    message: `unexpected subpath keys in package.json exports: cannot mix relative and conditional keys.
 --- value ---
 ${JSON.stringify(subpathValue, null, "  ")}
 --- value at ---
