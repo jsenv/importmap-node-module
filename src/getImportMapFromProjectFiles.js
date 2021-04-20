@@ -10,7 +10,7 @@ export const getImportMapFromProjectFiles = async ({
   moduleFormat = "esm",
   dev = false,
   jsFiles = true,
-  removeUnusedMappings = !dev,
+  treeshakeMappings = !dev,
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   onWarn = (warning, warn) => {
     warn(warning)
@@ -50,7 +50,7 @@ export const getImportMapFromProjectFiles = async ({
     importMap: importMapFromPackageFiles,
     magicExtensions,
     runtime,
-    removeUnusedMappings,
+    treeshakeMappings,
   })
   importMapFromJsFiles = sortImportMap(importMapFromJsFiles)
   return importMapFromJsFiles

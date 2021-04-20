@@ -248,13 +248,13 @@ When it is `"node"`, `"node"` is favored.
 </details>
 
 <details>
-  <summary>removeUnusedMappings parameter</summary>
+  <summary>treeshakeMappings parameter</summary>
 
-`removeUnusedMappings` parameter is a boolean controlling if mappings not used by js files are removed. This parameter is optional and enabled by default except if `dev` is enabled.
+`treeshakeMappings` parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
 
-During development you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mapping in the generate importmap. This is why `removeUnusedMappings` is disabled when `dev` is enabled.
+When disabled, all mappings needed for Node module resolution will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mapping in the generate importmap. Consequently `treeshakeMappings` parameter is disabled when `dev` parameter is enabled.
 
-However when building files to publish them somewhere it's prefferable to keep only the mappings actually used by your files (so that importmap file size is smaller). This is why `removeUnusedMappings` is enabled when `dev` is disabled.
+When enabled, only the mappings actually used by your files will be generated. This is the default behaviour as long as `dev` parameter is disabled. It will drastically decrease the importmap file size.
 
 </details>
 

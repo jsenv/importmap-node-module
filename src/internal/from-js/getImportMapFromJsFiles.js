@@ -23,7 +23,7 @@ export const getImportMapFromJsFiles = async ({
   importMap,
   magicExtensions,
   runtime,
-  removeUnusedMappings,
+  treeshakeMappings,
 }) => {
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
 
@@ -191,7 +191,7 @@ export const getImportMapFromJsFiles = async ({
     await visitFile(projectMainFileUrlOnFileSystem)
   }
 
-  if (removeUnusedMappings) {
+  if (treeshakeMappings) {
     const importsUsed = {}
     topLevelMappingsUsed.forEach(({ from, to }) => {
       importsUsed[from] = to
