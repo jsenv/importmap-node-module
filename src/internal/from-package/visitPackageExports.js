@@ -122,8 +122,8 @@ export const visitPackageExports = ({
       }
 
       // there is a condition, keep the first one leading to something
-      return conditions.some((keyCandidate) => {
-        if (!conditionalKeys.includes(keyCandidate)) {
+      return conditionalKeys.some((keyCandidate) => {
+        if (!conditions.includes(keyCandidate)) {
           return false
         }
         const valueCandidate = subpathValue[keyCandidate]

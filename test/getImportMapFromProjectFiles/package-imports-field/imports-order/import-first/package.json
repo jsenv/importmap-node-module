@@ -1,0 +1,9 @@
+{
+  "name": "root",
+  "imports": {
+    "#foo": {
+      "import": "./import.js",
+      "node": "./node.js"
+    }
+  }
+}
