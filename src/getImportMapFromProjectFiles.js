@@ -18,9 +18,9 @@ export const getImportMapFromProjectFiles = async ({
   ...rest
 }) => {
   const packageConditions = [
+    ...(dev ? ["development"] : ["production"]),
     ...(packageConditionsFromModuleFormat[moduleFormat] || [moduleFormat]),
     ...(packageConditionsFromRuntime[runtime] || [runtime]),
-    ...(dev ? ["development"] : ["production"]),
   ]
 
   const logger = createLogger({ logLevel })
