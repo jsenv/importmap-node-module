@@ -247,6 +247,17 @@ When it is `"node"`, `"node"` is favored.
 
 </details>
 
+<details>
+  <summary>removeUnusedMappings parameter</summary>
+
+`removeUnusedMappings` parameter is a boolean controlling if mappings not used by js files are removed. This parameter is optional and enabled by default except if `dev` is enabled.
+
+During development you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mapping in the generate importmap. This is why `removeUnusedMappings` is disabled when `dev` is enabled.
+
+However when building files to publish them somewhere it's prefferable to keep only the mappings actually used by your files (so that importmap file size is smaller). This is why `removeUnusedMappings` is enabled when `dev` is disabled.
+
+</details>
+
 ## getImportMapFromFile
 
 `getImportMapFromFile` is an async function reading importmap from a file.
