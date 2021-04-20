@@ -49,7 +49,6 @@ export const visitPackageExports = ({
 
     const keyNormalized = specifierToSource(key, packageName)
     const valueNormalized = addressToDestination(value, packageDirectoryRelativeUrl)
-
     exportsSubpaths[keyNormalized] = valueNormalized
   }
 

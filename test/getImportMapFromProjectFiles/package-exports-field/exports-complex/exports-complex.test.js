@@ -21,7 +21,7 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
       "whatever": "./index",
-      "foo": "./node_modules/foo/dist/es/rollup.js",
+      "foo": "./node_modules/foo/dist/rollup.mjs",
     },
     scopes: {},
   }
@@ -53,7 +53,7 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
       "whatever": "./index",
-      "foo": "./node_modules/foo/file.cjs",
+      "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
     scopes: {},
   }
@@ -66,7 +66,7 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
       "whatever": "./index",
-      "foo": "./node_modules/foo/dist/es/rollup.browser.js",
+      "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
     scopes: {},
   }
