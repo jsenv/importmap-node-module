@@ -9,6 +9,7 @@ import {
 import { optimizeImportMap } from "../optimizeImportMap.js"
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"
+import { visitPackageImports } from "./visitPackageImports.js"
 import { visitPackageExports } from "./visitPackageExports.js"
 import { createFindNodeModulePackage } from "./node-module-resolution.js"
 
@@ -252,6 +253,25 @@ export const getImportMapFromPackageFiles = async ({
       projectDirectoryUrl,
     })
     addImportMapForPackage(importsFromPackageField)
+
+    if ("imports" in packageJsonObject) {
+      const mappingsFromPackageExports = {}
+      const packageImports = visitPackageImports({
+        warn,
+        packageFileUrl,
+        packageJsonObject,
+        packageName,
+        projectDirectoryUrl,
+        packageConditions,
+      })
+      Object.keys(packageImports).forEach((from) => {
+        const to = packageImports[from]
+        mappingsFromPackageExports[from] = to
+      })
+      addImportMapForPackage({
+        imports: mappingsFromPackageExports,
+      })
+    }
 
     if ("exports" in packageJsonObject) {
       const mappingsFromPackageExports = {}

@@ -4,22 +4,18 @@ https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_
 
 */
 
-import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/util"
+import { urlToFileSystemPath } from "@jsenv/util"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
-export const visitPackageExports = ({
+export const visitPackageImports = ({
   packageFileUrl,
   packageJsonObject,
-  packageExports = packageJsonObject.exports,
-  packageName = packageJsonObject.name,
-  projectDirectoryUrl,
+  packageImports = packageJsonObject.imports,
   packageConditions,
   warn,
 }) => {
-  const exportsSubpaths = {}
-  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
-  const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
-  const onExportsSubpath = ({ key, value, trace }) => {
+  const importsSubpaths = {}
+  const onImportsSubpath = ({ key, value, trace }) => {
     if (!specifierIsRelative(value)) {
       warn(
         createSubpathValueMustBeRelativeWarning({
@@ -31,19 +27,14 @@ export const visitPackageExports = ({
       return
     }
 
-    const keyNormalized = specifierToSource(key, packageName)
-    const valueNormalized = addressToDestination(value, packageDirectoryRelativeUrl)
-    exportsSubpaths[keyNormalized] = valueNormalized
+    const keyNormalized = key
+    const valueNormalized = value
+    importsSubpaths[keyNormalized] = valueNormalized
   }
 
   const conditions = [...packageConditions, "default"]
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
-    // false is allowed as alternative to exports: {}
-    if (subpathValue === false) {
-      return handleFalse()
-    }
-
     if (typeof subpathValue === "string") {
       return handleString(subpathValue, subpathValueTrace)
     }
@@ -55,19 +46,13 @@ export const visitPackageExports = ({
     return handleRemaining(subpathValue, subpathValueTrace)
   }
 
-  const handleFalse = () => {
-    // nothing to do
-    return true
-  }
-
   const handleString = (subpathValue, subpathValueTrace) => {
-    const firstRelativeKey = subpathValueTrace
+    const firstBareKey = subpathValueTrace
       .slice()
       .reverse()
-      .find((key) => key.startsWith("."))
-    const key = firstRelativeKey || "."
-    onExportsSubpath({
-      key,
+      .find((key) => key.startsWith("#"))
+    onImportsSubpath({
+      key: firstBareKey,
       value: subpathValue,
       trace: subpathValueTrace,
     })
@@ -85,33 +70,33 @@ export const visitPackageExports = ({
     // it should be ignored and an other branch be taken until
     // something resolves
     const followConditionBranch = (subpathValue, conditionTrace) => {
-      const relativeKeys = []
+      const bareKeys = []
       const conditionalKeys = []
       Object.keys(subpathValue).forEach((availableKey) => {
-        if (availableKey.startsWith(".")) {
-          relativeKeys.push(availableKey)
+        if (availableKey.startsWith("#")) {
+          bareKeys.push(availableKey)
         } else {
           conditionalKeys.push(availableKey)
         }
       })
 
-      if (relativeKeys.length > 0 && conditionalKeys.length > 0) {
+      if (bareKeys.length > 0 && conditionalKeys.length > 0) {
         warn(
           createSubpathKeysAreMixedWarning({
             subpathValue,
             subpathValueTrace: [...subpathValueTrace, ...conditionTrace],
             packageFileUrl,
-            relativeKeys,
+            bareKeys,
             conditionalKeys,
           }),
         )
         return false
       }
 
-      // there is no condition, visit all relative keys
+      // there is no condition, visit all bare keys (starting with #)
       if (conditionalKeys.length === 0) {
         let leadsToSomething = false
-        relativeKeys.forEach((key) => {
+        bareKeys.forEach((key) => {
           leadsToSomething = visitSubpathValue(subpathValue[key], [
             ...subpathValueTrace,
             ...conditionTrace,
@@ -149,43 +134,15 @@ export const visitPackageExports = ({
     return false
   }
 
-  visitSubpathValue(packageExports, ["exports"])
+  visitSubpathValue(packageImports, ["imports"])
 
-  return exportsSubpaths
-}
-
-const specifierToSource = (specifier, packageName) => {
-  if (specifier === ".") {
-    return packageName
-  }
-
-  if (specifier[0] === "/") {
-    return specifier
-  }
-
-  if (specifier.startsWith("./")) {
-    return `${packageName}${specifier.slice(1)}`
-  }
-
-  return `${packageName}/${specifier}`
-}
-
-const addressToDestination = (address, packageDirectoryRelativeUrl) => {
-  if (address[0] === "/") {
-    return address
-  }
-
-  if (address.startsWith("./")) {
-    return `./${packageDirectoryRelativeUrl}${address.slice(2)}`
-  }
-
-  return `./${packageDirectoryRelativeUrl}${address}`
+  return importsSubpaths
 }
 
 const createSubpathIsUnexpectedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_SUBPATH_UNEXPECTED",
-    message: `unexpected subpath in package.json exports: value must be an object or a string.
+    code: "IMPORTS_SUBPATH_UNEXPECTED",
+    message: `unexpected subpath in package.json imports: value must be an object or a string.
 --- value ---
 ${subpathValue}
 --- value at ---
@@ -197,8 +154,8 @@ ${urlToFileSystemPath(packageFileUrl)}`,
 
 const createSubpathKeysAreMixedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_SUBPATH_MIXED_KEYS",
-    message: `unexpected subpath keys in package.json exports: cannot mix relative and conditional keys.
+    code: "IMPORTS_SUBPATH_MIXED_KEYS",
+    message: `unexpected subpath keys in package.json imports: cannot mix bare and conditional keys.
 --- value ---
 ${JSON.stringify(subpathValue, null, "  ")}
 --- value at ---
@@ -210,8 +167,8 @@ ${urlToFileSystemPath(packageFileUrl)}`,
 
 const createSubpathValueMustBeRelativeWarning = ({ value, valueTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
-    message: `unexpected subpath value in package.json exports: value must be a relative to the package.
+    code: "IMPORTS_SUBPATH_VALUE_UNEXPECTED",
+    message: `unexpected subpath value in package.json imports: value must be relative to package
 --- value ---
 ${value}
 --- value at ---
