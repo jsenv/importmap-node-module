@@ -241,7 +241,7 @@ export const getImportMapFromPackageFiles = async ({
     // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
     addImportMapForPackage({
       imports: {
-        [`${packageName}/`]: `./${packageDirectoryRelativeUrl}`,
+        [`${packageName}/`]: `./`,
       },
     })
 
