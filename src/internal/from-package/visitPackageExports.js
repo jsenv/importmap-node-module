@@ -16,29 +16,9 @@ export const visitPackageExports = ({
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
   const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
   const onExportsSubpath = ({ key, value, trace }) => {
-    if (!specifierIsRelative(key)) {
-      warn(
-        createExportsSubpathKeyMustBeRelativeWarning({
-          key,
-          keyTrace: trace.slice(0, -1),
-          packageFileUrl,
-        }),
-      )
-      return
-    }
-    if (typeof value !== "string") {
-      warn(
-        createExportsSubpathValueMustBeAStringWarning({
-          value,
-          valueTrace: trace,
-          packageFileUrl,
-        }),
-      )
-      return
-    }
     if (!specifierIsRelative(value)) {
       warn(
-        createExportsSubpathValueMustBeRelativeWarning({
+        createSubpathValueMustBeRelativeWarning({
           value,
           valueTrace: trace,
           packageFileUrl,
@@ -114,7 +94,7 @@ export const visitPackageExports = ({
       if (relativeKeys.length > 0 && conditionalKeys.length > 0) {
         // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
         warn(
-          createUnexpectedExportsSubpathWarning({
+          createSubpathKeysAreMixedWarning({
             subpathValue,
             subpathValueTrace: [...subpathValueTrace, ...conditionTrace],
             packageFileUrl,
@@ -157,7 +137,7 @@ export const visitPackageExports = ({
 
   const handleRemaining = (subpathValue, subpathValueTrace) => {
     warn(
-      createMixedExportsSubpathWarning({
+      createSubpathIsUnexpectedWarning({
         subpathValue,
         subpathValueTrace,
         packageFileUrl,
@@ -199,11 +179,7 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
   return `./${packageDirectoryRelativeUrl}${address}`
 }
 
-const createUnexpectedExportsSubpathWarning = ({
-  subpathValue,
-  subpathValueTrace,
-  packageFileUrl,
-}) => {
+const createSubpathIsUnexpectedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
   return {
     code: "EXPORTS_SUBPATH_UNEXPECTED",
     message: `unexpected value in package.json exports: value must be an object or a string.
@@ -216,10 +192,10 @@ ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createMixedExportsSubpathWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
+const createSubpathKeysAreMixedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
   return {
-    code: "EXPORTS_SUBPATH_MIXED",
-    message: `unexpected value in package.json exports: cannot mix conditional and subpath.
+    code: "EXPORTS_SUBPATH_MIXED_KEYS",
+    message: `unexpected subpath keys in package.json exports: cannot mix conditional and relative keys.
 --- value ---
 ${JSON.stringify(subpathValue, null, "  ")}
 --- value at ---
@@ -229,36 +205,10 @@ ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createExportsSubpathKeyMustBeRelativeWarning = ({ key, keyTrace, packageFileUrl }) => {
-  return {
-    code: "EXPORTS_SUBPATH_KEY_MUST_BE_RELATIVE",
-    message: `unexpected key in package.json exports: key must be relative.
---- key ---
-${key}
---- key at ---
-${keyTrace.join(".")}
---- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
-  }
-}
-
-const createExportsSubpathValueMustBeAStringWarning = ({ value, valueTrace, packageFileUrl }) => {
-  return {
-    code: "EXPORTS_SUBPATH_VALUE_MUST_BE_A_STRING",
-    message: `unexpected value in package.json exports: value must be a string.
---- value ---
-${value}
---- value at ---
-${valueTrace.join(".")}
---- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
-  }
-}
-
-const createExportsSubpathValueMustBeRelativeWarning = ({ value, valueTrace, packageFileUrl }) => {
+const createSubpathValueMustBeRelativeWarning = ({ value, valueTrace, packageFileUrl }) => {
   return {
     code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
-    message: `unexpected value in package.json exports: value must be relative.
+    message: `unexpected subpath value in package.json exports: value must be a relative to the package.
 --- value ---
 ${value}
 --- value at ---
