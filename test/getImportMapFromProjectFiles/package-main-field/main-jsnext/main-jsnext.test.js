@@ -11,8 +11,13 @@ const actual = await getImportMapFromProjectFiles({
 const expected = {
   imports: {
     "main-jsnext": "./node_modules/main-jsnext/jsnext.js",
+    "root/": "./",
     "root": "./index",
   },
-  scopes: {},
+  scopes: {
+    "./node_modules/main-jsnext/": {
+      "main-jsnext/": "./node_modules/main-jsnext/",
+    },
+  },
 }
 assert({ actual, expected })

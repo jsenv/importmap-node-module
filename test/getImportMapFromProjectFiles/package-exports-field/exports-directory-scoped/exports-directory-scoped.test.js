@@ -11,6 +11,7 @@ const actual = await getImportMapFromProjectFiles({
 const expected = {
   imports: {
     "foo/ding": "./node_modules/foo/dong",
+    "root/": "./",
     "root": "./index",
     "foo": "./node_modules/foo/index.js",
   },
@@ -21,6 +22,7 @@ const expected = {
     "./node_modules/foo/": {
       "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
       "exporting-folder": "./node_modules/foo/node_modules/exporting-folder/index.js",
+      "foo/": "./node_modules/foo/",
     },
   },
 }

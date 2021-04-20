@@ -12,13 +12,21 @@ const importMap = await getImportMapFromProjectFiles({
 const actual = importMap
 const expected = {
   imports: {
-    root: "./index",
-    bar: "./node_modules/bar/bar.js",
-    foo: "./node_modules/foo/foo.js",
+    "root/": "./",
+    "root": "./index",
+    "bar": "./node_modules/bar/bar.js",
+    "foo": "./node_modules/foo/foo.js",
   },
   scopes: {
+    "./node_modules/foo/node_modules/bar/": {
+      "bar/": "./node_modules/foo/node_modules/bar/",
+    },
+    "./node_modules/bar/": {
+      "bar/": "./node_modules/bar/",
+    },
     "./node_modules/foo/": {
-      bar: "./node_modules/foo/node_modules/bar/bar.js",
+      "foo/": "./node_modules/foo/",
+      "bar": "./node_modules/foo/node_modules/bar/bar.js",
     },
   },
 }
@@ -48,18 +56,12 @@ const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
 }
 
 // import 'bar/file.js' inside 'bar'
-try {
-  resolveImport({
+{
+  const actual = resolveImport({
     specifier: `bar/file.js`,
     importer: `http://example.com/node_modules/foo/node_modules/bar/bar.js`,
     importMap: importMapNormalized,
   })
-  throw new Error("should throw")
-} catch (actual) {
-  const expected = new Error(`Unmapped bare specifier.
---- specifier ---
-bar/file.js
---- importer ---
-http://example.com/node_modules/foo/node_modules/bar/bar.js`)
+  const expected = `http://example.com/node_modules/foo/node_modules/bar/file.js`
   assert({ actual, expected })
 }

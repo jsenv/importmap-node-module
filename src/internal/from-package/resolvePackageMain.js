@@ -6,11 +6,11 @@ const magicExtensions = [".js", ".json", ".node"]
 
 export const resolvePackageMain = ({
   warn,
-  packagesExportsPreference,
+  packageConditions,
   packageFileUrl,
   packageJsonObject,
 }) => {
-  if (packagesExportsPreference.includes("import") && "module" in packageJsonObject) {
+  if (packageConditions.includes("import") && "module" in packageJsonObject) {
     return resolveMainFile({
       warn,
       packageFileUrl,
@@ -19,7 +19,7 @@ export const resolvePackageMain = ({
     })
   }
 
-  if (packagesExportsPreference.includes("import") && "jsnext:main" in packageJsonObject) {
+  if (packageConditions.includes("import") && "jsnext:main" in packageJsonObject) {
     return resolveMainFile({
       warn,
       packageFileUrl,
@@ -29,7 +29,7 @@ export const resolvePackageMain = ({
   }
 
   if (
-    packagesExportsPreference.includes("browser") &&
+    packageConditions.includes("browser") &&
     "browser" in packageJsonObject &&
     // when it's an object it means some files
     // should be replaced with an other, let's ignore this when we are searching

@@ -17,10 +17,10 @@ export const getImportMapFromProjectFiles = async ({
   },
   ...rest
 }) => {
-  const packagesExportsPreference = [
-    ...(moduleFormatPreferences[moduleFormat] || [moduleFormat]),
-    ...(runtimeExportsPreferences[runtime] || [runtime]),
-    ...(dev ? "development" : "production"),
+  const packageConditions = [
+    ...(packageConditionsFromModuleFormat[moduleFormat] || [moduleFormat]),
+    ...(packageConditionsFromRuntime[runtime] || [runtime]),
+    ...(dev ? ["development"] : ["production"]),
   ]
 
   const logger = createLogger({ logLevel })
@@ -35,7 +35,7 @@ export const getImportMapFromProjectFiles = async ({
     logger,
     warn,
     projectDirectoryUrl,
-    packagesExportsPreference,
+    packageConditions,
     projectPackageDevDependenciesIncluded: dev,
     ...rest,
   })
@@ -56,12 +56,12 @@ export const getImportMapFromProjectFiles = async ({
   return importMapFromJsFiles
 }
 
-const runtimeExportsPreferences = {
+const packageConditionsFromRuntime = {
   browser: ["browser"],
   node: ["node"],
 }
 
-const moduleFormatPreferences = {
+const packageConditionsFromModuleFormat = {
   esm: ["import"],
   cjs: ["require"],
 }

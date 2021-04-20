@@ -14,10 +14,15 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const expected = {
     imports: {
       "foo/file.js": "./node_modules/foo/file.browser.js",
+      "root/": "./",
       "root": "./index",
       "foo": "./node_modules/foo/index",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }
@@ -32,10 +37,15 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const expected = {
     imports: {
       "foo/file.js": "./node_modules/foo/file.default.js",
+      "root/": "./",
       "root": "./index",
       "foo": "./node_modules/foo/index",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }

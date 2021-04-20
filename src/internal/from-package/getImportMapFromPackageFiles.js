@@ -9,6 +9,7 @@ import {
 import { optimizeImportMap } from "../optimizeImportMap.js"
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"
+import { visitPackageImports } from "./visitPackageImports.js"
 import { visitPackageExports } from "./visitPackageExports.js"
 import { createFindNodeModulePackage } from "./node-module-resolution.js"
 
@@ -21,8 +22,7 @@ export const getImportMapFromPackageFiles = async ({
   warn,
   projectDirectoryUrl,
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
-  packagesExportsPreference = ["import", "browser"],
-  packagesExportsIncluded = true,
+  packageConditions = ["import", "browser"],
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
 }) => {
@@ -239,6 +239,13 @@ export const getImportMapFromPackageFiles = async ({
       })
     }
 
+    // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
+    addImportMapForPackage({
+      imports: {
+        [`${packageName}/`]: `./`,
+      },
+    })
+
     const importsFromPackageField = await visitPackageImportMap({
       warn,
       packageFileUrl,
@@ -247,44 +254,61 @@ export const getImportMapFromPackageFiles = async ({
     })
     addImportMapForPackage(importsFromPackageField)
 
-    if (packagesExportsIncluded && "exports" in packageJsonObject) {
+    if ("imports" in packageJsonObject) {
       const mappingsFromPackageExports = {}
-      visitPackageExports({
+      const packageImports = visitPackageImports({
         warn,
         packageFileUrl,
         packageJsonObject,
         packageName,
         projectDirectoryUrl,
-        packagesExportsPreference,
-        onExport: ({ key, value }) => {
-          const from = key
-          const to = value
+        packageConditions,
+      })
+      Object.keys(packageImports).forEach((from) => {
+        const to = packageImports[from]
+        mappingsFromPackageExports[from] = to
+      })
+      addImportMapForPackage({
+        imports: mappingsFromPackageExports,
+      })
+    }
 
-          if (from.indexOf("*") === -1) {
-            mappingsFromPackageExports[from] = to
-            return
-          }
+    if ("exports" in packageJsonObject) {
+      const mappingsFromPackageExports = {}
+      const packageExports = visitPackageExports({
+        warn,
+        packageFileUrl,
+        packageJsonObject,
+        packageName,
+        projectDirectoryUrl,
+        packageConditions,
+      })
+      Object.keys(packageExports).forEach((from) => {
+        const to = packageExports[from]
+        if (from.indexOf("*") === -1) {
+          mappingsFromPackageExports[from] = to
+          return
+        }
 
-          if (
-            from.endsWith("/*") &&
-            to.endsWith("/*") &&
-            // ensure ends with '*' AND there is only one '*' occurence
-            to.indexOf("*") === to.length - 1
-          ) {
-            const fromWithouTrailingStar = from.slice(0, -1)
-            const toWithoutTrailingStar = to.slice(0, -1)
-            mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
-            return
-          }
+        if (
+          from.endsWith("/*") &&
+          to.endsWith("/*") &&
+          // ensure ends with '*' AND there is only one '*' occurence
+          to.indexOf("*") === to.length - 1
+        ) {
+          const fromWithouTrailingStar = from.slice(0, -1)
+          const toWithoutTrailingStar = to.slice(0, -1)
+          mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
+          return
+        }
 
-          warn(
-            createExportsWildcardIgnoredWarning({
-              key,
-              value,
-              packageFileUrl,
-            }),
-          )
-        },
+        warn(
+          createExportsWildcardIgnoredWarning({
+            key: from,
+            value: to,
+            packageFileUrl,
+          }),
+        )
       })
       addMappingsForPackageAndImporter(mappingsFromPackageExports)
     }
@@ -303,7 +327,7 @@ export const getImportMapFromPackageFiles = async ({
   }) => {
     const mainFileUrl = await resolvePackageMain({
       warn,
-      packagesExportsPreference,
+      packageConditions,
       packageFileUrl,
       packageJsonObject,
     })

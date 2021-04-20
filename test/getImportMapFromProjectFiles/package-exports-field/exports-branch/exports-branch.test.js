@@ -10,6 +10,7 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
     jsFiles: false,
     moduleFormat,
     runtime,
+    dev: true,
   })
 }
 
@@ -19,10 +20,9 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   })
   const expected = {
     imports: {
-      "foo/dist/": "./node_modules/foo/dist/",
       "whatever/": "./",
       "whatever": "./index",
-      "foo": "./node_modules/foo/dist/rollup.mjs",
+      "foo": "./node_modules/foo/main.js",
     },
     scopes: {
       "./node_modules/foo/": {
@@ -40,49 +40,9 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   })
   const expected = {
     imports: {
-      "foo/dist/": "./node_modules/foo/dist/",
       "whatever/": "./",
       "whatever": "./index",
-      "foo": "./node_modules/foo/dist/rollup.js",
-    },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
-  }
-  assert({ actual, expected })
-}
-
-{
-  const actual = await getImportMap({
-    runtime: "node",
-    moduleFormat: "other",
-  })
-  const expected = {
-    imports: {
-      "foo/dist/": "./node_modules/foo/dist/",
-      "whatever/": "./",
-      "whatever": "./index",
-      "foo": "./node_modules/foo/dist/rollup.browser.mjs",
-    },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
-  }
-  assert({ actual, expected })
-}
-
-{
-  const actual = await getImportMap()
-  const expected = {
-    imports: {
-      "foo/dist/": "./node_modules/foo/dist/",
-      "whatever/": "./",
-      "whatever": "./index",
-      "foo": "./node_modules/foo/dist/rollup.browser.mjs",
+      "foo": "./node_modules/foo/main.cjs",
     },
     scopes: {
       "./node_modules/foo/": {
