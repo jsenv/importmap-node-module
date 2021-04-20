@@ -22,7 +22,6 @@ export const getImportMapFromPackageFiles = async ({
   projectDirectoryUrl,
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   packageConditions = ["import", "browser"],
-  packagesExportsIncluded = true,
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
 }) => {
@@ -239,6 +238,13 @@ export const getImportMapFromPackageFiles = async ({
       })
     }
 
+    // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
+    addImportMapForPackage({
+      imports: {
+        [`${packageName}/`]: `./${packageDirectoryRelativeUrl}`,
+      },
+    })
+
     const importsFromPackageField = await visitPackageImportMap({
       warn,
       packageFileUrl,
@@ -247,7 +253,7 @@ export const getImportMapFromPackageFiles = async ({
     })
     addImportMapForPackage(importsFromPackageField)
 
-    if (packagesExportsIncluded && "exports" in packageJsonObject) {
+    if ("exports" in packageJsonObject) {
       const mappingsFromPackageExports = {}
       const packageExports = visitPackageExports({
         warn,
