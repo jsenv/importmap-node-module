@@ -252,7 +252,7 @@ When it is `"node"`, `"node"` is favored.
 
 `treeshakeMappings` parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
 
-When disabled, all mappings needed for Node module resolution will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mapping in the generate importmap. Consequently `treeshakeMappings` parameter is disabled when `dev` parameter is enabled.
+When disabled, all mappings needed for Node module resolution will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap. Consequently `treeshakeMappings` parameter is disabled when `dev` parameter is enabled.
 
 When enabled, only the mappings actually used by your files will be generated. This is the default behaviour as long as `dev` parameter is disabled. It will drastically decrease the importmap file size.
 
