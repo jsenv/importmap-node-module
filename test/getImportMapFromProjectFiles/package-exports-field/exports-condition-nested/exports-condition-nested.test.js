@@ -13,10 +13,15 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const actual = importMap
   const expected = {
     imports: {
-      root: "./index",
-      foo: "./node_modules/foo/feature-node.mjs",
+      "root/": "./",
+      "root": "./index",
+      "foo": "./node_modules/foo/feature-node.mjs",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }
@@ -30,10 +35,15 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const actual = importMap
   const expected = {
     imports: {
-      root: "./index",
-      foo: "./node_modules/foo/feature.mjs",
+      "root/": "./",
+      "root": "./index",
+      "foo": "./node_modules/foo/feature.mjs",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }

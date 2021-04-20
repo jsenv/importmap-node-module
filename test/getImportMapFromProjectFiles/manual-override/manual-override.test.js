@@ -18,6 +18,7 @@ const actual = await getImportMapFromProjectFiles({
 })
 const expected = {
   imports: {
+    "root/": "./",
     "bar/": "./node_modules/bar/",
     "root": "./index",
     "bar": "./node_modules/bar/bar.js",

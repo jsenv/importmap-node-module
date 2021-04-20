@@ -20,10 +20,15 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   })
   const expected = {
     imports: {
-      whatever: "./index",
-      foo: "./node_modules/foo/main.js",
+      "whatever/": "./",
+      "whatever": "./index",
+      "foo": "./node_modules/foo/main.js",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }
@@ -35,10 +40,15 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   })
   const expected = {
     imports: {
-      whatever: "./index",
-      foo: "./node_modules/foo/main.cjs",
+      "whatever/": "./",
+      "whatever": "./index",
+      "foo": "./node_modules/foo/main.cjs",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }

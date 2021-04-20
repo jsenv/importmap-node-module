@@ -20,10 +20,15 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever/": "./",
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.mjs",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }
@@ -36,10 +41,15 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever/": "./",
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.js",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }
@@ -52,10 +62,15 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever/": "./",
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }
@@ -65,10 +80,15 @@ const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   const expected = {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
+      "whatever/": "./",
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
-    scopes: {},
+    scopes: {
+      "./node_modules/foo/": {
+        "foo/": "./node_modules/foo/",
+      },
+    },
   }
   assert({ actual, expected })
 }

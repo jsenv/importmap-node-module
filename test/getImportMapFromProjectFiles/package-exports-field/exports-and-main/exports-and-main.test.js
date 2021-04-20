@@ -10,9 +10,14 @@ const actual = await getImportMapFromProjectFiles({
 })
 const expected = {
   imports: {
-    whatever: "./index",
-    foo: "./node_modules/foo/file.js",
+    "whatever/": "./",
+    "whatever": "./index",
+    "foo": "./node_modules/foo/file.js",
   },
-  scopes: {},
+  scopes: {
+    "./node_modules/foo/": {
+      "foo/": "./node_modules/foo/",
+    },
+  },
 }
 assert({ actual, expected })
