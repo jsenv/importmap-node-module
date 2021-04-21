@@ -10,17 +10,26 @@ export const getImportMapFromProjectFiles = async ({
   moduleFormat = "esm",
   dev = false,
   jsFiles = true,
+
+  projectPackageDevDependenciesIncluded = dev,
   treeshakeMappings = !dev,
+
+  packageConditions = [],
+  packageConditionDevelopment = dev,
+  packageConditionFromModuleFormat = packageConditionsFromModuleFormat[moduleFormat],
+  packageConditionFromRuntime = packageConditionsFromRuntime[runtime],
+
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   onWarn = (warning, warn) => {
     warn(warning)
   },
   ...rest
 }) => {
-  const packageConditions = [
-    ...(dev ? ["development"] : ["production"]),
-    ...(packageConditionsFromModuleFormat[moduleFormat] || [moduleFormat]),
-    ...(packageConditionsFromRuntime[runtime] || [runtime]),
+  packageConditions = [
+    ...(packageConditionDevelopment ? ["development"] : ["production"]),
+    ...(packageConditionFromModuleFormat ? [packageConditionFromModuleFormat] : []),
+    ...(packageConditionFromRuntime ? [packageConditionFromRuntime] : []),
+    ...packageConditions,
   ]
 
   const logger = createLogger({ logLevel })
@@ -36,7 +45,7 @@ export const getImportMapFromProjectFiles = async ({
     warn,
     projectDirectoryUrl,
     packageConditions,
-    projectPackageDevDependenciesIncluded: dev,
+    projectPackageDevDependenciesIncluded,
     ...rest,
   })
   importMapFromPackageFiles = sortImportMap(importMapFromPackageFiles)
@@ -57,11 +66,11 @@ export const getImportMapFromProjectFiles = async ({
 }
 
 const packageConditionsFromRuntime = {
-  browser: ["browser"],
-  node: ["node"],
+  browser: "browser",
+  node: "node",
 }
 
 const packageConditionsFromModuleFormat = {
-  esm: ["import"],
-  cjs: ["require"],
+  esm: "import",
+  cjs: "require",
 }
