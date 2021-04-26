@@ -5,6 +5,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var importMap = require('@jsenv/import-map');
 var logger = require('@jsenv/logger');
 var util = require('@jsenv/util');
+var isSpecifierForNodeCoreModule_js = require('@jsenv/import-map/src/isSpecifierForNodeCoreModule.js');
 var module$1 = require('module');
 var cancellation = require('@jsenv/cancellation');
 
@@ -480,10 +481,11 @@ const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
 const BARE_SPECIFIER_ERROR = {};
 const getImportMapFromJsFiles = async ({
   warn,
-  importMap: importMap$1,
   projectDirectoryUrl,
-  removeUnusedMappings,
-  magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"]
+  importMap: importMap$1,
+  magicExtensions,
+  runtime,
+  treeshakeMappings
 }) => {
   const projectPackageFileUrl = util.resolveUrl("./package.json", projectDirectoryUrl);
   const imports = {};
@@ -565,6 +567,10 @@ const getImportMapFromJsFiles = async ({
   const resolveFileSystemUrl = memoizeAsyncFunctionBySpecifierAndImporter(async (specifier, importer, {
     importedBy
   }) => {
+    if (runtime === "node" && isSpecifierForNodeCoreModule_js.isSpecifierForNodeCoreModule(specifier)) {
+      return null;
+    }
+
     let fileUrl;
     let gotBareSpecifierError = false;
 
@@ -661,7 +667,7 @@ const getImportMapFromJsFiles = async ({
     await visitFile(projectMainFileUrlOnFileSystem);
   }
 
-  if (removeUnusedMappings) {
+  if (treeshakeMappings) {
     const importsUsed = {};
     topLevelMappingsUsed.forEach(({
       from,
@@ -845,11 +851,11 @@ const optimizeImportMap = ({
 const magicExtensions = [".js", ".json", ".node"];
 const resolvePackageMain = ({
   warn,
-  packagesExportsPreference,
+  packageConditions,
   packageFileUrl,
   packageJsonObject
 }) => {
-  if (packagesExportsPreference.includes("import") && "module" in packageJsonObject) {
+  if (packageConditions.includes("import") && "module" in packageJsonObject) {
     return resolveMainFile({
       warn,
       packageFileUrl,
@@ -858,7 +864,7 @@ const resolvePackageMain = ({
     });
   }
 
-  if (packagesExportsPreference.includes("import") && "jsnext:main" in packageJsonObject) {
+  if (packageConditions.includes("import") && "jsnext:main" in packageJsonObject) {
     return resolveMainFile({
       warn,
       packageFileUrl,
@@ -867,7 +873,7 @@ const resolvePackageMain = ({
     });
   }
 
-  if (packagesExportsPreference.includes("browser") && "browser" in packageJsonObject && // when it's an object it means some files
+  if (packageConditions.includes("browser") && "browser" in packageJsonObject && // when it's an object it means some files
   // should be replaced with an other, let's ignore this when we are searching
   // for the main file
   typeof packageJsonObject.browser === "string") {
@@ -993,10 +999,23 @@ const visitPackageImportMap = async ({
 
   if (typeof packageImportmap === "string") {
     const importmapFileUrl = importMap.resolveUrl(packageImportmap, packageFileUrl);
-    const importmap = await util.readFile(importmapFileUrl, {
-      as: "json"
-    });
-    return importMap.moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl);
+
+    try {
+      const importmap = await util.readFile(importmapFileUrl, {
+        as: "json"
+      });
+      return importMap.moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl);
+    } catch (e) {
+      if (e.code === "ENOENT") {
+        warn(createPackageImportMapNotFoundWarning({
+          importmapFileUrl,
+          packageFileUrl
+        }));
+        return {};
+      }
+
+      throw e;
+    }
   }
 
   if (typeof packageImportmap === "object" && packageImportmap !== null) {
@@ -1008,6 +1027,20 @@ const visitPackageImportMap = async ({
     packageFileUrl
   }));
   return {};
+};
+
+const createPackageImportMapNotFoundWarning = ({
+  importmapFileUrl,
+  packageFileUrl
+}) => {
+  return {
+    code: "PACKAGE_IMPORTMAP_NOT_FOUND",
+    message: `importmap file specified in a package.json cannot be found,
+--- importmap file path ---
+${importmapFileUrl}
+--- package.json path ---
+${packageFileUrl}`
+  };
 };
 
 const createPackageImportMapUnexpectedWarning = ({
@@ -1041,164 +1074,320 @@ const specifierIsRelative = specifier => {
   return true;
 };
 
-// https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_package_exports
+/*
+
+https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_json_field_definitions
+
+*/
+const visitPackageImports = ({
+  packageFileUrl,
+  packageJsonObject,
+  packageImports = packageJsonObject.imports,
+  packageConditions,
+  warn
+}) => {
+  const importsSubpaths = {};
+
+  const onImportsSubpath = ({
+    key,
+    value,
+    trace
+  }) => {
+    if (!specifierIsRelative(value)) {
+      warn(createSubpathValueMustBeRelativeWarning$1({
+        value,
+        valueTrace: trace,
+        packageFileUrl
+      }));
+      return;
+    }
+
+    const keyNormalized = key;
+    const valueNormalized = value;
+    importsSubpaths[keyNormalized] = valueNormalized;
+  };
+
+  const conditions = [...packageConditions, "default"];
+
+  const visitSubpathValue = (subpathValue, subpathValueTrace) => {
+    if (typeof subpathValue === "string") {
+      return handleString(subpathValue, subpathValueTrace);
+    }
+
+    if (typeof subpathValue === "object" && subpathValue !== null) {
+      return handleObject(subpathValue, subpathValueTrace);
+    }
+
+    return handleRemaining(subpathValue, subpathValueTrace);
+  };
+
+  const handleString = (subpathValue, subpathValueTrace) => {
+    const firstBareKey = subpathValueTrace.slice().reverse().find(key => key.startsWith("#"));
+    onImportsSubpath({
+      key: firstBareKey,
+      value: subpathValue,
+      trace: subpathValueTrace
+    });
+    return true;
+  };
+
+  const handleObject = (subpathValue, subpathValueTrace) => {
+    // From Node.js documentation:
+    // "If a nested conditional does not have any mapping it will continue
+    // checking the remaining conditions of the parent condition"
+    // https://nodejs.org/docs/latest-v14.x/api/packages.html#packages_nested_conditions
+    //
+    // So it seems what we do here is not sufficient
+    // -> if the condition finally does not lead to something
+    // it should be ignored and an other branch be taken until
+    // something resolves
+    const followConditionBranch = (subpathValue, conditionTrace) => {
+      const bareKeys = [];
+      const conditionalKeys = [];
+      Object.keys(subpathValue).forEach(availableKey => {
+        if (availableKey.startsWith("#")) {
+          bareKeys.push(availableKey);
+        } else {
+          conditionalKeys.push(availableKey);
+        }
+      });
+
+      if (bareKeys.length > 0 && conditionalKeys.length > 0) {
+        warn(createSubpathKeysAreMixedWarning$1({
+          subpathValue,
+          subpathValueTrace: [...subpathValueTrace, ...conditionTrace],
+          packageFileUrl,
+          bareKeys,
+          conditionalKeys
+        }));
+        return false;
+      } // there is no condition, visit all bare keys (starting with #)
+
+
+      if (conditionalKeys.length === 0) {
+        let leadsToSomething = false;
+        bareKeys.forEach(key => {
+          leadsToSomething = visitSubpathValue(subpathValue[key], [...subpathValueTrace, ...conditionTrace, key]);
+        });
+        return leadsToSomething;
+      } // there is a condition, keep the first one leading to something
+
+
+      return conditionalKeys.some(keyCandidate => {
+        if (!conditions.includes(keyCandidate)) {
+          return false;
+        }
+
+        const valueCandidate = subpathValue[keyCandidate];
+        return visitSubpathValue(valueCandidate, [...subpathValueTrace, ...conditionTrace, keyCandidate]);
+      });
+    };
+
+    return followConditionBranch(subpathValue, []);
+  };
+
+  const handleRemaining = (subpathValue, subpathValueTrace) => {
+    warn(createSubpathIsUnexpectedWarning$1({
+      subpathValue,
+      subpathValueTrace,
+      packageFileUrl
+    }));
+    return false;
+  };
+
+  visitSubpathValue(packageImports, ["imports"]);
+  return importsSubpaths;
+};
+
+const createSubpathIsUnexpectedWarning$1 = ({
+  subpathValue,
+  subpathValueTrace,
+  packageFileUrl
+}) => {
+  return {
+    code: "IMPORTS_SUBPATH_UNEXPECTED",
+    message: `unexpected subpath in package.json imports: value must be an object or a string.
+--- value ---
+${subpathValue}
+--- value at ---
+${subpathValueTrace.join(".")}
+--- package.json path ---
+${util.urlToFileSystemPath(packageFileUrl)}`
+  };
+};
+
+const createSubpathKeysAreMixedWarning$1 = ({
+  subpathValue,
+  subpathValueTrace,
+  packageFileUrl
+}) => {
+  return {
+    code: "IMPORTS_SUBPATH_MIXED_KEYS",
+    message: `unexpected subpath keys in package.json imports: cannot mix bare and conditional keys.
+--- value ---
+${JSON.stringify(subpathValue, null, "  ")}
+--- value at ---
+${subpathValueTrace.join(".")}
+--- package.json path ---
+${util.urlToFileSystemPath(packageFileUrl)}`
+  };
+};
+
+const createSubpathValueMustBeRelativeWarning$1 = ({
+  value,
+  valueTrace,
+  packageFileUrl
+}) => {
+  return {
+    code: "IMPORTS_SUBPATH_VALUE_UNEXPECTED",
+    message: `unexpected subpath value in package.json imports: value must be relative to package
+--- value ---
+${value}
+--- value at ---
+${valueTrace.join(".")}
+--- package.json path ---
+${util.urlToFileSystemPath(packageFileUrl)}`
+  };
+};
+
+/*
+
+https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_json_field_definitions
+
+*/
 const visitPackageExports = ({
-  warn,
   packageFileUrl,
   packageJsonObject,
   packageExports = packageJsonObject.exports,
   packageName = packageJsonObject.name,
   projectDirectoryUrl,
-  packagesExportsPreference,
-  onExport
+  packageConditions,
+  warn
 }) => {
+  const exportsSubpaths = {};
   const packageDirectoryUrl = util.resolveUrl("./", packageFileUrl);
   const packageDirectoryRelativeUrl = util.urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl);
-  visitExportsSubpath(packageExports, packagesExportsPreference, {
-    onUnexpectedPackageExports: ({
-      packageExportsValue,
-      packageExportsValuePath
-    }) => {
-      warn(createExportsValueWarning({
-        packageExportsValue,
-        packageExportsValuePath,
-        packageFileUrl
-      }));
-    },
-    onMixedPackageExports: ({
-      packageExportsValue,
-      packageExportsValuePath
-    }) => {
-      // see https://nodejs.org/dist/latest-v13.x/docs/api/esm.html#esm_exports_sugar
-      warn(createExportsMixedWarning({
-        packageExportsValue,
-        packageExportsValuePath,
-        packageFileUrl
-      }));
-    },
-    onSubpathPackageExport: ({
-      key,
-      value,
-      valuePath
-    }) => {
-      if (!specifierIsRelative(key)) {
-        warn(createExportsMappingKeyMustBeRelativeWarning({
-          key,
-          keyPath: valuePath.slice(0, -1),
-          packageFileUrl
-        }));
-        return;
-      }
 
-      if (typeof value !== "string") {
-        warn(createExportsMappingValueMustBeAStringWarning({
-          value,
-          valuePath,
-          packageFileUrl
-        }));
-        return;
-      }
-
-      if (!specifierIsRelative(value)) {
-        warn(createExportsMappingValueMustBeRelativeWarning({
-          value,
-          valuePath,
-          packageFileUrl
-        }));
-        return;
-      }
-
-      onExport({
-        key: specifierToSource(key, packageName),
-        value: addressToDestination(value, packageDirectoryRelativeUrl)
-      });
-    }
-  });
-};
-
-const visitExportsSubpath = (packageExports, packageExportsConditions, {
-  onUnexpectedPackageExports,
-  onMixedPackageExports,
-  onSubpathPackageExport
-}) => {
-  const visitValue = (packageExportsValue, {
-    valuePath
+  const onExportsSubpath = ({
+    key,
+    value,
+    trace
   }) => {
-    // false is allowed as alternative to exports: {}
-    if (packageExportsValue === false) {
+    if (!specifierIsRelative(value)) {
+      warn(createSubpathValueMustBeRelativeWarning({
+        value,
+        valueTrace: trace,
+        packageFileUrl
+      }));
       return;
     }
 
-    if (typeof packageExportsValue === "string") {
-      const firstNonConditionKey = valuePath.slice().reverse().find(key => key.startsWith("."));
-      const key = firstNonConditionKey || ".";
-      onSubpathPackageExport({
-        value: packageExportsValue,
-        valuePath,
-        key
-      });
-      return;
-    }
-
-    if (typeof packageExportsValue !== "object" && packageExportsValue !== null) {
-      onUnexpectedPackageExports({
-        packageExportsValue,
-        packageExportsValuePath: valuePath
-      });
-      return;
-    }
-
-    const keys = Object.keys(packageExportsValue);
-    const everyKeyDoesNotStartsWithDot = keys.every(key => !key.startsWith("."));
-
-    if (everyKeyDoesNotStartsWithDot) {
-      const bestConditionKey = findBestConditionKey(keys, packageExportsConditions);
-
-      if (!bestConditionKey) {
-        return;
-      }
-
-      const bestExports = packageExportsValue[bestConditionKey];
-      visitValue(bestExports, {
-        valuePath: [...valuePath, bestConditionKey]
-      });
-      return;
-    }
-
-    const everyKeyStartsWithDot = keys.every(key => key.startsWith("."));
-
-    if (everyKeyStartsWithDot) {
-      keys.forEach(key => {
-        visitValue(packageExportsValue[key], {
-          valuePath: [...valuePath, key]
-        });
-      });
-      return;
-    }
-
-    onMixedPackageExports({
-      packageExportsValue,
-      packageExportsValuePath: valuePath
-    });
+    const keyNormalized = specifierToSource(key, packageName);
+    const valueNormalized = addressToDestination(value, packageDirectoryRelativeUrl);
+    exportsSubpaths[keyNormalized] = valueNormalized;
   };
 
-  visitValue(packageExports, {
-    valuePath: ["exports"]
-  });
-};
+  const conditions = [...packageConditions, "default"];
 
-const findBestConditionKey = (availableKeys, exportsConditions) => {
-  const conditionKey = exportsConditions.find(key => availableKeys.includes(key));
+  const visitSubpathValue = (subpathValue, subpathValueTrace) => {
+    // false is allowed as alternative to exports: {}
+    if (subpathValue === false) {
+      return handleFalse();
+    }
 
-  if (conditionKey) {
-    return conditionKey;
-  }
+    if (typeof subpathValue === "string") {
+      return handleString(subpathValue, subpathValueTrace);
+    }
 
-  if (availableKeys.includes("default")) {
-    return "default";
-  }
+    if (typeof subpathValue === "object" && subpathValue !== null) {
+      return handleObject(subpathValue, subpathValueTrace);
+    }
 
-  return undefined;
+    return handleRemaining(subpathValue, subpathValueTrace);
+  };
+
+  const handleFalse = () => {
+    // nothing to do
+    return true;
+  };
+
+  const handleString = (subpathValue, subpathValueTrace) => {
+    const firstRelativeKey = subpathValueTrace.slice().reverse().find(key => key.startsWith("."));
+    const key = firstRelativeKey || ".";
+    onExportsSubpath({
+      key,
+      value: subpathValue,
+      trace: subpathValueTrace
+    });
+    return true;
+  };
+
+  const handleObject = (subpathValue, subpathValueTrace) => {
+    // From Node.js documentation:
+    // "If a nested conditional does not have any mapping it will continue
+    // checking the remaining conditions of the parent condition"
+    // https://nodejs.org/docs/latest-v14.x/api/packages.html#packages_nested_conditions
+    //
+    // So it seems what we do here is not sufficient
+    // -> if the condition finally does not lead to something
+    // it should be ignored and an other branch be taken until
+    // something resolves
+    const followConditionBranch = (subpathValue, conditionTrace) => {
+      const relativeKeys = [];
+      const conditionalKeys = [];
+      Object.keys(subpathValue).forEach(availableKey => {
+        if (availableKey.startsWith(".")) {
+          relativeKeys.push(availableKey);
+        } else {
+          conditionalKeys.push(availableKey);
+        }
+      });
+
+      if (relativeKeys.length > 0 && conditionalKeys.length > 0) {
+        warn(createSubpathKeysAreMixedWarning({
+          subpathValue,
+          subpathValueTrace: [...subpathValueTrace, ...conditionTrace],
+          packageFileUrl,
+          relativeKeys,
+          conditionalKeys
+        }));
+        return false;
+      } // there is no condition, visit all relative keys
+
+
+      if (conditionalKeys.length === 0) {
+        let leadsToSomething = false;
+        relativeKeys.forEach(key => {
+          leadsToSomething = visitSubpathValue(subpathValue[key], [...subpathValueTrace, ...conditionTrace, key]);
+        });
+        return leadsToSomething;
+      } // there is a condition, keep the first one leading to something
+
+
+      return conditionalKeys.some(keyCandidate => {
+        if (!conditions.includes(keyCandidate)) {
+          return false;
+        }
+
+        const valueCandidate = subpathValue[keyCandidate];
+        return visitSubpathValue(valueCandidate, [...subpathValueTrace, ...conditionTrace, keyCandidate]);
+      });
+    };
+
+    return followConditionBranch(subpathValue, []);
+  };
+
+  const handleRemaining = (subpathValue, subpathValueTrace) => {
+    warn(createSubpathIsUnexpectedWarning({
+      subpathValue,
+      subpathValueTrace,
+      packageFileUrl
+    }));
+    return false;
+  };
+
+  visitSubpathValue(packageExports, ["exports"]);
+  return exportsSubpaths;
 };
 
 const specifierToSource = (specifier, packageName) => {
@@ -1229,86 +1418,52 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
   return `./${packageDirectoryRelativeUrl}${address}`;
 };
 
-const createExportsValueWarning = ({
-  packageExportsValue,
-  packageExportsValuePath,
+const createSubpathIsUnexpectedWarning = ({
+  subpathValue,
+  subpathValueTrace,
   packageFileUrl
 }) => {
   return {
-    code: "EXPORTS_VALUE",
-    message: `unexpected value in package.json exports field: value must be an object or a string.
+    code: "EXPORTS_SUBPATH_UNEXPECTED",
+    message: `unexpected subpath in package.json exports: value must be an object or a string.
 --- value ---
-${packageExportsValue}
---- value path ---
-${packageExportsValuePath.join(".")}
+${subpathValue}
+--- value at ---
+${subpathValueTrace.join(".")}
 --- package.json path ---
 ${util.urlToFileSystemPath(packageFileUrl)}`
   };
 };
 
-const createExportsMixedWarning = ({
-  packageExportsValue,
-  packageExportsValuePath,
+const createSubpathKeysAreMixedWarning = ({
+  subpathValue,
+  subpathValueTrace,
   packageFileUrl
 }) => {
   return {
-    code: "EXPORTS_MIXED",
-    message: `unexpected package.json exports field: cannot mix conditional and subpath exports.
+    code: "EXPORTS_SUBPATH_MIXED_KEYS",
+    message: `unexpected subpath keys in package.json exports: cannot mix relative and conditional keys.
 --- value ---
-${JSON.stringify(packageExportsValue, null, "  ")}
---- value path ---
-${packageExportsValuePath.join(".")}
+${JSON.stringify(subpathValue, null, "  ")}
+--- value at ---
+${subpathValueTrace.join(".")}
 --- package.json path ---
 ${util.urlToFileSystemPath(packageFileUrl)}`
   };
 };
 
-const createExportsMappingKeyMustBeRelativeWarning = ({
-  key,
-  keyPath,
-  packageFileUrl
-}) => {
-  return {
-    code: "EXPORTS_MAPPING_KEY_MUST_BE_RELATIVE",
-    message: `unexpected key in package.json exports field: key must be relative.
---- key ---
-${key}
---- key path ---
-${keyPath.join(".")}
---- package.json path ---
-${util.urlToFileSystemPath(packageFileUrl)}`
-  };
-};
-
-const createExportsMappingValueMustBeAStringWarning = ({
+const createSubpathValueMustBeRelativeWarning = ({
   value,
-  valuePath,
+  valueTrace,
   packageFileUrl
 }) => {
   return {
-    code: "EXPORTS_MAPPING_VALUE_MUST_BE_A_STRING",
-    message: `unexpected value in package.json exports field: value must be a string.
+    code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
+    message: `unexpected subpath value in package.json exports: value must be a relative to the package.
 --- value ---
 ${value}
---- value path ---
-${valuePath.join(".")}
---- package.json path ---
-${util.urlToFileSystemPath(packageFileUrl)}`
-  };
-};
-
-const createExportsMappingValueMustBeRelativeWarning = ({
-  value,
-  valuePath,
-  packageFileUrl
-}) => {
-  return {
-    code: "EXPORTS_MAPPING_VALUE_MUST_BE_RELATIVE",
-    message: `unexpected value in package.json exports field: value must be relative.
---- value ---
-${value}
---- value path ---
-${valuePath.join(".")}
+--- value at ---
+${valueTrace.join(".")}
 --- package.json path ---
 ${util.urlToFileSystemPath(packageFileUrl)}`
   };
@@ -1457,8 +1612,7 @@ const getImportMapFromPackageFiles = async ({
   warn,
   projectDirectoryUrl,
   projectPackageDevDependenciesIncluded = "undefined" !== "production",
-  packagesExportsPreference = ["import", "browser"],
-  packagesExportsIncluded = true,
+  packageConditions = ["import", "browser"],
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true
 }) => {
@@ -1688,8 +1842,14 @@ const getImportMapFromPackageFiles = async ({
           to
         });
       });
-    };
+    }; // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
 
+
+    addImportMapForPackage({
+      imports: {
+        [`${packageName}/`]: `./`
+      }
+    });
     const importsFromPackageField = await visitPackageImportMap({
       warn,
       packageFileUrl,
@@ -1698,41 +1858,56 @@ const getImportMapFromPackageFiles = async ({
     });
     addImportMapForPackage(importsFromPackageField);
 
-    if (packagesExportsIncluded && "exports" in packageJsonObject) {
+    if ("imports" in packageJsonObject) {
       const mappingsFromPackageExports = {};
-      visitPackageExports({
+      const packageImports = visitPackageImports({
         warn,
         packageFileUrl,
         packageJsonObject,
         packageName,
         projectDirectoryUrl,
-        packagesExportsPreference,
-        onExport: ({
-          key,
-          value
-        }) => {
-          const from = key;
-          const to = value;
+        packageConditions
+      });
+      Object.keys(packageImports).forEach(from => {
+        const to = packageImports[from];
+        mappingsFromPackageExports[from] = to;
+      });
+      addImportMapForPackage({
+        imports: mappingsFromPackageExports
+      });
+    }
 
-          if (from.indexOf("*") === -1) {
-            mappingsFromPackageExports[from] = to;
-            return;
-          }
+    if ("exports" in packageJsonObject) {
+      const mappingsFromPackageExports = {};
+      const packageExports = visitPackageExports({
+        warn,
+        packageFileUrl,
+        packageJsonObject,
+        packageName,
+        projectDirectoryUrl,
+        packageConditions
+      });
+      Object.keys(packageExports).forEach(from => {
+        const to = packageExports[from];
 
-          if (from.endsWith("/*") && to.endsWith("/*") && // ensure ends with '*' AND there is only one '*' occurence
-          to.indexOf("*") === to.length - 1) {
-            const fromWithouTrailingStar = from.slice(0, -1);
-            const toWithoutTrailingStar = to.slice(0, -1);
-            mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar;
-            return;
-          }
-
-          warn(createExportsWildcardIgnoredWarning({
-            key,
-            value,
-            packageFileUrl
-          }));
+        if (from.indexOf("*") === -1) {
+          mappingsFromPackageExports[from] = to;
+          return;
         }
+
+        if (from.endsWith("/*") && to.endsWith("/*") && // ensure ends with '*' AND there is only one '*' occurence
+        to.indexOf("*") === to.length - 1) {
+          const fromWithouTrailingStar = from.slice(0, -1);
+          const toWithoutTrailingStar = to.slice(0, -1);
+          mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar;
+          return;
+        }
+
+        warn(createExportsWildcardIgnoredWarning({
+          key: from,
+          value: to,
+          packageFileUrl
+        }));
       });
       addMappingsForPackageAndImporter(mappingsFromPackageExports);
     }
@@ -1751,7 +1926,7 @@ const getImportMapFromPackageFiles = async ({
   }) => {
     const mainFileUrl = await resolvePackageMain({
       warn,
-      packagesExportsPreference,
+      packageConditions,
       packageFileUrl,
       packageJsonObject
     }); // it's possible to have no main
@@ -2057,14 +2232,20 @@ const getImportMapFromProjectFiles = async ({
   moduleFormat = "esm",
   dev = false,
   jsFiles = true,
-  removeUnusedMappings = !dev,
-  magicExtensions,
+  importMapInput = {},
+  projectPackageDevDependenciesIncluded = dev,
+  treeshakeMappings = !dev,
+  packageConditions = [],
+  packageConditionDevelopment = dev,
+  packageConditionFromModuleFormat = packageConditionsFromModuleFormat[moduleFormat],
+  packageConditionFromRuntime = packageConditionsFromRuntime[runtime],
+  magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   onWarn = (warning, warn) => {
     warn(warning);
   },
   ...rest
 }) => {
-  const packagesExportsPreference = [...(moduleFormatPreferences[moduleFormat] || [moduleFormat]), ...(runtimeExportsPreferences[runtime] || [runtime]), ...(dev ? "development" : "production")];
+  packageConditions = [...(packageConditionDevelopment ? ["development"] : ["production"]), ...(packageConditionFromModuleFormat ? [packageConditionFromModuleFormat] : []), ...(packageConditionFromRuntime ? [packageConditionFromRuntime] : []), ...packageConditions];
   const logger$1 = logger.createLogger({
     logLevel
   });
@@ -2080,8 +2261,8 @@ const getImportMapFromProjectFiles = async ({
     logger: logger$1,
     warn,
     projectDirectoryUrl,
-    packagesExportsPreference,
-    projectPackageDevDependenciesIncluded: dev,
+    packageConditions,
+    projectPackageDevDependenciesIncluded,
     ...rest
   });
   importMapFromPackageFiles = importMap.sortImportMap(importMapFromPackageFiles);
@@ -2092,23 +2273,22 @@ const getImportMapFromProjectFiles = async ({
 
   let importMapFromJsFiles = await getImportMapFromJsFiles({
     warn,
-    importMap: importMapFromPackageFiles,
-    removeUnusedMappings,
     projectDirectoryUrl,
+    importMap: importMap.composeTwoImportMaps(importMapInput, importMapFromPackageFiles),
     magicExtensions,
-    packagesExportsPreference,
-    runtime
+    runtime,
+    treeshakeMappings
   });
   importMapFromJsFiles = importMap.sortImportMap(importMapFromJsFiles);
   return importMapFromJsFiles;
 };
-const runtimeExportsPreferences = {
-  browser: ["browser"],
-  node: ["node"]
+const packageConditionsFromRuntime = {
+  browser: "browser",
+  node: "node"
 };
-const moduleFormatPreferences = {
-  esm: ["import"],
-  cjs: ["require"]
+const packageConditionsFromModuleFormat = {
+  esm: "import",
+  cjs: "require"
 };
 
 const getImportMapFromFile = async ({
@@ -2169,8 +2349,7 @@ const writeImportMapFile = async (importMapInputs = [], {
   jsConfigFile = false,
   // not yet documented, makes vscode aware of the import remapping
   jsConfigFileLog = true,
-  jsConfigLeadingSlash = false,
-  jsConfigBase = {}
+  jsConfigLeadingSlash = false
 }) => {
   projectDirectoryUrl = util.assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
 
@@ -2194,32 +2373,46 @@ const writeImportMapFile = async (importMapInputs = [], {
 
   if (jsConfigFile) {
     const jsConfigFileUrl = util.resolveUrl("./jsconfig.json", projectDirectoryUrl);
-
-    try {
-      const jsConfig = {
-        compilerOptions: {
-          baseUrl: ".",
-          ...jsConfigBase,
-          paths: { ...(jsConfigLeadingSlash ? {
-              "/*": ["./*"]
-            } : {}),
-            ...importMapToVsCodeConfigPaths(importMap$1)
-          }
+    const jsConfigCurrent = (await readCurrentJsConfig(jsConfigFileUrl)) || {
+      compilerOptions: {}
+    };
+    const jsConfig = { ...jsConfigDefault,
+      ...jsConfigCurrent,
+      compilerOptions: { ...jsConfigDefault.compilerOptions,
+        ...jsConfigCurrent.compilerOptions,
+        paths: { ...(jsConfigLeadingSlash ? {
+            "/*": ["./*"]
+          } : {}),
+          ...importMapToVsCodeConfigPaths(importMap$1)
         }
-      };
-      await util.writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "));
+      }
+    };
+    await util.writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "));
 
-      if (jsConfigFileLog) {
-        console.info(`-> ${util.urlToFileSystemPath(jsConfigFileUrl)}`);
-      }
-    } catch (e) {
-      if (e.code !== "ENOENT") {
-        throw e;
-      }
+    if (jsConfigFileLog) {
+      console.info(`-> ${util.urlToFileSystemPath(jsConfigFileUrl)}`);
     }
   }
 
   return importMap$1;
+};
+
+const readCurrentJsConfig = async jsConfigFileUrl => {
+  try {
+    const currentJSConfig = await util.readFile(jsConfigFileUrl, {
+      as: "json"
+    });
+    return currentJSConfig;
+  } catch (e) {
+    return null;
+  }
+};
+
+const jsConfigDefault = {
+  compilerOptions: {
+    baseUrl: ".",
+    paths: {}
+  }
 };
 
 exports.getImportMapFromFile = getImportMapFromFile;
