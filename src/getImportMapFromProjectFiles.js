@@ -49,7 +49,9 @@ export const getImportMapFromProjectFiles = async ({
     projectPackageDevDependenciesIncluded,
     ...rest,
   })
-  importMapFromPackageFiles = sortImportMap(importMapFromPackageFiles)
+  importMapFromPackageFiles = sortImportMap(
+    composeTwoImportMaps(importMapInput, importMapFromPackageFiles),
+  )
   if (!jsFiles) {
     return importMapFromPackageFiles
   }
@@ -57,7 +59,7 @@ export const getImportMapFromProjectFiles = async ({
   let importMapFromJsFiles = await getImportMapFromJsFiles({
     warn,
     projectDirectoryUrl,
-    importMap: composeTwoImportMaps(importMapInput, importMapFromPackageFiles),
+    importMap: importMapFromPackageFiles,
     magicExtensions,
     runtime,
     treeshakeMappings,
