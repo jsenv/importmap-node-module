@@ -1,4 +1,4 @@
-import { sortImportMap } from "@jsenv/import-map"
+import { composeTwoImportMaps, sortImportMap } from "@jsenv/import-map"
 import { createLogger } from "@jsenv/logger"
 import { getImportMapFromJsFiles } from "./internal/from-js/getImportMapFromJsFiles.js"
 import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"
@@ -10,6 +10,7 @@ export const getImportMapFromProjectFiles = async ({
   moduleFormat = "esm",
   dev = false,
   jsFiles = true,
+  importMapInput = {},
 
   projectPackageDevDependenciesIncluded = dev,
   treeshakeMappings = !dev,
@@ -56,7 +57,7 @@ export const getImportMapFromProjectFiles = async ({
   let importMapFromJsFiles = await getImportMapFromJsFiles({
     warn,
     projectDirectoryUrl,
-    importMap: importMapFromPackageFiles,
+    importMap: composeTwoImportMaps(importMapInput, importMapFromPackageFiles),
     magicExtensions,
     runtime,
     treeshakeMappings,

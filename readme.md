@@ -258,6 +258,30 @@ When enabled, only the mappings actually used by your files will be generated. T
 
 </details>
 
+<details>
+  <summary>importMapInput parameter</summary>
+
+`importMapInput` parameter is an importMap object. This parameter is optional and by default it's an empty object.
+
+You can use this parameter to provide mappings that are not already in your `package.json`.
+
+```js
+import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+
+const importMap = await getImportMapFromProjectFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapInput: {
+    imports: {
+      foo: "./bar.js",
+    },
+  },
+})
+
+console.log(importMap.imports.foo) // "./bar.js"
+```
+
+</details>
+
 ## getImportMapFromFile
 
 `getImportMapFromFile` is an async function reading importmap from a file.
