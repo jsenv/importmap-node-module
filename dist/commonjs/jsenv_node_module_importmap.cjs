@@ -1611,7 +1611,7 @@ const getImportMapFromPackageFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
-  projectPackageDevDependenciesIncluded = "undefined" !== "production",
+  projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   packageConditions = ["import", "browser"],
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true
@@ -2265,7 +2265,7 @@ const getImportMapFromProjectFiles = async ({
     projectPackageDevDependenciesIncluded,
     ...rest
   });
-  importMapFromPackageFiles = importMap.sortImportMap(importMapFromPackageFiles);
+  importMapFromPackageFiles = importMap.sortImportMap(importMap.composeTwoImportMaps(importMapInput, importMapFromPackageFiles));
 
   if (!jsFiles) {
     return importMapFromPackageFiles;
@@ -2274,7 +2274,7 @@ const getImportMapFromProjectFiles = async ({
   let importMapFromJsFiles = await getImportMapFromJsFiles({
     warn,
     projectDirectoryUrl,
-    importMap: importMap.composeTwoImportMaps(importMapInput, importMapFromPackageFiles),
+    importMap: importMapFromPackageFiles,
     magicExtensions,
     runtime,
     treeshakeMappings
@@ -2419,4 +2419,4 @@ exports.getImportMapFromFile = getImportMapFromFile;
 exports.getImportMapFromProjectFiles = getImportMapFromProjectFiles;
 exports.writeImportMapFile = writeImportMapFile;
 
-//# sourceMappingURL=main.cjs.map
+//# sourceMappingURL=jsenv_node_module_importmap.cjs.map
