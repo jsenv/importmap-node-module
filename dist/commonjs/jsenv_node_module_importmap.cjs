@@ -480,6 +480,7 @@ const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
 
 const BARE_SPECIFIER_ERROR = {};
 const getImportMapFromJsFiles = async ({
+  logger,
   warn,
   projectDirectoryUrl,
   importMap: importMap$1,
@@ -617,15 +618,25 @@ const getImportMapFromJsFiles = async ({
       };
       addMapping(autoMapping);
       markMappingAsUsed(autoMapping);
-      warn(formatAutoMappingSpecifierWarning({
+      const closestPackageObject = await util.readFile(packageFileUrl, {
+        as: "json"
+      }); // it's imprecise because we are not ensuring the wildcard correspond to automapping
+      // but good enough for now
+
+      const containsWildcard = Object.keys(closestPackageObject.exports || {}).some(key => key.includes("*"));
+      const autoMappingWarning = formatAutoMappingSpecifierWarning({
         specifier,
         importedBy,
         autoMapping,
         closestPackageDirectoryUrl: packageDirectoryUrl,
-        closestPackageObject: await util.readFile(packageFileUrl, {
-          as: "json"
-        })
-      }));
+        closestPackageObject
+      });
+
+      if (containsWildcard) {
+        logger.debug(autoMappingWarning);
+      } else {
+        warn(autoMappingWarning);
+      }
     }
 
     return fileUrlOnFileSystem;
@@ -855,6 +866,8 @@ const resolvePackageMain = ({
   packageFileUrl,
   packageJsonObject
 }) => {
+  // we should remove "module", "browser", "jsenext:main" because Node.js native resolution
+  // ignores them
   if (packageConditions.includes("import") && "module" in packageJsonObject) {
     return resolveMainFile({
       warn,
@@ -1725,12 +1738,6 @@ const getImportMapFromPackageFiles = async ({
       packageName,
       importerPackageFileUrl
     });
-    await visitPackageMain({
-      packageFileUrl,
-      packageName,
-      packageJsonObject,
-      packageInfo
-    });
     const {
       importerIsRoot,
       importerRelativeUrl,
@@ -1903,13 +1910,22 @@ const getImportMapFromPackageFiles = async ({
           return;
         }
 
-        warn(createExportsWildcardIgnoredWarning({
+        logger.debug(createExportsWildcardIgnoredWarning({
           key: from,
           value: to,
           packageFileUrl
         }));
       });
       addMappingsForPackageAndImporter(mappingsFromPackageExports);
+    } else {
+      // visit "main" only if there is no "exports"
+      // https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_main
+      await visitPackageMain({
+        packageFileUrl,
+        packageName,
+        packageJsonObject,
+        packageInfo
+      });
     }
   };
 
@@ -2272,6 +2288,7 @@ const getImportMapFromProjectFiles = async ({
   }
 
   let importMapFromJsFiles = await getImportMapFromJsFiles({
+    logger: logger$1,
     warn,
     projectDirectoryUrl,
     importMap: importMapFromPackageFiles,
