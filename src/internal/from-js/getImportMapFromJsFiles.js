@@ -18,6 +18,7 @@ import { resolveFile } from "../resolveFile.js"
 const BARE_SPECIFIER_ERROR = {}
 
 export const getImportMapFromJsFiles = async ({
+  logger,
   warn,
   projectDirectoryUrl,
   importMap,
@@ -134,15 +135,26 @@ export const getImportMapFromJsFiles = async ({
         }
         addMapping(autoMapping)
         markMappingAsUsed(autoMapping)
-        warn(
-          formatAutoMappingSpecifierWarning({
-            specifier,
-            importedBy,
-            autoMapping,
-            closestPackageDirectoryUrl: packageDirectoryUrl,
-            closestPackageObject: await readFile(packageFileUrl, { as: "json" }),
-          }),
+
+        const closestPackageObject = await readFile(packageFileUrl, { as: "json" })
+        // it's imprecise because we are not ensuring the wildcard correspond to automapping
+        // but good enough for now
+        const containsWildcard = Object.keys(closestPackageObject.exports || {}).some((key) =>
+          key.includes("*"),
         )
+
+        const autoMappingWarning = formatAutoMappingSpecifierWarning({
+          specifier,
+          importedBy,
+          autoMapping,
+          closestPackageDirectoryUrl: packageDirectoryUrl,
+          closestPackageObject,
+        })
+        if (containsWildcard) {
+          logger.debug(autoMappingWarning)
+        } else {
+          warn(autoMappingWarning)
+        }
       }
 
       return fileUrlOnFileSystem

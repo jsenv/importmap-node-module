@@ -57,6 +57,7 @@ export const getImportMapFromProjectFiles = async ({
   }
 
   let importMapFromJsFiles = await getImportMapFromJsFiles({
+    logger,
     warn,
     projectDirectoryUrl,
     importMap: importMapFromPackageFiles,

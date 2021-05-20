@@ -295,7 +295,7 @@ export const getImportMapFromPackageFiles = async ({
           return
         }
 
-        warn(
+        logger.debug(
           createExportsWildcardIgnoredWarning({
             key: from,
             value: to,
