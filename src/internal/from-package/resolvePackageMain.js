@@ -10,6 +10,8 @@ export const resolvePackageMain = ({
   packageFileUrl,
   packageJsonObject,
 }) => {
+  // we should remove "module", "browser", "jsenext:main" because Node.js native resolution
+  // ignores them
   if (packageConditions.includes("import") && "module" in packageJsonObject) {
     return resolveMainFile({
       warn,
