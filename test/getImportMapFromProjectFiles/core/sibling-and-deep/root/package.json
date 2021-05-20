@@ -1,7 +1,7 @@
 {
   "name": "root",
-  "module": "index.js",
   "exports": {
+    ".": "./index.js",
     "./": "./"
   },
   "dependencies": {

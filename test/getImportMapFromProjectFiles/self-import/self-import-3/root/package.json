@@ -5,6 +5,7 @@
     "foo": "*"
   },
   "exports": {
+    ".": "./index.js",
     "./": "./",
     "./boo": "./lib/boo.js"
   }

@@ -1,5 +1,6 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/util"
+
 import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
@@ -18,6 +19,7 @@ const expected = {
   scopes: {
     "./node_modules/foo/node_modules/exporting-folder/": {
       "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
+      "exporting-folder": "./node_modules/foo/node_modules/exporting-folder/index.js",
     },
     "./node_modules/foo/": {
       "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",

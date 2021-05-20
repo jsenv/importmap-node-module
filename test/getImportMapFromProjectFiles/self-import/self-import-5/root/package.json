@@ -5,6 +5,7 @@
     "@jsenv/core": "*"
   },
   "exports": {
+    ".": "./index",
     "./": "./"
   }
 }
