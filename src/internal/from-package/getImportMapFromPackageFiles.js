@@ -127,13 +127,6 @@ export const getImportMapFromPackageFiles = async ({
       importerPackageFileUrl,
     })
 
-    await visitPackageMain({
-      packageFileUrl,
-      packageName,
-      packageJsonObject,
-      packageInfo,
-    })
-
     const {
       importerIsRoot,
       importerRelativeUrl,
@@ -311,6 +304,15 @@ export const getImportMapFromPackageFiles = async ({
         )
       })
       addMappingsForPackageAndImporter(mappingsFromPackageExports)
+    } else {
+      // visit "main" only if there is no "exports"
+      // https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_main
+      await visitPackageMain({
+        packageFileUrl,
+        packageName,
+        packageJsonObject,
+        packageInfo,
+      })
     }
   }
 
