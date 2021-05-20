@@ -24,7 +24,6 @@ const expected = {
     "./node_modules/foo/": {
       "bar/file.js": "./node_modules/bar/src/file.js",
       "foo/": "./node_modules/foo/",
-      "bar": "./node_modules/bar/index",
     },
   },
 }

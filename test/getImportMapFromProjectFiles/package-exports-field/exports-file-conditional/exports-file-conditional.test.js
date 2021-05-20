@@ -17,7 +17,6 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
       "foo/file.js": "./node_modules/foo/file.browser.js",
       "root/": "./",
       "root": "./index",
-      "foo": "./node_modules/foo/index",
     },
     scopes: {
       "./node_modules/foo/": {
@@ -40,7 +39,6 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
       "foo/file.js": "./node_modules/foo/file.default.js",
       "root/": "./",
       "root": "./index",
-      "foo": "./node_modules/foo/index",
     },
     scopes: {
       "./node_modules/foo/": {

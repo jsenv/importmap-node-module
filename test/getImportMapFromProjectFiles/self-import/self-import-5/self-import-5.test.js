@@ -17,6 +17,7 @@ const expected = {
   scopes: {
     "./node_modules/@jsenv/core/": {
       "@jsenv/core/": "./node_modules/@jsenv/core/",
+      "@jsenv/core": "./node_modules/@jsenv/core/index",
     },
   },
 }
