@@ -1,11 +1,6 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import {
-  resolveUrl,
-  urlToRelativeUrl,
-  assertAndNormalizeDirectoryUrl,
-  urlToFileSystemPath,
-  readFile,
-} from "@jsenv/util"
+import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath, readFile } from "@jsenv/util"
+
 import { optimizeImportMap } from "../optimizeImportMap.js"
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"
@@ -26,8 +21,6 @@ export const getImportMapFromPackageFiles = async ({
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
 }) => {
-  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
-
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
   const findNodeModulePackage = createFindNodeModulePackage(packagesManualOverrides)
 

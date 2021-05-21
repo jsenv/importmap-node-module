@@ -1,0 +1,6 @@
+{
+  "name": "awesome-isomorphic-app",
+  "devDependencies": {
+    "siesta": "../"
+  }
+}
