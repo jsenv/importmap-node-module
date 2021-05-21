@@ -1,5 +1,7 @@
 import { composeTwoImportMaps, sortImportMap } from "@jsenv/import-map"
 import { createLogger } from "@jsenv/logger"
+import { assertAndNormalizeDirectoryUrl } from "@jsenv/util"
+
 import { getImportMapFromJsFiles } from "./internal/from-js/getImportMapFromJsFiles.js"
 import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"
 
@@ -39,6 +41,8 @@ export const getImportMapFromProjectFiles = async ({
       logger.warn(`\n${warning.message}\n`)
     })
   }
+
+  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
   // At this point, importmap is relative to the project directory url
   let importMapFromPackageFiles = await getImportMapFromPackageFiles({
