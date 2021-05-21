@@ -6,7 +6,7 @@ import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 const projectDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const testDirectoryUrl = resolveUrl("./dir/", projectDirectoryUrl)
 
-await removeFileSystemNode(`${testDirectoryUrl}/node_modules/siesta`)
+await removeFileSystemNode(`${testDirectoryUrl}/node_modules/siesta`, { allowUseless: true })
 await writeSymbolicLink(`${testDirectoryUrl}/node_modules/siesta`, projectDirectoryUrl)
 
 const warnings = []
