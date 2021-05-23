@@ -64,28 +64,7 @@ await writeImportMapFile(
 )
 ```
 
-Or use the commonjs equivalent if you need (or want):
-
-```js
-const {
-  getImportMapFromProjectFiles,
-  writeImportMapFile,
-} = require("@jsenv/node-module-import-map")
-
-const projectDirectoryUrl = __dirname
-
-await writeImportMapFile(
-  [
-    getImportMapFromProjectFiles({
-      projectDirectoryUrl,
-    }),
-  ],
-  {
-    projectDirectoryUrl,
-    importMapFileRelativeUrl: "./project.importmap",
-  },
-)
-```
+The code above is written in ESM. You may have to use `.mjs` extension to run it with Node.js as documented in [enabling ESM](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_enabling)
 
 </details>
 
