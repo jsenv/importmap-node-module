@@ -6,7 +6,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const actual = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  importMapInput: {
+  initialImportMap: {
     imports: {
       "#env": "./env.js",
     },

@@ -12,7 +12,7 @@ export const getImportMapFromProjectFiles = async ({
   moduleFormat = "esm",
   dev = false,
   jsFiles = true,
-  importMapInput = {},
+  initialImportMap = {},
 
   projectPackageDevDependenciesIncluded = dev,
   treeshakeMappings = !dev,
@@ -26,6 +26,7 @@ export const getImportMapFromProjectFiles = async ({
   onWarn = (warning, warn) => {
     warn(warning)
   },
+  packagesManualOverrides,
   ...rest
 }) => {
   packageConditions = [
@@ -51,10 +52,11 @@ export const getImportMapFromProjectFiles = async ({
     projectDirectoryUrl,
     packageConditions,
     projectPackageDevDependenciesIncluded,
+    packagesManualOverrides,
     ...rest,
   })
   importMapFromPackageFiles = sortImportMap(
-    composeTwoImportMaps(importMapInput, importMapFromPackageFiles),
+    composeTwoImportMaps(initialImportMap, importMapFromPackageFiles),
   )
   if (!jsFiles) {
     return importMapFromPackageFiles

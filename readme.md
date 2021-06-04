@@ -12,8 +12,9 @@ Generate importmap for node_modules.
 - [Presentation](#Presentation)
 - [Usage](#Usage)
 - [API](#API)
+- [Custom node module resolution](#Custom-node-module-resolution)
+- [Extensionless import](#Extensionless-import)
 - [Configure VSCode and ESLint for importmap](#Configure-vscode-and-eslint-for-importmap)
-- [Advanced documentation](#Advanced-documentation)
 
 # Presentation
 
@@ -26,9 +27,7 @@ This repository generates [import map](https://github.com/WICG/import-maps) from
 import lodash from "lodash"
 ```
 
-> The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node module resolution algorith](https://nodejs.org/api/modules.html#modules_all_together).
-
-> Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in `404 File Not Found` from server.
+The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node module resolution algorith](https://nodejs.org/api/modules.html#modules_all_together). Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in `404 File Not Found` from server.
 
 </details>
 
@@ -98,11 +97,7 @@ node generate-import-map.js
 </html>
 ```
 
-If you use a bundler or an other tool, be sure it's compatible with import maps.
-
-> Because import map are standard, you can expect your bundler/tools to be already compatible or to become compatible without plugin in a near future.
-
-> [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, unit testing and when building for production.
+If you use a bundler or an other tool, be sure it's compatible with import maps. As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration. [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, testing and when building for production.
 
 </details>
 
@@ -238,9 +233,9 @@ When enabled, only the mappings actually used by your files will be generated. T
 </details>
 
 <details>
-  <summary>importMapInput parameter</summary>
+  <summary>initialImportMap parameter</summary>
 
-`importMapInput` parameter is an importMap object. This parameter is optional and by default it's an empty object.
+`initialImportMap` parameter is an importMap object. This parameter is optional and by default it's an empty object.
 
 You can use this parameter to provide mappings that are not already in your `package.json`.
 
@@ -249,7 +244,7 @@ import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
 const importMap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapInput: {
+  initialImportMap: {
     imports: {
       foo: "./bar.js",
     },
@@ -287,6 +282,57 @@ const importMap = await getImportMapFromFile({
 `importMapFileRelativeUrl` parameter is an url relative to `projectDirectoryUrl` leading to the importmap file. This parameter is **required**.
 
 </details>
+
+# Custom node module resolution
+
+`@jsenv/node-module-import-map` uses a custom node module resolution
+
+It behaves as Node.js with one big change:
+
+**A node module will not be found if it is outside your project directory.**
+
+We do this because import map are used on the web where a file outside project directory cannot be reached.
+
+In practice, it has no impact because node modules are inside your project directory. If they are not, ensure all your dependencies are in your `package.json` and re-run `npm install`.
+
+# Extensionless import
+
+If the code you wants to run contains one ore more extensionless path specifier, it will not be found by a browser (not even by Node.js).
+
+<details>
+  <summary>extensionless import example</summary>
+
+```js
+import { foo } from "./file"
+```
+
+</details>
+
+In this situation, you can do one of the following:
+
+1. Add extension in the source file
+2. If there is a build step, ensure extension are added during the build
+3. Add remapping in `exports` field of your `package.json`
+
+   ```json
+   {
+     "exports": {
+       "./file": "./file.js"
+     }
+   }
+   ```
+
+   Or using `*`
+
+   ```json
+   {
+     "exports": {
+       "./feature/*": "./feature/*.js"
+     }
+   }
+   ```
+
+4. Remap manually each extensionless import and pass that importmap in [initialImportMap](#getImportMapFromProjectFiles)
 
 # Configure VSCode and ESLint for importmap
 
@@ -349,56 +395,3 @@ Follow steps below to configure VsCode:
 At this stage, VsCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using `cmd+click` keyboard shortcut.
 
 If you also want to configure ESLint to be alerted when an import cannot be found, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
-
-# Advanced documentation
-
-## Custom node module resolution
-
-`@jsenv/node-module-import-map` uses a custom node module resolution
-
-It behaves as Node.js with one big change:
-
-**A node module will not be found if it is outside your project directory.**
-
-We do this because import map are used on the web where a file outside project directory cannot be reached.
-
-In practice, it has no impact because node modules are inside your project directory. If they are not, ensure all your dependencies are in your `package.json` and re-run `npm install`.
-
-## Extensionless import warning
-
-If the code you wants to run contains one ore more extensionless path specifier, it will not be found by a browser (not even by Node.js).
-
-<details>
-  <summary>extensionless import example</summary>
-
-```js
-import { foo } from "./file"
-```
-
-</details>
-
-In this situation, you can do one of the following:
-
-1. Add extension in the source file
-2. If there is a build step, ensure extension are added during the build
-3. Add remapping in `exports` field of your `package.json`
-
-   ```json
-   {
-     "exports": {
-       "./file": "./file.js"
-     }
-   }
-   ```
-
-   Or using `*`
-
-   ```json
-   {
-     "exports": {
-       "./feature/*": "./feature/*.js"
-     }
-   }
-   ```
-
-4. Remap manually each extensionless import and pass that importmap in [importMapInputs](#importMapInputs)

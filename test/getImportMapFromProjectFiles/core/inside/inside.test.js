@@ -13,6 +13,8 @@ const actual = importMap
 const expected = {
   imports: {
     "root/": "./",
+    "bar/": "./node_modules/bar/",
+    "foo/": "./node_modules/foo/",
     "root": "./index",
     "bar": "./node_modules/bar/bar.js",
     "foo": "./node_modules/foo/foo.js",
@@ -21,11 +23,8 @@ const expected = {
     "./node_modules/foo/node_modules/bar/": {
       "bar/": "./node_modules/foo/node_modules/bar/",
     },
-    "./node_modules/bar/": {
-      "bar/": "./node_modules/bar/",
-    },
     "./node_modules/foo/": {
-      "foo/": "./node_modules/foo/",
+      "bar/": "./node_modules/foo/node_modules/bar/",
       "bar": "./node_modules/foo/node_modules/bar/bar.js",
     },
   },

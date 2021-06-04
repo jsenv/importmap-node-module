@@ -298,6 +298,16 @@ export const getImportMapFromPackageFiles = async ({
       })
       addMappingsForPackageAndImporter(mappingsFromPackageExports)
     } else {
+      // no "exports" field means any file can be imported
+      // -> generated a mapping to allow this
+      const packageDirectoryRelativeUrl = urlToRelativeUrl(
+        resolveUrl("./", packageFileUrl),
+        projectDirectoryUrl,
+      )
+      addMappingsForPackageAndImporter({
+        [`${packageName}/`]: `./${packageDirectoryRelativeUrl}`,
+      })
+
       // visit "main" only if there is no "exports"
       // https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_main
       await visitPackageMain({
