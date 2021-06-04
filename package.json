@@ -43,7 +43,7 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
-    "@babel/parser": "7.14.3",
+    "@babel/parser": "7.14.4",
     "@babel/traverse": "7.14.2",
     "@jsenv/cancellation": "2.0.4",
     "@jsenv/import-map": "6.13.3",
@@ -57,11 +57,11 @@
     "@jsenv/eslint-config": "15.0.1",
     "@jsenv/github-release-package": "1.2.3",
     "@jsenv/importmap-eslint-resolver": "5.0.0",
-    "@jsenv/package-publish": "1.5.2",
+    "@jsenv/package-publish": "1.6.2",
     "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/prettier-config": "1.2.0",
-    "eslint": "7.26.0",
-    "eslint-plugin-import": "2.23.2",
+    "eslint": "7.27.0",
+    "eslint-plugin-import": "2.23.4",
     "prettier": "2.3.0"
   }
 }
