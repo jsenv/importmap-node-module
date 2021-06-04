@@ -28,13 +28,10 @@ const expected = {
     imports: {
       "awesome-isomorphic-app/": "./",
       "awesome-isomorphic-app": "./index",
+      "siesta/": "./node_modules/siesta/",
       "siesta": "./node_modules/siesta/index",
     },
-    scopes: {
-      "./node_modules/siesta/": {
-        "siesta/": "./node_modules/siesta/",
-      },
-    },
+    scopes: {},
   },
 }
 assert({ actual, expected })

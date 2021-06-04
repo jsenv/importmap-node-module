@@ -13,6 +13,7 @@ const actual = importMap
 const expected = {
   imports: {
     "root/": "./",
+    "foo/": "./node_modules/foo/",
     "root": "./index",
     "foo": "./node_modules/foo/index",
   },
@@ -23,7 +24,6 @@ const expected = {
     },
     "./node_modules/foo/": {
       "bar/file.js": "./node_modules/bar/src/file.js",
-      "foo/": "./node_modules/foo/",
     },
   },
 }

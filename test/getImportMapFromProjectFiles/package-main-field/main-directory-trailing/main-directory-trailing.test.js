@@ -10,14 +10,11 @@ const actual = await getImportMapFromProjectFiles({
 })
 const expected = {
   imports: {
+    "main-folder-trailing/": "./node_modules/main-folder-trailing/",
     "main-folder-trailing": "./node_modules/main-folder-trailing/lib/index.js",
     "root/": "./",
     "root": "./index",
   },
-  scopes: {
-    "./node_modules/main-folder-trailing/": {
-      "main-folder-trailing/": "./node_modules/main-folder-trailing/",
-    },
-  },
+  scopes: {},
 }
 assert({ actual, expected })
