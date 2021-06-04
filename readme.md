@@ -383,72 +383,22 @@ In this situation, you can do one of the following:
 2. If there is a build step, ensure extension are added during the build
 3. Add remapping in `exports` field of your `package.json`
 
-```json
-{
-  "exports": {
-    "./file": "./file.js"
-  }
-}
-```
+   ```json
+   {
+     "exports": {
+       "./file": "./file.js"
+     }
+   }
+   ```
+
+   Or using `*`
+
+   ```json
+   {
+     "exports": {
+       "./feature/*": "./feature/*.js"
+     }
+   }
+   ```
 
 4. Remap manually each extensionless import and pass that importmap in [importMapInputs](#importMapInputs)
-
-## Subpath import warning
-
-The generation of importmap takes into account `exports` field from `package.json`. These `exports` field are used to allow subpath imports.
-
-<details>
-  <summary>subpath import example</summary>
-
-```js
-import { foo } from "my-module/feature/index.js"
-import { bar } from "my-module/feature-b"
-```
-
-For the above import to work, `my-module/package.json` must contain the following `exports` field.
-
-```json
-{
-  "name": "my-module",
-  "exports": {
-    "./*": "./*",
-    "./feature-b": "./feature-b/index.js"
-  }
-}
-```
-
-Read more in [Node.js documentation about package entry points](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_package_entry_points)
-
-</details>
-
-Node.js allows to put `*` in `exports` field. There is an importmap equivalent when `*` is used for directory/folder remapping.
-
-```json
-{
-  "exports": {
-    "./feature/*": "./feature/*"
-  }
-}
-```
-
-Becomes the following importmap
-
-```json
-{
-  "imports": {
-    "./feature/": "./feature/"
-  }
-}
-```
-
-However using `*` to add file extension as in
-
-```json
-{
-  "exports": {
-    "./feature/*": "./feature/*.js"
-  }
-}
-```
-
-**is not supported in importmap**. Nothing suggests it will be supported for now, read more in https://github.com/WICG/import-maps/issues/232.
