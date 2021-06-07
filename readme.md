@@ -328,60 +328,53 @@ In this situation, you can do one of the following:
 
 VSCode and ESLint can be configured to understand importmap. This will make ESLint and VSCode capable to resolve your imports. Amongst other things it will give you the following:
 
-- ESLint tells your when import cannot be resolved (help to fix typo)
-- ESLint tells your when a named import does not exists (help to fix typo too)
+- ESLint tells your when an import file cannot be found (help to fix typo)
+- ESLint tells your when a named import does not exists in an imported file (help to fix typo too)
 - VSCode "go to definition" opens the imported file (cmd + click too)
 - VSCode autocompletion is improved because it can read imported files
 
-The animated image below shows how configuring ESLint and VsCode helps to fix an import with a typo and navigate to an imported file. This example uses `"demo/log.js"` import that is remapped to `"src/log.js"` by [docs/vscode-importmap-demo/custom.importmap](docs/vscode-importmap-demo/custom.importmap)
+The animated image below shows how configuring ESLint and VSCode helps to fix an import with a typo and navigate to an imported file. This example uses `"demo/log.js"` import that is remapped to `"src/log.js"` by [docs/vscode-importmap-demo/custom.importmap](docs/vscode-importmap-demo/custom.importmap)
 
 ![Animated image showing importmap integration in VSCode and ESLint](./docs/importmap-configured-demo.gif)
 
-Follow steps below to configure VsCode:
+To configure VSCode, pass `jsConfigFile: true` to [writeImportMapFile](#writeImportMapFile). When _jsConfigFile_ parameter is enabled, _writeImportMapFile_ convert mappings into _paths_ into a file called [jsconfig.json](https://code.visualstudio.com/docs/languages/jsconfig). This file is used by VSCode to resolve imports.
 
-1. Generate importmap file using [writeImportMapFile](#writeImportMapFile)
-2. Use `jsConfigFile` parameter
+<details>
+  <summary>jsConfigFile code example</summary>
 
-   VSCode import resolution can be configured in a file called [jsconfig.json](https://code.visualstudio.com/docs/languages/jsconfig). Enabling `jsConfigFile` converts import mapping into `paths` and write them into `jsconfig.json`.
+```js
+import { writeImportMapFile } from "@jsenv/node-module-import-map"
 
-   <details>
-      <summary>Code example using jsConfigFile</summary>
+await writeImportMapFile(
+  [
+    {
+      imports: {
+        "src/": "./src/",
+      },
+    },
+  ],
+  {
+    projectDirectoryUrl: new URL("./", import.meta.url),
+    jsConfigFile: true,
+  },
+)
+```
 
-   ```js
-   import { writeImportMapFile } from "@jsenv/node-module-import-map"
+Code above would result into the following `jsconfig.json` file
 
-   const projectDirectoryUrl = new URL("./", import.meta.url)
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["./src/*"]
+    }
+  }
+}
+```
 
-   await writeImportMapFile(
-     [
-       {
-         imports: {
-           "src/": "./src/",
-         },
-       },
-     ],
-     {
-       projectDirectoryUrl,
-       jsConfigFile: true,
-     },
-   )
-   ```
+</details>
 
-   Code above would result into the following `jsconfig.json` file
+At this stage, VSCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using `cmd+click` keyboard shortcut.
 
-   ```json
-   {
-     "compilerOptions": {
-       "baseUrl": ".",
-       "paths": {
-         "src/*": ["./src/*"]
-       }
-     }
-   }
-   ```
-
-   </details>
-
-At this stage, VsCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using `cmd+click` keyboard shortcut.
-
-If you also want to configure ESLint to be alerted when an import cannot be found, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
+If you also want to configure ESLint to resolve import using importmap, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
