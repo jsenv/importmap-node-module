@@ -1,4 +1,4 @@
-# node-module-import-map
+# Node module import map
 
 Generate importmap for node_modules.
 
