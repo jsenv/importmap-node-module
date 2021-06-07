@@ -6,15 +6,6 @@ Generate importmap for node_modules.
 [![github ci](https://github.com/jsenv/jsenv-node-module-import-map/workflows/ci/badge.svg)](https://github.com/jsenv/jsenv-node-module-import-map/actions?workflow=ci)
 [![codecov coverage](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
 
-# Table of contents
-
-- [Presentation](#Presentation)
-- [Usage](#Usage)
-- [API](#API)
-- [Custom node module resolution](#Custom-node-module-resolution)
-- [Extensionless import](#Extensionless-import)
-- [Configure VSCode and ESLint for importmap](#Configure-vscode-and-eslint-for-importmap)
-
 # Presentation
 
 This repository generates [import map](https://github.com/WICG/import-maps) from `package.json` files in your `node_modules` directory. The generated importmap can be used to make code dependent of node module executable in a browser.
@@ -26,7 +17,7 @@ This repository generates [import map](https://github.com/WICG/import-maps) from
 import lodash from "lodash"
 ```
 
-The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node module resolution algorith](https://nodejs.org/api/modules.html#modules_all_together). Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in `404 File Not Found` from server.
+The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in `404 File Not Found` from server.
 
 </details>
 
@@ -225,9 +216,9 @@ When it is `"node"`, `"node"` is favored.
 
 `treeshakeMappings` parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
 
-When disabled, all mappings needed for Node module resolution will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap. Consequently `treeshakeMappings` parameter is disabled when `dev` parameter is enabled.
+When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as `dev` parameter is disabled.
 
-When enabled, only the mappings actually used by your files will be generated. This is the default behaviour as long as `dev` parameter is disabled. It will drastically decrease the importmap file size.
+When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap. Consequently `treeshakeMappings` parameter is disabled when `dev` parameter is enabled.
 
 </details>
 
@@ -321,12 +312,12 @@ In this situation, you can do one of the following:
    }
    ```
 
-   Or using `*`
+   Or using [Subpath patterns](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_subpath_patterns)
 
    ```json
    {
      "exports": {
-       "./feature/*": "./feature/*.js"
+       "./*": "./*.js"
      }
    }
    ```
