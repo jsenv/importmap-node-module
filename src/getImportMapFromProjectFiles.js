@@ -37,11 +37,11 @@ export const getImportMapFromProjectFiles = async ({
   ]
 
   const logger = createLogger({ logLevel })
-  const warn = (warning) => {
+  const warn = wrapWarnToWarnOnce((warning) => {
     onWarn(warning, () => {
       logger.warn(`\n${warning.message}\n`)
     })
-  }
+  })
 
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
@@ -73,6 +73,24 @@ export const getImportMapFromProjectFiles = async ({
   })
   importMapFromJsFiles = sortImportMap(importMapFromJsFiles)
   return importMapFromJsFiles
+}
+
+const wrapWarnToWarnOnce = (warn) => {
+  const warnings = []
+  return (warning) => {
+    const alreadyWarned = warnings.some((warningCandidate) => {
+      return JSON.stringify(warningCandidate) === JSON.stringify(warning)
+    })
+    if (alreadyWarned) {
+      return
+    }
+
+    if (warnings.length > 1000) {
+      warnings.shift()
+    }
+    warnings.push(warning)
+    warn(warning)
+  }
 }
 
 const packageConditionsFromRuntime = {
