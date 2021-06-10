@@ -135,6 +135,9 @@ export const visitPackageExports = ({
       })
     }
 
+    if (Array.isArray(subpathValue)) {
+      subpathValue = exportsObjectFromExportsArray(subpathValue)
+    }
     return followConditionBranch(subpathValue, [])
   }
 
@@ -152,6 +155,22 @@ export const visitPackageExports = ({
   visitSubpathValue(packageExports, ["exports"])
 
   return exportsSubpaths
+}
+
+const exportsObjectFromExportsArray = (exportsArray) => {
+  const exportsObject = {}
+
+  exportsArray.forEach((exportValue) => {
+    if (typeof exportValue === "object") {
+      Object.assign(exportsObject, exportValue)
+      return
+    }
+    if (typeof exportValue === "string") {
+      exportsObject.default = exportValue
+    }
+  })
+
+  return exportsObject
 }
 
 const specifierToSource = (specifier, packageName) => {
