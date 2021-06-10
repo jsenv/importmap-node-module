@@ -7,13 +7,16 @@ import {
   composeTwoImportMaps,
 } from "@jsenv/import-map"
 import { isSpecifierForNodeCoreModule } from "@jsenv/import-map/src/isSpecifierForNodeCoreModule.js"
+
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
 } from "../memoizeAsyncFunction.js"
+
 import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
 import { showSource } from "./showSource.js"
 import { resolveFile } from "../resolveFile.js"
+import { createPackageNameMustBeAStringWarning } from "../warnings.js"
 
 const BARE_SPECIFIER_ERROR = {}
 
@@ -190,8 +193,19 @@ export const getImportMapFromJsFiles = async ({
   })
 
   const projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
+  const projectPackageName = projectPackageObject.name
+  if (typeof projectPackageName !== "string") {
+    warn(
+      createPackageNameMustBeAStringWarning({
+        packageName: projectPackageName,
+        packageFileUrl: projectPackageFileUrl,
+      }),
+    )
+    return importMap
+  }
+
   const projectMainFileUrlOnFileSystem = await resolveFileSystemUrl(
-    projectPackageObject.name,
+    projectPackageName,
     projectPackageFileUrl,
     {
       importedBy: projectPackageObject.exports

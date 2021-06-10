@@ -1,6 +1,8 @@
 import { createDetailedMessage } from "@jsenv/logger"
 import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath, readFile } from "@jsenv/util"
 
+import { createPackageNameMustBeAStringWarning } from "../warnings.js"
+
 import { optimizeImportMap } from "../optimizeImportMap.js"
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"
@@ -571,17 +573,6 @@ ${value}
 ${urlToFileSystemPath(packageFileUrl)}
 --- see also ---
 https://github.com/WICG/import-maps/issues/232`,
-  }
-}
-
-const createPackageNameMustBeAStringWarning = ({ packageName, packageFileUrl }) => {
-  return {
-    code: "PACKAGE_NAME_MUST_BE_A_STRING",
-    message: `package name field must be a string
---- package name field ---
-${packageName}
---- package.json file path ---
-${packageFileUrl}`,
   }
 }
 
