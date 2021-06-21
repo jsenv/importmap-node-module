@@ -1,5 +1,5 @@
 import { createRequire } from "module"
-import { readFile, urlToFileSystemPath } from "@jsenv/util"
+import { readFile, urlToFileSystemPath, urlToExtension } from "@jsenv/util"
 
 const require = createRequire(import.meta.url)
 
@@ -8,35 +8,30 @@ const traverse = require("@babel/traverse")
 
 export const parseSpecifiersFromFile = async (
   fileUrl,
-  {
-    fileContent,
-    sourceType = "module",
-    allowImportExportEverywhere = true,
-    allowAwaitOutsideFunction = true,
-    ranges = true,
-    jsx = true,
-    typescript = fileUrl.endsWith(".ts") || fileUrl.endsWith(".tsx"),
-    flow = false,
-    ...options
-  } = {},
+  { fileContent, jsFilesParsingOptions } = {},
 ) => {
   fileContent = fileContent === undefined ? await readFile(fileUrl, { as: "string" }) : fileContent
 
+  const fileExtension = urlToExtension(fileUrl)
+
+  const {
+    jsx = [".jsx", ".tsx"].includes(fileExtension),
+    typescript = [".ts", ".tsx"].includes(urlToExtension(fileUrl)),
+    flow = false,
+  } = jsFilesParsingOptions
+
   const ast = parser.parse(fileContent, {
-    sourceType,
+    sourceType: "module",
     sourceFilename: urlToFileSystemPath(fileUrl),
-    allowImportExportEverywhere,
-    allowAwaitOutsideFunction,
-    ranges,
     plugins: [
-      // "estree",
       "topLevelAwait",
       "exportDefaultFrom",
       ...(jsx ? ["jsx"] : []),
       ...(typescript ? ["typescript"] : []),
       ...(flow ? ["flow"] : []),
     ],
-    ...options,
+    ...jsFilesParsingOptions,
+    ranges: true,
   })
 
   const specifiers = {}
@@ -51,6 +46,8 @@ export const parseSpecifiersFromFile = async (
   }
 
   traverse.default(ast, {
+    // "ImportExpression is replaced with a CallExpression whose callee is an Import node."
+    // https://babeljs.io/docs/en/babel-parser#output
     // ImportExpression: (path) => {
     //   if (path.node.arguments[0].type !== "StringLiteral") {
     //     // Non-string argument, probably a variable or expression, e.g.

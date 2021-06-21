@@ -28,6 +28,7 @@ export const getImportMapFromJsFiles = async ({
   magicExtensions,
   runtime,
   treeshakeMappings,
+  jsFilesParsingOptions,
 }) => {
   const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
 
@@ -166,7 +167,10 @@ export const getImportMapFromJsFiles = async ({
 
   const visitFile = memoizeAsyncFunctionByUrl(async (fileUrl) => {
     const fileContent = await readFile(fileUrl, { as: "string" })
-    const specifiers = await parseSpecifiersFromFile(fileUrl, { fileContent })
+    const specifiers = await parseSpecifiersFromFile(fileUrl, {
+      fileContent,
+      jsFilesParsingOptions,
+    })
 
     const dependencies = await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {

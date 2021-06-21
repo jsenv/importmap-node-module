@@ -12,6 +12,7 @@ export const getImportMapFromProjectFiles = async ({
   moduleFormat = "esm",
   dev = false,
   jsFilesParsing = true,
+  jsFilesParsingOptions = {},
   initialImportMap = {},
 
   projectPackageDevDependenciesIncluded = dev,
@@ -70,6 +71,7 @@ export const getImportMapFromProjectFiles = async ({
     magicExtensions,
     runtime,
     treeshakeMappings,
+    jsFilesParsingOptions,
   })
   importMapFromJsFiles = sortImportMap(importMapFromJsFiles)
   return importMapFromJsFiles
