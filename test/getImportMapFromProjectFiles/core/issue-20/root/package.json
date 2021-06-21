@@ -1,6 +1,6 @@
 {
   "name": "root",
   "dependencies": {
-    "lume": "*"
+    "lume-fake": "*"
   }
 }

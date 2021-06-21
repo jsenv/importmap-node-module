@@ -12,12 +12,12 @@ const importMap = await getImportMapFromProjectFiles({
   const actual = importMap
   const expected = {
     imports: {
-      lume: "./node_modules/lume/lume.js",
-      root: "./index.js",
+      "lume-fake": "./node_modules/lume-fake/lume.js",
+      "root": "./index.js",
     },
     scopes: {
-      "./node_modules/lume/": {
-        lowclass: "./node_modules/lume/node_modules/lowclass/dist/index.js",
+      "./node_modules/lume-fake/": {
+        "lowclass-fake": "./node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js",
       },
     },
   }
@@ -27,10 +27,10 @@ const importMap = await getImportMapFromProjectFiles({
 {
   const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
   const actual = resolveImport({
-    specifier: "lowclass",
-    importer: `http://example.com/node_modules/lume/index.js`,
+    specifier: "lowclass-fake",
+    importer: `http://example.com/node_modules/lume-fake/index.js`,
     importMap: importMapNormalized,
   })
-  const expected = `http://example.com/node_modules/lume/node_modules/lowclass/dist/index.js`
+  const expected = `http://example.com/node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js`
   assert({ actual, expected })
 }
