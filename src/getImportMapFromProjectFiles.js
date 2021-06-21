@@ -11,7 +11,7 @@ export const getImportMapFromProjectFiles = async ({
   runtime = "browser",
   moduleFormat = "esm",
   dev = false,
-  jsFiles = true,
+  jsFilesParsing = true,
   initialImportMap = {},
 
   projectPackageDevDependenciesIncluded = dev,
@@ -58,7 +58,7 @@ export const getImportMapFromProjectFiles = async ({
   importMapFromPackageFiles = sortImportMap(
     composeTwoImportMaps(initialImportMap, importMapFromPackageFiles),
   )
-  if (!jsFiles) {
+  if (!jsFilesParsing) {
     return importMapFromPackageFiles
   }
 

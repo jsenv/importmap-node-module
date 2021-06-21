@@ -7,7 +7,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const getImportMap = async ({ runtime, moduleFormat } = {}) => {
   return getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
-    jsFiles: false,
+    jsFilesParsing: false,
     moduleFormat,
     runtime,
   })

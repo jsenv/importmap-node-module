@@ -8,7 +8,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
     runtime: "node",
-    jsFiles: false,
+    jsFilesParsing: false,
   })
   const actual = importMap
   const expected = {
@@ -30,7 +30,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
   const importMap = await getImportMapFromProjectFiles({
     projectDirectoryUrl: testDirectoryUrl,
     runtime: "browser",
-    jsFiles: false,
+    jsFilesParsing: false,
   })
   const actual = importMap
   const expected = {

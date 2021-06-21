@@ -12,7 +12,7 @@ await writeSymbolicLink(`${testDirectoryUrl}/node_modules/siesta`, projectDirect
 const warnings = []
 const importmap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  jsFiles: false,
+  jsFilesParsing: false,
   dev: true,
   onWarn: (warning) => {
     warnings.push(warning)

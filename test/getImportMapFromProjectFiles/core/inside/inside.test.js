@@ -7,7 +7,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const importMap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  jsFiles: false,
+  jsFilesParsing: false,
 })
 const actual = importMap
 const expected = {

@@ -15,7 +15,7 @@ const actual = await getImportMapFromProjectFiles({
       },
     },
   },
-  jsFiles: false,
+  jsFilesParsing: false,
 })
 const expected = {
   imports: {

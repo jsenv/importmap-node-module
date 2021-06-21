@@ -8,7 +8,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const warnings = []
 const importmap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  jsFiles: true,
+  jsFilesParsing: true,
   initialImportMap: {
     imports: {
       "#env": "./env.dev.js",
