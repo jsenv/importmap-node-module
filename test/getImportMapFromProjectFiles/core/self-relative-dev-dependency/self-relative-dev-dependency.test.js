@@ -35,4 +35,4 @@ const expected = {
   },
 }
 assert({ actual, expected })
-removeFileSystemNode(`${testDirectoryUrl}/node_modules/siesta`)
+await removeFileSystemNode(`${testDirectoryUrl}/node_modules/siesta`)
