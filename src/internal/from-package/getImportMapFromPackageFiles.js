@@ -1,5 +1,5 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath, readFile } from "@jsenv/util"
+import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/util"
 
 import { createPackageNameMustBeAStringWarning } from "../warnings.js"
 
@@ -18,12 +18,13 @@ export const getImportMapFromPackageFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
+  projectPackageFileUrl,
+  projectPackageObject,
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   packageConditions = ["import", "browser"],
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
 }) => {
-  const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
   const findNodeModulePackage = createFindNodeModulePackage(packagesManualOverrides)
 
   const imports = {}
@@ -478,11 +479,10 @@ export const getImportMapFromPackageFiles = async ({
     return dependencyPromise
   }
 
-  const projectPackageJsonObject = await readFile(projectPackageFileUrl, { as: "json" })
   const importerPackageFileUrl = projectPackageFileUrl
   markPackageAsSeen(projectPackageFileUrl, importerPackageFileUrl)
 
-  const packageName = projectPackageJsonObject.name
+  const packageName = projectPackageObject.name
   if (typeof packageName !== "string") {
     warn(
       createPackageNameMustBeAStringWarning({
@@ -495,8 +495,8 @@ export const getImportMapFromPackageFiles = async ({
 
   await visit({
     packageFileUrl: projectPackageFileUrl,
-    packageName: projectPackageJsonObject.name,
-    packageJsonObject: projectPackageJsonObject,
+    packageName: projectPackageObject.name,
+    packageJsonObject: projectPackageObject,
     importerPackageFileUrl,
     importerPackageJsonObject: null,
     includeDevDependencies: projectPackageDevDependenciesIncluded,

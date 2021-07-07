@@ -1,22 +1,33 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/util"
+import { resolveUrl } from "@jsenv/util"
+
 import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
 
-try {
-  await getImportMapFromProjectFiles({
-    projectDirectoryUrl: testDirectoryUrl,
-    jsFilesParsing: false,
-  })
-  throw new Error("should throw")
-} catch (error) {
-  const { code, message } = error
-  const actual = { code, message }
-  const expected = {
-    code: "ENOENT",
-    message: `ENOENT: no such file or directory, open '${urlToFileSystemPath(packageFileUrl)}'`,
-  }
-  assert({ actual, expected })
+const warnings = []
+const importmap = await getImportMapFromProjectFiles({
+  projectDirectoryUrl: testDirectoryUrl,
+  jsFilesParsing: false,
+  onWarn: (warning) => {
+    warnings.push(warning)
+  },
+})
+
+const actual = {
+  warnings,
+  importmap,
 }
+const expected = {
+  warnings: [
+    {
+      code: "PROJECT_PACKAGE_FILE_NOT_FOUND",
+      message: `Cannot find project package.json file.
+--- package.json url ---
+${packageFileUrl}`,
+    },
+  ],
+  importmap: {},
+}
+assert({ actual, expected })

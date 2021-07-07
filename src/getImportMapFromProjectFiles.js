@@ -1,6 +1,6 @@
 import { composeTwoImportMaps, sortImportMap } from "@jsenv/import-map"
-import { createLogger } from "@jsenv/logger"
-import { assertAndNormalizeDirectoryUrl } from "@jsenv/util"
+import { createLogger, createDetailedMessage } from "@jsenv/logger"
+import { assertAndNormalizeDirectoryUrl, resolveUrl, readFile } from "@jsenv/util"
 
 import { getImportMapFromJsFiles } from "./internal/from-js/getImportMapFromJsFiles.js"
 import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"
@@ -46,11 +46,30 @@ export const getImportMapFromProjectFiles = async ({
 
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
+  const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
+  let projectPackageObject
+  try {
+    projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      warn({
+        code: "PROJECT_PACKAGE_FILE_NOT_FOUND",
+        message: createDetailedMessage(`Cannot find project package.json file.`, {
+          "package.json url": projectPackageFileUrl,
+        }),
+      })
+      return initialImportMap
+    }
+    throw e
+  }
+
   // At this point, importmap is relative to the project directory url
   let importMapFromPackageFiles = await getImportMapFromPackageFiles({
     logger,
     warn,
     projectDirectoryUrl,
+    projectPackageFileUrl,
+    projectPackageObject,
     packageConditions,
     projectPackageDevDependenciesIncluded,
     packagesManualOverrides,
