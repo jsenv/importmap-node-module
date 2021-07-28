@@ -76,13 +76,13 @@ If you use a bundler or an other tool, be sure it's compatible with import maps.
 
 # getImportMapFromProjectFiles
 
-_getImportMapFromProjectFiles_ is an async function returning an importMap object computed from infos found in `package.json` files and source files.
+_getImportMapFromProjectFiles_ is an async function returning an importMap object computed from infos found in _package.json_ files and source files.
 
 The following source of information are used to create complete and coherent mappings in the importmap.
 
-- Your `package.json`
-- All `dependencies` declared in `package.json` are searched into `node_modules`, recursively.
-- In every `package.json`, "main", "exports" and "imports" field.
+- Your _package.json_
+- All dependencies declared in _package.json_ are searched into _node_modules_, recursively.
+- In every _package.json_, `"main"`, `"exports"` and `"imports"` field.
 - All static and dynamic import found in files, recursively.
 
 ```js
