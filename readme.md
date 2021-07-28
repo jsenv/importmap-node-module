@@ -97,8 +97,6 @@ const importMap = await getImportMapFromProjectFiles({
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
-[implementation](./src/getImportMapFromProjectFiles.js)
-
 ## projectDirectoryUrl
 
 _projectDirectoryUrl_ parameter is a string url leading to a folder with a _package.json_. This parameters is **required** and accepted values are documented in [@jsenv/util#assertAndNormalizeDirectoryUrl](https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl)
@@ -205,8 +203,6 @@ const importMap = await getImportMapFromFile({
   importMapRelativeUrl: "./importmap.importmap",
 })
 ```
-
-[implementation](./src/getImportMapFromFile.js)
 
 ## importMapFileRelativeUrl
 
