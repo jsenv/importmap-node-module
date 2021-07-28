@@ -107,7 +107,7 @@ _dev_ parameter is a boolean indicating if the importmap will be used for develo
 
 When enabled the following happens:
 
-1. `devDependencies` declared in your `package.json` are included in the generated importMap.
+1. `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
 2. `"development"` is favored over `"production"` in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions)
 
 ## runtime
@@ -122,7 +122,7 @@ When it is `"node"`, `"node"` is favored.
 
 _treeshakeMappings_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
 
-When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as [dev](#dev) parameter is disabled.
+When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as _dev_ parameter is disabled.
 
 When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap. Consequently _treeshakeMappings_ parameter is disabled when _dev_ parameter is enabled.
 
@@ -193,7 +193,7 @@ _importMapFileRelativeUrl_ parameter is a string controlling where importMap fil
 
 ## getImportMapFromFile
 
-`getImportMapFromFile` is an async function reading importmap from a file.
+_getImportMapFromFile_ is an async function reading importmap from a file.
 
 ```js
 import { getImportMapFromFile } from "@jsenv/importmap-node-module"
@@ -206,7 +206,7 @@ const importMap = await getImportMapFromFile({
 
 ## importMapFileRelativeUrl
 
-`importMapFileRelativeUrl` parameter is an url relative to `projectDirectoryUrl` leading to the importmap file. This parameter is **required**.
+_importMapFileRelativeUrl_ parameter is an url relative to _projectDirectoryUrl_ leading to the importmap file. This parameter is **required**.
 
 # Custom node module resolution
 
