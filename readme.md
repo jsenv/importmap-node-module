@@ -8,7 +8,7 @@ Generate importmap for node_modules.
 
 # Presentation
 
-This repository generates [import map](https://github.com/WICG/import-maps) from `package.json` files in your `node_modules` directory. The generated importmap can be used to make code dependent of node module executable in a browser.
+This repository generates [import map](https://github.com/WICG/import-maps) from _package.json_ files in your _node_modules_ directory. The generated importmap can be used to make code dependent of node module executable in a browser.
 
 _Example of code relying on node module resolution:_
 
@@ -16,9 +16,7 @@ _Example of code relying on node module resolution:_
 import lodash from "lodash"
 ```
 
-The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in `404 File Not Found` from server.
-
-</details>
+The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in _404 File Not Found_ from server.
 
 # Usage
 
@@ -76,50 +74,6 @@ node generate-importmap.mjs
 
 If you use a bundler or an other tool, be sure it's compatible with import maps. As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration. [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, testing and when building for production.
 
-# writeImportMapFile
-
-`writeImportMapFile` is an async function receiving an array of promise resolving to importmaps. It awaits for every importmap, compose them into one and write it into a file.
-
-```js
-/**
- * Generate an import map from node_modules + an inline importmap.
- */
-
-import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
-
-const projectDirectoryUrl = new URL("./", import.meta.url)
-const importMapInputs = [
-  getImportMapFromProjectFiles({
-    projectDirectoryUrl,
-    dev: true,
-  }),
-  {
-    imports: {
-      foo: "./bar.js",
-    },
-  },
-]
-
-await writeImportMapFile(importMapInputs, {
-  projectDirectoryUrl,
-  importMapFileRelativeUrl: "./importmap.importmap",
-})
-```
-
-## importMapInputs
-
-_importMapInputs_ is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
-
-> When _importMapInputs_ is empty a warning is emitted and _writeImportMapFile_ write an empty importmap file.
-
-## importMapFile
-
-_importMapFile_ parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
-
-## importMapFileRelativeUrl
-
-_importMapFileRelativeUrl_ parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./importmap.importmap"`.
-
 # getImportMapFromProjectFiles
 
 _getImportMapFromProjectFiles_ is an async function returning an importMap object computed from infos found in `package.json` files and source files.
@@ -174,7 +128,7 @@ When enabled, only the mappings actually used by your files will be generated. I
 
 When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap. Consequently _treeshakeMappings_ parameter is disabled when _dev_ parameter is enabled.
 
-## initialImportMap>
+## initialImportMap
 
 _initialImportMap_ parameter is an importMap object. This parameter is optional and by default it's an empty object.
 
@@ -194,6 +148,50 @@ const importMap = await getImportMapFromProjectFiles({
 
 console.log(importMap.imports.foo) // "./bar.js"
 ```
+
+# writeImportMapFile
+
+_writeImportMapFile_ is an async function receiving an array of promise resolving to importmaps. It awaits for every importmap, compose them into one and write it into a file.
+
+```js
+/**
+ * Generate an import map from node_modules + an inline importmap.
+ */
+
+import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
+
+const projectDirectoryUrl = new URL("./", import.meta.url)
+const importMapInputs = [
+  getImportMapFromProjectFiles({
+    projectDirectoryUrl,
+    dev: true,
+  }),
+  {
+    imports: {
+      foo: "./bar.js",
+    },
+  },
+]
+
+await writeImportMapFile(importMapInputs, {
+  projectDirectoryUrl,
+  importMapFileRelativeUrl: "./importmap.importmap",
+})
+```
+
+## importMapInputs
+
+_importMapInputs_ is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
+
+> When _importMapInputs_ is empty a warning is emitted and _writeImportMapFile_ write an empty importmap file.
+
+## importMapFile
+
+_importMapFile_ parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
+
+## importMapFileRelativeUrl
+
+_importMapFileRelativeUrl_ parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./importmap.importmap"`.
 
 ## getImportMapFromFile
 
