@@ -1,4 +1,4 @@
-# Node module import map
+# import map node module
 
 Generate importmap for node_modules.
 
@@ -10,8 +10,7 @@ Generate importmap for node_modules.
 
 This repository generates [import map](https://github.com/WICG/import-maps) from `package.json` files in your `node_modules` directory. The generated importmap can be used to make code dependent of node module executable in a browser.
 
-<details>
-  <summary>See code relying on node module resolution</summary>
+_Example of code relying on node module resolution:_
 
 ```js
 import lodash from "lodash"
@@ -23,17 +22,13 @@ The code above is expecting Node.js to "magically" find file corresponding to `"
 
 # Usage
 
-<details>
-  <summary>1 - Install <code>@jsenv/importmap-node-module</code></summary>
+1 - Install _@jsenv/importmap-node-module_
 
 ```console
 npm install --save-dev @jsenv/importmap-node-module
 ```
 
-</details>
-
-<details>
-  <summary>2 - Create <code>generate-importmap.js</code></summary>
+2 - Create _generate-importmap.mjs_
 
 ```js
 import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
@@ -53,30 +48,22 @@ await writeImportMapFile(
 )
 ```
 
-The code above is written in ESM. You may have to use `.mjs` extension to run it with Node.js as documented in [enabling ESM](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_enabling)
-
-</details>
-
-<details>
-  <summary>3 - Generate <code>project.importmap</code></summary>
+3 - Generate _project.importmap_
 
 ```console
-node generate-importmap.js
+node generate-importmap.mjs
 ```
 
-</details>
+4 - Add _project.importmap_ to your html
 
-<details>
-  <summary>4 - Add <code>project.importmap</code> to your html</summary>
-
-```html
+```diff
 <!DOCTYPE html>
 <html>
   <head>
     <title>Title</title>
     <meta charset="utf-8" />
     <link rel="icon" href="data:," />
-    <script type="importmap" src="./project.importmap"></script>
++   <script type="importmap" src="./project.importmap"></script>
   </head>
 
   <body>
@@ -89,20 +76,15 @@ node generate-importmap.js
 
 If you use a bundler or an other tool, be sure it's compatible with import maps. As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration. [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, testing and when building for production.
 
-</details>
-
-# API
-
-## writeImportMapFile
+# writeImportMapFile
 
 `writeImportMapFile` is an async function receiving an array of promise resolving to importmaps. It awaits for every importmap, compose them into one and write it into a file.
 
-<details>
-  <summary>writeImportMapFile code example</summary>
-
-Code below generate an import map from node_modules + an inline importmap.
-
 ```js
+/**
+ * Generate an import map from node_modules + an inline importmap.
+ */
+
 import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
@@ -124,36 +106,23 @@ await writeImportMapFile(importMapInputs, {
 })
 ```
 
-[implementation](./src/writeImportMapFile.js)
+## importMapInputs
 
-</details>
+_importMapInputs_ is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
 
-<details>
-  <summary>importMapInputs parameter</summary>
+> When _importMapInputs_ is empty a warning is emitted and _writeImportMapFile_ write an empty importmap file.
 
-`importMapInputs` is an array of importmap object or promise resolving to importmap objects. This parameter is optional and is an empty array by default.
+## importMapFile
 
-> When `importMapInputs` is empty a warning is emitted and `writeImportMapFile` write an empty importmap file.
+_importMapFile_ parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
 
-</details>
+## importMapFileRelativeUrl
 
-<details>
-  <summary>importMapFile parameter</summary>
+_importMapFileRelativeUrl_ parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./importmap.importmap"`.
 
-`importMapFile` parameter is a boolean controling if importMap is written to a file. This parameters is optional and enabled by default.
+# getImportMapFromProjectFiles
 
-</details>
-
-<details>
-  <summary>importMapFileRelativeUrl parameter</summary>
-
-`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./importmap.importmap"`.
-
-</details>
-
-## getImportMapFromProjectFiles
-
-`getImportMapFromProjectFiles` is an async function returning an importMap object computed from infos found in `package.json` files and source files.
+_getImportMapFromProjectFiles_ is an async function returning an importMap object computed from infos found in `package.json` files and source files.
 
 The following source of information are used to create complete and coherent mappings in the importmap.
 
@@ -161,9 +130,6 @@ The following source of information are used to create complete and coherent map
 - All `dependencies` declared in `package.json` are searched into `node_modules`, recursively.
 - In every `package.json`, "main", "exports" and "imports" field.
 - All static and dynamic import found in files, recursively.
-
-<details>
-  <summary>getImportMapFromProjectFiles code example</summary>
 
 ```js
 import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
@@ -179,55 +145,40 @@ const importMap = await getImportMapFromProjectFiles({
 
 [implementation](./src/getImportMapFromProjectFiles.js)
 
-</details>
+## projectDirectoryUrl
 
-<details>
-  <summary>projectDirectoryUrl parameter</summary>
+_projectDirectoryUrl_ parameter is a string url leading to a folder with a _package.json_. This parameters is **required** and accepted values are documented in [@jsenv/util#assertAndNormalizeDirectoryUrl](https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl)
 
-`projectDirectoryUrl` parameter is a string url leading to a folder with a `package.json`. This parameters is **required** and accepted values are documented in [@jsenv/util#assertAndNormalizeDirectoryUrl](https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl)
+## dev
 
-</details>
-
-<details>
-  <summary>dev parameter</summary>
-
-`dev` parameter is a boolean indicating if the importmap will be used for development or production. This parameter is optional and by default it's disabled.
+_dev_ parameter is a boolean indicating if the importmap will be used for development or production. This parameter is optional and by default it's disabled.
 
 When enabled the following happens:
 
 1. `devDependencies` declared in your `package.json` are included in the generated importMap.
 2. `"development"` is favored over `"production"` in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions)
 
-</details>
+## runtime
 
-<details>
-  <summary>runtime parameter</summary>
+_runtime_ parameter is a string indicating where the importmap will be used. This parameter is optional with a default of `"browser"`.
 
-`runtime` parameter is a string indicating where the importmap will be used. This parameter is optional with a default of `"browser"`.
-
-When `runtime` is `"browser"`, `"browser"` is favored over `"node"` in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+When _runtime_ is `"browser"`, `"browser"` is favored over `"node"` in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
 When it is `"node"`, `"node"` is favored.
 
-</details>
+## treeshakeMappings
 
-<details>
-  <summary>treeshakeMappings parameter</summary>
+_treeshakeMappings_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
 
-`treeshakeMappings` parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
+When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as [dev](#dev) parameter is disabled.
 
-When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as `dev` parameter is disabled.
+When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap. Consequently _treeshakeMappings_ parameter is disabled when _dev_ parameter is enabled.
 
-When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap. Consequently `treeshakeMappings` parameter is disabled when `dev` parameter is enabled.
+## initialImportMap>
 
-</details>
+_initialImportMap_ parameter is an importMap object. This parameter is optional and by default it's an empty object.
 
-<details>
-  <summary>initialImportMap parameter</summary>
-
-`initialImportMap` parameter is an importMap object. This parameter is optional and by default it's an empty object.
-
-You can use this parameter to provide mappings that are not already in your `package.json`.
+You can use this parameter to provide mappings that are not already in your _package.json_.
 
 ```js
 import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
@@ -244,14 +195,9 @@ const importMap = await getImportMapFromProjectFiles({
 console.log(importMap.imports.foo) // "./bar.js"
 ```
 
-</details>
-
 ## getImportMapFromFile
 
 `getImportMapFromFile` is an async function reading importmap from a file.
-
-<details>
-  <summary>getImportMapFromFile code example</summary>
 
 ```js
 import { getImportMapFromFile } from "@jsenv/importmap-node-module"
@@ -264,14 +210,9 @@ const importMap = await getImportMapFromFile({
 
 [implementation](./src/getImportMapFromFile.js)
 
-</details>
-
-<details>
-  <summary>importMapFileRelativeUrl</summary>
+## importMapFileRelativeUrl
 
 `importMapFileRelativeUrl` parameter is an url relative to `projectDirectoryUrl` leading to the importmap file. This parameter is **required**.
-
-</details>
 
 # Custom node module resolution
 
@@ -289,14 +230,11 @@ In practice, it has no impact because node modules are inside your project direc
 
 If the code you wants to run contains one ore more extensionless path specifier, it will not be found by a browser (not even by Node.js).
 
-<details>
-  <summary>extensionless import example</summary>
+_extensionless import example:_
 
 ```js
 import { foo } from "./file"
 ```
-
-</details>
 
 In this situation, you can do one of the following:
 
@@ -339,8 +277,7 @@ The animated image below shows how configuring ESLint and VSCode helps to fix an
 
 To configure VSCode, pass `jsConfigFile: true` to [writeImportMapFile](#writeImportMapFile). When _jsConfigFile_ parameter is enabled, _writeImportMapFile_ convert mappings into _paths_ into a file called [jsconfig.json](https://code.visualstudio.com/docs/languages/jsconfig). This file is used by VSCode to resolve imports.
 
-<details>
-  <summary>jsConfigFile code example</summary>
+_jsConfigFile code example:_
 
 ```js
 import { writeImportMapFile } from "@jsenv/importmap-node-module"
@@ -360,7 +297,7 @@ await writeImportMapFile(
 )
 ```
 
-Code above would result into the following `jsconfig.json` file
+Code above would result into the following _jsconfig.json_ file
 
 ```json
 {
@@ -373,8 +310,6 @@ Code above would result into the following `jsconfig.json` file
 }
 ```
 
-</details>
-
-At this stage, VSCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using `cmd+click` keyboard shortcut.
+At this stage, VSCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using <kbd>cmd</kbd> + `click` keyboard shortcut.
 
 If you also want to configure ESLint to resolve import using importmap, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/importmap-eslint-resolver#installation)
