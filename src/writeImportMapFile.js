@@ -5,7 +5,7 @@ import {
   writeFile,
   readFile,
 } from "@jsenv/util"
-import { composeTwoImportMaps } from "@jsenv/import-map"
+import { composeTwoImportMaps } from "@jsenv/importmap"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 
 export const writeImportMapFile = async (

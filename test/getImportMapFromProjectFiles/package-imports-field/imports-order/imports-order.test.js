@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/util"
-import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
 {
   const testDirectoryUrl = resolveUrl("./import-first/", import.meta.url)

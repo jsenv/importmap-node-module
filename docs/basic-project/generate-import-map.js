@@ -1,4 +1,4 @@
-import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
 getImportMapFromProjectFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),

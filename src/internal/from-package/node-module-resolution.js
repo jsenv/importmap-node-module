@@ -1,5 +1,6 @@
 import { firstOperationMatching } from "@jsenv/cancellation"
 import { urlToRelativeUrl, resolveUrl } from "@jsenv/util"
+
 import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js"
 import { readPackageFile, PACKAGE_NOT_FOUND, PACKAGE_WITH_SYNTAX_ERROR } from "./readPackageFile.js"
 

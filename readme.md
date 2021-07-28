@@ -2,9 +2,9 @@
 
 Generate importmap for node_modules.
 
-[![npm package](https://img.shields.io/npm/v/@jsenv/node-module-import-map.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/node-module-import-map)
-[![github ci](https://github.com/jsenv/jsenv-node-module-import-map/workflows/ci/badge.svg)](https://github.com/jsenv/jsenv-node-module-import-map/actions?workflow=ci)
-[![codecov coverage](https://codecov.io/gh/jsenv/jsenv-node-module-import-map/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/jsenv-node-module-import-map)
+[![npm package](https://img.shields.io/npm/v/@jsenv/importmap-node-module.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/importmap-node-module)
+[![github ci](https://github.com/jsenv/importmap-node-module/workflows/ci/badge.svg)](https://github.com/jsenv/importmap-node-module/actions?workflow=ci)
+[![codecov coverage](https://codecov.io/gh/jsenv/importmap-node-module/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/importmap-node-module)
 
 # Presentation
 
@@ -24,19 +24,19 @@ The code above is expecting Node.js to "magically" find file corresponding to `"
 # Usage
 
 <details>
-  <summary>1 - Install <code>@jsenv/node-module-import-map</code></summary>
+  <summary>1 - Install <code>@jsenv/importmap-node-module</code></summary>
 
 ```console
-npm install --save-dev @jsenv/node-module-import-map
+npm install --save-dev @jsenv/importmap-node-module
 ```
 
 </details>
 
 <details>
-  <summary>2 - Create <code>generate-import-map.js</code></summary>
+  <summary>2 - Create <code>generate-importmap.js</code></summary>
 
 ```js
-import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
 
@@ -61,7 +61,7 @@ The code above is written in ESM. You may have to use `.mjs` extension to run it
   <summary>3 - Generate <code>project.importmap</code></summary>
 
 ```console
-node generate-import-map.js
+node generate-importmap.js
 ```
 
 </details>
@@ -103,7 +103,7 @@ If you use a bundler or an other tool, be sure it's compatible with import maps.
 Code below generate an import map from node_modules + an inline importmap.
 
 ```js
-import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
 const importMapInputs = [
@@ -120,7 +120,7 @@ const importMapInputs = [
 
 await writeImportMapFile(importMapInputs, {
   projectDirectoryUrl,
-  importMapFileRelativeUrl: "./import-map.importmap",
+  importMapFileRelativeUrl: "./importmap.importmap",
 })
 ```
 
@@ -147,7 +147,7 @@ await writeImportMapFile(importMapInputs, {
 <details>
   <summary>importMapFileRelativeUrl parameter</summary>
 
-`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./import-map.importmap"`.
+`importMapFileRelativeUrl` parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./importmap.importmap"`.
 
 </details>
 
@@ -166,7 +166,7 @@ The following source of information are used to create complete and coherent map
   <summary>getImportMapFromProjectFiles code example</summary>
 
 ```js
-import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
 const importMap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -230,7 +230,7 @@ When disabled, all mappings needed for node _esm module resolution_ will be gene
 You can use this parameter to provide mappings that are not already in your `package.json`.
 
 ```js
-import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
 const importMap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -254,11 +254,11 @@ console.log(importMap.imports.foo) // "./bar.js"
   <summary>getImportMapFromFile code example</summary>
 
 ```js
-import { getImportMapFromFile } from "@jsenv/node-module-import-map"
+import { getImportMapFromFile } from "@jsenv/importmap-node-module"
 
 const importMap = await getImportMapFromFile({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapRelativeUrl: "./import-map.importmap",
+  importMapRelativeUrl: "./importmap.importmap",
 })
 ```
 
@@ -275,7 +275,7 @@ const importMap = await getImportMapFromFile({
 
 # Custom node module resolution
 
-`@jsenv/node-module-import-map` uses a custom node module resolution
+`@jsenv/importmap-node-module` uses a custom node module resolution
 
 It behaves as Node.js with one big change:
 
@@ -343,7 +343,7 @@ To configure VSCode, pass `jsConfigFile: true` to [writeImportMapFile](#writeImp
   <summary>jsConfigFile code example</summary>
 
 ```js
-import { writeImportMapFile } from "@jsenv/node-module-import-map"
+import { writeImportMapFile } from "@jsenv/importmap-node-module"
 
 await writeImportMapFile(
   [
@@ -377,4 +377,4 @@ Code above would result into the following `jsconfig.json` file
 
 At this stage, VSCode is configured to understand import mappings. It means "Go to definition" is working and allow you to navigate in your codebase using `cmd+click` keyboard shortcut.
 
-If you also want to configure ESLint to resolve import using importmap, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/jsenv-importmap-eslint-resolver#installation)
+If you also want to configure ESLint to resolve import using importmap, follow steps described in [@jsenv/importmap-eslint-resolver](https://github.com/jsenv/importmap-eslint-resolver#installation)

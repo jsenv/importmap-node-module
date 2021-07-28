@@ -1,7 +1,7 @@
 import { assert } from "@jsenv/assert"
 import { removeFileSystemNode, resolveUrl, writeSymbolicLink } from "@jsenv/util"
 
-import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const testDirectoryUrl = resolveUrl("./dir/", projectDirectoryUrl)

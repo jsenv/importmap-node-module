@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl, readFile, writeFile, removeFileSystemNode } from "@jsenv/util"
-import { writeImportMapFile } from "@jsenv/node-module-import-map"
+import { writeImportMapFile } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./", import.meta.url)
 const jsConfigFileUrl = resolveUrl("jsconfig.json", testDirectoryUrl)

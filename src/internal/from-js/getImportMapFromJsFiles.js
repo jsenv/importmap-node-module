@@ -5,8 +5,8 @@ import {
   resolveImport,
   sortImportMap,
   composeTwoImportMaps,
-} from "@jsenv/import-map"
-import { isSpecifierForNodeCoreModule } from "@jsenv/import-map/src/isSpecifierForNodeCoreModule.js"
+} from "@jsenv/importmap"
+import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js"
 
 import {
   memoizeAsyncFunctionByUrl,

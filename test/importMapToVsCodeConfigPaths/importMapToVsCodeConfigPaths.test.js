@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { importMapToVsCodeConfigPaths } from "@jsenv/node-module-import-map/src/internal/importMapToVsCodeConfigPaths.js"
+import { importMapToVsCodeConfigPaths } from "@jsenv/importmap-node-module/src/internal/importMapToVsCodeConfigPaths.js"
 
 {
   const actual = importMapToVsCodeConfigPaths({

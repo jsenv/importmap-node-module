@@ -1,7 +1,7 @@
-// import { normalizeImportMap, resolveImport } from "@jsenv/import-map"
+// import { normalizeImportMap, resolveImport } from "@jsenv/importmap"
 import { resolveUrl } from "@jsenv/util"
 import { assert } from "@jsenv/assert"
-import { getImportMapFromProjectFiles } from "@jsenv/node-module-import-map"
+import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 

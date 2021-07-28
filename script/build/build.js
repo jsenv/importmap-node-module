@@ -6,7 +6,7 @@ buildProject({
   buildDirectoryRelativeUrl: "./dist/commonjs/",
   format: "commonjs",
   entryPointMap: {
-    "./index.js": "./jsenv_node_module_importmap.cjs",
+    "./index.js": "./jsenv_importmap_node_module.cjs",
   },
   babelPluginMap: getBabelPluginMapForNode(),
   buildDirectoryClean: true,

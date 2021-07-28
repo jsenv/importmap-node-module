@@ -1,4 +1,4 @@
-import { composeTwoImportMaps, sortImportMap } from "@jsenv/import-map"
+import { composeTwoImportMaps, sortImportMap } from "@jsenv/importmap"
 import { createLogger, createDetailedMessage } from "@jsenv/logger"
 import { assertAndNormalizeDirectoryUrl, resolveUrl, readFile } from "@jsenv/util"
 
