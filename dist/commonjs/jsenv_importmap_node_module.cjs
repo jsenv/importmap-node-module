@@ -2,10 +2,10 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var importMap = require('@jsenv/import-map');
+var importmap = require('@jsenv/importmap');
 var logger = require('@jsenv/logger');
 var util = require('@jsenv/util');
-var isSpecifierForNodeCoreModule_js = require('@jsenv/import-map/src/isSpecifierForNodeCoreModule.js');
+var isSpecifierForNodeCoreModule_js = require('@jsenv/importmap/src/isSpecifierForNodeCoreModule.js');
 var module$1 = require('module');
 var cancellation = require('@jsenv/cancellation');
 
@@ -130,27 +130,23 @@ const traverse = require$1("@babel/traverse");
 
 const parseSpecifiersFromFile = async (fileUrl, {
   fileContent,
-  sourceType = "module",
-  allowImportExportEverywhere = true,
-  allowAwaitOutsideFunction = true,
-  ranges = true,
-  jsx = true,
-  typescript = fileUrl.endsWith(".ts") || fileUrl.endsWith(".tsx"),
-  flow = false,
-  ...options
+  jsFilesParsingOptions
 } = {}) => {
   fileContent = fileContent === undefined ? await util.readFile(fileUrl, {
     as: "string"
   }) : fileContent;
+  const fileExtension = util.urlToExtension(fileUrl);
+  const {
+    jsx = [".jsx", ".tsx"].includes(fileExtension),
+    typescript = [".ts", ".tsx"].includes(util.urlToExtension(fileUrl)),
+    flow = false
+  } = jsFilesParsingOptions;
   const ast = parser.parse(fileContent, {
-    sourceType,
+    sourceType: "module",
     sourceFilename: util.urlToFileSystemPath(fileUrl),
-    allowImportExportEverywhere,
-    allowAwaitOutsideFunction,
-    ranges,
-    plugins: [// "estree",
-    "topLevelAwait", "exportDefaultFrom", ...(jsx ? ["jsx"] : []), ...(typescript ? ["typescript"] : []), ...(flow ? ["flow"] : [])],
-    ...options
+    plugins: ["topLevelAwait", "exportDefaultFrom", ...(jsx ? ["jsx"] : []), ...(typescript ? ["typescript"] : []), ...(flow ? ["flow"] : [])],
+    ...jsFilesParsingOptions,
+    ranges: true
   });
   const specifiers = {};
 
@@ -167,6 +163,8 @@ const parseSpecifiersFromFile = async (fileUrl, {
   };
 
   traverse.default(ast, {
+    // "ImportExpression is replaced with a CallExpression whose callee is an Import node."
+    // https://babeljs.io/docs/en/babel-parser#output
     // ImportExpression: (path) => {
     //   if (path.node.arguments[0].type !== "StringLiteral") {
     //     // Non-string argument, probably a variable or expression, e.g.
@@ -478,15 +476,30 @@ const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
   return extensionLeadingToFile || null;
 };
 
+const createPackageNameMustBeAStringWarning = ({
+  packageName,
+  packageFileUrl
+}) => {
+  return {
+    code: "PACKAGE_NAME_MUST_BE_A_STRING",
+    message: `package name field must be a string
+--- package name field ---
+${packageName}
+--- package.json file path ---
+${packageFileUrl}`
+  };
+};
+
 const BARE_SPECIFIER_ERROR = {};
 const getImportMapFromJsFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
-  importMap: importMap$1,
+  importMap,
   magicExtensions,
   runtime,
-  treeshakeMappings
+  treeshakeMappings,
+  jsFilesParsingOptions
 }) => {
   const projectPackageFileUrl = util.resolveUrl("./package.json", projectDirectoryUrl);
   const imports = {};
@@ -534,10 +547,10 @@ const getImportMapFromJsFiles = async ({
     }
   };
 
-  const importMapNormalized = importMap.normalizeImportMap(importMap$1, projectDirectoryUrl);
+  const importMapNormalized = importmap.normalizeImportMap(importMap, projectDirectoryUrl);
 
   const trackAndResolveImport = (specifier, importer) => {
-    return importMap.resolveImport({
+    return importmap.resolveImport({
       specifier,
       importer,
       importMap: importMapNormalized,
@@ -558,7 +571,7 @@ const getImportMapFromJsFiles = async ({
         markMappingAsUsed({
           scope,
           from,
-          to: scope ? importMap$1.scopes[scope][from] : importMap$1.imports[from]
+          to: scope ? importMap.scopes[scope][from] : importMap.imports[from]
         });
       },
       createBareSpecifierError: () => BARE_SPECIFIER_ERROR
@@ -646,7 +659,8 @@ const getImportMapFromJsFiles = async ({
       as: "string"
     });
     const specifiers = await parseSpecifiersFromFile(fileUrl, {
-      fileContent
+      fileContent,
+      jsFilesParsingOptions
     });
     const dependencies = await Promise.all(Object.keys(specifiers).map(async specifier => {
       const specifierInfo = specifiers[specifier];
@@ -670,7 +684,17 @@ const getImportMapFromJsFiles = async ({
   const projectPackageObject = await util.readFile(projectPackageFileUrl, {
     as: "json"
   });
-  const projectMainFileUrlOnFileSystem = await resolveFileSystemUrl(projectPackageObject.name, projectPackageFileUrl, {
+  const projectPackageName = projectPackageObject.name;
+
+  if (typeof projectPackageName !== "string") {
+    warn(createPackageNameMustBeAStringWarning({
+      packageName: projectPackageName,
+      packageFileUrl: projectPackageFileUrl
+    }));
+    return importMap;
+  }
+
+  const projectMainFileUrlOnFileSystem = await resolveFileSystemUrl(projectPackageName, projectPackageFileUrl, {
     importedBy: projectPackageObject.exports ? `${projectPackageFileUrl}#exports` : `${projectPackageFileUrl}`
   });
 
@@ -698,13 +722,13 @@ const getImportMapFromJsFiles = async ({
       });
       scopesUsed[scope] = scopedMappings;
     });
-    return importMap.sortImportMap({
+    return importmap.sortImportMap({
       imports: importsUsed,
       scopes: scopesUsed
     });
   }
 
-  return importMap.sortImportMap(importMap.composeTwoImportMaps(importMap$1, {
+  return importmap.sortImportMap(importmap.composeTwoImportMaps(importMap, {
     imports,
     scopes
   }));
@@ -1011,13 +1035,13 @@ const visitPackageImportMap = async ({
   }
 
   if (typeof packageImportmap === "string") {
-    const importmapFileUrl = importMap.resolveUrl(packageImportmap, packageFileUrl);
+    const importmapFileUrl = importmap.resolveUrl(packageImportmap, packageFileUrl);
 
     try {
-      const importmap = await util.readFile(importmapFileUrl, {
+      const importmap$1 = await util.readFile(importmapFileUrl, {
         as: "json"
       });
-      return importMap.moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl);
+      return importmap.moveImportMap(importmap$1, importmapFileUrl, projectDirectoryUrl);
     } catch (e) {
       if (e.code === "ENOENT") {
         warn(createPackageImportMapNotFoundWarning({
@@ -1387,6 +1411,10 @@ const visitPackageExports = ({
       });
     };
 
+    if (Array.isArray(subpathValue)) {
+      subpathValue = exportsObjectFromExportsArray(subpathValue);
+    }
+
     return followConditionBranch(subpathValue, []);
   };
 
@@ -1401,6 +1429,21 @@ const visitPackageExports = ({
 
   visitSubpathValue(packageExports, ["exports"]);
   return exportsSubpaths;
+};
+
+const exportsObjectFromExportsArray = exportsArray => {
+  const exportsObject = {};
+  exportsArray.forEach(exportValue => {
+    if (typeof exportValue === "object") {
+      Object.assign(exportsObject, exportValue);
+      return;
+    }
+
+    if (typeof exportValue === "string") {
+      exportsObject.default = exportValue;
+    }
+  });
+  return exportsObject;
 };
 
 const specifierToSource = (specifier, packageName) => {
@@ -1624,13 +1667,13 @@ const getImportMapFromPackageFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
+  projectPackageFileUrl,
+  projectPackageObject,
   projectPackageDevDependenciesIncluded = process.env.NODE_ENV !== "production",
   packageConditions = ["import", "browser"],
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true
 }) => {
-  projectDirectoryUrl = util.assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
-  const projectPackageFileUrl = util.resolveUrl("./package.json", projectDirectoryUrl);
   const findNodeModulePackage = createFindNodeModulePackage(packagesManualOverrides);
   const imports = {};
   const scopes = {};
@@ -1918,8 +1961,14 @@ const getImportMapFromPackageFiles = async ({
       });
       addMappingsForPackageAndImporter(mappingsFromPackageExports);
     } else {
-      // visit "main" only if there is no "exports"
+      // no "exports" field means any file can be imported
+      // -> generated a mapping to allow this
+      const packageDirectoryRelativeUrl = util.urlToRelativeUrl(util.resolveUrl("./", packageFileUrl), projectDirectoryUrl);
+      addMappingsForPackageAndImporter({
+        [`${packageName}/`]: `./${packageDirectoryRelativeUrl}`
+      }); // visit "main" only if there is no "exports"
       // https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_main
+
       await visitPackageMain({
         packageFileUrl,
         packageName,
@@ -2093,12 +2142,9 @@ const getImportMapFromPackageFiles = async ({
     return dependencyPromise;
   };
 
-  const projectPackageJsonObject = await util.readFile(projectPackageFileUrl, {
-    as: "json"
-  });
   const importerPackageFileUrl = projectPackageFileUrl;
   markPackageAsSeen(projectPackageFileUrl, importerPackageFileUrl);
-  const packageName = projectPackageJsonObject.name;
+  const packageName = projectPackageObject.name;
 
   if (typeof packageName !== "string") {
     warn(createPackageNameMustBeAStringWarning({
@@ -2110,8 +2156,8 @@ const getImportMapFromPackageFiles = async ({
 
   await visit({
     packageFileUrl: projectPackageFileUrl,
-    packageName: projectPackageJsonObject.name,
-    packageJsonObject: projectPackageJsonObject,
+    packageName: projectPackageObject.name,
+    packageJsonObject: projectPackageObject,
     importerPackageFileUrl,
     importerPackageJsonObject: null,
     includeDevDependencies: projectPackageDevDependenciesIncluded
@@ -2210,20 +2256,6 @@ https://github.com/WICG/import-maps/issues/232`
   };
 };
 
-const createPackageNameMustBeAStringWarning = ({
-  packageName,
-  packageFileUrl
-}) => {
-  return {
-    code: "PACKAGE_NAME_MUST_BE_A_STRING",
-    message: `package name field must be a string
---- package name field ---
-${packageName}
---- package.json file path ---
-${packageFileUrl}`
-  };
-};
-
 const createCannotFindPackageWarning = ({
   dependencyName,
   dependencyInfo,
@@ -2247,8 +2279,9 @@ const getImportMapFromProjectFiles = async ({
   runtime = "browser",
   moduleFormat = "esm",
   dev = false,
-  jsFiles = true,
-  importMapInput = {},
+  jsFilesParsing = true,
+  jsFilesParsingOptions = {},
+  initialImportMap = {},
   projectPackageDevDependenciesIncluded = dev,
   treeshakeMappings = !dev,
   packageConditions = [],
@@ -2259,31 +2292,55 @@ const getImportMapFromProjectFiles = async ({
   onWarn = (warning, warn) => {
     warn(warning);
   },
+  packagesManualOverrides,
   ...rest
 }) => {
   packageConditions = [...(packageConditionDevelopment ? ["development"] : ["production"]), ...(packageConditionFromModuleFormat ? [packageConditionFromModuleFormat] : []), ...(packageConditionFromRuntime ? [packageConditionFromRuntime] : []), ...packageConditions];
   const logger$1 = logger.createLogger({
     logLevel
   });
-
-  const warn = warning => {
+  const warn = wrapWarnToWarnOnce(warning => {
     onWarn(warning, () => {
       logger$1.warn(`\n${warning.message}\n`);
     });
-  }; // At this point, importmap is relative to the project directory url
+  });
+  projectDirectoryUrl = util.assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
+  const projectPackageFileUrl = util.resolveUrl("./package.json", projectDirectoryUrl);
+  let projectPackageObject;
+
+  try {
+    projectPackageObject = await util.readFile(projectPackageFileUrl, {
+      as: "json"
+    });
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      warn({
+        code: "PROJECT_PACKAGE_FILE_NOT_FOUND",
+        message: logger.createDetailedMessage(`Cannot find project package.json file.`, {
+          "package.json url": projectPackageFileUrl
+        })
+      });
+      return initialImportMap;
+    }
+
+    throw e;
+  } // At this point, importmap is relative to the project directory url
 
 
   let importMapFromPackageFiles = await getImportMapFromPackageFiles({
     logger: logger$1,
     warn,
     projectDirectoryUrl,
+    projectPackageFileUrl,
+    projectPackageObject,
     packageConditions,
     projectPackageDevDependenciesIncluded,
+    packagesManualOverrides,
     ...rest
   });
-  importMapFromPackageFiles = importMap.sortImportMap(importMap.composeTwoImportMaps(importMapInput, importMapFromPackageFiles));
+  importMapFromPackageFiles = importmap.sortImportMap(importmap.composeTwoImportMaps(initialImportMap, importMapFromPackageFiles));
 
-  if (!jsFiles) {
+  if (!jsFilesParsing) {
     return importMapFromPackageFiles;
   }
 
@@ -2294,11 +2351,33 @@ const getImportMapFromProjectFiles = async ({
     importMap: importMapFromPackageFiles,
     magicExtensions,
     runtime,
-    treeshakeMappings
+    treeshakeMappings,
+    jsFilesParsingOptions
   });
-  importMapFromJsFiles = importMap.sortImportMap(importMapFromJsFiles);
+  importMapFromJsFiles = importmap.sortImportMap(importMapFromJsFiles);
   return importMapFromJsFiles;
 };
+
+const wrapWarnToWarnOnce = warn => {
+  const warnings = [];
+  return warning => {
+    const alreadyWarned = warnings.some(warningCandidate => {
+      return JSON.stringify(warningCandidate) === JSON.stringify(warning);
+    });
+
+    if (alreadyWarned) {
+      return;
+    }
+
+    if (warnings.length > 1000) {
+      warnings.shift();
+    }
+
+    warnings.push(warning);
+    warn(warning);
+  };
+};
+
 const packageConditionsFromRuntime = {
   browser: "browser",
   node: "node"
@@ -2314,15 +2393,15 @@ const getImportMapFromFile = async ({
 }) => {
   projectDirectoryUrl = util.assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
   const importmapFileUrl = util.resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
-  const importmap = await util.readFile(importmapFileUrl, {
+  const importmap$1 = await util.readFile(importmapFileUrl, {
     as: "json"
   }); // ensure the importmap is now relative to the project directory url
   // we do that because writeImportMapFile expect all importmap
   // to be relative to the projectDirectoryUrl
 
   const importmapFakeRootUrl = util.resolveUrl("whatever.importmap", projectDirectoryUrl);
-  const importmapRelativeToProject = importMap.moveImportMap(importmap, importmapFileUrl, importmapFakeRootUrl);
-  return importMap.sortImportMap(importmapRelativeToProject);
+  const importmapRelativeToProject = importmap.moveImportMap(importmap$1, importmapFileUrl, importmapFakeRootUrl);
+  return importmap.sortImportMap(importmapRelativeToProject);
 };
 
 const importMapToVsCodeConfigPaths = ({
@@ -2375,13 +2454,13 @@ const writeImportMapFile = async (importMapInputs = [], {
   }
 
   const importMaps = await Promise.all(importMapInputs);
-  const importMap$1 = importMaps.reduce((previous, current) => {
-    return importMap.composeTwoImportMaps(previous, current);
+  const importMap = importMaps.reduce((previous, current) => {
+    return importmap.composeTwoImportMaps(previous, current);
   }, {});
 
   if (importMapFile) {
     const importMapFileUrl = util.resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
-    await util.writeFile(importMapFileUrl, JSON.stringify(importMap$1, null, "  "));
+    await util.writeFile(importMapFileUrl, JSON.stringify(importMap, null, "  "));
 
     if (importMapFileLog) {
       console.info(`-> ${util.urlToFileSystemPath(importMapFileUrl)}`);
@@ -2400,7 +2479,7 @@ const writeImportMapFile = async (importMapInputs = [], {
         paths: { ...(jsConfigLeadingSlash ? {
             "/*": ["./*"]
           } : {}),
-          ...importMapToVsCodeConfigPaths(importMap$1)
+          ...importMapToVsCodeConfigPaths(importMap)
         }
       }
     };
@@ -2411,7 +2490,7 @@ const writeImportMapFile = async (importMapInputs = [], {
     }
   }
 
-  return importMap$1;
+  return importMap;
 };
 
 const readCurrentJsConfig = async jsConfigFileUrl => {
@@ -2436,4 +2515,4 @@ exports.getImportMapFromFile = getImportMapFromFile;
 exports.getImportMapFromProjectFiles = getImportMapFromProjectFiles;
 exports.writeImportMapFile = writeImportMapFile;
 
-//# sourceMappingURL=jsenv_node_module_importmap.cjs.map
+//# sourceMappingURL=jsenv_importmap_node_module.cjs.map
