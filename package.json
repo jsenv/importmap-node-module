@@ -1,7 +1,7 @@
 {
   "name": "@jsenv/importmap-node-module",
-  "version": "1.0.0",
-  "description": "Generate importmap for node_modules.",
+  "version": "1.0.1",
+  "description": "Generate importmap for node_modules",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -21,7 +21,6 @@
     },
     "./*": "./*"
   },
-  "main": "dist/commonjs/jsenv_importmap_node_module.cjs",
   "files": [
     "/dist/",
     "/src/",
@@ -43,17 +42,17 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
-    "@babel/parser": "7.14.4",
-    "@babel/traverse": "7.14.2",
+    "@babel/parser": "7.14.8",
+    "@babel/traverse": "7.14.8",
     "@jsenv/cancellation": "3.0.0",
-    "@jsenv/importmap": "1.0.0",
+    "@jsenv/importmap": "1.1.0",
     "@jsenv/logger": "4.0.1",
     "@jsenv/util": "4.1.1"
   },
   "devDependencies": {
     "@jsenv/assert": "2.2.5",
     "@jsenv/codecov-upload": "3.5.0",
-    "@jsenv/core": "19.0.2",
+    "@jsenv/core": "19.1.0",
     "@jsenv/eslint-config": "15.0.1",
     "@jsenv/github-release-package": "1.2.3",
     "@jsenv/importmap-eslint-resolver": "5.0.0",
