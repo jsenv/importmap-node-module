@@ -92,6 +92,8 @@ const importMap = await getImportMapFromProjectFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   dev: false,
   runtime: "browser",
+  treeshakeMappings: true,
+  initialImportMap: null,
 })
 ```
 
@@ -191,7 +193,7 @@ _importMapFile_ parameter is a boolean controling if importMap is written to a f
 
 _importMapFileRelativeUrl_ parameter is a string controlling where importMap file is written. This parameter is optional and by default it's `"./importmap.importmap"`.
 
-## getImportMapFromFile
+# getImportMapFromFile
 
 _getImportMapFromFile_ is an async function reading importmap from a file.
 
