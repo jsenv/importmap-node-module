@@ -8,7 +8,7 @@ Generate importmap for node_modules.
 
 # Presentation
 
-This repository generates [import map](https://github.com/WICG/import-maps) from _package.json_ files in your _node_modules_ directory. The generated importmap can be used to make code dependent of node module executable in a browser.
+Generate [import map](https://github.com/WICG/import-maps) to make code dependent of node module resolution executable in a browser.
 
 _Example of code relying on node module resolution:_
 
