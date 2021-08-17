@@ -47,7 +47,7 @@ await writeImportMapFile(
 3 - Generate _project.importmap_
 
 ```console
-node generate_importmap.mjs
+> node ./generate_importmap.mjs
 ```
 
 4 - Add _project.importmap_ to your html
