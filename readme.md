@@ -8,15 +8,13 @@ Generate importmap for node_modules.
 
 # Presentation
 
-Generate [import map](https://github.com/WICG/import-maps) to make code dependent of node module resolution executable in a browser.
+Generates an [import map](https://github.com/WICG/import-maps) with mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). This importmap can be used to make code dependent on node module resolution executable in a browser.
 
-_Example of code relying on node module resolution:_
+_Example of code relying on node module resolution_
 
 ```js
 import lodash from "lodash"
 ```
-
-The code above is expecting Node.js to "magically" find file corresponding to `"lodash"`. This magic is the [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). Other runtimes than Node.js, a browser like Chrome for instance, don't have this algorithm. Executing that code in a browser fetches `http://example.com/lodash` and likely results in _404 File Not Found_ from server.
 
 # Usage
 
@@ -26,7 +24,7 @@ The code above is expecting Node.js to "magically" find file corresponding to `"
 npm install --save-dev @jsenv/importmap-node-module
 ```
 
-2 - Create _generate-importmap.mjs_
+2 - Create _generate_importmap.mjs_
 
 ```js
 import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
@@ -49,7 +47,7 @@ await writeImportMapFile(
 3 - Generate _project.importmap_
 
 ```console
-node generate-importmap.mjs
+node generate_importmap.mjs
 ```
 
 4 - Add _project.importmap_ to your html
