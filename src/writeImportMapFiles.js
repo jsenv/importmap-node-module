@@ -3,12 +3,15 @@ import {
   assertAndNormalizeDirectoryUrl,
   writeFile,
   resolveUrl,
+  readFile,
+  urlToFileSystemPath,
 } from "@jsenv/filesystem"
 import { sortImportMap } from "@jsenv/importmap"
 
 import { visitNodeModuleResolution } from "./internal/from-package/visitNodeModuleResolution.js"
 import { optimizeImportMap } from "./internal/optimizeImportMap.js"
 import { visitSourceFiles } from "./internal/from-js/visitSourceFiles.js"
+import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 
 export const writeImportMapFiles = async ({
   logLevel,
@@ -107,14 +110,6 @@ export const writeImportMapFiles = async ({
     importMaps[key] = importMapNormalized
   })
 
-  // for js config we'll see later
-  // const firstUpdatingJsConfig = importMapFileRelativeUrls.find(
-  //   (importMapFileRelativeUrl) => {
-  //     const importMapFileConfig = importMapFiles[importMapFileRelativeUrl]
-  //     return importMapFileConfig.useForJsConfigJSON
-  //   },
-  // )
-
   if (writeFiles) {
     await importMapFileRelativeUrls.reduce(
       async (previous, importMapFileRelativeUrl) => {
@@ -128,6 +123,33 @@ export const writeImportMapFiles = async ({
       },
       Promise.resolve(),
     )
+  }
+
+  const firstUpdatingJsConfig = importMapFileRelativeUrls.find(
+    (importMapFileRelativeUrl) => {
+      const importMapFileConfig = importMapFiles[importMapFileRelativeUrl]
+      return importMapFileConfig.useForJsConfigJSON
+    },
+  )
+  if (firstUpdatingJsConfig) {
+    const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl)
+    const jsConfigCurrent = (await readCurrentJsConfig(jsConfigFileUrl)) || {
+      compilerOptions: {},
+    }
+    const importMapUsedForVsCode = importMaps[firstUpdatingJsConfig]
+    const jsConfig = {
+      ...jsConfigDefault,
+      ...jsConfigCurrent,
+      compilerOptions: {
+        ...jsConfigDefault.compilerOptions,
+        ...jsConfigCurrent.compilerOptions,
+        // importmap is the source of truth -> paths are overwritten
+        // We coudldn't differentiate which one we created and which one where added manually anyway
+        paths: importMapToVsCodeConfigPaths(importMapUsedForVsCode),
+      },
+    }
+    await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "))
+    logger.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`)
   }
 
   return importMaps
@@ -148,5 +170,21 @@ const wrapWarnToWarnOnce = (warn) => {
     }
     warnings.push(warning)
     warn(warning)
+  }
+}
+
+const jsConfigDefault = {
+  compilerOptions: {
+    baseUrl: ".",
+    paths: {},
+  },
+}
+
+const readCurrentJsConfig = async (jsConfigFileUrl) => {
+  try {
+    const currentJSConfig = await readFile(jsConfigFileUrl, { as: "json" })
+    return currentJSConfig
+  } catch (e) {
+    return null
   }
 }
