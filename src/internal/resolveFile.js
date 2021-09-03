@@ -1,4 +1,9 @@
-import { resolveUrl, readFileSystemNodeStat, urlToFilename, urlToExtension } from "@jsenv/util"
+import {
+  resolveUrl,
+  readFileSystemNodeStat,
+  urlToFilename,
+  urlToExtension,
+} from "@jsenv/filesystem"
 import { firstOperationMatching } from "@jsenv/cancellation"
 
 export const resolveFile = async (fileUrl, { magicExtensions }) => {

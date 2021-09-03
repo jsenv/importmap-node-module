@@ -4,7 +4,7 @@ import {
   assertAndNormalizeDirectoryUrl,
   writeFile,
   readFile,
-} from "@jsenv/util"
+} from "@jsenv/filesystem"
 import { composeTwoImportMaps } from "@jsenv/importmap"
 
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"

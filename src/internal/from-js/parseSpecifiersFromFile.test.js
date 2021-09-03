@@ -1,5 +1,5 @@
 import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
-import { writeFile, ensureEmptyDirectory, resolveUrl } from "@jsenv/util"
+import { writeFile, ensureEmptyDirectory, resolveUrl } from "@jsenv/filesystem"
 import { assert } from "@jsenv/assert"
 
 const testDirectoryUrl = resolveUrl("./fixtures/", import.meta.url)

@@ -1,5 +1,5 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, urlToFileSystemPath, urlToExtension } from "@jsenv/util"
+import { resolveUrl, urlToFileSystemPath, urlToExtension } from "@jsenv/filesystem"
 import { resolveFile } from "../resolveFile.js"
 
 const magicExtensions = [".js", ".json", ".node"]

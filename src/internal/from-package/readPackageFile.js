@@ -1,4 +1,4 @@
-import { readFile, urlToFileSystemPath } from "@jsenv/util"
+import { readFile, urlToFileSystemPath } from "@jsenv/filesystem"
 import { applyPackageManualOverride } from "./applyPackageManualOverride.js"
 
 export const PACKAGE_NOT_FOUND = {}

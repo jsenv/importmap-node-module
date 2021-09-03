@@ -1,5 +1,5 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, readFile, urlToExtension, urlToRelativeUrl } from "@jsenv/util"
+import { resolveUrl, readFile, urlToExtension, urlToRelativeUrl } from "@jsenv/filesystem"
 import {
   normalizeImportMap,
   resolveImport,

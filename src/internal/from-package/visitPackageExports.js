@@ -4,7 +4,7 @@ https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_
 
 */
 
-import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/util"
+import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/filesystem"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({

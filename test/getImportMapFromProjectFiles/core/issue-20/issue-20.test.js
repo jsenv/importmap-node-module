@@ -1,5 +1,5 @@
 import { normalizeImportMap, resolveImport } from "@jsenv/importmap"
-import { resolveUrl } from "@jsenv/util"
+import { resolveUrl } from "@jsenv/filesystem"
 import { assert } from "@jsenv/assert"
 import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 

@@ -1,6 +1,6 @@
 import { composeTwoImportMaps, sortImportMap } from "@jsenv/importmap"
 import { createLogger, createDetailedMessage } from "@jsenv/logger"
-import { assertAndNormalizeDirectoryUrl, resolveUrl, readFile } from "@jsenv/util"
+import { assertAndNormalizeDirectoryUrl, resolveUrl, readFile } from "@jsenv/filesystem"
 
 import { getImportMapFromJsFiles } from "./internal/from-js/getImportMapFromJsFiles.js"
 import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"

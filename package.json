@@ -8,7 +8,7 @@
     "url": "https://github.com/jsenv/importmap-node-module"
   },
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=14.17.0"
   },
   "publishConfig": {
     "access": "public"
@@ -42,25 +42,25 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
-    "@babel/parser": "7.14.8",
-    "@babel/traverse": "7.14.8",
+    "@babel/parser": "7.15.4",
+    "@babel/traverse": "7.15.4",
     "@jsenv/cancellation": "3.0.0",
+    "@jsenv/filesystem": "2.1.1",
     "@jsenv/importmap": "1.1.0",
-    "@jsenv/logger": "4.0.1",
-    "@jsenv/util": "4.1.1"
+    "@jsenv/logger": "4.0.1"
   },
   "devDependencies": {
-    "@jsenv/assert": "2.2.5",
+    "@jsenv/assert": "2.3.1",
     "@jsenv/codecov-upload": "3.5.0",
-    "@jsenv/core": "19.1.0",
-    "@jsenv/eslint-config": "15.0.1",
+    "@jsenv/core": "19.6.2",
+    "@jsenv/eslint-config": "15.0.2",
     "@jsenv/github-release-package": "1.2.3",
-    "@jsenv/importmap-eslint-resolver": "5.0.0",
+    "@jsenv/importmap-eslint-resolver": "5.1.0",
     "@jsenv/package-publish": "1.6.2",
     "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/prettier-config": "1.2.0",
-    "eslint": "7.31.0",
-    "eslint-plugin-import": "2.23.4",
+    "eslint": "7.32.0",
+    "eslint-plugin-import": "2.24.2",
     "prettier": "2.3.2"
   }
 }

@@ -1,5 +1,5 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/util"
+import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/filesystem"
 
 import { createPackageNameMustBeAStringWarning } from "../warnings.js"
 

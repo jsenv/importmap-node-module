@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { removeFileSystemNode, resolveUrl, writeSymbolicLink } from "@jsenv/util"
+import { removeFileSystemNode, resolveUrl, writeSymbolicLink } from "@jsenv/filesystem"
 
 import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 

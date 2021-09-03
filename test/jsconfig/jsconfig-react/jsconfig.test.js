@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl, readFile, writeFile, removeFileSystemNode } from "@jsenv/util"
+import { resolveUrl, readFile, writeFile, removeFileSystemNode } from "@jsenv/filesystem"
 import { writeImportMapFile } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./", import.meta.url)

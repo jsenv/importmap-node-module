@@ -1,5 +1,5 @@
 import { createRequire } from "module"
-import { readFile, urlToFileSystemPath, urlToExtension } from "@jsenv/util"
+import { readFile, urlToFileSystemPath, urlToExtension } from "@jsenv/filesystem"
 
 const require = createRequire(import.meta.url)
 
