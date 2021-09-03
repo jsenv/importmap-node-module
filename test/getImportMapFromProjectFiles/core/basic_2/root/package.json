@@ -1,11 +1,14 @@
 {
   "name": "root",
+  "module": "index.js",
   "type": "module",
   "dependencies": {
-    "foo": "*"
+    "bar": "*",
+    "foo": "*",
+    "@dmail/yo": "*"
   },
   "exports": {
     ".": "./index.js",
-    "./*": "./*"
+    "./": "./"
   }
 }

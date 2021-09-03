@@ -91,15 +91,17 @@ export const writeImportMapFiles = async ({
   await importMapFileRelativeUrls.reduce(
     async (previous, importMapFileRelativeUrl) => {
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
-      const { mappingsTreeshaking } = importMapConfig
-      const importMap = await visitSourceFiles({
-        logger,
-        warn,
-        projectDirectoryUrl,
-        importMap: importMaps[importMapFileRelativeUrl],
-        mappingsTreeshaking,
-      })
-      importMaps[importMapFileRelativeUrl] = importMap
+      const { mappingsTreeshaking, ignoreSourceFiles } = importMapConfig
+      if (!ignoreSourceFiles) {
+        const importMap = await visitSourceFiles({
+          logger,
+          warn,
+          projectDirectoryUrl,
+          importMap: importMaps[importMapFileRelativeUrl],
+          mappingsTreeshaking,
+        })
+        importMaps[importMapFileRelativeUrl] = importMap
+      }
     },
     Promise.resolve(),
   )

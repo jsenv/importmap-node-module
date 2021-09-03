@@ -59,7 +59,14 @@ export const visitNodeModuleResolution = async ({
           packageInfo,
         }),
       )
-      return
+      // if package is root, we don't go further
+      // otherwise package name is deduced from file structure
+      // si it's thoerically safe to keep going
+      // in practice it should never happen because npm won't let
+      // a package without name be published
+      if (!packageImporterInfo) {
+        return
+      }
     }
 
     packageVisitors = packageVisitors.filter((visitor) => {
@@ -153,19 +160,19 @@ export const visitNodeModuleResolution = async ({
         name: dependencyName,
         object: dependencyPackageJsonObject,
       },
-      importerPackageInfo: packageInfo,
+      packageImporterInfo: packageInfo,
     })
   }
 
   const visitPackage = async ({
     packageVisitors,
     packageInfo,
-    importerPackageInfo,
+    packageImporterInfo,
   }) => {
     const packageDerivedInfo = computePackageDerivedInfo({
       projectDirectoryUrl,
       packageInfo,
-      importerPackageInfo,
+      packageImporterInfo,
     })
 
     const addImportMapForPackage = (visitor, importMap) => {
@@ -277,7 +284,7 @@ export const visitNodeModuleResolution = async ({
     }
 
     // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
-    visitors.forEach((visitor) => {
+    packageVisitors.forEach((visitor) => {
       addImportMapForPackage(visitor, {
         imports: {
           [`${packageInfo.name}/`]: `./`,
@@ -290,7 +297,7 @@ export const visitNodeModuleResolution = async ({
       packageInfo,
       projectDirectoryUrl,
     })
-    visitors.forEach((visitor) => {
+    packageVisitors.forEach((visitor) => {
       addImportMapForPackage(visitor, importsFromPackageField)
     })
 
@@ -360,7 +367,7 @@ export const visitNodeModuleResolution = async ({
         resolveUrl("./", packageInfo.url),
         projectDirectoryUrl,
       )
-      visitors.forEach((visitor) => {
+      packageVisitors.forEach((visitor) => {
         addMappingsForPackageAndImporter(visitor, {
           [`${packageInfo.name}/`]: `./${packageDirectoryRelativeUrl}`,
         })
@@ -484,7 +491,7 @@ export const visitNodeModuleResolution = async ({
 const triggerVisitorOnMapping = (visitor, { scope, from, to }) => {
   if (scope) {
     // when a package says './' maps to './'
-    // we must add something to say if we are already inside the package
+    // we add something to say if we are already inside the package
     // no need to ensure leading slash are scoped to the package
     if (from === "./" && to === scope) {
       triggerVisitorOnMapping(visitor, {
