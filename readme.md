@@ -73,7 +73,9 @@ node ./generate_importmap.mjs
 </html>
 ```
 
-If you use a bundler or an other tool, be sure it's compatible with import maps. As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration. [@jsenv/core](https://github.com/jsenv/jsenv-core) seamlessly supports importmap during development, testing and when building for production.
+If you use a bundler or an other tool, be sure it's compatible with import maps.
+As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration.
+If you don't know what to use check [@jsenv/core](https://github.com/jsenv/jsenv-core#presentation).
 
 # getImportMapFromProjectFiles
 
