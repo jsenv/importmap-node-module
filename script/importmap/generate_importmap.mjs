@@ -5,24 +5,17 @@
  * - update "paths" in "./jsconfig.json" file that is used by VSCode to resolve imports
  */
 
-import {
-  getImportMapFromProjectFiles,
-  writeImportMapFile,
-} from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 import { projectDirectoryUrl } from "../../jsenv.config.mjs"
 
-await writeImportMapFile(
-  [
-    getImportMapFromProjectFiles({
-      projectDirectoryUrl,
-      runtime: "node",
-      dev: true,
-    }),
-  ],
-  {
-    projectDirectoryUrl,
-    importMapFileRelativeUrl: "./node_resolution.importmap",
-    jsConfigFile: true,
+await writeImportMapFiles({
+  projectDirectoryUrl,
+  importMapFiles: {
+    "./node_resolution.importmap": {
+      mappingsForNodeResolution: true,
+      mappingsForDevDependencies: true,
+      useForJsConfigJSON: true,
+    },
   },
-)
+})

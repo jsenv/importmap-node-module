@@ -29,7 +29,7 @@ export const visitSourceFiles = async ({
   warn,
   projectDirectoryUrl,
   jsFilesParsingOptions = {},
-  runtime = "browser",
+  runtime = "node",
   importMap,
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   mappingsTreeshaking,
