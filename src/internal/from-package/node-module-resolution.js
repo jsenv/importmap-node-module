@@ -18,7 +18,7 @@ export const createFindNodeModulePackage = () => {
 
   return ({
     projectDirectoryUrl,
-    packagesManualOverrides,
+    packagesManualOverrides = {},
     packageFileUrl,
     dependencyName,
   }) => {

@@ -1,20 +1,27 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/filesystem"
-import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
+
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const warnings = []
-const importmap = await getImportMapFromProjectFiles({
+const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  jsFilesParsing: true,
+  importMapFiles: {
+    "test.importmap": {
+      mappingsForNodeResolution: true,
+      mappingsTreeshaking: true,
+    },
+  },
   onWarn: (warning) => {
     warnings.push(warning)
   },
+  writeFiles: false,
 })
 const actual = {
   warnings,
-  importmap,
+  importmaps,
 }
 const expected = {
   warnings: [
@@ -51,15 +58,17 @@ To get rid of this warning, add an explicit mapping into package.json.
 into ${testDirectoryUrl}node_modules/leftpad/package.json.`,
     },
   ],
-  importmap: {
-    imports: {
-      leftpad: "./node_modules/leftpad/index.js",
-      root: "./main.js",
-    },
-    scopes: {
-      "./node_modules/leftpad/": {
-        "./other-file": "./node_modules/leftpad/other-file.ts",
-        "./file": "./node_modules/leftpad/file.js",
+  importmaps: {
+    "test.importmap": {
+      imports: {
+        leftpad: "./node_modules/leftpad/index.js",
+        root: "./main.js",
+      },
+      scopes: {
+        "./node_modules/leftpad/": {
+          "./other-file": "./node_modules/leftpad/other-file.ts",
+          "./file": "./node_modules/leftpad/file.js",
+        },
       },
     },
   },

@@ -1,20 +1,27 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/filesystem"
-import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
+
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const warnings = []
-const importmap = await getImportMapFromProjectFiles({
+const importMaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  jsFilesParsing: true,
+  importMapFiles: {
+    "test.importmap": {
+      mappingsForNodeResolution: true,
+      mappingsTreeshaking: true,
+    },
+  },
   onWarn: (warning) => {
     warnings.push(warning)
   },
+  writeFiles: false,
 })
 const actual = {
   warnings,
-  importmap,
+  importMaps,
 }
 const expected = {
   warnings: [
@@ -37,12 +44,14 @@ To get rid of this warning, add an explicit mapping into package.json.
 into ${testDirectoryUrl}package.json.`,
     },
   ],
-  importmap: {
-    imports: {
-      file: "./file.js",
-      root: "./index.js",
+  importMaps: {
+    "test.importmap": {
+      imports: {
+        file: "./file.js",
+        root: "./index.js",
+      },
+      scopes: {},
     },
-    scopes: {},
   },
 }
 assert({ actual, expected })
