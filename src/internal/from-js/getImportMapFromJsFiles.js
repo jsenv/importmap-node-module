@@ -1,5 +1,10 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, readFile, urlToExtension, urlToRelativeUrl } from "@jsenv/util"
+import {
+  resolveUrl,
+  readFile,
+  urlToExtension,
+  urlToRelativeUrl,
+} from "@jsenv/filesystem"
 import {
   normalizeImportMap,
   resolveImport,
@@ -30,7 +35,10 @@ export const getImportMapFromJsFiles = async ({
   treeshakeMappings,
   jsFilesParsingOptions,
 }) => {
-  const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
+  const projectPackageFileUrl = resolveUrl(
+    "./package.json",
+    projectDirectoryUrl,
+  )
 
   const imports = {}
   const scopes = {}
@@ -110,7 +118,10 @@ export const getImportMapFromJsFiles = async ({
       }
 
       const fileUrlOnFileSystem = await resolveFile(fileUrl, {
-        magicExtensions: magicExtensionWithImporterExtension(magicExtensions, importer),
+        magicExtensions: magicExtensionWithImporterExtension(
+          magicExtensions,
+          importer,
+        ),
       })
 
       if (!fileUrlOnFileSystem) {
@@ -125,27 +136,36 @@ export const getImportMapFromJsFiles = async ({
         return null
       }
 
-      const needsAutoMapping = fileUrlOnFileSystem !== fileUrl || gotBareSpecifierError
+      const needsAutoMapping =
+        fileUrlOnFileSystem !== fileUrl || gotBareSpecifierError
       if (needsAutoMapping) {
-        const packageDirectoryUrl = packageDirectoryUrlFromUrl(fileUrl, projectDirectoryUrl)
+        const packageDirectoryUrl = packageDirectoryUrlFromUrl(
+          fileUrl,
+          projectDirectoryUrl,
+        )
         const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
         const autoMapping = {
           scope:
             packageFileUrl === projectPackageFileUrl
               ? undefined
-              : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`,
+              : `./${urlToRelativeUrl(
+                  packageDirectoryUrl,
+                  projectDirectoryUrl,
+                )}`,
           from: specifier,
           to: `./${urlToRelativeUrl(fileUrlOnFileSystem, projectDirectoryUrl)}`,
         }
         addMapping(autoMapping)
         markMappingAsUsed(autoMapping)
 
-        const closestPackageObject = await readFile(packageFileUrl, { as: "json" })
+        const closestPackageObject = await readFile(packageFileUrl, {
+          as: "json",
+        })
         // it's imprecise because we are not ensuring the wildcard correspond to automapping
         // but good enough for now
-        const containsWildcard = Object.keys(closestPackageObject.exports || {}).some((key) =>
-          key.includes("*"),
-        )
+        const containsWildcard = Object.keys(
+          closestPackageObject.exports || {},
+        ).some((key) => key.includes("*"))
 
         const autoMappingWarning = formatAutoMappingSpecifierWarning({
           specifier,
@@ -175,14 +195,18 @@ export const getImportMapFromJsFiles = async ({
     const dependencies = await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
-        const dependencyUrlOnFileSystem = await resolveFileSystemUrl(specifier, fileUrl, {
-          importedBy: showSource({
-            url: fileUrl,
-            line: specifierInfo.line,
-            column: specifierInfo.column,
-            source: fileContent,
-          }),
-        })
+        const dependencyUrlOnFileSystem = await resolveFileSystemUrl(
+          specifier,
+          fileUrl,
+          {
+            importedBy: showSource({
+              url: fileUrl,
+              line: specifierInfo.line,
+              column: specifierInfo.column,
+              source: fileContent,
+            }),
+          },
+        )
         return dependencyUrlOnFileSystem
       }),
     )
@@ -196,7 +220,9 @@ export const getImportMapFromJsFiles = async ({
     )
   })
 
-  const projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
+  const projectPackageObject = await readFile(projectPackageFileUrl, {
+    as: "json",
+  })
   const projectPackageName = projectPackageObject.name
   if (typeof projectPackageName !== "string") {
     warn(
@@ -247,7 +273,8 @@ export const getImportMapFromJsFiles = async ({
 const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
   const relativeUrl = urlToRelativeUrl(url, projectDirectoryUrl)
 
-  const lastNodeModulesDirectoryStartIndex = relativeUrl.lastIndexOf("node_modules/")
+  const lastNodeModulesDirectoryStartIndex =
+    relativeUrl.lastIndexOf("node_modules/")
   if (lastNodeModulesDirectoryStartIndex === -1) {
     return projectDirectoryUrl
   }
@@ -255,8 +282,13 @@ const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
   const lastNodeModulesDirectoryEndIndex =
     lastNodeModulesDirectoryStartIndex + `node_modules/`.length
 
-  const beforeNodeModulesLastDirectory = relativeUrl.slice(0, lastNodeModulesDirectoryEndIndex)
-  const afterLastNodeModulesDirectory = relativeUrl.slice(lastNodeModulesDirectoryEndIndex)
+  const beforeNodeModulesLastDirectory = relativeUrl.slice(
+    0,
+    lastNodeModulesDirectoryEndIndex,
+  )
+  const afterLastNodeModulesDirectory = relativeUrl.slice(
+    lastNodeModulesDirectoryEndIndex,
+  )
   const remainingDirectories = afterLastNodeModulesDirectory.split("/")
 
   if (afterLastNodeModulesDirectory[0] === "@") {
@@ -276,7 +308,12 @@ const magicExtensionWithImporterExtension = (magicExtensions, importer) => {
   return [importerExtension, ...magicExtensionsWithoutImporterExtension]
 }
 
-const createFileNotFoundWarning = ({ specifier, importedBy, fileUrl, magicExtensions }) => {
+const createFileNotFoundWarning = ({
+  specifier,
+  importedBy,
+  fileUrl,
+  magicExtensions,
+}) => {
   return {
     code: "FILE_NOT_FOUND",
     message: createDetailedMessage(`Cannot find file for "${specifier}"`, {
@@ -297,14 +334,17 @@ const formatAutoMappingSpecifierWarning = ({
 }) => {
   return {
     code: "AUTO_MAPPING",
-    message: createDetailedMessage(`Auto mapping ${autoMapping.from} to ${autoMapping.to}.`, {
-      "specifier origin": importedBy,
-      "suggestion": decideAutoMappingSuggestion({
-        autoMapping,
-        closestPackageDirectoryUrl,
-        closestPackageObject,
-      }),
-    }),
+    message: createDetailedMessage(
+      `Auto mapping ${autoMapping.from} to ${autoMapping.to}.`,
+      {
+        "specifier origin": importedBy,
+        "suggestion": decideAutoMappingSuggestion({
+          autoMapping,
+          closestPackageDirectoryUrl,
+          closestPackageObject,
+        }),
+      },
+    ),
   }
 }
 

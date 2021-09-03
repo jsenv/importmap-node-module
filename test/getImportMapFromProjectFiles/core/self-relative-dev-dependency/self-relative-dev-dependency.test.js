@@ -1,13 +1,22 @@
 import { assert } from "@jsenv/assert"
-import { removeFileSystemNode, resolveUrl, writeSymbolicLink } from "@jsenv/util"
+import {
+  removeFileSystemNode,
+  resolveUrl,
+  writeSymbolicLink,
+} from "@jsenv/filesystem"
 
 import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const testDirectoryUrl = resolveUrl("./dir/", projectDirectoryUrl)
 
-await removeFileSystemNode(`${testDirectoryUrl}/node_modules/siesta`, { allowUseless: true })
-await writeSymbolicLink(`${testDirectoryUrl}/node_modules/siesta`, projectDirectoryUrl)
+await removeFileSystemNode(`${testDirectoryUrl}/node_modules/siesta`, {
+  allowUseless: true,
+})
+await writeSymbolicLink({
+  from: `${testDirectoryUrl}/node_modules/siesta`,
+  to: projectDirectoryUrl,
+})
 
 const warnings = []
 const importmap = await getImportMapFromProjectFiles({

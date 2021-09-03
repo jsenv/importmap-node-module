@@ -4,7 +4,11 @@ https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_
 
 */
 
-import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/util"
+import {
+  urlToFileSystemPath,
+  urlToRelativeUrl,
+  resolveUrl,
+} from "@jsenv/filesystem"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({
@@ -18,7 +22,10 @@ export const visitPackageExports = ({
 }) => {
   const exportsSubpaths = {}
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
-  const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
+  const packageDirectoryRelativeUrl = urlToRelativeUrl(
+    packageDirectoryUrl,
+    projectDirectoryUrl,
+  )
   const onExportsSubpath = ({ key, value, trace }) => {
     if (!specifierIsRelative(value)) {
       warn(
@@ -32,7 +39,10 @@ export const visitPackageExports = ({
     }
 
     const keyNormalized = specifierToSource(key, packageName)
-    const valueNormalized = addressToDestination(value, packageDirectoryRelativeUrl)
+    const valueNormalized = addressToDestination(
+      value,
+      packageDirectoryRelativeUrl,
+    )
     exportsSubpaths[keyNormalized] = valueNormalized
   }
 
@@ -201,7 +211,11 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
   return `./${packageDirectoryRelativeUrl}${address}`
 }
 
-const createSubpathIsUnexpectedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
+const createSubpathIsUnexpectedWarning = ({
+  subpathValue,
+  subpathValueTrace,
+  packageFileUrl,
+}) => {
   return {
     code: "EXPORTS_SUBPATH_UNEXPECTED",
     message: `unexpected subpath in package.json exports: value must be an object or a string.
@@ -214,7 +228,11 @@ ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createSubpathKeysAreMixedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
+const createSubpathKeysAreMixedWarning = ({
+  subpathValue,
+  subpathValueTrace,
+  packageFileUrl,
+}) => {
   return {
     code: "EXPORTS_SUBPATH_MIXED_KEYS",
     message: `unexpected subpath keys in package.json exports: cannot mix relative and conditional keys.
@@ -227,7 +245,11 @@ ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createSubpathValueMustBeRelativeWarning = ({ value, valueTrace, packageFileUrl }) => {
+const createSubpathValueMustBeRelativeWarning = ({
+  value,
+  valueTrace,
+  packageFileUrl,
+}) => {
   return {
     code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
     message: `unexpected subpath value in package.json exports: value must be a relative to the package.

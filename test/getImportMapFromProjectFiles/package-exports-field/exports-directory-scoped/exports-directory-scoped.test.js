@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/util"
+import { resolveUrl } from "@jsenv/filesystem"
 
 import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
 
@@ -19,11 +19,13 @@ const expected = {
   scopes: {
     "./node_modules/foo/node_modules/exporting-folder/": {
       "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
-      "exporting-folder": "./node_modules/foo/node_modules/exporting-folder/index.js",
+      "exporting-folder":
+        "./node_modules/foo/node_modules/exporting-folder/index.js",
     },
     "./node_modules/foo/": {
       "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
-      "exporting-folder": "./node_modules/foo/node_modules/exporting-folder/index.js",
+      "exporting-folder":
+        "./node_modules/foo/node_modules/exporting-folder/index.js",
       "foo/": "./node_modules/foo/",
     },
   },

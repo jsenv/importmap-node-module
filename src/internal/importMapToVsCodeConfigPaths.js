@@ -11,7 +11,8 @@ export const importMapToVsCodeConfigPaths = ({ imports = {} }) => {
       key = importKey
     }
 
-    const importValueArray = typeof importValue === "string" ? [importValue] : importValue
+    const importValueArray =
+      typeof importValue === "string" ? [importValue] : importValue
     const candidatesForPath = importValueArray.map((importValue) => {
       if (importValue.endsWith("/")) {
         return `${importValue}*`

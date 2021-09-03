@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/importmap-node-module",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Generate importmap for node_modules",
   "license": "MIT",
   "repository": {
@@ -8,7 +8,7 @@
     "url": "https://github.com/jsenv/importmap-node-module"
   },
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=14.17.0"
   },
   "publishConfig": {
     "access": "public"
@@ -28,39 +28,40 @@
   ],
   "scripts": {
     "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
-    "test": "node ./script/test/test.js",
+    "generate-importmap": "node ./script/importmap/generate_importmap.mjs",
+    "measure-performances": "node ./script/performance/generate_performance_report.mjs --local",
+    "dist": "npm run build",
+    "build": "node --experimental-import-meta-resolve ./script/build/build.mjs",
+    "test": "node ./script/test/test.mjs",
     "test-with-coverage": "npm run test -- --coverage",
-    "prettier-format": "node ./script/prettier-format/prettier-format.js",
+    "prettier-format": "node ./script/prettier/prettier_format.mjs",
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",
-    "upload-coverage": "node ./script/upload-coverage/upload-coverage.js",
-    "build": "node --experimental-import-meta-resolve ./script/build/build.js",
-    "generate-importmap": "node ./script/generate-importmap/generate-importmap.js",
-    "dist": "npm run build",
     "postinstall": "npm run generate-importmap",
-    "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
-    "postpublish": "node ./script/transform-package/restore-postinstall.js"
+    "prepublishOnly": "node ./script/publish/remove_postinstall.mjs && npm run dist",
+    "postpublish": "node ./script/publish/restore_postinstall.mjs"
   },
   "dependencies": {
-    "@babel/parser": "7.14.8",
-    "@babel/traverse": "7.14.8",
+    "@babel/parser": "7.15.4",
+    "@babel/traverse": "7.15.4",
     "@jsenv/cancellation": "3.0.0",
+    "@jsenv/filesystem": "2.1.1",
     "@jsenv/importmap": "1.1.0",
-    "@jsenv/logger": "4.0.1",
-    "@jsenv/util": "4.1.1"
+    "@jsenv/logger": "4.0.1"
   },
   "devDependencies": {
-    "@jsenv/assert": "2.2.5",
+    "@jsenv/assert": "2.3.1",
     "@jsenv/codecov-upload": "3.5.0",
-    "@jsenv/core": "19.1.0",
-    "@jsenv/eslint-config": "15.0.1",
+    "@jsenv/core": "19.6.2",
+    "@jsenv/eslint-config": "15.0.2",
     "@jsenv/github-release-package": "1.2.3",
-    "@jsenv/importmap-eslint-resolver": "5.0.0",
+    "@jsenv/importmap-eslint-resolver": "5.1.0",
     "@jsenv/package-publish": "1.6.2",
+    "@jsenv/performance-impact": "1.7.0",
     "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/prettier-config": "1.2.0",
-    "eslint": "7.31.0",
-    "eslint-plugin-import": "2.23.4",
+    "eslint": "7.32.0",
+    "eslint-plugin-import": "2.24.2",
     "prettier": "2.3.2"
   }
 }

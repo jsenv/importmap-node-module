@@ -4,7 +4,7 @@ import {
   assertAndNormalizeDirectoryUrl,
   writeFile,
   readFile,
-} from "@jsenv/util"
+} from "@jsenv/filesystem"
 import { composeTwoImportMaps } from "@jsenv/importmap"
 
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
@@ -26,7 +26,9 @@ export const writeImportMapFile = async (
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
   if (importMapInputs.length === 0) {
-    console.warn(`importMapInputs is empty, the generated importmap will be empty`)
+    console.warn(
+      `importMapInputs is empty, the generated importmap will be empty`,
+    )
   }
 
   const importMaps = await Promise.all(importMapInputs)
@@ -36,7 +38,10 @@ export const writeImportMapFile = async (
   }, {})
 
   if (importMapFile) {
-    const importMapFileUrl = resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl)
+    const importMapFileUrl = resolveUrl(
+      importMapFileRelativeUrl,
+      projectDirectoryUrl,
+    )
     await writeFile(importMapFileUrl, JSON.stringify(importMap, null, "  "))
     if (importMapFileLog) {
       console.info(`-> ${urlToFileSystemPath(importMapFileUrl)}`)
@@ -44,7 +49,9 @@ export const writeImportMapFile = async (
   }
   if (jsConfigFile) {
     const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl)
-    const jsConfigCurrent = (await readCurrentJsConfig(jsConfigFileUrl)) || { compilerOptions: {} }
+    const jsConfigCurrent = (await readCurrentJsConfig(jsConfigFileUrl)) || {
+      compilerOptions: {},
+    }
     const jsConfig = {
       ...jsConfigDefault,
       ...jsConfigCurrent,

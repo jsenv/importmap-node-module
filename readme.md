@@ -27,7 +27,10 @@ npm install --save-dev @jsenv/importmap-node-module
 2 - Create _generate_importmap.mjs_
 
 ```js
-import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
+import {
+  getImportMapFromProjectFiles,
+  writeImportMapFile,
+} from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
 
@@ -99,7 +102,7 @@ const importMap = await getImportMapFromProjectFiles({
 
 ## projectDirectoryUrl
 
-_projectDirectoryUrl_ parameter is a string url leading to a folder with a _package.json_. This parameters is **required** and accepted values are documented in [@jsenv/util#assertAndNormalizeDirectoryUrl](https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl)
+_projectDirectoryUrl_ parameter is a string url leading to a folder with a _package.json_. This parameters is **required** and accepted values are documented in [@jsenv/filesystem#assertAndNormalizeDirectoryUrl](https://github.com/jsenv/jsenv-util#assertandnormalizedirectoryurl)
 
 ## dev
 
@@ -156,7 +159,10 @@ _writeImportMapFile_ is an async function receiving an array of promise resolvin
  * Generate an import map from node_modules + an inline importmap.
  */
 
-import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
+import {
+  getImportMapFromProjectFiles,
+  writeImportMapFile,
+} from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = new URL("./", import.meta.url)
 const importMapInputs = [

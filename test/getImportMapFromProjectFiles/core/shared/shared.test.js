@@ -1,5 +1,5 @@
 import { normalizeImportMap, resolveImport } from "@jsenv/importmap"
-import { resolveUrl } from "@jsenv/util"
+import { resolveUrl } from "@jsenv/filesystem"
 import { assert } from "@jsenv/assert"
 
 import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
@@ -24,7 +24,10 @@ const importMap = await getImportMapFromProjectFiles({
 }
 
 {
-  const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
+  const importMapNormalized = normalizeImportMap(
+    importMap,
+    "http://example.com",
+  )
 
   // import 'bar' inside project
   {
@@ -55,7 +58,8 @@ const importMap = await getImportMapFromProjectFiles({
       importer: "http://example.com/node_modules/foo/foo.js",
       importMap: importMapNormalized,
     })
-    const expected = "http://example.com/node_modules/foo/node_modules/bar/bar.js"
+    const expected =
+      "http://example.com/node_modules/foo/node_modules/bar/bar.js"
     assert({ actual, expected })
   }
 
@@ -79,7 +83,8 @@ const importMap = await getImportMapFromProjectFiles({
     })
     // there is no remapping because package.json does not specify
     // a dependency
-    const expected = "http://example.com/node_modules/bar/node_modules/foo/foo.js"
+    const expected =
+      "http://example.com/node_modules/bar/node_modules/foo/foo.js"
     assert({ actual, expected })
   }
 }

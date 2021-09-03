@@ -1,0 +1,74 @@
+# This is a GitHub workflow YAML file
+# see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+#
+# If you want to update this file it's recommended to use a YAML validator
+# https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml
+# configured to validate with https://json.schemastore.org/github-workflow.json
+#
+# This workflow is responsible to perform various checks related to the codebase,
+# For every push to main or on a pull request, it
+# - ensures there is no eslint error on files
+# - ensures there is no test failing
+# - uploads code coverage from tests to codecov
+#
+# If all these steps are passing and there is a secrets.NPM_TOKEN and version in package.json
+# is not already published, workflow published the package on npm.
+
+name: main
+
+on:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [14.17.0]
+    runs-on: ${{ matrix.os }}
+    name: test on ${{ matrix.os }} and node ${{ matrix.node }}
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: npm install
+        run: npm install
+      - name: check lint
+        run: npm run eslint-check
+      - name: check tests
+        run: npm run test-with-coverage
+      - name: upload coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        if: env.CODECOV_TOKEN != null
+        run: node ./script/test/upload_coverage.mjs
+
+  release:
+    needs: [test]
+    if: success() && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    name: release
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - name: npm install
+        run: npm install
+      - name: publish package
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: env.NPM_TOKEN != null
+        run: node ./.github/workflows/main/publish_package.mjs
+      - name: ensure github release
+        run: node ./.github/workflows/main/github_release.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

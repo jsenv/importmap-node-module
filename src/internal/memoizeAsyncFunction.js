@@ -24,7 +24,9 @@ export const memoizeAsyncFunctionBySpecifierAndImporter = (fn) => {
       return {
         get: () => {
           const specifierCacheForImporter = importerCache[importer]
-          return specifierCacheForImporter ? specifierCacheForImporter[specifier] : null
+          return specifierCacheForImporter
+            ? specifierCacheForImporter[specifier]
+            : null
         },
         set: (promise) => {
           const specifierCacheForImporter = importerCache[importer]
