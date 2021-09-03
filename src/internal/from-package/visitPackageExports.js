@@ -12,16 +12,15 @@ import {
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({
-  packageFileUrl,
-  packageJsonObject,
-  packageExports = packageJsonObject.exports,
-  packageName = packageJsonObject.name,
   projectDirectoryUrl,
-  packageConditions,
   warn,
+  packageInfo,
+  packageExports = packageInfo.object.exports,
+  packageName = packageInfo.name,
+  nodeResolutionConditions = [],
 }) => {
   const exportsSubpaths = {}
-  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
+  const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
   const packageDirectoryRelativeUrl = urlToRelativeUrl(
     packageDirectoryUrl,
     projectDirectoryUrl,
@@ -32,7 +31,7 @@ export const visitPackageExports = ({
         createSubpathValueMustBeRelativeWarning({
           value,
           valueTrace: trace,
-          packageFileUrl,
+          packageInfo,
         }),
       )
       return
@@ -46,7 +45,7 @@ export const visitPackageExports = ({
     exportsSubpaths[keyNormalized] = valueNormalized
   }
 
-  const conditions = [...packageConditions, "default"]
+  const conditions = [...nodeResolutionConditions, "default"]
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     // false is allowed as alternative to exports: {}
@@ -110,7 +109,7 @@ export const visitPackageExports = ({
           createSubpathKeysAreMixedWarning({
             subpathValue,
             subpathValueTrace: [...subpathValueTrace, ...conditionTrace],
-            packageFileUrl,
+            packageInfo,
             relativeKeys,
             conditionalKeys,
           }),
@@ -156,7 +155,7 @@ export const visitPackageExports = ({
       createSubpathIsUnexpectedWarning({
         subpathValue,
         subpathValueTrace,
-        packageFileUrl,
+        packageInfo,
       }),
     )
     return false
@@ -214,7 +213,7 @@ const addressToDestination = (address, packageDirectoryRelativeUrl) => {
 const createSubpathIsUnexpectedWarning = ({
   subpathValue,
   subpathValueTrace,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "EXPORTS_SUBPATH_UNEXPECTED",
@@ -224,14 +223,14 @@ ${subpathValue}
 --- value at ---
 ${subpathValueTrace.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo)}`,
   }
 }
 
 const createSubpathKeysAreMixedWarning = ({
   subpathValue,
   subpathValueTrace,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "EXPORTS_SUBPATH_MIXED_KEYS",
@@ -241,14 +240,14 @@ ${JSON.stringify(subpathValue, null, "  ")}
 --- value at ---
 ${subpathValueTrace.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo)}`,
   }
 }
 
 const createSubpathValueMustBeRelativeWarning = ({
   value,
   valueTrace,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
@@ -258,6 +257,6 @@ ${value}
 --- value at ---
 ${valueTrace.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo)}`,
   }
 }

@@ -8,7 +8,6 @@ import {
 import {
   normalizeImportMap,
   resolveImport,
-  sortImportMap,
   composeTwoImportMaps,
 } from "@jsenv/importmap"
 import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js"
@@ -25,15 +24,15 @@ import { createPackageNameMustBeAStringWarning } from "../warnings.js"
 
 const BARE_SPECIFIER_ERROR = {}
 
-export const getImportMapFromJsFiles = async ({
+export const visitSourceFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
+  jsFilesParsingOptions = {},
+  runtime = "browser",
   importMap,
-  magicExtensions,
-  runtime,
-  treeshakeMappings,
-  jsFilesParsingOptions,
+  magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
+  mappingsTreeshaking,
 }) => {
   const projectPackageFileUrl = resolveUrl(
     "./package.json",
@@ -247,7 +246,7 @@ export const getImportMapFromJsFiles = async ({
     await visitFile(projectMainFileUrlOnFileSystem)
   }
 
-  if (treeshakeMappings) {
+  if (mappingsTreeshaking) {
     const importsUsed = {}
     topLevelMappingsUsed.forEach(({ from, to }) => {
       importsUsed[from] = to
@@ -261,13 +260,13 @@ export const getImportMapFromJsFiles = async ({
       })
       scopesUsed[scope] = scopedMappings
     })
-    return sortImportMap({
+    return {
       imports: importsUsed,
       scopes: scopesUsed,
-    })
+    }
   }
 
-  return sortImportMap(composeTwoImportMaps(importMap, { imports, scopes }))
+  return composeTwoImportMaps(importMap, { imports, scopes })
 }
 
 const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {

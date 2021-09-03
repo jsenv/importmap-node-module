@@ -7,15 +7,21 @@ import {
   PACKAGE_NOT_FOUND,
   PACKAGE_WITH_SYNTAX_ERROR,
 } from "./readPackageFile.js"
+import { applyPackageManualOverride } from "./applyPackageManualOverride.js"
 
-export const createFindNodeModulePackage = (packagesManualOverrides) => {
+export const createFindNodeModulePackage = () => {
   const readPackageFileMemoized = memoizeAsyncFunctionByUrl(
     (packageFileUrl) => {
-      return readPackageFile(packageFileUrl, packagesManualOverrides)
+      return readPackageFile(packageFileUrl)
     },
   )
 
-  return ({ projectDirectoryUrl, packageFileUrl, dependencyName }) => {
+  return ({
+    projectDirectoryUrl,
+    packagesManualOverrides,
+    packageFileUrl,
+    dependencyName,
+  }) => {
     const nodeModuleCandidates = getNodeModuleCandidates(
       packageFileUrl,
       projectDirectoryUrl,
@@ -28,9 +34,13 @@ export const createFindNodeModulePackage = (packagesManualOverrides) => {
         const packageObjectCandidate = await readPackageFileMemoized(
           packageFileUrlCandidate,
         )
+
         return {
           packageFileUrl: packageFileUrlCandidate,
-          packageJsonObject: packageObjectCandidate,
+          packageJsonObject: applyPackageManualOverride(
+            packageObjectCandidate,
+            packagesManualOverrides,
+          ),
           syntaxError: packageObjectCandidate === PACKAGE_WITH_SYNTAX_ERROR,
         }
       },

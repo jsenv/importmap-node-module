@@ -27,9 +27,9 @@ npm install --save-dev @jsenv/importmap-node-module
 2 - Create _generate_importmap.mjs_
 
 ```js
-import { generateImportMaps } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
-await generateImportMaps({
+await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./project.importmap": {
@@ -70,14 +70,14 @@ If you use a bundler or an other tool, be sure it's compatible with import maps.
 As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration.
 If you don't know what to use check [@jsenv/core](https://github.com/jsenv/jsenv-core#presentation).
 
-# generateImportMaps
+# writeImportMapFiles
 
-_generateImportMaps_ is an async function generating one or many importmap files.
+_writeImportMapFiles_ is an async function generating one or many importmap files.
 
 ```js
-import { generateImportMaps } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
-await generateImportMaps({
+await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./importmap_for_dev.importmap": {
@@ -119,9 +119,9 @@ The following source of information are used to create complete and coherent map
 Controls which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
 ```js
-import { generateImportMaps } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
-await generateImportMaps({
+await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./browser_dev.importmap": {
@@ -154,9 +154,9 @@ _initialImportMap_ parameter is an importMap object that can be used to provide 
 This parameter is optional and by default it's an empty object.
 
 ```js
-import { generateImportMaps } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
-await generateImportMaps({
+await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./test.importmap": {
@@ -238,9 +238,9 @@ To configure VSCode, pass `jsConfigFile: true` to [writeImportMapFile](#writeImp
 _jsConfigFile code example:_
 
 ```diff
-import { generateImportMaps } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
-await generateImportMaps({
+await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./project.importmap": {

@@ -8,10 +8,9 @@ import { urlToFileSystemPath } from "@jsenv/filesystem"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageImports = ({
-  packageFileUrl,
-  packageJsonObject,
-  packageImports = packageJsonObject.imports,
-  packageConditions,
+  packageInfo,
+  packageImports = packageInfo.object.imports,
+  nodeResolutionConditions = [],
   warn,
 }) => {
   const importsSubpaths = {}
@@ -21,7 +20,7 @@ export const visitPackageImports = ({
         createSubpathValueMustBeRelativeWarning({
           value,
           valueTrace: trace,
-          packageFileUrl,
+          packageInfo,
         }),
       )
       return
@@ -32,7 +31,7 @@ export const visitPackageImports = ({
     importsSubpaths[keyNormalized] = valueNormalized
   }
 
-  const conditions = [...packageConditions, "default"]
+  const conditions = [...nodeResolutionConditions, "default"]
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     if (typeof subpathValue === "string") {
@@ -85,7 +84,7 @@ export const visitPackageImports = ({
           createSubpathKeysAreMixedWarning({
             subpathValue,
             subpathValueTrace: [...subpathValueTrace, ...conditionTrace],
-            packageFileUrl,
+            packageInfo,
             bareKeys,
             conditionalKeys,
           }),
@@ -128,7 +127,7 @@ export const visitPackageImports = ({
       createSubpathIsUnexpectedWarning({
         subpathValue,
         subpathValueTrace,
-        packageFileUrl,
+        packageInfo,
       }),
     )
     return false
@@ -142,7 +141,7 @@ export const visitPackageImports = ({
 const createSubpathIsUnexpectedWarning = ({
   subpathValue,
   subpathValueTrace,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "IMPORTS_SUBPATH_UNEXPECTED",
@@ -152,14 +151,14 @@ ${subpathValue}
 --- value at ---
 ${subpathValueTrace.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo.url)}`,
   }
 }
 
 const createSubpathKeysAreMixedWarning = ({
   subpathValue,
   subpathValueTrace,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "IMPORTS_SUBPATH_MIXED_KEYS",
@@ -169,14 +168,14 @@ ${JSON.stringify(subpathValue, null, "  ")}
 --- value at ---
 ${subpathValueTrace.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo.url)}`,
   }
 }
 
 const createSubpathValueMustBeRelativeWarning = ({
   value,
   valueTrace,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "IMPORTS_SUBPATH_VALUE_UNEXPECTED",
@@ -186,6 +185,6 @@ ${value}
 --- value at ---
 ${valueTrace.join(".")}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo.url)}`,
   }
 }

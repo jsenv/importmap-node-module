@@ -10,61 +10,21 @@ const magicExtensions = [".js", ".json", ".node"]
 
 export const resolvePackageMain = ({
   warn,
-  packageConditions,
-  packageFileUrl,
-  packageJsonObject,
+  packageInfo,
+  // nodeResolutionConditions = [],
 }) => {
-  // we should remove "module", "browser", "jsenext:main" because Node.js native resolution
-  // ignores them
-  if (packageConditions.includes("import") && "module" in packageJsonObject) {
+  if ("main" in packageInfo.object) {
     return resolveMainFile({
       warn,
-      packageFileUrl,
-      packageMainFieldName: "module",
-      packageMainFieldValue: packageJsonObject.module,
-    })
-  }
-
-  if (
-    packageConditions.includes("import") &&
-    "jsnext:main" in packageJsonObject
-  ) {
-    return resolveMainFile({
-      warn,
-      packageFileUrl,
-      packageMainFieldName: "jsnext:main",
-      packageMainFieldValue: packageJsonObject["jsnext:main"],
-    })
-  }
-
-  if (
-    packageConditions.includes("browser") &&
-    "browser" in packageJsonObject &&
-    // when it's an object it means some files
-    // should be replaced with an other, let's ignore this when we are searching
-    // for the main file
-    typeof packageJsonObject.browser === "string"
-  ) {
-    return resolveMainFile({
-      warn,
-      packageFileUrl,
-      packageMainFieldName: "browser",
-      packageMainFieldValue: packageJsonObject.browser,
-    })
-  }
-
-  if ("main" in packageJsonObject) {
-    return resolveMainFile({
-      warn,
-      packageFileUrl,
+      packageFileUrl: packageInfo.url,
       packageMainFieldName: "main",
-      packageMainFieldValue: packageJsonObject.main,
+      packageMainFieldValue: packageInfo.object.main,
     })
   }
 
   return resolveMainFile({
     warn,
-    packageFileUrl,
+    packageFileUrl: packageInfo.url,
     packageMainFieldName: "default",
     packageMainFieldValue: "index",
   })

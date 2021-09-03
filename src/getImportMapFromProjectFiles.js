@@ -54,28 +54,7 @@ export const getImportMapFromProjectFiles = async ({
 
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
-  const projectPackageFileUrl = resolveUrl(
-    "./package.json",
-    projectDirectoryUrl,
-  )
-  let projectPackageObject
-  try {
-    projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      warn({
-        code: "PROJECT_PACKAGE_FILE_NOT_FOUND",
-        message: createDetailedMessage(
-          `Cannot find project package.json file.`,
-          {
-            "package.json url": projectPackageFileUrl,
-          },
-        ),
-      })
-      return initialImportMap
-    }
-    throw e
-  }
+
 
   // At this point, importmap is relative to the project directory url
   let importMapFromPackageFiles = await getImportMapFromPackageFiles({
