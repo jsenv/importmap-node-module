@@ -35,7 +35,7 @@
     "prettier-check": "npm run prettier-format -- --dry-run",
     "upload-coverage": "node ./script/upload-coverage/upload-coverage.js",
     "build": "node --experimental-import-meta-resolve ./script/build/build.js",
-    "generate-importmap": "node ./script/generate-importmap/generate-importmap.js",
+    "generate-importmap": "node ./script/importmap/generate_importmap.mjs",
     "dist": "npm run build",
     "postinstall": "npm run generate-importmap",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
