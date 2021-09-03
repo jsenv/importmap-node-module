@@ -13,10 +13,10 @@ const testDirectoryUrl = resolveUrl("./dir/", projectDirectoryUrl)
 await removeFileSystemNode(`${testDirectoryUrl}/node_modules/siesta`, {
   allowUseless: true,
 })
-await writeSymbolicLink(
-  `${testDirectoryUrl}/node_modules/siesta`,
-  projectDirectoryUrl,
-)
+await writeSymbolicLink({
+  from: `${testDirectoryUrl}/node_modules/siesta`,
+  to: projectDirectoryUrl,
+})
 
 const warnings = []
 const importmap = await getImportMapFromProjectFiles({
