@@ -77,14 +77,19 @@ const showSourceLocation = (
     const lineSourceTruncated = applyColumnRange(columnRange, lineSource)
     const lineNumberWidth = String(lineNumber).length
     // ensure if line moves from 7,8,9 to 10 the display is still great
-    const lineNumberRightSpacing = " ".repeat(lineNumberMaxWidth - lineNumberWidth)
+    const lineNumberRightSpacing = " ".repeat(
+      lineNumberMaxWidth - lineNumberWidth,
+    )
     const asideSource = `${lineNumber}${lineNumberRightSpacing} |`
     const lineFormatted = `${aside(asideSource)} ${lineSourceTruncated}`
     if (isMainLine) {
       if (column === undefined) {
         return `${mark(">")} ${lineFormatted}`
       }
-      const lineSourceUntilColumn = lineSourceTruncated.slice(0, column - columnRange.start)
+      const lineSourceUntilColumn = lineSourceTruncated.slice(
+        0,
+        column - columnRange.start,
+      )
       const spacing = stringToSpaces(lineSourceUntilColumn)
       const mainLineFormatted = `${mark(">")} ${lineFormatted}
   ${" ".repeat(lineNumberWidth)} ${aside("|")}${spacing}${mark("^")}`
@@ -103,7 +108,9 @@ const applyColumnRange = ({ start, end }, line) => {
     throw new TypeError(`end must be a number, received ${end}`)
   }
   if (end < start) {
-    throw new Error(`end must be greater than start, but ${end} is smaller than ${start}`)
+    throw new Error(
+      `end must be greater than start, but ${end} is smaller than ${start}`,
+    )
   }
 
   const prefix = "…"

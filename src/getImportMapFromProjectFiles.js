@@ -1,6 +1,10 @@
 import { composeTwoImportMaps, sortImportMap } from "@jsenv/importmap"
 import { createLogger, createDetailedMessage } from "@jsenv/logger"
-import { assertAndNormalizeDirectoryUrl, resolveUrl, readFile } from "@jsenv/filesystem"
+import {
+  assertAndNormalizeDirectoryUrl,
+  resolveUrl,
+  readFile,
+} from "@jsenv/filesystem"
 
 import { getImportMapFromJsFiles } from "./internal/from-js/getImportMapFromJsFiles.js"
 import { getImportMapFromPackageFiles } from "./internal/from-package/getImportMapFromPackageFiles.js"
@@ -20,7 +24,9 @@ export const getImportMapFromProjectFiles = async ({
 
   packageConditions = [],
   packageConditionDevelopment = dev,
-  packageConditionFromModuleFormat = packageConditionsFromModuleFormat[moduleFormat],
+  packageConditionFromModuleFormat = packageConditionsFromModuleFormat[
+    moduleFormat
+  ],
   packageConditionFromRuntime = packageConditionsFromRuntime[runtime],
 
   magicExtensions = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
@@ -32,7 +38,9 @@ export const getImportMapFromProjectFiles = async ({
 }) => {
   packageConditions = [
     ...(packageConditionDevelopment ? ["development"] : ["production"]),
-    ...(packageConditionFromModuleFormat ? [packageConditionFromModuleFormat] : []),
+    ...(packageConditionFromModuleFormat
+      ? [packageConditionFromModuleFormat]
+      : []),
     ...(packageConditionFromRuntime ? [packageConditionFromRuntime] : []),
     ...packageConditions,
   ]
@@ -46,7 +54,10 @@ export const getImportMapFromProjectFiles = async ({
 
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl)
 
-  const projectPackageFileUrl = resolveUrl("./package.json", projectDirectoryUrl)
+  const projectPackageFileUrl = resolveUrl(
+    "./package.json",
+    projectDirectoryUrl,
+  )
   let projectPackageObject
   try {
     projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
@@ -54,9 +65,12 @@ export const getImportMapFromProjectFiles = async ({
     if (e.code === "ENOENT") {
       warn({
         code: "PROJECT_PACKAGE_FILE_NOT_FOUND",
-        message: createDetailedMessage(`Cannot find project package.json file.`, {
-          "package.json url": projectPackageFileUrl,
-        }),
+        message: createDetailedMessage(
+          `Cannot find project package.json file.`,
+          {
+            "package.json url": projectPackageFileUrl,
+          },
+        ),
       })
       return initialImportMap
     }

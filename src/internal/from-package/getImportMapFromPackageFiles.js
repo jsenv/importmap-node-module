@@ -1,5 +1,9 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/filesystem"
+import {
+  resolveUrl,
+  urlToRelativeUrl,
+  urlToFileSystemPath,
+} from "@jsenv/filesystem"
 
 import { createPackageNameMustBeAStringWarning } from "../warnings.js"
 
@@ -25,7 +29,9 @@ export const getImportMapFromPackageFiles = async ({
   packagesManualOverrides = {},
   packageIncludedPredicate = () => true,
 }) => {
-  const findNodeModulePackage = createFindNodeModulePackage(packagesManualOverrides)
+  const findNodeModulePackage = createFindNodeModulePackage(
+    packagesManualOverrides,
+  )
 
   const imports = {}
   const scopes = {}
@@ -40,7 +46,9 @@ export const getImportMapFromPackageFiles = async ({
           from: scope,
           to: scope,
         })
-        const packageName = scope.slice(scope.lastIndexOf("node_modules/") + `node_modules/`.length)
+        const packageName = scope.slice(
+          scope.lastIndexOf("node_modules/") + `node_modules/`.length,
+        )
         addMapping({
           scope,
           from: packageName,
@@ -82,7 +90,10 @@ export const getImportMapFromPackageFiles = async ({
     }
   }
   const packageIsSeen = (packageFileUrl, importerPackageFileUrl) => {
-    return packageFileUrl in seen && seen[packageFileUrl].includes(importerPackageFileUrl)
+    return (
+      packageFileUrl in seen &&
+      seen[packageFileUrl].includes(importerPackageFileUrl)
+    )
   }
 
   const visit = async ({
@@ -93,7 +104,13 @@ export const getImportMapFromPackageFiles = async ({
     importerPackageJsonObject,
     includeDevDependencies,
   }) => {
-    if (!packageIncludedPredicate({ packageName, packageFileUrl, packageJsonObject })) {
+    if (
+      !packageIncludedPredicate({
+        packageName,
+        packageFileUrl,
+        packageJsonObject,
+      })
+    ) {
       return
     }
 
@@ -158,7 +175,11 @@ export const getImportMapFromPackageFiles = async ({
       const scope = `./${packageDirectoryRelativeUrl}`
       Object.keys(imports).forEach((from) => {
         const to = imports[from]
-        const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl)
+        const toMoved = moveMappingValue(
+          to,
+          packageFileUrl,
+          projectDirectoryUrl,
+        )
         addMapping({
           scope,
           from,
@@ -167,10 +188,18 @@ export const getImportMapFromPackageFiles = async ({
       })
       Object.keys(scopes).forEach((scope) => {
         const scopeMappings = scopes[scope]
-        const scopeMoved = moveMappingValue(scope, packageFileUrl, projectDirectoryUrl)
+        const scopeMoved = moveMappingValue(
+          scope,
+          packageFileUrl,
+          projectDirectoryUrl,
+        )
         Object.keys(scopeMappings).forEach((key) => {
           const to = scopeMappings[key]
-          const toMoved = moveMappingValue(to, packageFileUrl, projectDirectoryUrl)
+          const toMoved = moveMappingValue(
+            to,
+            packageFileUrl,
+            projectDirectoryUrl,
+          )
           addMapping({
             scope: scopeMoved,
             from: key,
@@ -287,7 +316,8 @@ export const getImportMapFromPackageFiles = async ({
         ) {
           const fromWithouTrailingStar = from.slice(0, -1)
           const toWithoutTrailingStar = to.slice(0, -1)
-          mappingsFromPackageExports[fromWithouTrailingStar] = toWithoutTrailingStar
+          mappingsFromPackageExports[fromWithouTrailingStar] =
+            toWithoutTrailingStar
           return
         }
 
@@ -347,7 +377,10 @@ export const getImportMapFromPackageFiles = async ({
       return
     }
 
-    const mainFileRelativeUrl = urlToRelativeUrl(mainFileUrl, projectDirectoryUrl)
+    const mainFileRelativeUrl = urlToRelativeUrl(
+      mainFileUrl,
+      projectDirectoryUrl,
+    )
     const from = packageName
     const to = `./${mainFileRelativeUrl}`
 
@@ -374,9 +407,12 @@ export const getImportMapFromPackageFiles = async ({
     packageJsonObject,
     includeDevDependencies,
   }) => {
-    const dependencyMap = packageDependenciesFromPackageObject(packageJsonObject, {
-      includeDevDependencies,
-    })
+    const dependencyMap = packageDependenciesFromPackageObject(
+      packageJsonObject,
+      {
+        includeDevDependencies,
+      },
+    )
 
     await Promise.all(
       Object.keys(dependencyMap).map(async (dependencyName) => {
@@ -437,12 +473,19 @@ export const getImportMapFromPackageFiles = async ({
     })
   }
 
-  const computePackageInfo = ({ packageFileUrl, packageName, importerPackageFileUrl }) => {
+  const computePackageInfo = ({
+    packageFileUrl,
+    packageName,
+    importerPackageFileUrl,
+  }) => {
     const importerIsRoot = importerPackageFileUrl === projectPackageFileUrl
 
     const importerPackageDirectoryUrl = resolveUrl("./", importerPackageFileUrl)
 
-    const importerRelativeUrl = urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl)
+    const importerRelativeUrl = urlToRelativeUrl(
+      importerPackageDirectoryUrl,
+      projectDirectoryUrl,
+    )
 
     const packageIsRoot = packageFileUrl === projectPackageFileUrl
 
@@ -450,7 +493,10 @@ export const getImportMapFromPackageFiles = async ({
 
     const packageDirectoryUrlExpected = `${importerPackageDirectoryUrl}node_modules/${packageName}/`
 
-    const packageDirectoryRelativeUrl = urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)
+    const packageDirectoryRelativeUrl = urlToRelativeUrl(
+      packageDirectoryUrl,
+      projectDirectoryUrl,
+    )
 
     return {
       importerIsRoot,
@@ -505,7 +551,10 @@ export const getImportMapFromPackageFiles = async ({
   return optimizeImportMap({ imports, scopes })
 }
 
-const packageDependenciesFromPackageObject = (packageObject, { includeDevDependencies }) => {
+const packageDependenciesFromPackageObject = (
+  packageObject,
+  { includeDevDependencies },
+) => {
   const packageDependencies = {}
 
   const { dependencies = {} } = packageObject
@@ -526,7 +575,8 @@ const packageDependenciesFromPackageObject = (packageObject, { includeDevDepende
       type: "peerDependency",
       versionPattern: peerDependencies[dependencyName],
       isOptional:
-        dependencyName in peerDependenciesMeta && peerDependenciesMeta[dependencyName].optional,
+        dependencyName in peerDependenciesMeta &&
+        peerDependenciesMeta[dependencyName].optional,
     }
   })
 
@@ -561,7 +611,11 @@ const moveMappingValue = (address, from, to) => {
   return `./${relativeUrl}`
 }
 
-const createExportsWildcardIgnoredWarning = ({ key, value, packageFileUrl }) => {
+const createExportsWildcardIgnoredWarning = ({
+  key,
+  value,
+  packageFileUrl,
+}) => {
   return {
     code: "EXPORTS_WILDCARD",
     message: `Ignoring export using "*" because it is not supported by importmap.
@@ -576,7 +630,11 @@ https://github.com/WICG/import-maps/issues/232`,
   }
 }
 
-const createCannotFindPackageWarning = ({ dependencyName, dependencyInfo, packageFileUrl }) => {
+const createCannotFindPackageWarning = ({
+  dependencyName,
+  dependencyInfo,
+  packageFileUrl,
+}) => {
   const dependencyIsOptional = dependencyInfo.isOptional
   const dependencyType = dependencyInfo.type
   const dependencyVersionPattern = dependencyInfo.versionPattern

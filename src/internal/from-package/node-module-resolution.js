@@ -2,21 +2,32 @@ import { firstOperationMatching } from "@jsenv/cancellation"
 import { urlToRelativeUrl, resolveUrl } from "@jsenv/filesystem"
 
 import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js"
-import { readPackageFile, PACKAGE_NOT_FOUND, PACKAGE_WITH_SYNTAX_ERROR } from "./readPackageFile.js"
+import {
+  readPackageFile,
+  PACKAGE_NOT_FOUND,
+  PACKAGE_WITH_SYNTAX_ERROR,
+} from "./readPackageFile.js"
 
 export const createFindNodeModulePackage = (packagesManualOverrides) => {
-  const readPackageFileMemoized = memoizeAsyncFunctionByUrl((packageFileUrl) => {
-    return readPackageFile(packageFileUrl, packagesManualOverrides)
-  })
+  const readPackageFileMemoized = memoizeAsyncFunctionByUrl(
+    (packageFileUrl) => {
+      return readPackageFile(packageFileUrl, packagesManualOverrides)
+    },
+  )
 
   return ({ projectDirectoryUrl, packageFileUrl, dependencyName }) => {
-    const nodeModuleCandidates = getNodeModuleCandidates(packageFileUrl, projectDirectoryUrl)
+    const nodeModuleCandidates = getNodeModuleCandidates(
+      packageFileUrl,
+      projectDirectoryUrl,
+    )
 
     return firstOperationMatching({
       array: nodeModuleCandidates,
       start: async (nodeModuleCandidate) => {
         const packageFileUrlCandidate = `${projectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`
-        const packageObjectCandidate = await readPackageFileMemoized(packageFileUrlCandidate)
+        const packageObjectCandidate = await readPackageFileMemoized(
+          packageFileUrlCandidate,
+        )
         return {
           packageFileUrl: packageFileUrlCandidate,
           packageJsonObject: packageObjectCandidate,
@@ -37,9 +48,13 @@ const getNodeModuleCandidates = (fileUrl, projectDirectoryUrl) => {
     return [`node_modules/`]
   }
 
-  const fileDirectoryRelativeUrl = urlToRelativeUrl(fileDirectoryUrl, projectDirectoryUrl)
+  const fileDirectoryRelativeUrl = urlToRelativeUrl(
+    fileDirectoryUrl,
+    projectDirectoryUrl,
+  )
   const candidates = []
-  const relativeNodeModuleDirectoryArray = fileDirectoryRelativeUrl.split("node_modules/")
+  const relativeNodeModuleDirectoryArray =
+    fileDirectoryRelativeUrl.split("node_modules/")
   // remove the first empty string
   relativeNodeModuleDirectoryArray.shift()
 

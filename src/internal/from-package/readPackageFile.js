@@ -4,7 +4,10 @@ import { applyPackageManualOverride } from "./applyPackageManualOverride.js"
 export const PACKAGE_NOT_FOUND = {}
 export const PACKAGE_WITH_SYNTAX_ERROR = {}
 
-export const readPackageFile = async (packageFileUrl, packagesManualOverrides) => {
+export const readPackageFile = async (
+  packageFileUrl,
+  packagesManualOverrides,
+) => {
   try {
     const packageObject = await readFile(packageFileUrl, { as: "json" })
     return applyPackageManualOverride(packageObject, packagesManualOverrides)
@@ -14,7 +17,9 @@ export const readPackageFile = async (packageFileUrl, packagesManualOverrides) =
     }
 
     if (e.name === "SyntaxError") {
-      console.error(formatPackageSyntaxErrorLog({ syntaxError: e, packageFileUrl }))
+      console.error(
+        formatPackageSyntaxErrorLog({ syntaxError: e, packageFileUrl }),
+      )
       return PACKAGE_WITH_SYNTAX_ERROR
     }
 

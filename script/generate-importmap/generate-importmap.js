@@ -1,5 +1,11 @@
-import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
-import { projectDirectoryUrl, importMapFileRelativeUrl } from "../../jsenv.config.js"
+import {
+  getImportMapFromProjectFiles,
+  writeImportMapFile,
+} from "@jsenv/importmap-node-module"
+import {
+  projectDirectoryUrl,
+  importMapFileRelativeUrl,
+} from "../../jsenv.config.js"
 
 writeImportMapFile(
   [

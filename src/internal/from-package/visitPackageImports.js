@@ -139,7 +139,11 @@ export const visitPackageImports = ({
   return importsSubpaths
 }
 
-const createSubpathIsUnexpectedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
+const createSubpathIsUnexpectedWarning = ({
+  subpathValue,
+  subpathValueTrace,
+  packageFileUrl,
+}) => {
   return {
     code: "IMPORTS_SUBPATH_UNEXPECTED",
     message: `unexpected subpath in package.json imports: value must be an object or a string.
@@ -152,7 +156,11 @@ ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createSubpathKeysAreMixedWarning = ({ subpathValue, subpathValueTrace, packageFileUrl }) => {
+const createSubpathKeysAreMixedWarning = ({
+  subpathValue,
+  subpathValueTrace,
+  packageFileUrl,
+}) => {
   return {
     code: "IMPORTS_SUBPATH_MIXED_KEYS",
     message: `unexpected subpath keys in package.json imports: cannot mix bare and conditional keys.
@@ -165,7 +173,11 @@ ${urlToFileSystemPath(packageFileUrl)}`,
   }
 }
 
-const createSubpathValueMustBeRelativeWarning = ({ value, valueTrace, packageFileUrl }) => {
+const createSubpathValueMustBeRelativeWarning = ({
+  value,
+  valueTrace,
+  packageFileUrl,
+}) => {
   return {
     code: "IMPORTS_SUBPATH_VALUE_UNEXPECTED",
     message: `unexpected subpath value in package.json imports: value must be relative to package

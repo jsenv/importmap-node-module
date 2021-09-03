@@ -1,14 +1,19 @@
-export const applyPackageManualOverride = (packageObject, packagesManualOverrides) => {
+export const applyPackageManualOverride = (
+  packageObject,
+  packagesManualOverrides,
+) => {
   const { name, version } = packageObject
-  const overrideKey = Object.keys(packagesManualOverrides).find((overrideKeyCandidate) => {
-    if (name === overrideKeyCandidate) {
-      return true
-    }
-    if (`${name}@${version}` === overrideKeyCandidate) {
-      return true
-    }
-    return false
-  })
+  const overrideKey = Object.keys(packagesManualOverrides).find(
+    (overrideKeyCandidate) => {
+      if (name === overrideKeyCandidate) {
+        return true
+      }
+      if (`${name}@${version}` === overrideKeyCandidate) {
+        return true
+      }
+      return false
+    },
+  )
   if (overrideKey) {
     return composeObject(packageObject, packagesManualOverrides[overrideKey])
   }
@@ -22,7 +27,11 @@ const composeObject = (leftObject, rightObject) => {
   Object.keys(rightObject).forEach((key) => {
     const rightValue = rightObject[key]
 
-    if (rightValue === null || typeof rightValue !== "object" || key in leftObject === false) {
+    if (
+      rightValue === null ||
+      typeof rightValue !== "object" ||
+      key in leftObject === false
+    ) {
       composedObject[key] = rightValue
     } else {
       const leftValue = leftObject[key]

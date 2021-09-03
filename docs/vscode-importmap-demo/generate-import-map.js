@@ -1,4 +1,7 @@
-import { getImportMapFromProjectFiles, writeImportMapFile } from "@jsenv/importmap-node-module"
+import {
+  getImportMapFromProjectFiles,
+  writeImportMapFile,
+} from "@jsenv/importmap-node-module"
 
 const projectDirectoryUrl = String(new URL("./", import.meta.url))
 

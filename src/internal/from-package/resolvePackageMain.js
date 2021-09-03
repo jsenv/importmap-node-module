@@ -1,5 +1,9 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, urlToFileSystemPath, urlToExtension } from "@jsenv/filesystem"
+import {
+  resolveUrl,
+  urlToFileSystemPath,
+  urlToExtension,
+} from "@jsenv/filesystem"
 import { resolveFile } from "../resolveFile.js"
 
 const magicExtensions = [".js", ".json", ".node"]
@@ -21,7 +25,10 @@ export const resolvePackageMain = ({
     })
   }
 
-  if (packageConditions.includes("import") && "jsnext:main" in packageJsonObject) {
+  if (
+    packageConditions.includes("import") &&
+    "jsnext:main" in packageJsonObject
+  ) {
     return resolveMainFile({
       warn,
       packageFileUrl,
@@ -80,7 +87,10 @@ const resolveMainFile = async ({
     ? `${packageMainFieldValue}index`
     : packageMainFieldValue
 
-  const mainFileUrlFirstCandidate = resolveUrl(mainFileRelativeUrl, packageFileUrl)
+  const mainFileUrlFirstCandidate = resolveUrl(
+    mainFileRelativeUrl,
+    packageFileUrl,
+  )
 
   if (!mainFileUrlFirstCandidate.startsWith(packageDirectoryUrl)) {
     warn(
@@ -143,12 +153,15 @@ const createPackageMainFileNotFoundWarning = ({
 }) => {
   return {
     code: "PACKAGE_MAIN_FILE_NOT_FOUND",
-    message: createDetailedMessage(`Cannot find package main file "${specifier}"`, {
-      "imported in": importedIn,
-      "file url tried": fileUrl,
-      ...(urlToExtension(fileUrl) === ""
-        ? { ["extensions tried"]: magicExtensions.join(`, `) }
-        : {}),
-    }),
+    message: createDetailedMessage(
+      `Cannot find package main file "${specifier}"`,
+      {
+        "imported in": importedIn,
+        "file url tried": fileUrl,
+        ...(urlToExtension(fileUrl) === ""
+          ? { ["extensions tried"]: magicExtensions.join(`, `) }
+          : {}),
+      },
+    ),
   }
 }

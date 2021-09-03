@@ -1,5 +1,9 @@
 import { createRequire } from "module"
-import { readFile, urlToFileSystemPath, urlToExtension } from "@jsenv/filesystem"
+import {
+  readFile,
+  urlToFileSystemPath,
+  urlToExtension,
+} from "@jsenv/filesystem"
 
 const require = createRequire(import.meta.url)
 
@@ -10,7 +14,10 @@ export const parseSpecifiersFromFile = async (
   fileUrl,
   { fileContent, jsFilesParsingOptions } = {},
 ) => {
-  fileContent = fileContent === undefined ? await readFile(fileUrl, { as: "string" }) : fileContent
+  fileContent =
+    fileContent === undefined
+      ? await readFile(fileUrl, { as: "string" })
+      : fileContent
 
   const fileExtension = urlToExtension(fileUrl)
 
