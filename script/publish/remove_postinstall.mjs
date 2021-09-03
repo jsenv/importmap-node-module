@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs"
+import { readFileSync, writeFileSync } from "node:fs"
 
 const PACKAGE_URL = new URL("../../package.json", import.meta.url)
 const PACKAGE_CACHED_URL = new URL("../../package-cached.json", import.meta.url)

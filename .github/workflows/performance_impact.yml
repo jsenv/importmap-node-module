@@ -1,0 +1,43 @@
+# This is a GitHub workflow YAML file
+# see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+#
+# If you want to update this file it's recommended to use a YAML validator
+# https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml
+# configured to validate with https://json.schemastore.org/github-workflow.json
+#
+# For every push on a pull request, it
+# - starts a machine on ubuntu
+# - clone the git repository
+# - install node, install npm deps
+# - Executes report_performance_impact.mjs
+# Read more in https://github.com/jsenv/performance-impact
+
+name: performance_impact
+
+on: pull_request_target
+
+jobs:
+  performance_impact:
+    # Explicit OS version (ubuntu-20.04 instead of ubuntu-latest)
+    # to make build more predictable
+    runs-on: ubuntu-20.04
+    name: performance impact
+    env:
+      CI: true
+    steps:
+      - name: Setup git
+        # "checkout@v2" documentation available at https://github.com/actions/checkout
+        uses: actions/checkout@v2
+      - name: Setup node ${{ matrix.node }}
+        # "setup-node@v1" documentation available at https://github.com/actions/setup-node
+        uses: actions/setup-node@v1
+        with:
+          # Explicit node version ("16.6.1" instead of "lts")
+          # to make build more predictable
+          node-version: "16.6.1"
+      - name: Setup npm
+        run: npm install
+      - name: Report performance impact
+        run: node ./.github/workflows/performance_impact/report_performance_impact.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

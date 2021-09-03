@@ -10,7 +10,7 @@ import {
   writeImportMapFile,
 } from "@jsenv/importmap-node-module"
 
-import { projectDirectoryUrl } from "../../jsenv.config.js"
+import { projectDirectoryUrl } from "../../jsenv.config.mjs"
 
 await writeImportMapFile(
   [

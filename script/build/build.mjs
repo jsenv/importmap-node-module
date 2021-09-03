@@ -1,7 +1,8 @@
 import { buildProject, getBabelPluginMapForNode } from "@jsenv/core"
-import * as jsenvConfig from "../../jsenv.config.js"
 
-buildProject({
+import * as jsenvConfig from "../../jsenv.config.mjs"
+
+await buildProject({
   ...jsenvConfig,
   buildDirectoryRelativeUrl: "./dist/commonjs/",
   format: "commonjs",
