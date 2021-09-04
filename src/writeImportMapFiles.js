@@ -17,6 +17,7 @@ export const writeImportMapFiles = async ({
   logLevel,
   projectDirectoryUrl,
   importMapFiles,
+  packagesManualOverrides,
   onWarn = (warning, warn) => {
     warn(warning)
   },
@@ -87,6 +88,7 @@ export const writeImportMapFiles = async ({
       warn,
       projectDirectoryUrl,
       visitors: nodeResolutionVisitors,
+      packagesManualOverrides,
     })
   }
 

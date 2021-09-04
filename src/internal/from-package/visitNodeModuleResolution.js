@@ -23,6 +23,7 @@ export const visitNodeModuleResolution = async ({
   warn,
   projectDirectoryUrl,
   visitors,
+  packagesManualOverrides,
 }) => {
   const projectPackageFileUrl = resolveUrl(
     "./package.json",
@@ -449,6 +450,7 @@ export const visitNodeModuleResolution = async ({
       projectDirectoryUrl,
       packageFileUrl,
       dependencyName,
+      packagesManualOverrides,
     })
     dependenciesCache[packageFileUrl][dependencyName] = dependencyPromise
     return dependencyPromise

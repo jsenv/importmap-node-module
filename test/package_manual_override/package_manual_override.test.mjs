@@ -1,12 +1,19 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/filesystem"
 
-import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const actual = await getImportMapFromProjectFiles({
+const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
+  importMapFiles: {
+    "test.importmap": {
+      mappingsForNodeResolution: true,
+      mappingsTreeshaking: true,
+      ignoreJsFiles: true,
+    },
+  },
   packagesManualOverrides: {
     bar: {
       exports: {
@@ -15,8 +22,10 @@ const actual = await getImportMapFromProjectFiles({
       },
     },
   },
-  jsFilesParsing: false,
+  writeFiles: false,
 })
+
+const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
     "root/": "./",
