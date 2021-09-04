@@ -1,15 +1,23 @@
 import { resolveImport, normalizeImportMap } from "@jsenv/importmap"
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/filesystem"
-import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
+
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const importMap = await getImportMapFromProjectFiles({
+const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
-  jsFilesParsing: false,
+  importMapFiles: {
+    "test.importmap": {
+      mappingsForNodeResolution: true,
+      mappingsTreeshaking: true,
+      ignoreJsFiles: true,
+    },
+  },
+  writeFiles: false,
 })
-const actual = importMap
+const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
     "root/": "./",
@@ -31,7 +39,7 @@ const expected = {
 }
 assert({ actual, expected })
 
-const importMapNormalized = normalizeImportMap(importMap, "http://example.com")
+const importMapNormalized = normalizeImportMap(actual, "http://example.com")
 // import 'bar' inside project
 {
   const actual = resolveImport({
