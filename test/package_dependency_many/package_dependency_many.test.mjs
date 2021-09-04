@@ -11,7 +11,7 @@ const importmaps = await writeImportMapFiles({
     "test.importmap": {
       mappingsForNodeResolution: true,
       mappingsTreeshaking: true,
-      ignoreSourceFiles: true,
+      ignoreJsFiles: true,
     },
   },
   writeFiles: false,
@@ -19,18 +19,23 @@ const importmaps = await writeImportMapFiles({
 const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
+    "@dmail/yo/": "./node_modules/@dmail/yo/",
+    "@dmail/yo": "./node_modules/@dmail/yo/index.js",
     "root/": "./",
+    "bar/": "./node_modules/bar/",
+    "foo/": "./node_modules/foo/",
     "root": "./index.js",
+    "bar": "./node_modules/bar/bar.js",
     "foo": "./node_modules/foo/foo.js",
   },
   scopes: {
-    "./node_modules/bar/": {
-      "bar/": "./node_modules/bar/",
-      "bar": "./node_modules/bar/bar.js",
+    "./node_modules/foo/node_modules/bar/": {
+      "bar/": "./node_modules/foo/node_modules/bar/",
+      "bar": "./node_modules/foo/node_modules/bar/index.js",
     },
     "./node_modules/foo/": {
-      "foo/": "./node_modules/foo/",
-      "bar": "./node_modules/bar/bar.js",
+      "bar/": "./node_modules/foo/node_modules/bar/",
+      "bar": "./node_modules/foo/node_modules/bar/index.js",
     },
   },
 }
