@@ -1,0 +1,8 @@
+{
+  "name": "root",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "foo": "*"
+  }
+}
