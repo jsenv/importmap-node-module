@@ -1,26 +1,37 @@
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/filesystem"
-import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
+
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
 const warnings = []
-const importMap = await getImportMapFromProjectFiles({
+const importmaps = await writeImportMapFiles({
   logLevel: "off",
   projectDirectoryUrl: testDirectoryUrl,
+  importMapFiles: {
+    "test.importmap": {
+      mappingsForNodeResolution: true,
+      mappingsTreeshaking: true,
+    },
+  },
   onWarn: (warning) => {
     warnings.push(warning)
   },
+  writeFiles: false,
+  
 })
 const actual = {
   warnings,
-  importMap,
+  importmaps,
 }
 const expected = {
   warnings: [],
-  importMap: {
-    imports: {},
-    scopes: {},
+  importmaps: {
+    "test.importmap": {
+      imports: {},
+      scopes: {},
+    },
   },
 }
 assert({ actual, expected })

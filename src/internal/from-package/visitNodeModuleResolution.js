@@ -459,19 +459,17 @@ export const visitNodeModuleResolution = async ({
     projectPackageObject = await readFile(projectPackageFileUrl, { as: "json" })
   } catch (e) {
     if (e.code === "ENOENT") {
-      warn({
-        code: "PROJECT_PACKAGE_FILE_NOT_FOUND",
-        message: createDetailedMessage(
-          `Cannot find project package.json file.`,
-          {
-            "package.json url": projectPackageFileUrl,
-          },
-        ),
-      })
-      return
+      const error = new Error(
+        createDetailedMessage(`Cannot find project package.json file.`, {
+          "package.json url": projectPackageFileUrl,
+        }),
+      )
+      error.code = "PROJECT_PACKAGE_FILE_NOT_FOUND"
+      throw error
     }
     throw e
   }
+
   const importerPackageFileUrl = projectPackageFileUrl
   markPackageAsSeen(projectPackageFileUrl, importerPackageFileUrl)
   await visit({
