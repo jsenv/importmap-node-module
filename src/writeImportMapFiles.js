@@ -100,18 +100,35 @@ export const writeImportMapFiles = async ({
     async (previous, importMapFileRelativeUrl) => {
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
       const {
-        mappingsTreeshaking,
+        checkImportResolution,
+        mappingsForImportsWithoutExtension,
+        removeUnusedMappings,
+        magicExtensions,
         runtime = "browser",
-        ignoreJsFiles,
       } = importMapConfig
-      if (!ignoreJsFiles) {
+
+      if (
+        checkImportResolution ||
+        mappingsForImportsWithoutExtension ||
+        removeUnusedMappings
+      ) {
+        if (!removeUnusedMappings) {
+          // warn that it cannot be disabled when mappingsForImportsWithoutExtension or removeUnusedMappings
+          // is used
+        }
+        if (mappingsForImportsWithoutExtension && !magicExtensions) {
+          // warn that magicExtensions is required
+        }
+
         const importMap = await visitSourceFiles({
           logger,
           warn,
           projectDirectoryUrl,
           importMap: importMaps[importMapFileRelativeUrl],
+          mappingsForImportsWithoutExtension,
+          magicExtensions,
+          removeUnusedMappings,
           runtime,
-          mappingsTreeshaking,
         })
         importMaps[importMapFileRelativeUrl] = importMap
       }

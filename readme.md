@@ -34,7 +34,6 @@ await writeImportMapFiles({
   importMapFiles: {
     "./project.importmap": {
       mappingsForNodeResolution: true,
-      packageUserConditions: ["development"],
     },
   },
 })
@@ -83,10 +82,12 @@ await writeImportMapFiles({
     "./importmap_for_dev.importmap": {
       mappingsForNodeResolution: true,
       mappingsForDevDependencies: true,
+      checkImportResolution: true,
     },
     "./importmap_for_prod.importmap": {
       mappingsForNodeResolution: true,
-      mappingsTreeshaking: true,
+      checkImportResolution: true,
+      removeUnusedMappings: true,
     },
   },
 })
@@ -100,25 +101,9 @@ _projectDirectoryUrl_ parameter is a string url leading to a folder with a _pack
 
 _importMapFiles_ parameter is an object where keys are importmap file relative urls and values are parameters controlling the mappings that will be written in the importmap file.
 
-## mappingsForNodeResolution
-
-When _mappingsForNodeResolution_ is enabled, the mappings required to implement node module resolution will added to the importmap.
-The following source of information are used to create complete and coherent mappings in the importmap.
-
-- Your _package.json_
-- All dependencies declared in _package.json_ are searched into _node_modules_, recursively.
-- In every _package.json_, `"main"`, `"exports"` and `"imports"` field.
-- All static and dynamic import found in files, recursively.
-
-> Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
-
-## mappingsForDevDependencies
-
-When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
-
 ## initialImportMap
 
-_initialImportMap_ parameter is an importMap object that can be used to provide initial mappings that will be put in the resulting importmap file.
+_initialImportMap_ parameter is an importMap object that can be used to provide initial mappings.
 This parameter is optional and by default it's an empty object.
 
 ```js
@@ -133,7 +118,51 @@ await writeImportMapFiles({
           "#env": "./env.js",
         },
       },
-      mappingsForNodeResolution: true,
+    },
+  },
+})
+```
+
+## mappingsForNodeResolution
+
+When _mappingsForNodeResolution_ is enabled, the mappings required to implement node module resolution are generated.
+The following source of information are used to create complete and coherent mappings in the importmap.
+
+- Your _package.json_
+- All dependencies declared in _package.json_ are searched into _node_modules_, recursively.
+- In every _package.json_, `"main"`, `"exports"` and `"imports"` field.
+
+> Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
+
+## mappingsForDevDependencies
+
+When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
+
+## checkImportResolution
+
+_checkImportResolution_ parameter is a boolean controlling if script tries to resolve all import found in your js files using the importmap. When import are not resolved a warning is logged in the terminal.
+
+## removeUnusedMappings
+
+_removeUnusedMappings_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
+
+During development, you can start or stop using a mapping often so it's convenient to have all mappings.
+
+In production you likely want to keep only the mappings actually used by your js files. In that case enable removeUnusedMappings: it will drastically decrease the importmap file size.
+
+## mappingsForImportsWithoutExtension
+
+_mappingsForImportsWithoutExtension_ parameter is a boolean controlling if mappings are generated for import(s) without extension found in your js files. Should be combined with _magicExtensions_ as shown in the code below.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      mappingsForImportsWithoutExtension: true,
+      magicExtensions: [".ts", ".tsx"],
     },
   },
 })
@@ -183,14 +212,6 @@ await writeImportMapFiles({
   },
 })
 ```
-
-## mappingsTreeshaking
-
-_mappingsTreeshaking_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
-
-When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as _dev_ parameter is disabled.
-
-When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap.
 
 # Custom node module resolution
 
