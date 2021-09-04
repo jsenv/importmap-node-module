@@ -308,7 +308,7 @@ export const visitNodeModuleResolution = async ({
           warn,
           packageInfo,
           projectDirectoryUrl,
-          nodeResolutionConditions: visitor.nodeResolutionConditions,
+          packageConditions: visitor.packageConditions,
         })
 
         const mappingsFromPackageImports = {}
@@ -328,7 +328,7 @@ export const visitNodeModuleResolution = async ({
           projectDirectoryUrl,
           warn,
           packageInfo,
-          nodeResolutionConditions: visitor.nodeResolutionConditions,
+          packageConditions: visitor.packageConditions,
         })
         const mappingsFromPackageExports = {}
         Object.keys(packageExports).forEach((from) => {

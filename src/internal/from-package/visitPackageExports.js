@@ -17,7 +17,7 @@ export const visitPackageExports = ({
   packageInfo,
   packageExports = packageInfo.object.exports,
   packageName = packageInfo.name,
-  nodeResolutionConditions = [],
+  packageConditions,
 }) => {
   const exportsSubpaths = {}
   const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
@@ -44,8 +44,6 @@ export const visitPackageExports = ({
     )
     exportsSubpaths[keyNormalized] = valueNormalized
   }
-
-  const conditions = [...nodeResolutionConditions, "default"]
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     // false is allowed as alternative to exports: {}
@@ -132,7 +130,7 @@ export const visitPackageExports = ({
 
       // there is a condition, keep the first one leading to something
       return conditionalKeys.some((keyCandidate) => {
-        if (!conditions.includes(keyCandidate)) {
+        if (!packageConditions.includes(keyCandidate)) {
           return false
         }
         const valueCandidate = subpathValue[keyCandidate]

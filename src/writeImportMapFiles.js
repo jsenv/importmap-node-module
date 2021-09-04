@@ -60,13 +60,17 @@ export const writeImportMapFiles = async ({
     const {
       mappingsForNodeResolution,
       mappingsForDevDependencies,
-      nodeResolutionConditions,
+      packageUserConditions,
       packageIncludedPredicate,
+      runtime = "browser",
     } = importMapConfig
     if (mappingsForNodeResolution) {
       nodeResolutionVisitors.push({
         mappingsForDevDependencies,
-        nodeResolutionConditions,
+        packageConditions: packageConditionsFromPackageUserConditions({
+          runtime,
+          packageUserConditions,
+        }),
         packageIncludedPredicate,
         onMapping: ({ scope, from, to }) => {
           if (scope) {
@@ -95,13 +99,18 @@ export const writeImportMapFiles = async ({
   await importMapFileRelativeUrls.reduce(
     async (previous, importMapFileRelativeUrl) => {
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
-      const { mappingsTreeshaking, ignoreJsFiles } = importMapConfig
+      const {
+        mappingsTreeshaking,
+        runtime = "browser",
+        ignoreJsFiles,
+      } = importMapConfig
       if (!ignoreJsFiles) {
         const importMap = await visitSourceFiles({
           logger,
           warn,
           projectDirectoryUrl,
           importMap: importMaps[importMapFileRelativeUrl],
+          runtime,
           mappingsTreeshaking,
         })
         importMaps[importMapFileRelativeUrl] = importMap
@@ -159,6 +168,31 @@ export const writeImportMapFiles = async ({
   }
 
   return importMaps
+}
+
+const packageConditionsFromPackageUserConditions = ({
+  runtime,
+  packageUserConditions,
+}) => {
+  if (typeof packageUserConditions === "undefined") {
+    return ["import", runtime, "default"]
+  }
+
+  if (!Array.isArray(packageUserConditions)) {
+    throw new TypeError(
+      `packageUserConditions must be an array, got ${packageUserConditions}`,
+    )
+  }
+
+  packageUserConditions.forEach((userCondition) => {
+    if (typeof userCondition !== "string") {
+      throw new TypeError(
+        `user condition must be a string, got ${userCondition}`,
+      )
+    }
+  })
+
+  return [...packageUserConditions, "import", runtime, "default"]
 }
 
 const wrapWarnToWarnOnce = (warn) => {

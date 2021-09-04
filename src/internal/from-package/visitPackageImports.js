@@ -8,10 +8,10 @@ import { urlToFileSystemPath } from "@jsenv/filesystem"
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageImports = ({
+  warn,
   packageInfo,
   packageImports = packageInfo.object.imports,
-  nodeResolutionConditions = [],
-  warn,
+  packageConditions,
 }) => {
   const importsSubpaths = {}
   const onImportsSubpath = ({ key, value, trace }) => {
@@ -30,8 +30,6 @@ export const visitPackageImports = ({
     const valueNormalized = value
     importsSubpaths[keyNormalized] = valueNormalized
   }
-
-  const conditions = [...nodeResolutionConditions, "default"]
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     if (typeof subpathValue === "string") {
@@ -107,7 +105,7 @@ export const visitPackageImports = ({
 
       // there is a condition, keep the first one leading to something
       return conditionalKeys.some((keyCandidate) => {
-        if (!conditions.includes(keyCandidate)) {
+        if (!packageConditions.includes(keyCandidate)) {
           return false
         }
         const valueCandidate = subpathValue[keyCandidate]

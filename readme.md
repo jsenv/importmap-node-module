@@ -34,7 +34,7 @@ await writeImportMapFiles({
   importMapFiles: {
     "./project.importmap": {
       mappingsForNodeResolution: true,
-      nodeResolutionConditions: ["development"],
+      packageUserConditions: ["development"],
     },
   },
 })
@@ -82,12 +82,10 @@ await writeImportMapFiles({
   importMapFiles: {
     "./importmap_for_dev.importmap": {
       mappingsForNodeResolution: true,
-      nodeResolutionConditions: ["development"],
       mappingsForDevDependencies: true,
     },
     "./importmap_for_prod.importmap": {
       mappingsForNodeResolution: true,
-      nodeResolutionConditions: ["production"],
       mappingsTreeshaking: true,
     },
   },
@@ -114,39 +112,9 @@ The following source of information are used to create complete and coherent map
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
-## nodeResolutionConditions
-
-Controls which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
-
-```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./browser_dev.importmap": {
-      mappingsForNodeResolution: true,
-      nodeResolutionConditions: ["browser", "development"],
-    },
-    "./node_prod.importmap": {
-      mappingsForNodeResolution: true,
-      nodeResolutionConditions: ["node", "production"],
-    },
-  },
-})
-```
-
 ## mappingsForDevDependencies
 
 When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
-
-## mappingsTreeshaking
-
-_mappingsTreeshaking_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
-
-When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as _dev_ parameter is disabled.
-
-When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap.
 
 ## initialImportMap
 
@@ -166,11 +134,63 @@ await writeImportMapFiles({
         },
       },
       mappingsForNodeResolution: true,
-      nodeResolutionConditions: ["browser", "development"],
     },
   },
 })
 ```
+
+## runtime
+
+A string parameter indicating where the importmap will be used. The default runtime is `"browser"`.
+The runtime is used to determine which what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./browser.importmap": {
+      mappingsForNodeResolution: true,
+      runtime: "browser",
+    },
+    "./node.importmap": {
+      mappingsForNodeResolution: true,
+      runtime: "node",
+    },
+  },
+})
+```
+
+## packageUserConditions
+
+Controls which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./dev.importmap": {
+      mappingsForNodeResolution: true,
+      packageUserConditions: ["development"],
+    },
+    "./prod.importmap": {
+      mappingsForNodeResolution: true,
+      packageUserConditions: ["production"],
+    },
+  },
+})
+```
+
+## mappingsTreeshaking
+
+_mappingsTreeshaking_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
+
+When enabled, only the mappings actually used by your files will be generated. It will drastically decrease the importmap file size. This is the default behaviour as long as _dev_ parameter is disabled.
+
+When disabled, all mappings needed for node _esm module resolution_ will be generated. During development, you can start/stop using a mapping at any time. In that case it's more convenient to keep unused mappings in the generated importmap.
 
 # Custom node module resolution
 
