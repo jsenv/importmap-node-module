@@ -1,15 +1,25 @@
 import { normalizeImportMap, resolveImport } from "@jsenv/importmap"
 import { resolveUrl } from "@jsenv/filesystem"
 import { assert } from "@jsenv/assert"
-import { getImportMapFromProjectFiles } from "@jsenv/importmap-node-module"
+
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const importMap = await getImportMapFromProjectFiles({
+const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
+  importMapFiles: {
+    "test.importmap": {
+      mappingsForNodeResolution: true,
+      mappingsTreeshaking: true,
+    },
+  },
+  writeFiles: false,
 })
+const importmap = importmaps["test.importmap"]
+
 {
-  const actual = importMap
+  const actual = importmap
   const expected = {
     imports: {
       "lume-fake": "./node_modules/lume-fake/lume.js",
@@ -27,7 +37,7 @@ const importMap = await getImportMapFromProjectFiles({
 
 {
   const importMapNormalized = normalizeImportMap(
-    importMap,
+    importmap,
     "http://example.com",
   )
   const actual = resolveImport({
