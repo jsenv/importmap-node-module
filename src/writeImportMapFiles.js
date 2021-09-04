@@ -60,11 +60,13 @@ export const writeImportMapFiles = async ({
       mappingsForNodeResolution,
       mappingsForDevDependencies,
       nodeResolutionConditions,
+      packageIncludedPredicate,
     } = importMapConfig
     if (mappingsForNodeResolution) {
       nodeResolutionVisitors.push({
         mappingsForDevDependencies,
         nodeResolutionConditions,
+        packageIncludedPredicate,
         onMapping: ({ scope, from, to }) => {
           if (scope) {
             scopedMappings[scope] = {
