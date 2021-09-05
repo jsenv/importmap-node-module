@@ -12,14 +12,14 @@ const importmaps = await writeImportMapFiles({
   importMapFiles: {
     "test.importmap": {
       mappingsForNodeResolution: true,
-      mappingsTreeshaking: true,
+      removeUnusedMappings: true,
     },
   },
   onWarn: (warning) => {
     warnings.push(warning)
   },
   writeFiles: false,
-  
+
 })
 const actual = {
   warnings,

@@ -16,7 +16,7 @@ const importMaps = await writeImportMapFiles({
         },
       },
       mappingsForNodeResolution: true,
-      mappingsTreeshaking: true,
+      removeUnusedMappings: true,
     },
   },
   onWarn: (warning) => {

@@ -42,7 +42,7 @@ there is no mapping for this bare specifier
 --- suggestion 1 ---
 update import specifier to "./file.js"
 --- suggestion 2 ---
-enable "bareSpecifierAutomapping"
+use bareSpecifierAutomapping: true
 --- suggestion 3 ---
 add mapping to "initialImportMap"
 {

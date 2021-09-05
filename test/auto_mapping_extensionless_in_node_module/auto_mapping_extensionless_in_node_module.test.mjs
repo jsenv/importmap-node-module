@@ -44,7 +44,7 @@ file not found on filesystem
 --- suggestion 1 ---
 update import specifier to "./file.js"
 --- suggestion 2 ---
-enable "extensionlessAutomapping"
+use extensionlessAutomapping: true
 --- suggestion 3 ---
 add mapping to "initialImportMap"
 {
