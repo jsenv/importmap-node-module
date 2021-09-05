@@ -2,8 +2,8 @@
   "name": "whatever",
   "exports": {
     ".": {
-      "import": "./main.mjs",
-      "require": "./main-2.cjs"
+      "require": "./main-2.cjs",
+      "import": "./main.mjs"
     }
   },
   "main": "./main.cjs"
