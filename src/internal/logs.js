@@ -77,7 +77,7 @@ const getImportResolutionFailedSuggestions = ({
   const suggestions = {}
 
   const addSuggestion = (suggestion) => {
-    const suggestionCount = Object.keys(suggestions.length)
+    const suggestionCount = Object.keys(suggestions).length
     suggestions[`suggestion ${suggestionCount + 1}`] = suggestion
   }
 

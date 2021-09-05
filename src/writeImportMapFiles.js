@@ -101,22 +101,23 @@ export const writeImportMapFiles = async ({
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
       const {
         checkImportResolution,
-        mappingsForImportsWithoutExtension,
-        removeUnusedMappings,
+        bareSpecifierAutomapping,
+        extensionlessAutomapping,
         magicExtensions,
+        removeUnusedMappings,
         runtime = "browser",
       } = importMapConfig
 
       if (
         checkImportResolution ||
-        mappingsForImportsWithoutExtension ||
+        bareSpecifierAutomapping ||
         removeUnusedMappings
       ) {
         if (!removeUnusedMappings) {
           // warn that it cannot be disabled when mappingsForImportsWithoutExtension or removeUnusedMappings
           // is used
         }
-        if (mappingsForImportsWithoutExtension && !magicExtensions) {
+        if (extensionlessAutomapping && !magicExtensions) {
           // warn that magicExtensions is required
         }
 
@@ -125,7 +126,8 @@ export const writeImportMapFiles = async ({
           warn,
           projectDirectoryUrl,
           importMap: importMaps[importMapFileRelativeUrl],
-          mappingsForImportsWithoutExtension,
+          bareSpecifierAutomapping,
+          extensionlessAutomapping,
           magicExtensions,
           removeUnusedMappings,
           runtime,
