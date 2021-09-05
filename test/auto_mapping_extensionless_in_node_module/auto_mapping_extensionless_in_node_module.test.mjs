@@ -5,72 +5,126 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const warnings = []
-const importmaps = await writeImportMapFiles({
-  projectDirectoryUrl: testDirectoryUrl,
-  importMapFiles: {
-    "test.importmap": {
-      mappingsForNodeResolution: true,
-      mappingsTreeshaking: true,
+const test = async ({
+  extensionlessAutomapping = false,
+  magicExtensions,
+} = {}) => {
+  const warnings = []
+  const importmaps = await writeImportMapFiles({
+    projectDirectoryUrl: testDirectoryUrl,
+    importMapFiles: {
+      "test.importmap": {
+        mappingsForNodeResolution: true,
+        removeUnusedMappings: true,
+        extensionlessAutomapping,
+        magicExtensions,
+      },
     },
-  },
-  onWarn: (warning) => {
-    warnings.push(warning)
-  },
-  writeFiles: false,
-})
-const actual = {
-  warnings,
-  importmaps,
+    onWarn: (warning) => {
+      warnings.push(warning)
+    },
+    writeFiles: false,
+  })
+  return { warnings, importmaps }
 }
-const expected = {
-  warnings: [
-    {
-      code: "AUTO_MAPPING",
-      message: `Auto mapping ./file to ./node_modules/leftpad/file.js.
---- specifier origin ---
+
+{
+  const actual = await test()
+  const expected = {
+    warnings: [
+      {
+        code: "IMPORT_RESOLUTION_FAILED",
+        message: `Import resolution failed for "./file"
+--- import source ---
 ${testDirectoryUrl}node_modules/leftpad/index.js:1:7
 > 1 | import "./file"
     |       ^
---- suggestion ---
-To get rid of this warning, add an explicit mapping into package.json.
+--- reason ---
+file not found on filesystem
+--- suggestion 1 ---
+update import specifier to "./file.js"
+--- suggestion 2 ---
+enable "extensionlessAutomapping"
+--- suggestion 3 ---
+add mapping to "initialImportMap"
 {
-  "exports": {
-    "./file": "./file.js"
+  "scopes": {
+    "./node_modules/leftpad/": {
+      "./file": "./node_modules/leftpad/file.js"
+    }
   }
-}
-into ${testDirectoryUrl}node_modules/leftpad/package.json.`,
+}`,
+      },
+    ],
+    importmaps: {
+      "test.importmap": {
+        imports: {
+          leftpad: "./node_modules/leftpad/index.js",
+          root: "./main.js",
+        },
+        scopes: {},
+      },
     },
-    {
-      code: "AUTO_MAPPING",
-      message: `Auto mapping ./other-file to ./node_modules/leftpad/other-file.ts.
---- specifier origin ---
+  }
+  assert({ actual, expected })
+}
+
+{
+  const actual = await test({
+    extensionlessAutomapping: true,
+    magicExtensions: [".js"],
+  })
+  const expected = {
+    warnings: [
+      {
+        code: "IMPORT_RESOLUTION_FAILED",
+        message: `Import resolution failed for "./other-file"
+--- import source ---
 ${testDirectoryUrl}node_modules/leftpad/file.js:1:7
 > 1 | import "./other-file"
     |       ^
---- suggestion ---
-To get rid of this warning, add an explicit mapping into package.json.
-{
-  "exports": {
-    "./other-file": "./other-file.ts"
-  }
-}
-into ${testDirectoryUrl}node_modules/leftpad/package.json.`,
-    },
-  ],
-  importmaps: {
-    "test.importmap": {
-      imports: {
-        leftpad: "./node_modules/leftpad/index.js",
-        root: "./main.js",
+--- reason ---
+file not found on filesystem`,
       },
-      scopes: {
-        "./node_modules/leftpad/": {
-          "./other-file": "./node_modules/leftpad/other-file.ts",
-          "./file": "./node_modules/leftpad/file.js",
+    ],
+    importmaps: {
+      "test.importmap": {
+        imports: {
+          leftpad: "./node_modules/leftpad/index.js",
+          root: "./main.js",
+        },
+        scopes: {
+          "./node_modules/leftpad/": {
+            "./file": "./node_modules/leftpad/file.js",
+          },
         },
       },
     },
-  },
+  }
+  assert({ actual, expected })
 }
-assert({ actual, expected })
+
+{
+  const actual = await test({
+    extensionlessAutomapping: true,
+    magicExtensions: [".ts"],
+  })
+  const expected = {
+    warnings: [],
+    importmaps: {
+      "test.importmap": {
+        imports: {
+          leftpad: "./node_modules/leftpad/index.js",
+          root: "./main.js",
+        },
+        scopes: {
+          "./node_modules/leftpad/": {
+            "./other-file": "./node_modules/leftpad/other-file.ts",
+            "./file": "./node_modules/leftpad/file.js",
+          },
+        },
+      },
+    },
+  }
+  assert({ actual, expected })
+}

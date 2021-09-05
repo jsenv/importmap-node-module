@@ -101,6 +101,9 @@ export const writeImportMapFiles = async ({
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
       const {
         checkImportResolution,
+        // ideally we could enable extensionlessAutomapping and bareSpecifierAutomappingonly for a subset
+        // of files. Not that hard to do, especially using @jsenv/url-meta
+        // but that's super extra fine tuning that I don't have time/energy to do for now
         bareSpecifierAutomapping,
         extensionlessAutomapping,
         magicExtensions,

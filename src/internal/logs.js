@@ -1,5 +1,9 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import { urlToFileSystemPath } from "@jsenv/filesystem"
+import {
+  urlToFileSystemPath,
+  urlToRelativeUrl,
+  resolveUrl,
+} from "@jsenv/filesystem"
 
 export const createPackageNameMustBeAStringWarning = ({
   packageName,
@@ -82,7 +86,9 @@ const getImportResolutionFailedSuggestions = ({
   }
 
   if (automapping) {
-    addSuggestion(`update import specifier to "${automapping.to}"`)
+    addSuggestion(
+      `update import specifier to "${mappingToUrlRelativeToFile(automapping)}"`,
+    )
   }
   if (gotBareSpecifierError) {
     addSuggestion(`enable "bareSpecifierAutomapping"`)
@@ -96,6 +102,15 @@ ${mappingToImportmapString(automapping)}`)
   }
 
   return suggestions
+}
+
+const mappingToUrlRelativeToFile = (mapping) => {
+  if (!mapping.scope) {
+    return mapping.to
+  }
+  const scopeUrl = resolveUrl(mapping.scope, "file:///")
+  const toUrl = resolveUrl(mapping.to, "file:///")
+  return `./${urlToRelativeUrl(toUrl, scopeUrl)}`
 }
 
 const mappingToImportmapString = ({ scope, from, to }) => {
