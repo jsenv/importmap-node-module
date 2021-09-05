@@ -284,15 +284,6 @@ export const visitNodeModuleResolution = async ({
       })
     }
 
-    // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
-    packageVisitors.forEach((visitor) => {
-      addImportMapForPackage(visitor, {
-        imports: {
-          [`${packageInfo.name}/`]: `./`,
-        },
-      })
-    })
-
     const importsFromPackageField = await visitPackageImportMap({
       warn,
       packageInfo,
@@ -363,7 +354,8 @@ export const visitNodeModuleResolution = async ({
       })
     } else {
       // no "exports" field means any file can be imported
-      // -> generated a mapping to allow this
+      // -> generate a mapping to allow this
+      // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
       const packageDirectoryRelativeUrl = urlToRelativeUrl(
         resolveUrl("./", packageInfo.url),
         projectDirectoryUrl,
@@ -416,18 +408,17 @@ export const visitNodeModuleResolution = async ({
         mainFileUrl,
         projectDirectoryUrl,
       )
+      const scope =
+        packageIsRoot || importerIsRoot ? null : `./${importerRelativeUrl}`
       const from = packageInfo.name
       const to = `./${mainFileRelativeUrl}`
 
-      if (packageIsRoot || importerIsRoot) {
-        triggerVisitorOnMapping(visitor, { from, to })
-      } else {
-        triggerVisitorOnMapping(visitor, {
-          scope: `./${importerRelativeUrl}`,
-          from,
-          to,
-        })
-      }
+      triggerVisitorOnMapping(visitor, {
+        scope,
+        from,
+        to,
+      })
+
       if (packageDirectoryUrl !== packageDirectoryUrlExpected) {
         triggerVisitorOnMapping(visitor, {
           scope: `./${importerRelativeUrl}`,
