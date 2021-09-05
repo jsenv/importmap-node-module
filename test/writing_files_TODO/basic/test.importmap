@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "bar": "./hello.js",
+    "foo": "./whatever.js"
+  }
+}

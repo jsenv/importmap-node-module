@@ -19,7 +19,6 @@ const importmaps = await writeImportMapFiles({
     warnings.push(warning)
   },
   writeFiles: false,
-
 })
 const actual = {
   warnings,
