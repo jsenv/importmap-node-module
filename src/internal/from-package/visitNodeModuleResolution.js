@@ -50,7 +50,6 @@ export const visitNodeModuleResolution = async ({
     packageVisitors,
     packageInfo,
     packageImporterInfo,
-    includeDevDependencies,
   }) => {
     const packageName = packageInfo.object.name
     if (typeof packageName !== "string") {
@@ -83,7 +82,6 @@ export const visitNodeModuleResolution = async ({
     await visitDependencies({
       packageVisitors,
       packageInfo,
-      includeDevDependencies,
     })
 
     await visitPackage({
@@ -93,21 +91,36 @@ export const visitNodeModuleResolution = async ({
     })
   }
 
-  const visitDependencies = async ({
-    packageVisitors,
-    packageInfo,
-    includeDevDependencies,
-  }) => {
+  const visitDependencies = async ({ packageVisitors, packageInfo }) => {
     const dependencyMap = packageDependenciesFromPackageObject(
       packageInfo.object,
-      {
-        includeDevDependencies,
-      },
     )
 
     await Promise.all(
       Object.keys(dependencyMap).map(async (dependencyName) => {
         const dependencyInfo = dependencyMap[dependencyName]
+        if (dependencyInfo.type === "devDependency") {
+          if (packageInfo.url !== projectPackageFileUrl) {
+            return
+          }
+          const visitorsForDevDependencies = packageVisitors.filter(
+            (visitor) => {
+              return visitor.mappingsForDevDependencies
+            },
+          )
+          if (visitorsForDevDependencies.length === 0) {
+            return
+          }
+
+          await visitDependency({
+            packageVisitors: visitorsForDevDependencies,
+            packageInfo,
+            dependencyName,
+            dependencyInfo,
+          })
+          return
+        }
+
         await visitDependency({
           packageVisitors,
           packageInfo,
@@ -473,9 +486,6 @@ export const visitNodeModuleResolution = async ({
     },
     packageImporterInfo: null,
     packageVisitors: visitors,
-    includeDevDependencies: visitors.some(
-      (visitor) => visitor.mappingsForDevDependencies,
-    ),
   })
 }
 
@@ -527,10 +537,7 @@ const triggerVisitorOnMapping = (visitor, { scope, from, to }) => {
   visitor.onMapping({ from, to })
 }
 
-const packageDependenciesFromPackageObject = (
-  packageObject,
-  { includeDevDependencies },
-) => {
+const packageDependenciesFromPackageObject = (packageObject) => {
   const packageDependencies = {}
 
   const { dependencies = {} } = packageObject
@@ -556,17 +563,15 @@ const packageDependenciesFromPackageObject = (
     }
   })
 
-  if (includeDevDependencies) {
-    const { devDependencies = {} } = packageObject
-    Object.keys(devDependencies).forEach((dependencyName) => {
-      if (!packageDependencies.hasOwnProperty(dependencyName)) {
-        packageDependencies[dependencyName] = {
-          type: "devDependency",
-          versionPattern: devDependencies[dependencyName],
-        }
+  const { devDependencies = {} } = packageObject
+  Object.keys(devDependencies).forEach((dependencyName) => {
+    if (!packageDependencies.hasOwnProperty(dependencyName)) {
+      packageDependencies[dependencyName] = {
+        type: "devDependency",
+        versionPattern: devDependencies[dependencyName],
       }
-    })
-  }
+    }
+  })
 
   return packageDependencies
 }
