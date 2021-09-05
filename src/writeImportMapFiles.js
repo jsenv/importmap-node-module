@@ -114,14 +114,18 @@ export const writeImportMapFiles = async ({
       if (
         checkImportResolution ||
         bareSpecifierAutomapping ||
+        extensionlessAutomapping ||
         removeUnusedMappings
       ) {
-        if (!removeUnusedMappings) {
-          // warn that it cannot be disabled when mappingsForImportsWithoutExtension or removeUnusedMappings
-          // is used
+        if (checkImportResolution === false) {
+          logger.warn(
+            `"checkImportResolution" cannot be disabled when automapping or "removeUnusedMappings" are enabled`,
+          )
         }
         if (extensionlessAutomapping && !magicExtensions) {
-          // warn that magicExtensions is required
+          logger.warn(
+            `"magicExtensions" is required when "extensionlessAutomapping" is enabled`,
+          )
         }
 
         const importMap = await visitSourceFiles({

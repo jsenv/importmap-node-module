@@ -100,10 +100,6 @@ export const visitSourceFiles = async ({
 
   const testImportResolution = memoizeAsyncFunctionBySpecifierAndImporter(
     async (specifier, importer, { importedBy }) => {
-      if (runtime === "node" && isSpecifierForNodeCoreModule(specifier)) {
-        return null
-      }
-
       const url = await tryToResolveImport({
         logger,
         warn,
@@ -113,6 +109,7 @@ export const visitSourceFiles = async ({
         projectDirectoryUrl,
         projectPackageFileUrl,
         trackAndResolveImport,
+        runtime,
         bareSpecifierAutomapping,
         extensionlessAutomapping,
         magicExtensions,
@@ -220,11 +217,16 @@ const tryToResolveImport = async ({
   projectDirectoryUrl,
   projectPackageFileUrl,
   trackAndResolveImport,
+  runtime,
   bareSpecifierAutomapping,
   extensionlessAutomapping,
   magicExtensions,
   performAutomapping,
 }) => {
+  if (runtime === "node" && isSpecifierForNodeCoreModule(specifier)) {
+    return null
+  }
+
   let gotBareSpecifierError = false
   let fileUrl
   try {
@@ -266,6 +268,19 @@ const tryToResolveImport = async ({
   }
 
   if (gotBareSpecifierError) {
+    if (!found) {
+      warn(
+        createImportResolutionFailedWarning({
+          specifier,
+          importedBy,
+          gotBareSpecifierError,
+          suggestsNodeRuntime:
+            runtime !== "node" && isSpecifierForNodeCoreModule(specifier),
+        }),
+      )
+      return null
+    }
+
     if (!bareSpecifierAutomapping) {
       warn(
         createImportResolutionFailedWarning({
@@ -286,6 +301,16 @@ const tryToResolveImport = async ({
     )
     performAutomapping(automapping)
     return url
+  }
+
+  if (!found) {
+    warn(
+      createImportResolutionFailedWarning({
+        specifier,
+        importedBy,
+      }),
+    )
+    return null
   }
 
   if (magicExtension) {
@@ -326,16 +351,6 @@ const tryToResolveImport = async ({
     )
     performAutomapping(automapping)
     return url
-  }
-
-  if (!found) {
-    warn(
-      createImportResolutionFailedWarning({
-        specifier,
-        importedBy,
-      }),
-    )
-    return null
   }
 
   return url

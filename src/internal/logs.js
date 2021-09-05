@@ -24,6 +24,7 @@ export const createImportResolutionFailedWarning = ({
   importedBy,
   gotBareSpecifierError,
   magicExtension,
+  suggestsNodeRuntime,
   automapping,
 }) => {
   return {
@@ -36,6 +37,7 @@ export const createImportResolutionFailedWarning = ({
           ? `there is no mapping for this bare specifier`
           : `file not found on filesystem`,
         ...getImportResolutionFailedSuggestions({
+          suggestsNodeRuntime,
           gotBareSpecifierError,
           magicExtension,
           automapping,
@@ -74,6 +76,7 @@ export const createExtensionLessAutomappingMessage = ({
 }
 
 const getImportResolutionFailedSuggestions = ({
+  suggestsNodeRuntime,
   gotBareSpecifierError,
   magicExtension,
   automapping,
@@ -85,18 +88,19 @@ const getImportResolutionFailedSuggestions = ({
     suggestions[`suggestion ${suggestionCount + 1}`] = suggestion
   }
 
+  if (suggestsNodeRuntime) {
+    addSuggestion(`use runtime: "node"`)
+  }
   if (automapping) {
     addSuggestion(
       `update import specifier to "${mappingToUrlRelativeToFile(automapping)}"`,
     )
-  }
-  if (gotBareSpecifierError) {
-    addSuggestion(`enable "bareSpecifierAutomapping"`)
-  }
-  if (magicExtension) {
-    addSuggestion(`enable "extensionlessAutomapping"`)
-  }
-  if (automapping) {
+    if (gotBareSpecifierError) {
+      addSuggestion(`use bareSpecifierAutomapping: true`)
+    }
+    if (magicExtension) {
+      addSuggestion(`use extensionlessAutomapping: true`)
+    }
     addSuggestion(`add mapping to "initialImportMap"
 ${mappingToImportmapString(automapping)}`)
   }
