@@ -1,7 +1,0 @@
-{
-  "imports": {
-    "anonymous": "./main.js",
-    "demo/": "./src/"
-  },
-  "scopes": {}
-}

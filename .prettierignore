@@ -1,8 +1,6 @@
 /.jsenv/
 /coverage/
 /dist/
-/docs/basic-project/node_modules/
-/docs/basic-project/package-lock.json
 /node_modules/
 /jsconfig.json
 /package-lock.json
