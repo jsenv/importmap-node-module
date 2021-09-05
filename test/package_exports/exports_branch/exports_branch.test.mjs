@@ -31,11 +31,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
       "whatever": "./index",
       "foo": "./node_modules/foo/main.browser.js",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }
@@ -51,11 +47,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
       "whatever": "./index",
       "foo": "./node_modules/foo/main.js",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }

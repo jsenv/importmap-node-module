@@ -5,7 +5,6 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const rootPackageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
-
 const warnings = []
 const importmaps = await writeImportMapFiles({
   logLevel: "error",
@@ -13,8 +12,6 @@ const importmaps = await writeImportMapFiles({
   importMapFiles: {
     "test.importmap": {
       mappingsForNodeResolution: true,
-      removeUnusedMappings: true,
-      ignoreJsFiles: true,
     },
   },
   onWarn: (warning) => {

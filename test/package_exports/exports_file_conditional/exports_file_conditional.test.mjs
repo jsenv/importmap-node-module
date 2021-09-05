@@ -4,7 +4,6 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-
 const test = async ({ runtime }) => {
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -29,11 +28,7 @@ const test = async ({ runtime }) => {
       "root/": "./",
       "root": "./index",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }
@@ -48,11 +43,7 @@ const test = async ({ runtime }) => {
       "root/": "./",
       "root": "./index",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }

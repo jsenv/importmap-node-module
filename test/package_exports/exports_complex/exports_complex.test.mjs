@@ -4,7 +4,6 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-
 const test = async ({ runtime, packageUserConditions } = {}) => {
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -31,11 +30,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.mjs",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }
@@ -52,11 +47,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.js",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }
@@ -73,11 +64,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }
@@ -93,11 +80,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
       "whatever": "./index",
       "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
-    scopes: {
-      "./node_modules/foo/": {
-        "foo/": "./node_modules/foo/",
-      },
-    },
+    scopes: {},
   }
   assert({ actual, expected })
 }
