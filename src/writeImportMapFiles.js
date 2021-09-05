@@ -22,6 +22,8 @@ export const writeImportMapFiles = async ({
     warn(warning)
   },
   writeFiles = true,
+  // for unit test
+  jsConfigFileUrl,
 }) => {
   const logger = createLogger({ logLevel })
   const warn = wrapWarnToWarnOnce((warning) => {
@@ -173,11 +175,13 @@ export const writeImportMapFiles = async ({
     },
   )
   if (firstUpdatingJsConfig) {
-    const jsConfigFileUrl = resolveUrl("./jsconfig.json", projectDirectoryUrl)
+    jsConfigFileUrl =
+      jsConfigFileUrl || resolveUrl("./jsconfig.json", projectDirectoryUrl)
     const jsConfigCurrent = (await readCurrentJsConfig(jsConfigFileUrl)) || {
       compilerOptions: {},
     }
     const importMapUsedForVsCode = importMaps[firstUpdatingJsConfig]
+    const jsConfigPaths = importMapToVsCodeConfigPaths(importMapUsedForVsCode)
     const jsConfig = {
       ...jsConfigDefault,
       ...jsConfigCurrent,
@@ -186,7 +190,7 @@ export const writeImportMapFiles = async ({
         ...jsConfigCurrent.compilerOptions,
         // importmap is the source of truth -> paths are overwritten
         // We coudldn't differentiate which one we created and which one where added manually anyway
-        paths: importMapToVsCodeConfigPaths(importMapUsedForVsCode),
+        paths: jsConfigPaths,
       },
     }
     await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "))
