@@ -6,34 +6,58 @@ import {
 } from "@jsenv/filesystem"
 import { firstOperationMatching } from "@jsenv/cancellation"
 
-export const resolveFile = async (fileUrl, { magicExtensions }) => {
+export const resolveFile = async (
+  fileUrl,
+  { magicDirectoryIndexEnabled, magicExtensionEnabled, magicExtensions },
+) => {
   const fileStat = await readFileSystemNodeStat(fileUrl, {
     nullIfNotFound: true,
   })
 
   // file found
   if (fileStat && fileStat.isFile()) {
-    return fileUrl
+    return {
+      found: true,
+      url: fileUrl,
+    }
   }
 
   // directory found
   if (fileStat && fileStat.isDirectory()) {
-    const indexFileSuffix = fileUrl.endsWith("/") ? "index" : "/index"
-    const indexFileUrl = `${fileUrl}${indexFileSuffix}`
-    const extensionLeadingToAFile = await findExtensionLeadingToFile(
-      indexFileUrl,
-      magicExtensions,
-    )
-    if (extensionLeadingToAFile === null) {
-      return null
+    if (magicDirectoryIndexEnabled) {
+      const indexFileSuffix = fileUrl.endsWith("/") ? "index" : "/index"
+      const indexFileUrl = `${fileUrl}${indexFileSuffix}`
+      const result = await resolveFile(indexFileUrl, {
+        magicExtensionEnabled,
+        magicDirectoryIndexEnabled: false,
+        magicExtensions,
+      })
+      return {
+        magicDirectoryIndex: true,
+        ...result,
+      }
     }
-    return `${indexFileUrl}${extensionLeadingToAFile}`
+
+    return {
+      found: false,
+      url: fileUrl,
+    }
   }
 
-  // file not found and it has an extension
+  if (!magicExtensionEnabled) {
+    return {
+      found: false,
+      url: fileUrl,
+    }
+  }
+
+  // file already has an extension, magic extension cannot be used
   const extension = urlToExtension(fileUrl)
   if (extension !== "") {
-    return null
+    return {
+      found: false,
+      url: fileUrl,
+    }
   }
 
   const extensionLeadingToAFile = await findExtensionLeadingToFile(
@@ -42,11 +66,17 @@ export const resolveFile = async (fileUrl, { magicExtensions }) => {
   )
   // magic extension not found
   if (extensionLeadingToAFile === null) {
-    return null
+    return {
+      found: false,
+      url: fileUrl,
+    }
   }
-
   // magic extension worked
-  return `${fileUrl}${extensionLeadingToAFile}`
+  return {
+    magicExtension: extensionLeadingToAFile,
+    found: true,
+    url: `${fileUrl}${extensionLeadingToAFile}`,
+  }
 }
 
 const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {

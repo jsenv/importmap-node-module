@@ -6,8 +6,6 @@ import {
 } from "@jsenv/filesystem"
 import { resolveFile } from "../resolveFile.js"
 
-const magicExtensions = [".js", ".json", ".node"]
-
 export const resolvePackageMain = ({
   warn,
   packageInfo,
@@ -63,11 +61,13 @@ const resolveMainFile = async ({
     return null
   }
 
-  const mainFileUrl = await resolveFile(mainFileUrlFirstCandidate, {
-    magicExtensions,
+  const { found, url } = await resolveFile(mainFileUrlFirstCandidate, {
+    magicDirectoryIndexEnabled: true,
+    magicExtensionEnabled: true,
+    magicExtensions: [".js", ".json", ".node"],
   })
 
-  if (!mainFileUrl) {
+  if (!found) {
     // we know in advance this remapping does not lead to an actual file.
     // we only warn because we have no guarantee this remapping will actually be used
     // in the codebase.
@@ -80,14 +80,14 @@ const resolveMainFile = async ({
           specifier: packageMainFieldValue,
           importedIn: `${packageFileUrl}#${packageMainFieldName}`,
           fileUrl: mainFileUrlFirstCandidate,
-          magicExtensions,
+          magicExtensions: [".js", ".json", ".node"],
         }),
       )
     }
     return mainFileUrlFirstCandidate
   }
 
-  return mainFileUrl
+  return url
 }
 
 const createPackageMainFileMustBeRelativeWarning = ({

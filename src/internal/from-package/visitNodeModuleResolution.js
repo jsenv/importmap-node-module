@@ -6,7 +6,7 @@ import {
   urlToFileSystemPath,
 } from "@jsenv/filesystem"
 
-import { createPackageNameMustBeAStringWarning } from "../warnings.js"
+import { createPackageNameMustBeAStringWarning } from "../logs.js"
 
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"

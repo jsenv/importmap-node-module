@@ -150,24 +150,6 @@ During development, you can start or stop using a mapping often so it's convenie
 
 In production you likely want to keep only the mappings actually used by your js files. In that case enable removeUnusedMappings: it will drastically decrease the importmap file size.
 
-## mappingsForImportsWithoutExtension
-
-_mappingsForImportsWithoutExtension_ parameter is a boolean controlling if mappings are generated for import(s) without extension found in your js files. Should be combined with _magicExtensions_ as shown in the code below.
-
-```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./test.importmap": {
-      mappingsForImportsWithoutExtension: true,
-      magicExtensions: [".ts", ".tsx"],
-    },
-  },
-})
-```
-
 ## runtime
 
 A string parameter indicating where the importmap will be used. The default runtime is `"browser"`.
@@ -208,6 +190,24 @@ await writeImportMapFiles({
     "./prod.importmap": {
       mappingsForNodeResolution: true,
       packageUserConditions: ["production"],
+    },
+  },
+})
+```
+
+## extensionlessAutomapping
+
+_extensionlessAutomapping_ parameter is a boolean controlling if mappings are generated for import(s) without extension found in your js files. Should be combined with _magicExtensions_ as shown in the code below.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      extensionlessAutomapping: true,
+      magicExtensions: [".ts", ".tsx"],
     },
   },
 })
