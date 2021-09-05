@@ -163,6 +163,7 @@ export const writeImportMapFiles = async ({
         )
         const importMap = importMaps[importMapFileRelativeUrl]
         await writeFile(importmapFileUrl, JSON.stringify(importMap, null, "  "))
+        logger.info(`-> ${urlToFileSystemPath(importmapFileUrl)}`)
       },
       Promise.resolve(),
     )
