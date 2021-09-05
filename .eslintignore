@@ -2,7 +2,5 @@
 /.jsenv/
 /coverage/
 /dist/
-/docs/basic-project/node_modules/
-/docs/vscode-importmap-demo/
 /test/**/node_modules/malformed/
 /node_modules/

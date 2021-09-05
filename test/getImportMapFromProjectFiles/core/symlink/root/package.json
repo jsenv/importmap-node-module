@@ -1,8 +1,0 @@
-{
-  "name": "root",
-  "module": "index.js",
-  "type": "module",
-  "dependencies": {
-    "foo": "*"
-  }
-}

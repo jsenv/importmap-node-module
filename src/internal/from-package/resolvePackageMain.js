@@ -6,65 +6,23 @@ import {
 } from "@jsenv/filesystem"
 import { resolveFile } from "../resolveFile.js"
 
-const magicExtensions = [".js", ".json", ".node"]
-
 export const resolvePackageMain = ({
   warn,
-  packageConditions,
-  packageFileUrl,
-  packageJsonObject,
+  packageInfo,
+  // nodeResolutionConditions = [],
 }) => {
-  // we should remove "module", "browser", "jsenext:main" because Node.js native resolution
-  // ignores them
-  if (packageConditions.includes("import") && "module" in packageJsonObject) {
+  if ("main" in packageInfo.object) {
     return resolveMainFile({
       warn,
-      packageFileUrl,
-      packageMainFieldName: "module",
-      packageMainFieldValue: packageJsonObject.module,
-    })
-  }
-
-  if (
-    packageConditions.includes("import") &&
-    "jsnext:main" in packageJsonObject
-  ) {
-    return resolveMainFile({
-      warn,
-      packageFileUrl,
-      packageMainFieldName: "jsnext:main",
-      packageMainFieldValue: packageJsonObject["jsnext:main"],
-    })
-  }
-
-  if (
-    packageConditions.includes("browser") &&
-    "browser" in packageJsonObject &&
-    // when it's an object it means some files
-    // should be replaced with an other, let's ignore this when we are searching
-    // for the main file
-    typeof packageJsonObject.browser === "string"
-  ) {
-    return resolveMainFile({
-      warn,
-      packageFileUrl,
-      packageMainFieldName: "browser",
-      packageMainFieldValue: packageJsonObject.browser,
-    })
-  }
-
-  if ("main" in packageJsonObject) {
-    return resolveMainFile({
-      warn,
-      packageFileUrl,
+      packageFileUrl: packageInfo.url,
       packageMainFieldName: "main",
-      packageMainFieldValue: packageJsonObject.main,
+      packageMainFieldValue: packageInfo.object.main,
     })
   }
 
   return resolveMainFile({
     warn,
-    packageFileUrl,
+    packageFileUrl: packageInfo.url,
     packageMainFieldName: "default",
     packageMainFieldValue: "index",
   })
@@ -103,11 +61,13 @@ const resolveMainFile = async ({
     return null
   }
 
-  const mainFileUrl = await resolveFile(mainFileUrlFirstCandidate, {
-    magicExtensions,
+  const { found, url } = await resolveFile(mainFileUrlFirstCandidate, {
+    magicDirectoryIndexEnabled: true,
+    magicExtensionEnabled: true,
+    magicExtensions: [".js", ".json", ".node"],
   })
 
-  if (!mainFileUrl) {
+  if (!found) {
     // we know in advance this remapping does not lead to an actual file.
     // we only warn because we have no guarantee this remapping will actually be used
     // in the codebase.
@@ -120,14 +80,14 @@ const resolveMainFile = async ({
           specifier: packageMainFieldValue,
           importedIn: `${packageFileUrl}#${packageMainFieldName}`,
           fileUrl: mainFileUrlFirstCandidate,
-          magicExtensions,
+          magicExtensions: [".js", ".json", ".node"],
         }),
       )
     }
     return mainFileUrlFirstCandidate
   }
 
-  return mainFileUrl
+  return url
 }
 
 const createPackageMainFileMustBeRelativeWarning = ({

@@ -1,16 +1,12 @@
 import { readFile, urlToFileSystemPath } from "@jsenv/filesystem"
-import { applyPackageManualOverride } from "./applyPackageManualOverride.js"
 
 export const PACKAGE_NOT_FOUND = {}
 export const PACKAGE_WITH_SYNTAX_ERROR = {}
 
-export const readPackageFile = async (
-  packageFileUrl,
-  packagesManualOverrides,
-) => {
+export const readPackageFile = async (packageFileUrl) => {
   try {
     const packageObject = await readFile(packageFileUrl, { as: "json" })
-    return applyPackageManualOverride(packageObject, packagesManualOverrides)
+    return packageObject
   } catch (e) {
     if (e.code === "ENOENT") {
       return PACKAGE_NOT_FOUND

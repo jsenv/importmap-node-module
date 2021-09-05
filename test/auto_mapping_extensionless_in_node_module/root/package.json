@@ -1,0 +1,8 @@
+{
+  "name": "root",
+  "type": "module",
+  "main": "main.js",
+  "dependencies": {
+    "leftpad": "*"
+  }
+}

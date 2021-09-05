@@ -1,0 +1,10 @@
+{
+  "name": "whatever",
+  "exports": {
+    ".": {
+      "require": "./main-2.cjs",
+      "import": "./main.mjs"
+    }
+  },
+  "main": "./main.cjs"
+}

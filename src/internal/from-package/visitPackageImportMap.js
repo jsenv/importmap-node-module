@@ -3,9 +3,8 @@ import { readFile, urlToFileSystemPath } from "@jsenv/filesystem"
 
 export const visitPackageImportMap = async ({
   warn,
-  packageFileUrl,
-  packageJsonObject,
-  packageImportmap = packageJsonObject.importmap,
+  packageInfo,
+  packageImportmap = packageInfo.object.importmap,
   projectDirectoryUrl,
 }) => {
   if (typeof packageImportmap === "undefined") {
@@ -13,7 +12,7 @@ export const visitPackageImportMap = async ({
   }
 
   if (typeof packageImportmap === "string") {
-    const importmapFileUrl = resolveUrl(packageImportmap, packageFileUrl)
+    const importmapFileUrl = resolveUrl(packageImportmap, packageInfo.url)
     try {
       const importmap = await readFile(importmapFileUrl, { as: "json" })
       return moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl)
@@ -22,7 +21,7 @@ export const visitPackageImportMap = async ({
         warn(
           createPackageImportMapNotFoundWarning({
             importmapFileUrl,
-            packageFileUrl,
+            packageInfo,
           }),
         )
         return {}
@@ -38,7 +37,7 @@ export const visitPackageImportMap = async ({
   warn(
     createPackageImportMapUnexpectedWarning({
       packageImportmap,
-      packageFileUrl,
+      packageInfo,
     }),
   )
   return {}
@@ -46,7 +45,7 @@ export const visitPackageImportMap = async ({
 
 const createPackageImportMapNotFoundWarning = ({
   importmapFileUrl,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "PACKAGE_IMPORTMAP_NOT_FOUND",
@@ -54,13 +53,13 @@ const createPackageImportMapNotFoundWarning = ({
 --- importmap file path ---
 ${importmapFileUrl}
 --- package.json path ---
-${packageFileUrl}`,
+${urlToFileSystemPath(packageInfo.url)}`,
   }
 }
 
 const createPackageImportMapUnexpectedWarning = ({
   packageImportmap,
-  packageFileUrl,
+  packageInfo,
 }) => {
   return {
     code: "PACKAGE_IMPORTMAP_UNEXPECTED",
@@ -68,6 +67,6 @@ const createPackageImportMapUnexpectedWarning = ({
 --- value ---
 ${packageImportmap}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo.url)}`,
   }
 }
