@@ -156,7 +156,7 @@ In production you likely want to keep only the mappings actually used by your js
 ## runtime
 
 A string parameter indicating where the importmap will be used. The default runtime is `"browser"`.
-The runtime is used to determine which what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
+The runtime is used to determine what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -232,7 +232,7 @@ In practice, it has no impact because node modules are inside your project direc
 
 If the code you wants to run contains one ore more extensionless path specifier, it will not be found by a browser (not even by Node.js).
 
-_extensionless import example:_
+_extensionless import example_
 
 ```js
 import { foo } from "./file"
@@ -262,7 +262,7 @@ In this situation, you can do one of the following:
    }
    ```
 
-4. Remap manually each extensionless import and pass that importmap in [initialImportMap](#getImportMapFromProjectFiles)
+4. Remap manually each extensionless import and pass that importmap in [initialImportMap](#initialImportMap)
 
 # Configure VSCode and ESLint for importmap
 
