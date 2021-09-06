@@ -1,0 +1,9 @@
+{
+  "name": "root",
+  "exports": {
+    ".": {
+      "require": "./main.cjs",
+      "import": "./main.js"
+    }
+  }
+}
