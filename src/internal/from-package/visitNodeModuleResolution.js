@@ -404,7 +404,7 @@ export const visitNodeModuleResolution = async ({
 
     await packageVisitors.reduce(async (previous, visitor) => {
       await previous
-      const mainFileUrl = await resolvePackageMain({
+      const mainFileRelativeUrl = await resolvePackageMain({
         warn,
         packageInfo,
         nodeResolutionConditions: visitor.nodeResolutionConditions,
@@ -413,14 +413,10 @@ export const visitNodeModuleResolution = async ({
       // it's possible to have no main
       // like { main: "" } in package.json
       // or a main that does not lead to an actual file
-      if (mainFileUrl === null) {
+      if (mainFileRelativeUrl === null) {
         return
       }
 
-      const mainFileRelativeUrl = urlToRelativeUrl(
-        mainFileUrl,
-        projectDirectoryUrl,
-      )
       const scope =
         packageIsRoot || importerIsRoot ? null : `./${importerRelativeUrl}`
       const from = packageInfo.name

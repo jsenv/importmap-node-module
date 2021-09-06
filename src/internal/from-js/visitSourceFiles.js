@@ -25,13 +25,11 @@ import {
   createImportResolutionFailedWarning,
 } from "../logs.js"
 
-const BARE_SPECIFIER_ERROR = {}
-
 export const visitSourceFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
-  projectMainFile,
+  projectEntryPoint,
   jsFilesParsingOptions = {},
   runtime,
   importMap,
@@ -66,93 +64,78 @@ export const visitSourceFiles = async ({
       topLevelMappingsUsed.push({ from, to })
     }
   }
-  const importMapNormalized = normalizeImportMap(importMap, projectDirectoryUrl)
-  const trackAndResolveImport = (specifier, importer) => {
-    return resolveImport({
-      specifier,
-      importer,
-      importMap: importMapNormalized,
-      defaultExtension: false,
-      onImportMapping: ({ scope, from }) => {
-        if (scope) {
-          // make scope relative again
-          scope = `./${urlToRelativeUrl(scope, projectDirectoryUrl)}`
-          // make from relative again
-          if (from.startsWith(projectDirectoryUrl)) {
-            from = `./${urlToRelativeUrl(from, projectDirectoryUrl)}`
-          }
+
+  const importResolver = createImportResolver({
+    logger,
+    warn,
+    runtime,
+    importMap,
+    projectDirectoryUrl,
+    bareSpecifierAutomapping,
+    extensionlessAutomapping,
+    magicExtensions,
+    onImportMapping: ({ scope, from }) => {
+      if (scope) {
+        // make scope relative again
+        scope = `./${urlToRelativeUrl(scope, projectDirectoryUrl)}`
+        // make from relative again
+        if (from.startsWith(projectDirectoryUrl)) {
+          from = `./${urlToRelativeUrl(from, projectDirectoryUrl)}`
         }
+      }
 
-        markMappingAsUsed({
-          scope,
-          from,
-          to: scope ? importMap.scopes[scope][from] : importMap.imports[from],
-        })
-      },
-      createBareSpecifierError: () => BARE_SPECIFIER_ERROR,
-    })
-  }
-
-  const testImportResolution = memoizeAsyncFunctionBySpecifierAndImporter(
-    async (specifier, importer, { importedBy }) => {
-      const url = await tryToResolveImport({
-        logger,
-        warn,
-        specifier,
-        importer,
-        importedBy,
-        projectDirectoryUrl,
-        trackAndResolveImport,
-        runtime,
-        bareSpecifierAutomapping,
-        extensionlessAutomapping,
-        magicExtensions,
-        performAutomapping: (automapping) => {
-          addMapping(automapping)
-          markMappingAsUsed(automapping)
-        },
+      markMappingAsUsed({
+        scope,
+        from,
+        to: scope ? importMap.scopes[scope][from] : importMap.imports[from],
       })
+    },
+    performAutomapping: (automapping) => {
+      addMapping(automapping)
+      markMappingAsUsed(automapping)
+    },
+  })
 
-      return url
+  const visitUrl = memoizeAsyncFunctionBySpecifierAndImporter(
+    async (specifier, importer, { importedBy }) => {
+      const { found, ignore, url, body } =
+        await importResolver.applyImportResolution({
+          specifier,
+          importer,
+          importedBy,
+        })
+
+      if (!found || ignore) {
+        return
+      }
+
+      await visitUrlResponse(url, { body })
     },
   )
 
-  const visitImport = memoizeAsyncFunctionByUrl(async (fileUrl) => {
-    const fileContent = await readFile(fileUrl, { as: "string" })
-    const specifiers = await parseSpecifiersFromFile(fileUrl, {
-      fileContent,
+  const visitUrlResponse = memoizeAsyncFunctionByUrl(async (url, { body }) => {
+    const specifiers = await parseSpecifiersFromFile(url, {
+      fileContent: body,
       jsFilesParsingOptions,
     })
-
-    const dependencies = await Promise.all(
+    await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
-        const dependencyUrlOnFileSystem = await testImportResolution(
-          specifier,
-          fileUrl,
-          {
-            importedBy: showSource({
-              url: fileUrl,
-              line: specifierInfo.line,
-              column: specifierInfo.column,
-              source: fileContent,
-            }),
-          },
-        )
-        return dependencyUrlOnFileSystem
-      }),
-    )
-    const dependenciesToVisit = dependencies.filter((dependency) => {
-      return dependency && !visitImport.isInMemory(dependency)
-    })
-    await Promise.all(
-      dependenciesToVisit.map((dependency) => {
-        return visitImport(dependency)
+        await visitUrl(specifier, url, {
+          importedBy: showSource({
+            url,
+            line: specifierInfo.line,
+            column: specifierInfo.column,
+            source: body,
+          }),
+        })
       }),
     )
   })
 
-  await visitImport(projectMainFile)
+  await visitUrl(`./${projectEntryPoint}`, undefined, {
+    importedBy: "project package.json",
+  })
 
   if (removeUnusedMappings) {
     const importsUsed = {}
@@ -177,156 +160,243 @@ export const visitSourceFiles = async ({
   return composeTwoImportMaps(importMap, { imports, scopes })
 }
 
-const tryToResolveImport = async ({
+const createImportResolver = ({
   logger,
   warn,
-  specifier,
-  importer,
-  importedBy,
-  projectDirectoryUrl,
-  trackAndResolveImport,
   runtime,
+  importMap,
+  projectDirectoryUrl,
   bareSpecifierAutomapping,
   extensionlessAutomapping,
   magicExtensions,
+  onImportMapping,
   performAutomapping,
 }) => {
-  if (runtime === "node" && isSpecifierForNodeCoreModule(specifier)) {
-    return null
-  }
+  const importMapNormalized = normalizeImportMap(
+    importMap,
+    runtime === "browser"
+      ? fileUrlToHttpUrl(projectDirectoryUrl, { projectDirectoryUrl })
+      : projectDirectoryUrl,
+  )
+  const BARE_SPECIFIER_ERROR = {}
 
-  let gotBareSpecifierError = false
-  let importUrl
-  try {
-    importUrl = trackAndResolveImport(specifier, importer)
-  } catch (e) {
-    if (e !== BARE_SPECIFIER_ERROR) {
-      throw e
+  const applyImportResolution = async ({ specifier, importer, importedBy }) => {
+    if (runtime === "node" && isSpecifierForNodeCoreModule(specifier)) {
+      return {
+        found: true,
+        ignore: true,
+      }
     }
-    gotBareSpecifierError = true
-    importUrl = resolveUrl(specifier, importer)
+
+    const { gotBareSpecifierError, importUrl } = resolveImportUrl({
+      specifier,
+      importer,
+    })
+
+    if (runtime === "browser" && importUrl.startsWith("http://jsenv.com/")) {
+      return handleFileUrl({
+        specifier,
+        importer,
+        importedBy,
+        gotBareSpecifierError,
+        importUrl: httpUrlToFileUrl(importUrl, { projectDirectoryUrl }),
+      })
+    }
+
+    if (importUrl.startsWith("http:") || importUrl.startsWith("https:")) {
+      return handleHttpUrl()
+    }
+
+    return handleFileUrl({
+      specifier,
+      importer,
+      importedBy,
+      gotBareSpecifierError,
+      importUrl,
+    })
   }
 
-  if (importUrl.startsWith("http:") || importUrl.startsWith("https:")) {
+  const resolveImportUrl = ({ specifier, importer = projectDirectoryUrl }) => {
+    try {
+      const importUrl = resolveImport({
+        specifier,
+        importer:
+          runtime === "browser"
+            ? fileUrlToHttpUrl(importer, { projectDirectoryUrl })
+            : importer,
+        importMap: importMapNormalized,
+        defaultExtension: false,
+        onImportMapping,
+        createBareSpecifierError: () => BARE_SPECIFIER_ERROR,
+      })
+
+      return {
+        gotBareSpecifierError: false,
+        importUrl,
+      }
+    } catch (e) {
+      return {
+        gotBareSpecifierError: true,
+        importUrl: resolveUrl(specifier, importer),
+      }
+    }
+  }
+
+  const handleHttpUrl = async () => {
     // NICE TO HAVE: perform an http request and check for 404 and things like that
     // the day we do the http request, this function would return both
     // if the file is found and the file content
     // because once http request is done we can await response body
     // CURRENT BEHAVIOUR: consider http url as found without checking
-    // is means returning "null" so that import is not visited
-    return null
+    return {
+      found: true,
+      ignore: true,
+      body: null,
+    }
   }
 
-  const { magicExtension, found, url } = await resolveFile(importUrl, {
-    magicExtensionEnabled: true,
-    magicExtensions: magicExtensionWithImporterExtension(
-      magicExtensions || [],
-      importer,
-    ),
-  })
+  const foundFileUrl = async (url) => {
+    const extension = urlToExtension(url)
+    const isJs = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(
+      extension,
+    )
 
-  const packageDirectoryUrl = packageDirectoryUrlFromUrl(
-    url,
-    projectDirectoryUrl,
-  )
-  const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
-  const scope =
-    packageDirectoryUrl === projectDirectoryUrl
-      ? undefined
-      : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`
-  const automapping = {
-    scope,
-    from: specifier,
-    to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
+    if (isJs) {
+      return {
+        found: true,
+        url,
+        body: await readFile(url, { as: "string" }),
+      }
+    }
+
+    return {
+      found: true,
+      ignore: true,
+      url,
+    }
   }
 
-  if (gotBareSpecifierError) {
+  const handleFileUrl = async ({
+    specifier,
+    importer,
+    importedBy,
+    gotBareSpecifierError,
+    importUrl,
+  }) => {
+    const { magicExtension, found, url } = await resolveFile(importUrl, {
+      magicExtensionEnabled: true,
+      magicExtensions: magicExtensionWithImporterExtension(
+        magicExtensions || [],
+        importer,
+      ),
+    })
+    const packageDirectoryUrl = packageDirectoryUrlFromUrl(
+      url,
+      projectDirectoryUrl,
+    )
+    const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
+    const scope =
+      packageDirectoryUrl === projectDirectoryUrl
+        ? undefined
+        : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`
+    const automapping = {
+      scope,
+      from: specifier,
+      to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
+    }
+    if (gotBareSpecifierError) {
+      if (!found) {
+        warn(
+          createImportResolutionFailedWarning({
+            specifier,
+            importedBy,
+            gotBareSpecifierError,
+            suggestsNodeRuntime:
+              runtime !== "node" && isSpecifierForNodeCoreModule(specifier),
+          }),
+        )
+        return { found: false }
+      }
+      if (!bareSpecifierAutomapping) {
+        warn(
+          createImportResolutionFailedWarning({
+            specifier,
+            importedBy,
+            gotBareSpecifierError,
+            automapping,
+          }),
+        )
+        return { found: false }
+      }
+      logger.debug(
+        createBareSpecifierAutomappingMessage({
+          specifier,
+          importedBy,
+          automapping,
+        }),
+      )
+      performAutomapping(automapping)
+      return foundFileUrl(url)
+    }
     if (!found) {
       warn(
         createImportResolutionFailedWarning({
           specifier,
           importedBy,
-          gotBareSpecifierError,
-          suggestsNodeRuntime:
-            runtime !== "node" && isSpecifierForNodeCoreModule(specifier),
         }),
       )
-      return null
+      return { found: false }
     }
-
-    if (!bareSpecifierAutomapping) {
-      warn(
-        createImportResolutionFailedWarning({
-          specifier,
-          importedBy,
-          gotBareSpecifierError,
-          automapping,
-        }),
-      )
-      return null
-    }
-    logger.debug(
-      createBareSpecifierAutomappingMessage({
-        specifier,
-        importedBy,
-        automapping,
-      }),
-    )
-    performAutomapping(automapping)
-    return url
-  }
-
-  if (!found) {
-    warn(
-      createImportResolutionFailedWarning({
-        specifier,
-        importedBy,
-      }),
-    )
-    return null
-  }
-
-  if (magicExtension) {
-    if (!extensionlessAutomapping) {
-      const mappingFoundInPackageExports =
-        await extensionIsMappedInPackageExports(packageFileUrl)
-
-      if (!mappingFoundInPackageExports) {
-        warn(
-          createImportResolutionFailedWarning({
+    if (magicExtension) {
+      if (!extensionlessAutomapping) {
+        const mappingFoundInPackageExports =
+          await extensionIsMappedInPackageExports(packageFileUrl)
+        if (!mappingFoundInPackageExports) {
+          warn(
+            createImportResolutionFailedWarning({
+              specifier,
+              importedBy,
+              magicExtension,
+              automapping,
+            }),
+          )
+          return { found: false }
+        }
+        logger.debug(
+          createExtensionLessAutomappingMessage({
             specifier,
             importedBy,
-            magicExtension,
             automapping,
+            mappingFoundInPackageExports,
           }),
         )
-        return null
+        performAutomapping(automapping)
+        return foundFileUrl(url)
       }
-
       logger.debug(
         createExtensionLessAutomappingMessage({
           specifier,
           importedBy,
           automapping,
-          mappingFoundInPackageExports,
         }),
       )
       performAutomapping(automapping)
-      return url
+      return foundFileUrl(url)
     }
-
-    logger.debug(
-      createExtensionLessAutomappingMessage({
-        specifier,
-        importedBy,
-        automapping,
-      }),
-    )
-    performAutomapping(automapping)
-    return url
+    return foundFileUrl(url)
   }
 
-  return url
+  return { applyImportResolution }
+}
+
+const fileUrlToHttpUrl = (url, { projectDirectoryUrl }) => {
+  const relativeUrl = urlToRelativeUrl(url, projectDirectoryUrl)
+  return resolveUrl(relativeUrl, `http://jsenv.com/`)
+}
+
+const httpUrlToFileUrl = (url, { projectDirectoryUrl }) => {
+  const relativeUrl = urlToRelativeUrl(url, "http://jsenv.com/")
+  return resolveUrl(relativeUrl, projectDirectoryUrl)
 }
 
 const extensionIsMappedInPackageExports = async (packageFileUrl) => {

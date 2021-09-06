@@ -3,7 +3,9 @@ import {
   resolveUrl,
   urlToFileSystemPath,
   urlToExtension,
+  urlToRelativeUrl,
 } from "@jsenv/filesystem"
+
 import { resolveFile } from "../resolveFile.js"
 
 export const resolvePackageMain = ({
@@ -84,10 +86,10 @@ const resolveMainFile = async ({
         }),
       )
     }
-    return mainFileUrlFirstCandidate
+    return urlToRelativeUrl(mainFileUrlFirstCandidate, packageFileUrl)
   }
 
-  return url
+  return urlToRelativeUrl(url, packageFileUrl)
 }
 
 const createPackageMainFileMustBeRelativeWarning = ({

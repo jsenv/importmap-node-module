@@ -12,7 +12,7 @@ import { assertInitialImportMap } from "./internal/assertInitialImportMap.js"
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js"
 import { visitNodeModuleResolution } from "./internal/from-package/visitNodeModuleResolution.js"
 import { optimizeImportMap } from "./internal/optimizeImportMap.js"
-import { resolveProjectMainFile } from "./internal/from-js/resolveProjectMainFile.js"
+import { resolveProjectEntryPoint } from "./internal/from-js/resolveProjectEntryPoint.js"
 import { visitSourceFiles } from "./internal/from-js/visitSourceFiles.js"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 
@@ -135,18 +135,18 @@ export const writeImportMapFiles = async ({
           )
         }
 
-        const projectMainFile = await resolveProjectMainFile({
+        const projectEntryPoint = await resolveProjectEntryPoint({
           warn,
           projectDirectoryUrl,
           packageUserConditions,
         })
 
-        if (projectMainFile) {
+        if (projectEntryPoint) {
           const importMap = await visitSourceFiles({
             logger,
             warn,
             projectDirectoryUrl,
-            projectMainFile,
+            projectEntryPoint,
             importMap: importMaps[importMapFileRelativeUrl],
             bareSpecifierAutomapping,
             extensionlessAutomapping,
