@@ -109,7 +109,9 @@ export const visitSourceFiles = async ({
         return
       }
 
-      await visitUrlResponse(url, { body })
+      if (!visitUrlResponse.isInMemory(url)) {
+        await visitUrlResponse(url, { body })
+      }
     },
   )
 
