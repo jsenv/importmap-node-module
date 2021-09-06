@@ -1,4 +1,3 @@
-
 import { assert } from "@jsenv/assert"
 import { resolveUrl } from "@jsenv/filesystem"
 
