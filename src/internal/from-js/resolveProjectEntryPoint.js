@@ -76,7 +76,9 @@ export const resolveProjectEntryPoint = async ({
       packageExports,
       packageConditions,
     })
-    const subpathKey = Object.keys(packageSubpaths).find((from) => from === ".")
+    const subpathKey = Object.keys(packageSubpaths).find(
+      (from) => from === projectPackageName,
+    )
     if (!subpathKey) {
       warn({
         code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
@@ -136,7 +138,7 @@ const tryExportSubpath = async ({
     warn({
       code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
       message: createDetailedMessage(entryPointResolutionFailureMessage, {
-        reason: `file not found for ${exportSubpath} declared in package.json "exports"`,
+        reason: `file not found for "${exportSubpath}" declared in package.json "exports"`,
       }),
     })
     return null

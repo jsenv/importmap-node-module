@@ -1,17 +1,23 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/filesystem"
+import {
+  resolveUrl,
+  urlToFileSystemPath,
+  removeFileSystemNode,
+  writeFile,
+} from "@jsenv/filesystem"
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const rootPackageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
+const indexJsFileUrl = resolveUrl("./index.js", testDirectoryUrl)
 const test = async () => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
-        removeUnusedMappings: true,
+        checkImportResolution: true,
       },
     },
     onWarn: (warning) => {
@@ -21,6 +27,8 @@ const test = async () => {
   })
   return { warnings, importmaps }
 }
+
+await removeFileSystemNode(indexJsFileUrl, { allowUseless: true })
 
 {
   const actual = await test()
@@ -37,6 +45,22 @@ ${urlToFileSystemPath(rootPackageFileUrl)}
 .js, .json, .node`,
       },
     ],
+    importmaps: {
+      "test.importmap": {
+        imports: {},
+        scopes: {},
+      },
+    },
+  }
+  assert({ actual, expected })
+}
+
+await writeFile(indexJsFileUrl)
+
+{
+  const actual = await test()
+  const expected = {
+    warnings: [],
     importmaps: {
       "test.importmap": {
         imports: {},

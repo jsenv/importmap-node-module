@@ -4,18 +4,14 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const test = async () => {
+const test = async ({ packageUserConditions }) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
-        initialImportMap: {
-          imports: {
-            "http://example.com/foo.js": "http://example.com/bar.js",
-          },
-        },
-        removeUnusedMappings: true,
+        checkImportResolution: true,
+        packageUserConditions,
       },
     },
     onWarn: (warning) => {
@@ -27,14 +23,37 @@ const test = async () => {
 }
 
 {
-  const actual = await test()
+  const actual = await test({
+    packageUserConditions: [],
+  })
+  const expected = {
+    warnings: [
+      {
+        code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
+        message: `Cannot find project entry point
+--- reason ---
+no subpath found in package.json "exports"`,
+      },
+    ],
+    importmaps: {
+      "test.importmap": {
+        imports: {},
+        scopes: {},
+      },
+    },
+  }
+  assert({ actual, expected })
+}
+
+{
+  const actual = await test({
+    packageUserConditions: ["electron"],
+  })
   const expected = {
     warnings: [],
     importmaps: {
       "test.importmap": {
-        imports: {
-          "http://example.com/foo.js": "http://example.com/bar.js",
-        },
+        imports: {},
         scopes: {},
       },
     },
