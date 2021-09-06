@@ -60,7 +60,6 @@ add mapping to "initialImportMap"
       "test.importmap": {
         imports: {
           leftpad: "./node_modules/leftpad/index.js",
-          root: "./main.js",
         },
         scopes: {},
       },
@@ -91,7 +90,6 @@ file not found on filesystem`,
       "test.importmap": {
         imports: {
           leftpad: "./node_modules/leftpad/index.js",
-          root: "./main.js",
         },
         scopes: {
           "./node_modules/leftpad/": {
@@ -115,7 +113,6 @@ file not found on filesystem`,
       "test.importmap": {
         imports: {
           leftpad: "./node_modules/leftpad/index.js",
-          root: "./main.js",
         },
         scopes: {
           "./node_modules/leftpad/": {

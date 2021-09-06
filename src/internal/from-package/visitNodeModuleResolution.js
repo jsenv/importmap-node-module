@@ -422,7 +422,10 @@ export const visitNodeModuleResolution = async ({
         warn(mainResolutionInfo.warning)
       }
 
-      const mainFileRelativeUrl = mainResolutionInfo.relativeUrl
+      const mainFileRelativeUrl = urlToRelativeUrl(
+        resolveUrl(mainResolutionInfo.relativeUrl, packageInfo.url),
+        projectDirectoryUrl,
+      )
       const scope =
         packageIsRoot || importerIsRoot ? null : `./${importerRelativeUrl}`
       const from = packageInfo.name
