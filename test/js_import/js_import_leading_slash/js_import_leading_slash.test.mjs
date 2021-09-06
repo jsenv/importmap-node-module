@@ -4,17 +4,13 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const test = async () => {
+const test = async ({ runtime }) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
-        initialImportMap: {
-          imports: {
-            "http://example.com/foo.js": "http://example.com/bar.js",
-          },
-        },
+        runtime,
         removeUnusedMappings: true,
       },
     },
@@ -27,14 +23,26 @@ const test = async () => {
 }
 
 {
-  const actual = await test()
+  const actual = await test({ runtime: "browser" })
   const expected = {
     warnings: [],
     importmaps: {
       "test.importmap": {
-        imports: {
-          "http://example.com/foo.js": "http://example.com/bar.js",
-        },
+        imports: {},
+        scopes: {},
+      },
+    },
+  }
+  assert({ actual, expected })
+}
+
+{
+  const actual = await test({ runtime: "node" })
+  const expected = {
+    warnings: [],
+    importmaps: {
+      "test.importmap": {
+        imports: {},
         scopes: {},
       },
     },
