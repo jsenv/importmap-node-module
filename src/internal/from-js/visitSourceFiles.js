@@ -20,7 +20,6 @@ import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
 import { showSource } from "./showSource.js"
 import { resolveFile } from "../resolveFile.js"
 import {
-  createPackageNameMustBeAStringWarning,
   createBareSpecifierAutomappingMessage,
   createExtensionLessAutomappingMessage,
   createImportResolutionFailedWarning,
@@ -32,6 +31,7 @@ export const visitSourceFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
+  projectMainFile,
   jsFilesParsingOptions = {},
   runtime,
   importMap,
@@ -40,11 +40,6 @@ export const visitSourceFiles = async ({
   magicExtensions, //  = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   removeUnusedMappings,
 }) => {
-  const projectPackageFileUrl = resolveUrl(
-    "./package.json",
-    projectDirectoryUrl,
-  )
-
   const imports = {}
   const scopes = {}
   const addMapping = ({ scope, from, to }) => {
@@ -107,7 +102,6 @@ export const visitSourceFiles = async ({
         importer,
         importedBy,
         projectDirectoryUrl,
-        projectPackageFileUrl,
         trackAndResolveImport,
         runtime,
         bareSpecifierAutomapping,
@@ -123,7 +117,7 @@ export const visitSourceFiles = async ({
     },
   )
 
-  const visitFile = memoizeAsyncFunctionByUrl(async (fileUrl) => {
+  const visitImport = memoizeAsyncFunctionByUrl(async (fileUrl) => {
     const fileContent = await readFile(fileUrl, { as: "string" })
     const specifiers = await parseSpecifiersFromFile(fileUrl, {
       fileContent,
@@ -149,41 +143,16 @@ export const visitSourceFiles = async ({
       }),
     )
     const dependenciesToVisit = dependencies.filter((dependency) => {
-      return dependency && !visitFile.isInMemory(dependency)
+      return dependency && !visitImport.isInMemory(dependency)
     })
     await Promise.all(
       dependenciesToVisit.map((dependency) => {
-        return visitFile(dependency)
+        return visitImport(dependency)
       }),
     )
   })
 
-  const projectPackageObject = await readFile(projectPackageFileUrl, {
-    as: "json",
-  })
-  const projectPackageName = projectPackageObject.name
-  if (typeof projectPackageName !== "string") {
-    warn(
-      createPackageNameMustBeAStringWarning({
-        packageName: projectPackageName,
-        packageFileUrl: projectPackageFileUrl,
-      }),
-    )
-    return importMap
-  }
-
-  const projectMainFileUrlOnFileSystem = await testImportResolution(
-    projectPackageName,
-    projectPackageFileUrl,
-    {
-      importedBy: projectPackageObject.exports
-        ? `${projectPackageFileUrl}#exports`
-        : `${projectPackageFileUrl}`,
-    },
-  )
-  if (projectMainFileUrlOnFileSystem) {
-    await visitFile(projectMainFileUrlOnFileSystem)
-  }
+  await visitImport(projectMainFile)
 
   if (removeUnusedMappings) {
     const importsUsed = {}
@@ -215,7 +184,6 @@ const tryToResolveImport = async ({
   importer,
   importedBy,
   projectDirectoryUrl,
-  projectPackageFileUrl,
   trackAndResolveImport,
   runtime,
   bareSpecifierAutomapping,
@@ -228,23 +196,28 @@ const tryToResolveImport = async ({
   }
 
   let gotBareSpecifierError = false
-  let fileUrl
+  let importUrl
   try {
-    fileUrl = trackAndResolveImport(specifier, importer)
+    importUrl = trackAndResolveImport(specifier, importer)
   } catch (e) {
     if (e !== BARE_SPECIFIER_ERROR) {
       throw e
     }
     gotBareSpecifierError = true
-    if (importer === projectPackageFileUrl) {
-      // cannot find package main file (package.main is "" for instance)
-      // we can't discover main file and parse dependencies
-      return null
-    }
-    fileUrl = resolveUrl(specifier, importer)
+    importUrl = resolveUrl(specifier, importer)
   }
 
-  const { magicExtension, found, url } = await resolveFile(fileUrl, {
+  if (importUrl.startsWith("http:") || importUrl.startsWith("https:")) {
+    // NICE TO HAVE: perform an http request and check for 404 and things like that
+    // the day we do the http request, this function would return both
+    // if the file is found and the file content
+    // because once http request is done we can await response body
+    // CURRENT BEHAVIOUR: consider http url as found without checking
+    // is means returning "null" so that import is not visited
+    return null
+  }
+
+  const { magicExtension, found, url } = await resolveFile(importUrl, {
     magicExtensionEnabled: true,
     magicExtensions: magicExtensionWithImporterExtension(
       magicExtensions || [],
@@ -258,7 +231,7 @@ const tryToResolveImport = async ({
   )
   const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
   const scope =
-    packageFileUrl === projectPackageFileUrl
+    packageDirectoryUrl === projectDirectoryUrl
       ? undefined
       : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`
   const automapping = {

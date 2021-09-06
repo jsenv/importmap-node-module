@@ -143,7 +143,11 @@ When enabled, `"devDependencies"` declared in your _package.json_ are included i
 
 ## checkImportResolution
 
-_checkImportResolution_ parameter is a boolean controlling if script tries to resolve all import found in your js files using the importmap. When import are not resolved a warning is logged in the terminal.
+_checkImportResolution_ is a boolean parameter controlling if script tries to resolve all import found in your js files using the importmap.
+
+It is recommended to enable this parameter, it gives more confidence in the generated importmap and outputs nice logs for for imports that cannot be resolved.
+
+This import resolution is auto enabled when [removeUnusedMappings](#removeUnusedMappings) or [extensionlessAutomapping](#extensionlessAutomapping) are used.
 
 ## removeUnusedMappings
 
