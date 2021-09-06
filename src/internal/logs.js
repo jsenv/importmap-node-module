@@ -19,36 +19,6 @@ ${urlToFileSystemPath(packageInfo.url)}`,
   }
 }
 
-export const createProjectEntryPointResolutionFailedWarning = ({
-  cause,
-  exportSubpath,
-  projectPackageInfo,
-}) => {
-  const decideReason = () => {
-    if (cause === "EXPORTS_IS_FALSE_OR_NULL") {
-      return `explicitely disabled in package.json ("exports" is ${projectPackageInfo.exports})`
-    }
-    if (cause === "EXPORT_SUBPATH_NOT_FOUND") {
-      return `no subpath found in package.json "exports"`
-    }
-    if (cause === "EXPORT_SUBPATH_FILE_NOT_FOUND") {
-      return `file not found for ${exportSubpath} declared in package.json "exports"`
-    }
-    if (cause === "MAIN_IS_EMPTY_STRING") {
-      return `explicitely disabled in package.json ("main" is an empty string)`
-    }
-    // if (cause === "MAIN_FILE_NOT_FOUND") {
-    return `file not found for ${projectPackageInfo.object.main} declared in package.json "main"`
-  }
-
-  return {
-    code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
-    message: createDetailedMessage(`Cannot find project entry point`, {
-      reason: decideReason(),
-    }),
-  }
-}
-
 export const createImportResolutionFailedWarning = ({
   specifier,
   importedBy,

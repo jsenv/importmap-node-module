@@ -1,3 +1,4 @@
+import { createDetailedMessage } from "@jsenv/logger"
 import {
   resolveUrl,
   readFile,
@@ -5,13 +6,12 @@ import {
   urlToRelativeUrl,
 } from "@jsenv/filesystem"
 
-import {
-  createPackageNameMustBeAStringWarning,
-  createProjectEntryPointResolutionFailedWarning,
-} from "../logs.js"
+import { createPackageNameMustBeAStringWarning } from "../logs.js"
 import { packageConditionsFromPackageUserConditions } from "../package_conditions.js"
 import { visitPackageExports } from "../from-package/visitPackageExports.js"
 import { resolvePackageMain } from "../from-package/resolvePackageMain.js"
+
+const entryPointResolutionFailureMessage = `Cannot find project entry point`
 
 export const resolveProjectEntryPoint = async ({
   projectDirectoryUrl,
@@ -52,12 +52,12 @@ export const resolveProjectEntryPoint = async ({
     const packageExports = projectPackageObject.exports
 
     if (packageExports === false || packageExports === null) {
-      warn(
-        createProjectEntryPointResolutionFailedWarning({
-          cause: "EXPORTS_IS_FALSE_OR_NULL",
-          projectPackageInfo,
+      warn({
+        code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
+        message: createDetailedMessage(entryPointResolutionFailureMessage, {
+          reason: `explicitely disabled in package.json ("exports" is ${packageExports})`,
         }),
-      )
+      })
       return null
     }
 
@@ -78,12 +78,12 @@ export const resolveProjectEntryPoint = async ({
     })
     const subpathKey = Object.keys(packageSubpaths).find((from) => from === ".")
     if (!subpathKey) {
-      warn(
-        createProjectEntryPointResolutionFailedWarning({
-          cause: "EXPORT_SUBPATH_NOT_FOUND",
-          projectPackageInfo,
+      warn({
+        code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
+        message: createDetailedMessage(entryPointResolutionFailureMessage, {
+          reason: `no subpath found in package.json "exports"`,
         }),
-      )
+      })
       return null
     }
     return tryExportSubpath({
@@ -97,30 +97,30 @@ export const resolveProjectEntryPoint = async ({
   // https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_main
   const main = projectPackageObject.main
   if (main === "") {
-    warn(
-      createProjectEntryPointResolutionFailedWarning({
-        cause: "MAIN_IS_EMPTY_STRING",
-        projectPackageInfo,
+    warn({
+      code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
+      message: createDetailedMessage(entryPointResolutionFailureMessage, {
+        reason: `explicitely disabled in package.json ("main" is an empty string)`,
       }),
-    )
+    })
     return null
   }
 
-  const packageMainRelativeUrl = await resolvePackageMain({
+  const packageMainResolutionInfo = await resolvePackageMain({
     warn,
     packageInfo: projectPackageInfo,
   })
-  if (!packageMainRelativeUrl) {
-    warn(
-      createProjectEntryPointResolutionFailedWarning({
-        cause: "MAIN_FILE_NOT_FOUND",
-        projectPackageInfo,
+  if (!packageMainResolutionInfo.found) {
+    warn({
+      code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
+      message: createDetailedMessage(entryPointResolutionFailureMessage, {
+        reason: packageMainResolutionInfo.warning.message,
       }),
-    )
+    })
     return null
   }
 
-  return packageMainRelativeUrl
+  return packageMainResolutionInfo.relativeUrl
 }
 
 const tryExportSubpath = async ({
@@ -133,12 +133,12 @@ const tryExportSubpath = async ({
     nullIfNotFound: true,
   })
   if (filesystemStat === null || !filesystemStat.isFile()) {
-    warn(
-      createProjectEntryPointResolutionFailedWarning({
-        cause: "EXPORT_SUBPATH_FILE_NOT_FOUND",
-        exportSubpath,
+    warn({
+      code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
+      message: createDetailedMessage(entryPointResolutionFailureMessage, {
+        reason: `file not found for ${exportSubpath} declared in package.json "exports"`,
       }),
-    )
+    })
     return null
   }
   return urlToRelativeUrl(subpathUrl, projectPackageFileUrl)
