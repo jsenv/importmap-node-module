@@ -19,7 +19,6 @@ const importmaps = await writeImportMapFiles({
 const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
-    "whatever": "./index.js",
     "foo/": "./node_modules/foo/",
   },
   scopes: {},

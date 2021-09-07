@@ -1,12 +1,4 @@
-# import map node module
-
-Generate importmap for node_modules.
-
-[![npm package](https://img.shields.io/npm/v/@jsenv/importmap-node-module.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/importmap-node-module)
-[![github ci](https://github.com/jsenv/importmap-node-module/workflows/ci/badge.svg)](https://github.com/jsenv/importmap-node-module/actions?workflow=ci)
-[![codecov coverage](https://codecov.io/gh/jsenv/importmap-node-module/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/importmap-node-module)
-
-# Presentation
+# import map node module &middot; [![npm package](https://img.shields.io/npm/v/@jsenv/importmap-node-module.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/importmap-node-module) [![github ci](https://github.com/jsenv/importmap-node-module/workflows/ci/badge.svg)](https://github.com/jsenv/importmap-node-module/actions?workflow=ci) [![codecov coverage](https://codecov.io/gh/jsenv/importmap-node-module/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/importmap-node-module)
 
 Generates [import map](https://github.com/WICG/import-maps) with mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). This importmap can be used to make code dependent on node module resolution executable in a browser.
 
@@ -143,7 +135,11 @@ When enabled, `"devDependencies"` declared in your _package.json_ are included i
 
 ## checkImportResolution
 
-_checkImportResolution_ parameter is a boolean controlling if script tries to resolve all import found in your js files using the importmap. When import are not resolved a warning is logged in the terminal.
+_checkImportResolution_ is a boolean parameter controlling if script tries to resolve all import found in your js files using the importmap.
+
+It is recommended to enable this parameter, it gives more confidence in the generated importmap and outputs nice logs for for imports that cannot be resolved.
+
+This import resolution is auto enabled when [removeUnusedMappings](#removeUnusedMappings) or [extensionlessAutomapping](#extensionlessAutomapping) are used.
 
 ## removeUnusedMappings
 

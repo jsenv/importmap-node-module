@@ -11,7 +11,7 @@ export const createPackageNameMustBeAStringWarning = ({
 }) => {
   return {
     code: "PACKAGE_NAME_MUST_BE_A_STRING",
-    message: `package name field must be a string
+    message: `Package name field must be a string
 --- package name field ---
 ${packageName}
 --- package.json path ---

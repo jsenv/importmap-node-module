@@ -19,8 +19,8 @@ const expected = {
   imports: {
     "root/": "./",
     "foo/": "./node_modules/foo/",
-    "root": "./index",
-    "foo": "./node_modules/foo/index",
+    "root": "./index.js",
+    "foo": "./node_modules/foo/index.js",
   },
   scopes: {
     "./node_modules/foo/src/": {
