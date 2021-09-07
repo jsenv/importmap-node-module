@@ -50,10 +50,12 @@
     "@jsenv/logger": "4.0.1"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "7.15.4",
+    "@babel/plugin-syntax-decorators": "7.14.5",
     "@jsenv/assert": "2.3.1",
     "@jsenv/codecov-upload": "3.5.0",
     "@jsenv/core": "19.6.2",
-    "@jsenv/eslint-config": "15.0.2",
+    "@jsenv/eslint-config": "16.0.0",
     "@jsenv/github-release-package": "1.2.3",
     "@jsenv/importmap-eslint-resolver": "5.1.0",
     "@jsenv/package-publish": "1.6.2",

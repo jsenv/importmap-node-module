@@ -15,6 +15,14 @@ const {
 const eslintConfig = composeEslintConfig(
   eslintConfigBase,
 
+  // use "@babel/eslint-parser" until top level await is supported by ESLint default parser
+  {
+    parser: "@babel/eslint-parser",
+    parserOptions: {
+      requireConfigFile: false,
+    },
+  },
+
   // Files in this repository are all meant to be executed in Node.js
   // and we want to tell this to ESLint.
   // As a result ESLint can consider `window` as undefined
