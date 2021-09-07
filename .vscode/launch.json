@@ -24,32 +24,6 @@
         "node_modules/@dmail/cancellation/**",
         "<node_internals>/**"
       ]
-    },
-    {
-      "name": "jsenv-node",
-      "type": "node",
-      "request": "launch",
-      "protocol": "inspector",
-      "program": "${workspaceFolder}/script/run-node/run-node.js",
-      "runtimeArgs": [
-        "--unhandled-rejections=strict",
-        // this is to disable experimental warning
-        "--no-warnings"
-      ],
-      "args": ["${relativeFile}"],
-      "autoAttachChildProcesses": true,
-      // "sourceMaps": false,
-      "smartStep": true,
-      "skipFiles": [
-        // force-array-multiline
-        // "node_modules/**",
-        "node_modules/@jsenv/core/**",
-        "node_modules/@babel/template/**",
-        "node_modules/@dmail/cancellation/**",
-        "node_modules/rollup/**",
-        "node_modules/@rollup/**",
-        "<node_internals>/**/*.js"
-      ]
     }
   ]
 }
