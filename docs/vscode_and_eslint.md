@@ -12,7 +12,7 @@ Amongst other things it will give you the following:
 The animated image below shows how configuring ESLint and VSCode helps to fix an import with a typo and navigate to an imported file.
 This example uses `"demo/log.js"` import that is remapped to `"src/log.js"`.
 
-![Animated image showing importmap integration in VSCode and ESLint](./docs/importmap_configured_demo.gif)
+![Animated image showing importmap integration in VSCode and ESLint](./importmap_configured_demo.gif)
 
 To configure VSCode, set `useForJsConfigJSON: true`.
 It will update a file used by VSCode to resolve import: [jsconfig.json](https://code.visualstudio.com/docs/languages/jsconfig).
