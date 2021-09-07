@@ -410,16 +410,22 @@ export const visitNodeModuleResolution = async ({
 
       if (!mainResolutionInfo.found) {
         const { warning } = mainResolutionInfo
-        if (!warning) {
-          // it's ok to have no main
-          // like { main: "" } in package.json
+        // main explicitely disabled
+        if (packageInfo.object.main === "") {
           return
         }
-        // we don't know yet if the codebase will rely on main file presence or not
-        // so when main does not lead to a file:
-        // - a warning is logged
-        // - we still generate the mapping
-        warn(mainResolutionInfo.warning)
+
+        // main "should" be there but if we warn there is many false positive
+        // when package have no main file and that's expected
+        if (packageInfo.object.main === undefined) {
+          logger.debug(warning.message)
+        } else {
+          // we don't know yet if the codebase will rely on main file presence or not
+          // so when main does not lead to a file:
+          // - a warning is logged
+          // - we still generate the mapping
+          warn(warning)
+        }
       }
 
       const mainFileRelativeUrl = urlToRelativeUrl(

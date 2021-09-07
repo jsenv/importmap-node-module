@@ -8,7 +8,7 @@ const traverse = require("@babel/traverse")
 
 export const parseImportSpecifiers = async (
   url,
-  { urlResponseText, jsFilesParsingOptions } = {},
+  { urlResponseText, jsFilesParsingOptions, babelOptions } = {},
 ) => {
   const urlExtension = urlToExtension(url)
 
@@ -18,17 +18,31 @@ export const parseImportSpecifiers = async (
     flow = false,
   } = jsFilesParsingOptions
 
+  const initialPlugins = babelOptions.plugins
+  const plugins = [
+    ...initialPlugins,
+    ...(jsx && !findPluginByKey(initialPlugins, "jsx") ? ["jsx"] : []),
+    ...(typescript && !findPluginByKey(initialPlugins, "typescript")
+      ? ["typescript"]
+      : []),
+    ...(flow && !findPluginByKey(initialPlugins, "flow") ? ["flow"] : []),
+  ]
+  const decoratorPlugin = findPluginByKey(initialPlugins, "proposal-decorators")
+  if (decoratorPlugin) {
+    // When codebase uses decorators, babel assert decorator should be in the list of plugins
+    // bu even if it is, babel fails to detect it!
+    // by forcing the name to "decorators" as done below, babel is happy
+    plugins[plugins.indexOf(decoratorPlugin)] = [
+      "decorators",
+      decoratorPlugin.options,
+    ]
+  }
+
   const ast = parser.parse(urlResponseText, {
+    ...babelOptions,
     sourceType: "module",
     sourceFilename: url.startsWith("file://") ? urlToFileSystemPath(url) : url,
-    plugins: [
-      "topLevelAwait",
-      "exportDefaultFrom",
-      ...(jsx ? ["jsx"] : []),
-      ...(typescript ? ["typescript"] : []),
-      ...(flow ? ["flow"] : []),
-    ],
-    ...jsFilesParsingOptions,
+    plugins,
     ranges: true,
   })
 
@@ -100,4 +114,10 @@ export const parseImportSpecifiers = async (
   })
 
   return specifiers
+}
+
+const findPluginByKey = (plugins, key) => {
+  return plugins.find(
+    (plugin) => plugin === key || plugin.key === key || plugin[0] === key,
+  )
 }
