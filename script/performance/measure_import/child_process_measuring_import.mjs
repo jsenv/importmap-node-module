@@ -5,7 +5,7 @@ global.gc()
 const beforeHeapUsed = memoryUsage().heapUsed
 const beforeMs = Date.now()
 
-let namespace = await import(`../../../main.js?t=${Date.now()}`)
+let namespace = await import(`../../../index.js?t=${Date.now()}`)
 
 const afterMs = Date.now()
 
