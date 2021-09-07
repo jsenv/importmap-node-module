@@ -1,9 +1,12 @@
+import { loadOptionsAsync } from "@babel/core"
+
 import {
   resolveUrl,
   readFile,
   urlToExtension,
   urlToRelativeUrl,
   urlIsInsideOf,
+  urlToFileSystemPath,
 } from "@jsenv/filesystem"
 import {
   normalizeImportMap,
@@ -74,6 +77,11 @@ export const visitSourceFiles = async ({
         })
       : projectDirectoryUrl
 
+  // https://babeljs.io/docs/en/babel-core#loadoptions
+  const babelOptions = await loadOptionsAsync({
+    root: urlToFileSystemPath(projectDirectoryUrl),
+  })
+
   const importResolver = createImportResolver({
     logger,
     warn,
@@ -129,6 +137,7 @@ export const visitSourceFiles = async ({
     const specifiers = await parseImportSpecifiers(url, {
       urlResponseText: body,
       jsFilesParsingOptions,
+      babelOptions,
     })
     const fileUrl =
       httpUrlToFileUrl(url, { projectDirectoryUrl, baseUrl }) || url
