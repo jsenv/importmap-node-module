@@ -19,6 +19,7 @@ const importmaps = await writeImportMapFiles({
   },
   writeFiles: false,
 })
+
 const actual = {
   warnings,
   importmaps,
@@ -38,7 +39,7 @@ ${urlToFileSystemPath(rootPackageFileUrl)}`,
     "test.importmap": {
       imports: {
         "root/": "./",
-        "root": "./index",
+        "root": "./index.js",
       },
       scopes: {},
     },

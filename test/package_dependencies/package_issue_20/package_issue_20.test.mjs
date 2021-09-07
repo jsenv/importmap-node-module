@@ -5,7 +5,6 @@ import { assert } from "@jsenv/assert"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
@@ -23,7 +22,6 @@ const importmap = importmaps["test.importmap"]
   const expected = {
     imports: {
       "lume-fake": "./node_modules/lume-fake/lume.js",
-      "root": "./index.js",
     },
     scopes: {
       "./node_modules/lume-fake/": {
