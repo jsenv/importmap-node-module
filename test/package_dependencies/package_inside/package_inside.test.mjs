@@ -21,7 +21,7 @@ const expected = {
     "root/": "./",
     "bar/": "./node_modules/bar/",
     "foo/": "./node_modules/foo/",
-    "root": "./index",
+    "root": "./index.js",
     "bar": "./node_modules/bar/bar.js",
     "foo": "./node_modules/foo/foo.js",
   },

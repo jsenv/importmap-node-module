@@ -26,7 +26,7 @@ const test = async ({ runtime } = {}) => {
   const expected = {
     imports: {
       "root/": "./",
-      "root": "./index",
+      "root": "./index.js",
       "foo": "./node_modules/foo/feature-node.mjs",
     },
     scopes: {},
@@ -42,7 +42,7 @@ const test = async ({ runtime } = {}) => {
   const expected = {
     imports: {
       "root/": "./",
-      "root": "./index",
+      "root": "./index.js",
       "foo": "./node_modules/foo/feature.mjs",
     },
     scopes: {},

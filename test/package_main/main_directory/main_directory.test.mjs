@@ -19,7 +19,6 @@ const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
     "main-directory": "./node_modules/main-directory/lib/index.js",
-    "root": "./index.js",
   },
   scopes: {},
 }

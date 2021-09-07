@@ -27,7 +27,7 @@ const expected = {
   imports: {
     "root/": "./",
     "bar/": "./node_modules/bar/",
-    "root": "./index",
+    "root": "./index.js",
     "bar": "./node_modules/bar/bar.js",
   },
   scopes: {},

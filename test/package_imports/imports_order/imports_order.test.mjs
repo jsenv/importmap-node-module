@@ -26,7 +26,6 @@ const test = async ({ projectDirectoryUrl, runtime }) => {
   const expected = {
     imports: {
       "#foo": "./import.js",
-      "root": "./index.js",
     },
     scopes: {},
   }
@@ -42,7 +41,6 @@ const test = async ({ projectDirectoryUrl, runtime }) => {
   const expected = {
     imports: {
       "#foo": "./node.js",
-      "root": "./index.js",
     },
     scopes: {},
   }
