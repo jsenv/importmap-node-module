@@ -1,6 +1,12 @@
-import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
-import { writeFile, ensureEmptyDirectory, resolveUrl } from "@jsenv/filesystem"
+import {
+  writeFile,
+  ensureEmptyDirectory,
+  resolveUrl,
+  readFile,
+} from "@jsenv/filesystem"
 import { assert } from "@jsenv/assert"
+
+import { parseImportSpecifiers } from "@jsenv/importmap-node-module/src/internal/from-js/parseImportSpecifiers.js"
 
 const testDirectoryUrl = resolveUrl("./fixtures/", import.meta.url)
 const fileUrl = resolveUrl("test.js", testDirectoryUrl)
@@ -13,7 +19,9 @@ const fileUrl = resolveUrl("test.js", testDirectoryUrl)
 import "./bar.js"
 `,
   )
-  const specifiers = await parseSpecifiersFromFile(fileUrl)
+  const specifiers = await parseImportSpecifiers(fileUrl, {
+    urlResponseText: await readFile(fileUrl),
+  })
   const actual = specifiers
   const expected = {
     "./foo": { type: "import-static" },
@@ -31,7 +39,9 @@ import "./bar.js"
 import(id)
 `,
   )
-  const specifiers = await parseSpecifiersFromFile(fileUrl)
+  const specifiers = await parseImportSpecifiers(fileUrl, {
+    urlResponseText: await readFile(fileUrl),
+  })
   const actual = specifiers
   const expected = {
     "./foo": { type: "import-dynamic" },
@@ -43,7 +53,9 @@ import(id)
 // export from named
 {
   await writeFile(fileUrl, `export {toto} from "./foo"`)
-  const specifiers = await parseSpecifiersFromFile(fileUrl)
+  const specifiers = await parseImportSpecifiers(fileUrl, {
+    urlResponseText: await readFile(fileUrl),
+  })
   const actual = specifiers
   const expected = {
     "./foo": { type: "export-named" },
@@ -55,7 +67,9 @@ import(id)
 // export from all
 {
   await writeFile(fileUrl, `export * from "./foo"`)
-  const specifiers = await parseSpecifiersFromFile(fileUrl)
+  const specifiers = await parseImportSpecifiers(fileUrl, {
+    urlResponseText: await readFile(fileUrl),
+  })
   const actual = specifiers
   const expected = {
     "./foo": { type: "export-all" },

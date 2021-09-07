@@ -1,35 +1,26 @@
-import { createRequire } from "module"
-import {
-  readFile,
-  urlToFileSystemPath,
-  urlToExtension,
-} from "@jsenv/filesystem"
+import { createRequire } from "node:module"
+import { urlToFileSystemPath, urlToExtension } from "@jsenv/filesystem"
 
 const require = createRequire(import.meta.url)
 
 const parser = require("@babel/parser")
 const traverse = require("@babel/traverse")
 
-export const parseSpecifiersFromFile = async (
-  fileUrl,
-  { fileContent, jsFilesParsingOptions } = {},
+export const parseImportSpecifiers = async (
+  url,
+  { urlResponseText, jsFilesParsingOptions } = {},
 ) => {
-  fileContent =
-    fileContent === undefined
-      ? await readFile(fileUrl, { as: "string" })
-      : fileContent
-
-  const fileExtension = urlToExtension(fileUrl)
+  const urlExtension = urlToExtension(url)
 
   const {
-    jsx = [".jsx", ".tsx"].includes(fileExtension),
-    typescript = [".ts", ".tsx"].includes(urlToExtension(fileUrl)),
+    jsx = [".jsx", ".tsx"].includes(urlExtension),
+    typescript = [".ts", ".tsx"].includes(urlExtension),
     flow = false,
   } = jsFilesParsingOptions
 
-  const ast = parser.parse(fileContent, {
+  const ast = parser.parse(urlResponseText, {
     sourceType: "module",
-    sourceFilename: urlToFileSystemPath(fileUrl),
+    sourceFilename: url.startsWith("file://") ? urlToFileSystemPath(url) : url,
     plugins: [
       "topLevelAwait",
       "exportDefaultFrom",

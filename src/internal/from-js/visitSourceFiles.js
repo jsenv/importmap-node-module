@@ -16,7 +16,7 @@ import {
   memoizeAsyncFunctionBySpecifierAndImporter,
 } from "../memoizeAsyncFunction.js"
 
-import { parseSpecifiersFromFile } from "./parseSpecifiersFromFile.js"
+import { parseImportSpecifiers } from "./parseImportSpecifiers.js"
 import { showSource } from "./showSource.js"
 import { resolveFile } from "../resolveFile.js"
 import {
@@ -65,22 +65,31 @@ export const visitSourceFiles = async ({
     }
   }
 
+  const baseUrl =
+    runtime === "browser"
+      ? fileUrlToHttpUrl(projectDirectoryUrl, {
+          projectDirectoryUrl,
+          baseUrl: "http://jsenv.com",
+        })
+      : projectDirectoryUrl
+
   const importResolver = createImportResolver({
     logger,
     warn,
     runtime,
     importMap,
     projectDirectoryUrl,
+    baseUrl,
     bareSpecifierAutomapping,
     extensionlessAutomapping,
     magicExtensions,
     onImportMapping: ({ scope, from }) => {
       if (scope) {
         // make scope relative again
-        scope = `./${urlToRelativeUrl(scope, projectDirectoryUrl)}`
+        scope = `./${urlToRelativeUrl(scope, baseUrl)}`
         // make from relative again
-        if (from.startsWith(projectDirectoryUrl)) {
-          from = `./${urlToRelativeUrl(from, projectDirectoryUrl)}`
+        if (from.startsWith(baseUrl)) {
+          from = `./${urlToRelativeUrl(from, baseUrl)}`
         }
       }
 
@@ -116,16 +125,18 @@ export const visitSourceFiles = async ({
   )
 
   const visitUrlResponse = memoizeAsyncFunctionByUrl(async (url, { body }) => {
-    const specifiers = await parseSpecifiersFromFile(url, {
-      fileContent: body,
+    const specifiers = await parseImportSpecifiers(url, {
+      urlResponseText: body,
       jsFilesParsingOptions,
     })
+    const fileUrl =
+      httpUrlToFileUrl(url, { projectDirectoryUrl, baseUrl }) || url
     await Promise.all(
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
         await visitUrl(specifier, url, {
           importedBy: showSource({
-            url,
+            url: fileUrl,
             line: specifierInfo.line,
             column: specifierInfo.column,
             source: body,
@@ -135,7 +146,7 @@ export const visitSourceFiles = async ({
     )
   })
 
-  await visitUrl(`./${projectEntryPoint}`, undefined, {
+  await visitUrl(`./${projectEntryPoint}`, baseUrl, {
     importedBy: "project package.json",
   })
 
@@ -167,6 +178,7 @@ const createImportResolver = ({
   warn,
   runtime,
   importMap,
+  baseUrl,
   projectDirectoryUrl,
   bareSpecifierAutomapping,
   extensionlessAutomapping,
@@ -174,12 +186,7 @@ const createImportResolver = ({
   onImportMapping,
   performAutomapping,
 }) => {
-  const importMapNormalized = normalizeImportMap(
-    importMap,
-    runtime === "browser"
-      ? fileUrlToHttpUrl(projectDirectoryUrl, { projectDirectoryUrl })
-      : projectDirectoryUrl,
-  )
+  const importMapNormalized = normalizeImportMap(importMap, baseUrl)
   const BARE_SPECIFIER_ERROR = {}
 
   const applyImportResolution = async ({ specifier, importer, importedBy }) => {
@@ -195,13 +202,18 @@ const createImportResolver = ({
       importer,
     })
 
-    if (runtime === "browser" && importUrl.startsWith("http://jsenv.com/")) {
+    const importFileUrl = httpUrlToFileUrl(importUrl, {
+      projectDirectoryUrl,
+      baseUrl,
+    })
+
+    if (importFileUrl) {
       return handleFileUrl({
         specifier,
         importer,
         importedBy,
         gotBareSpecifierError,
-        importUrl: httpUrlToFileUrl(importUrl, { projectDirectoryUrl }),
+        importUrl: importFileUrl,
       })
     }
 
@@ -218,14 +230,11 @@ const createImportResolver = ({
     })
   }
 
-  const resolveImportUrl = ({ specifier, importer = projectDirectoryUrl }) => {
+  const resolveImportUrl = ({ specifier, importer }) => {
     try {
       const importUrl = resolveImport({
         specifier,
-        importer:
-          runtime === "browser"
-            ? fileUrlToHttpUrl(importer, { projectDirectoryUrl })
-            : importer,
+        importer,
         importMap: importMapNormalized,
         defaultExtension: false,
         onImportMapping,
@@ -262,11 +271,12 @@ const createImportResolver = ({
     const isJs = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(
       extension,
     )
+    const httpUrl = fileUrlToHttpUrl(url, { projectDirectoryUrl, baseUrl })
 
     if (isJs) {
       return {
         found: true,
-        url,
+        url: httpUrl || url,
         body: await readFile(url, { as: "string" }),
       }
     }
@@ -274,7 +284,7 @@ const createImportResolver = ({
     return {
       found: true,
       ignore: true,
-      url,
+      url: httpUrl || url,
     }
   }
 
@@ -391,13 +401,13 @@ const createImportResolver = ({
   return { applyImportResolution }
 }
 
-const fileUrlToHttpUrl = (url, { projectDirectoryUrl }) => {
+const fileUrlToHttpUrl = (url, { projectDirectoryUrl, baseUrl }) => {
   const relativeUrl = urlToRelativeUrl(url, projectDirectoryUrl)
-  return resolveUrl(relativeUrl, `http://jsenv.com/`)
+  return resolveUrl(relativeUrl, baseUrl)
 }
 
-const httpUrlToFileUrl = (url, { projectDirectoryUrl }) => {
-  const relativeUrl = urlToRelativeUrl(url, "http://jsenv.com/")
+const httpUrlToFileUrl = (url, { projectDirectoryUrl, baseUrl }) => {
+  const relativeUrl = urlToRelativeUrl(url, baseUrl)
   return resolveUrl(relativeUrl, projectDirectoryUrl)
 }
 
