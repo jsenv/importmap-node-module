@@ -4,7 +4,6 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
@@ -22,7 +21,6 @@ const expected = {
     "nested/": "./node_modules/nested/",
     "nested": "./node_modules/nested/index.js",
     "root/": "./",
-    "root": "./index.js",
   },
   scopes: {
     "./node_modules/nested/node_modules/bar/": {

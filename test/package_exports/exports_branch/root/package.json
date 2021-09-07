@@ -1,6 +1,7 @@
 {
   "name": "whatever",
   "type": "module",
+  "main": "./main.js",
   "dependencies": {
     "foo": "*"
   }

@@ -3,6 +3,7 @@ import {
   readFile,
   urlToExtension,
   urlToRelativeUrl,
+  urlIsInsideOf,
 } from "@jsenv/filesystem"
 import {
   normalizeImportMap,
@@ -401,14 +402,21 @@ const createImportResolver = ({
   return { applyImportResolution }
 }
 
-const fileUrlToHttpUrl = (url, { projectDirectoryUrl, baseUrl }) => {
-  const relativeUrl = urlToRelativeUrl(url, projectDirectoryUrl)
-  return resolveUrl(relativeUrl, baseUrl)
-}
+const fileUrlToHttpUrl = (url, { projectDirectoryUrl, baseUrl }) =>
+  moveUrl({ url, from: projectDirectoryUrl, to: baseUrl })
 
-const httpUrlToFileUrl = (url, { projectDirectoryUrl, baseUrl }) => {
-  const relativeUrl = urlToRelativeUrl(url, baseUrl)
-  return resolveUrl(relativeUrl, projectDirectoryUrl)
+const httpUrlToFileUrl = (url, { projectDirectoryUrl, baseUrl }) =>
+  moveUrl({ url, from: baseUrl, to: projectDirectoryUrl })
+
+const moveUrl = ({ url, from, to }) => {
+  if (urlIsInsideOf(url, from)) {
+    const relativeUrl = urlToRelativeUrl(url, from)
+    return resolveUrl(relativeUrl, to)
+  }
+  if (url === from) {
+    return to
+  }
+  return null
 }
 
 const extensionIsMappedInPackageExports = async (packageFileUrl) => {
