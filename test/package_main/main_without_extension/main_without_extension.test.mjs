@@ -20,7 +20,7 @@ const expected = {
     "main-without-extension/": "./node_modules/main-without-extension/",
     "main-without-extension": "./node_modules/main-without-extension/file.js",
     "root/": "./",
-    "root": "./index",
+    "root": "./index.js",
   },
   scopes: {},
 }

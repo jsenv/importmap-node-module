@@ -404,21 +404,26 @@ export const visitNodeModuleResolution = async ({
 
     await packageVisitors.reduce(async (previous, visitor) => {
       await previous
-      const mainFileUrl = await resolvePackageMain({
-        warn,
+      const mainResolutionInfo = await resolvePackageMain({
         packageInfo,
-        nodeResolutionConditions: visitor.nodeResolutionConditions,
       })
 
-      // it's possible to have no main
-      // like { main: "" } in package.json
-      // or a main that does not lead to an actual file
-      if (mainFileUrl === null) {
-        return
+      if (!mainResolutionInfo.found) {
+        const { warning } = mainResolutionInfo
+        if (!warning) {
+          // it's ok to have no main
+          // like { main: "" } in package.json
+          return
+        }
+        // we don't know yet if the codebase will rely on main file presence or not
+        // so when main does not lead to a file:
+        // - a warning is logged
+        // - we still generate the mapping
+        warn(mainResolutionInfo.warning)
       }
 
       const mainFileRelativeUrl = urlToRelativeUrl(
-        mainFileUrl,
+        resolveUrl(mainResolutionInfo.relativeUrl, packageInfo.url),
         projectDirectoryUrl,
       )
       const scope =

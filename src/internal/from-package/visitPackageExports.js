@@ -55,7 +55,11 @@ export const visitPackageExports = ({
       return handleString(subpathValue, subpathValueTrace)
     }
 
-    if (typeof subpathValue === "object" && subpathValue !== null) {
+    if (subpathValue === null) {
+      return handleNull(subpathValue, subpathValueTrace)
+    }
+
+    if (typeof subpathValue === "object") {
       return handleObject(subpathValue, subpathValueTrace)
     }
 
@@ -79,6 +83,11 @@ export const visitPackageExports = ({
       trace: subpathValueTrace,
     })
     return true
+  }
+
+  const handleNull = () => {
+    // see "null can be used" in https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_subpath_patterns
+    return false
   }
 
   const handleObject = (subpathValue, subpathValueTrace) => {

@@ -18,7 +18,7 @@ const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
     "whatever/": "./",
-    "whatever": "./index",
+    "whatever": "./index.js",
     "foo": "./node_modules/foo/file.js",
   },
   scopes: {},

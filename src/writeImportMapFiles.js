@@ -8,8 +8,11 @@ import {
 } from "@jsenv/filesystem"
 import { sortImportMap } from "@jsenv/importmap"
 
+import { assertInitialImportMap } from "./internal/assertInitialImportMap.js"
+import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js"
 import { visitNodeModuleResolution } from "./internal/from-package/visitNodeModuleResolution.js"
 import { optimizeImportMap } from "./internal/optimizeImportMap.js"
+import { resolveProjectEntryPoint } from "./internal/from-js/resolveProjectEntryPoint.js"
 import { visitSourceFiles } from "./internal/from-js/visitSourceFiles.js"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 
@@ -51,6 +54,7 @@ export const writeImportMapFiles = async ({
     const importMapConfig = importMapFiles[importMapFileRelativeUrl]
 
     const { initialImportMap = {} } = importMapConfig
+    assertInitialImportMap(initialImportMap)
     const topLevelMappings = initialImportMap.imports || {}
     const scopedMappings = initialImportMap.scopes || {}
     const importMap = {
@@ -110,6 +114,7 @@ export const writeImportMapFiles = async ({
         extensionlessAutomapping,
         magicExtensions,
         removeUnusedMappings,
+        packageUserConditions,
         runtime = "browser",
       } = importMapConfig
 
@@ -130,18 +135,27 @@ export const writeImportMapFiles = async ({
           )
         }
 
-        const importMap = await visitSourceFiles({
-          logger,
+        const projectEntryPoint = await resolveProjectEntryPoint({
           warn,
           projectDirectoryUrl,
-          importMap: importMaps[importMapFileRelativeUrl],
-          bareSpecifierAutomapping,
-          extensionlessAutomapping,
-          magicExtensions,
-          removeUnusedMappings,
-          runtime,
+          packageUserConditions,
         })
-        importMaps[importMapFileRelativeUrl] = importMap
+
+        if (projectEntryPoint) {
+          const importMap = await visitSourceFiles({
+            logger,
+            warn,
+            projectDirectoryUrl,
+            projectEntryPoint,
+            importMap: importMaps[importMapFileRelativeUrl],
+            bareSpecifierAutomapping,
+            extensionlessAutomapping,
+            magicExtensions,
+            removeUnusedMappings,
+            runtime,
+          })
+          importMaps[importMapFileRelativeUrl] = importMap
+        }
       }
     },
     Promise.resolve(),
@@ -199,31 +213,6 @@ export const writeImportMapFiles = async ({
   }
 
   return importMaps
-}
-
-const packageConditionsFromPackageUserConditions = ({
-  runtime,
-  packageUserConditions,
-}) => {
-  if (typeof packageUserConditions === "undefined") {
-    return ["import", runtime, "default"]
-  }
-
-  if (!Array.isArray(packageUserConditions)) {
-    throw new TypeError(
-      `packageUserConditions must be an array, got ${packageUserConditions}`,
-    )
-  }
-
-  packageUserConditions.forEach((userCondition) => {
-    if (typeof userCondition !== "string") {
-      throw new TypeError(
-        `user condition must be a string, got ${userCondition}`,
-      )
-    }
-  })
-
-  return [...packageUserConditions, "import", runtime, "default"]
 }
 
 const wrapWarnToWarnOnce = (warn) => {

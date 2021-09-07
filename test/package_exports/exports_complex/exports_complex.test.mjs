@@ -27,7 +27,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
       "whatever/": "./",
-      "whatever": "./index",
+      "whatever": "./index.js",
       "foo": "./node_modules/foo/dist/rollup.mjs",
     },
     scopes: {},
@@ -44,7 +44,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
       "whatever/": "./",
-      "whatever": "./index",
+      "whatever": "./index.js",
       "foo": "./node_modules/foo/dist/rollup.js",
     },
     scopes: {},
@@ -61,7 +61,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
       "whatever/": "./",
-      "whatever": "./index",
+      "whatever": "./index.js",
       "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
     scopes: {},
@@ -77,7 +77,7 @@ const test = async ({ runtime, packageUserConditions } = {}) => {
     imports: {
       "foo/dist/": "./node_modules/foo/dist/",
       "whatever/": "./",
-      "whatever": "./index",
+      "whatever": "./index.js",
       "foo": "./node_modules/foo/dist/rollup.browser.mjs",
     },
     scopes: {},

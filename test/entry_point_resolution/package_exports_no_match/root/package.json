@@ -1,0 +1,8 @@
+{
+  "name": "root",
+  "exports": {
+    ".": {
+      "electron": "./main.js"
+    }
+  }
+}

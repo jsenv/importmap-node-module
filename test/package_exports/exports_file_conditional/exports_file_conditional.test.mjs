@@ -26,7 +26,7 @@ const test = async ({ runtime }) => {
     imports: {
       "foo/file.js": "./node_modules/foo/file.browser.js",
       "root/": "./",
-      "root": "./index",
+      "root": "./index.js",
     },
     scopes: {},
   }
@@ -41,7 +41,7 @@ const test = async ({ runtime }) => {
     imports: {
       "foo/file.js": "./node_modules/foo/file.default.js",
       "root/": "./",
-      "root": "./index",
+      "root": "./index.js",
     },
     scopes: {},
   }

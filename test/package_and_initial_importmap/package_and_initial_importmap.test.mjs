@@ -4,18 +4,17 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      removeUnusedMappings: true,
       initialImportMap: {
         imports: {
           "#env": "./env.js",
         },
       },
+      mappingsForNodeResolution: true,
+      removeUnusedMappings: true,
       packageIncludedPredicate: ({ name }) => name !== "foo",
     },
   },
@@ -26,7 +25,6 @@ const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
     "#env": "./env.js",
-    "root": "./index.js",
   },
   scopes: {},
 }

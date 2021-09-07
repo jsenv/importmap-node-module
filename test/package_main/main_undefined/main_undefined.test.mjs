@@ -20,7 +20,7 @@ const expected = {
     "main-undefined/": "./node_modules/main-undefined/",
     "main-undefined": "./node_modules/main-undefined/index.js",
     "root/": "./",
-    "root": "./index",
+    "root": "./index.js",
   },
   scopes: {},
 }

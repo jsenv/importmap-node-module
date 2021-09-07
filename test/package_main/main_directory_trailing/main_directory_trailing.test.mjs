@@ -20,7 +20,7 @@ const expected = {
     "main-folder-trailing/": "./node_modules/main-folder-trailing/",
     "main-folder-trailing": "./node_modules/main-folder-trailing/lib/index.js",
     "root/": "./",
-    "root": "./index",
+    "root": "./index.js",
   },
   scopes: {},
 }

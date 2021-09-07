@@ -1,7 +1,0 @@
-{
-  "name": "root",
-  "main": "",
-  "dependencies": {
-    "malformed": "*"
-  }
-}

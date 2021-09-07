@@ -3,111 +3,84 @@ import {
   resolveUrl,
   urlToFileSystemPath,
   urlToExtension,
+  urlToRelativeUrl,
 } from "@jsenv/filesystem"
+
 import { resolveFile } from "../resolveFile.js"
 
-export const resolvePackageMain = ({
-  warn,
+export const resolvePackageMain = async ({
   packageInfo,
   // nodeResolutionConditions = [],
 }) => {
-  if ("main" in packageInfo.object) {
-    return resolveMainFile({
-      warn,
-      packageFileUrl: packageInfo.url,
-      packageMainFieldName: "main",
-      packageMainFieldValue: packageInfo.object.main,
-    })
-  }
-
-  return resolveMainFile({
-    warn,
-    packageFileUrl: packageInfo.url,
-    packageMainFieldName: "default",
-    packageMainFieldValue: "index",
-  })
-}
-
-const resolveMainFile = async ({
-  warn,
-  packageFileUrl,
-  packageMainFieldName,
-  packageMainFieldValue,
-}) => {
+  const packageMain = packageInfo.object.main
   // main is explicitely empty meaning
   // it is assumed that we should not find a file
-  if (packageMainFieldValue === "") {
-    return null
+  if (packageMain === "") {
+    return { found: false }
   }
 
-  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
-  const mainFileRelativeUrl = packageMainFieldValue.endsWith("/")
-    ? `${packageMainFieldValue}index`
-    : packageMainFieldValue
+  const relativeUrlToTry = packageMain
+    ? packageMain.endsWith("/")
+      ? `${packageMain}index`
+      : packageMain
+    : "./index"
+  const urlFirstCandidate = resolveUrl(relativeUrlToTry, packageInfo.url)
+  const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
 
-  const mainFileUrlFirstCandidate = resolveUrl(
-    mainFileRelativeUrl,
-    packageFileUrl,
-  )
-
-  if (!mainFileUrlFirstCandidate.startsWith(packageDirectoryUrl)) {
-    warn(
-      createPackageMainFileMustBeRelativeWarning({
-        packageMainFieldName,
-        packageMainFieldValue,
-        packageFileUrl,
+  if (!urlFirstCandidate.startsWith(packageDirectoryUrl)) {
+    return {
+      found: false,
+      warning: createPackageMainFileMustBeRelativeWarning({
+        packageMain,
+        packageInfo,
       }),
-    )
-    return null
+    }
   }
 
-  const { found, url } = await resolveFile(mainFileUrlFirstCandidate, {
+  const { found, url } = await resolveFile(urlFirstCandidate, {
     magicDirectoryIndexEnabled: true,
     magicExtensionEnabled: true,
     magicExtensions: [".js", ".json", ".node"],
   })
 
   if (!found) {
-    // we know in advance this remapping does not lead to an actual file.
-    // we only warn because we have no guarantee this remapping will actually be used
-    // in the codebase.
-    // warn only if there is actually a main field
-    // otherwise the package.json is missing the main field
-    // it certainly means it's not important
-    if (packageMainFieldName !== "default") {
-      warn(
-        createPackageMainFileNotFoundWarning({
-          specifier: packageMainFieldValue,
-          importedIn: `${packageFileUrl}#${packageMainFieldName}`,
-          fileUrl: mainFileUrlFirstCandidate,
-          magicExtensions: [".js", ".json", ".node"],
-        }),
-      )
+    const warning = createPackageMainFileNotFoundWarning({
+      specifier: relativeUrlToTry,
+      packageInfo,
+      fileUrl: urlFirstCandidate,
+      magicExtensions: [".js", ".json", ".node"],
+    })
+
+    return {
+      found: false,
+      relativeUrl: urlToRelativeUrl(urlFirstCandidate, packageInfo.url),
+      warning,
     }
-    return mainFileUrlFirstCandidate
   }
 
-  return url
+  return {
+    found: true,
+    relativeUrl: urlToRelativeUrl(url, packageInfo.url),
+  }
 }
 
 const createPackageMainFileMustBeRelativeWarning = ({
-  packageMainFieldName,
-  packageMainFieldValue,
-  packageFileUrl,
+  packageMain,
+  packageInfo,
 }) => {
   return {
     code: "PACKAGE_MAIN_FILE_MUST_BE_RELATIVE",
-    message: `${packageMainFieldName} field in package.json must be inside package.json folder.
---- ${packageMainFieldName} ---
-${packageMainFieldValue}
+    message: `"main" field in package.json must be inside package.json folder.
+--- main ---
+${packageMain}
 --- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}`,
+${urlToFileSystemPath(packageInfo.url)}`,
   }
 }
 
 const createPackageMainFileNotFoundWarning = ({
   specifier,
-  importedIn,
+  packageInfo,
   fileUrl,
   magicExtensions,
 }) => {
@@ -116,8 +89,7 @@ const createPackageMainFileNotFoundWarning = ({
     message: createDetailedMessage(
       `Cannot find package main file "${specifier}"`,
       {
-        "imported in": importedIn,
-        "file url tried": fileUrl,
+        "package.json path": urlToFileSystemPath(packageInfo.url),
         ...(urlToExtension(fileUrl) === ""
           ? { ["extensions tried"]: magicExtensions.join(`, `) }
           : {}),
