@@ -59,10 +59,10 @@ node ./generate_importmap.mjs
 
 If you use a bundler or an other tool, be sure it's compatible with import maps.
 As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration.
-If you don't know what to use check [@jsenv/core](https://github.com/jsenv/jsenv-core#presentation).
+If you don't know what to use, check [@jsenv/core](https://github.com/jsenv/jsenv-core#presentation).
 
-At this stage you have generated an importmap with mappings corresponding to node resolution.
-The rest of the documentation go into details.
+At this stage you have generated an importmap file with mappings corresponding to how node resolve imports.
+You can read the rest of this document to go further.
 
 # writeImportMapFiles
 
