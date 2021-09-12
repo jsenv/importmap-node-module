@@ -1,49 +1,24 @@
 import { createRequire } from "node:module"
-import { urlToFileSystemPath, urlToExtension } from "@jsenv/filesystem"
+import { parseAsync } from "@babel/core"
+import { urlToFileSystemPath } from "@jsenv/filesystem"
 
 const require = createRequire(import.meta.url)
 
-const parser = require("@babel/parser")
 const traverse = require("@babel/traverse")
 
 export const parseImportSpecifiers = async (
   url,
-  { urlResponseText, jsFilesParsingOptions, babelOptions } = {},
+  { urlResponseText, babelOptions } = {},
 ) => {
-  const urlExtension = urlToExtension(url)
-
-  const {
-    jsx = [".jsx", ".tsx"].includes(urlExtension),
-    typescript = [".ts", ".tsx"].includes(urlExtension),
-    flow = false,
-  } = jsFilesParsingOptions
-
-  const initialPlugins = babelOptions.plugins
-  const plugins = [
-    ...initialPlugins,
-    ...(jsx && !findPluginByKey(initialPlugins, "jsx") ? ["jsx"] : []),
-    ...(typescript && !findPluginByKey(initialPlugins, "typescript")
-      ? ["typescript"]
-      : []),
-    ...(flow && !findPluginByKey(initialPlugins, "flow") ? ["flow"] : []),
-  ]
-  const decoratorPlugin = findPluginByKey(initialPlugins, "proposal-decorators")
-  if (decoratorPlugin) {
-    // When codebase uses decorators, babel assert decorator should be in the list of plugins
-    // bu even if it is, babel fails to detect it!
-    // by forcing the name to "decorators" as done below, babel is happy
-    plugins[plugins.indexOf(decoratorPlugin)] = [
-      "decorators",
-      decoratorPlugin.options,
-    ]
-  }
-
-  const ast = parser.parse(urlResponseText, {
+  const ast = await parseAsync(urlResponseText, {
     ...babelOptions,
     sourceType: "module",
-    sourceFilename: url.startsWith("file://") ? urlToFileSystemPath(url) : url,
-    plugins,
-    ranges: true,
+    filename: url.startsWith("file://") ? urlToFileSystemPath(url) : url,
+    plugins: babelOptions.plugins,
+    // ranges: true,
+    parserOpts: {
+      ranges: true,
+    },
   })
 
   const specifiers = {}
@@ -114,10 +89,4 @@ export const parseImportSpecifiers = async (
   })
 
   return specifiers
-}
-
-const findPluginByKey = (plugins, key) => {
-  return plugins.find(
-    (plugin) => plugin === key || plugin.key === key || plugin[0] === key,
-  )
 }

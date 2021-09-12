@@ -34,7 +34,6 @@ export const visitSourceFiles = async ({
   warn,
   projectDirectoryUrl,
   projectEntryPoint,
-  jsFilesParsingOptions = {},
   runtime,
   importMap,
   bareSpecifierAutomapping,
@@ -136,7 +135,6 @@ export const visitSourceFiles = async ({
   const visitUrlResponse = memoizeAsyncFunctionByUrl(async (url, { body }) => {
     const specifiers = await parseImportSpecifiers(url, {
       urlResponseText: body,
-      jsFilesParsingOptions,
       babelOptions,
     })
     const fileUrl =
