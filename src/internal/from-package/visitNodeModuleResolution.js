@@ -6,7 +6,7 @@ import {
   urlToFileSystemPath,
 } from "@jsenv/filesystem"
 
-import { createPackageNameMustBeAStringWarning } from "../logs.js"
+import { createPreferExportsFieldWarning, createPackageNameMustBeAStringWarning } from "../logs.js"
 
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"
@@ -406,7 +406,17 @@ export const visitNodeModuleResolution = async ({
       await previous
       const mainResolutionInfo = await resolvePackageMain({
         packageInfo,
+        packageConditions: visitor.packageConditions,
       })
+
+      if (mainResolutionInfo.packageEntryFieldName !== "main") {
+        warn(
+          createPreferExportsFieldWarning({
+            packageInfo,
+            packageEntryFieldName: mainResolutionInfo.packageEntryFieldName,
+          }),
+        )
+      }
 
       if (!mainResolutionInfo.found) {
         const { warning } = mainResolutionInfo

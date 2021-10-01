@@ -139,6 +139,7 @@ export const writeImportMapFiles = async ({
           warn,
           projectDirectoryUrl,
           packageUserConditions,
+          runtime,
         })
 
         if (projectEntryPoint) {

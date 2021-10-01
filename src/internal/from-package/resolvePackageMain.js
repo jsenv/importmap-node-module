@@ -10,28 +10,62 @@ import { resolveFile } from "../resolveFile.js"
 
 export const resolvePackageMain = async ({
   packageInfo,
-  // nodeResolutionConditions = [],
+  packageConditions,
 }) => {
-  const packageMain = packageInfo.object.main
-  // main is explicitely empty meaning
-  // it is assumed that we should not find a file
-  if (packageMain === "") {
-    return { found: false }
+  const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
+  const packageEntryFieldName = decidePackageEntryFieldName({
+    packageConditions,
+    packageInfo,
+  })
+  return tryToResolvePackageEntryFile({
+    packageEntryFieldName,
+    packageDirectoryUrl,
+    packageInfo,
+  })
+}
+
+const decidePackageEntryFieldName = ({ packageConditions, packageInfo }) => {
+  if (packageConditions.includes("import")) {
+    const packageModule = packageInfo.object.module
+    if (typeof packageModule === "string") {
+      return "module"
+    }
+
+    const packageJsNextMain = packageInfo.object["jsnext:main"]
+    if (typeof packageJsNextMain === "string") {
+      return "jsnext:main"
+    }
   }
 
-  const relativeUrlToTry = packageMain
-    ? packageMain.endsWith("/")
-      ? `${packageMain}index`
-      : packageMain
+  return "main"
+}
+
+const tryToResolvePackageEntryFile = async ({
+  packageEntryFieldName,
+  packageDirectoryUrl,
+  packageInfo,
+}) => {
+  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName]
+  // explicitely empty meaning
+  // it is assumed that we should not find a file
+  if (packageEntrySpecifier === "") {
+    return { found: false, packageEntryFieldName }
+  }
+
+  const relativeUrlToTry = packageEntrySpecifier
+    ? packageEntrySpecifier.endsWith("/")
+      ? `${packageEntrySpecifier}index`
+      : packageEntrySpecifier
     : "./index"
-  const urlFirstCandidate = resolveUrl(relativeUrlToTry, packageInfo.url)
-  const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
+
+  const urlFirstCandidate = resolveUrl(relativeUrlToTry, packageDirectoryUrl)
 
   if (!urlFirstCandidate.startsWith(packageDirectoryUrl)) {
     return {
       found: false,
-      warning: createPackageMainFileMustBeRelativeWarning({
-        packageMain,
+      packageEntryFieldName,
+      warning: createPackageEntryMustBeRelativeWarning({
+        packageEntryFieldName,
         packageInfo,
       }),
     }
@@ -44,8 +78,8 @@ export const resolvePackageMain = async ({
   })
 
   if (!found) {
-    const warning = createPackageMainFileNotFoundWarning({
-      specifier: relativeUrlToTry,
+    const warning = createPackageEntryNotFoundWarning({
+      packageEntryFieldName,
       packageInfo,
       fileUrl: urlFirstCandidate,
       magicExtensions: [".js", ".json", ".node"],
@@ -53,6 +87,7 @@ export const resolvePackageMain = async ({
 
     return {
       found: false,
+      packageEntryFieldName,
       relativeUrl: urlToRelativeUrl(urlFirstCandidate, packageInfo.url),
       warning,
     }
@@ -60,36 +95,41 @@ export const resolvePackageMain = async ({
 
   return {
     found: true,
+    packageEntryFieldName,
     relativeUrl: urlToRelativeUrl(url, packageInfo.url),
   }
 }
 
-const createPackageMainFileMustBeRelativeWarning = ({
-  packageMain,
+const createPackageEntryMustBeRelativeWarning = ({
+  packageEntryFieldName,
   packageInfo,
 }) => {
   return {
-    code: "PACKAGE_MAIN_FILE_MUST_BE_RELATIVE",
-    message: `"main" field in package.json must be inside package.json folder.
---- main ---
-${packageMain}
---- package.json path ---
-${urlToFileSystemPath(packageInfo.url)}`,
+    code: "PACKAGE_ENTRY_MUST_BE_RELATIVE",
+    message: createDetailedMessage(
+      `"${packageEntryFieldName}" field in package.json must be inside package.json directory`,
+      {
+        [packageEntryFieldName]: packageInfo.object[packageEntryFieldName],
+        "package.json path": urlToFileSystemPath(packageInfo.url),
+      },
+    ),
   }
 }
 
-const createPackageMainFileNotFoundWarning = ({
-  specifier,
+const createPackageEntryNotFoundWarning = ({
+  packageEntryFieldName,
   packageInfo,
   fileUrl,
   magicExtensions,
 }) => {
   return {
-    code: "PACKAGE_MAIN_FILE_NOT_FOUND",
+    code: "PACKAGE_ENTRY_NOT_FOUND",
     message: createDetailedMessage(
-      `Cannot find package main file "${specifier}"`,
+      `File not found for package.json "${packageEntryFieldName}" field`,
       {
+        [packageEntryFieldName]: packageInfo.object[packageEntryFieldName],
         "package.json path": urlToFileSystemPath(packageInfo.url),
+        "url tried": urlToFileSystemPath(fileUrl),
         ...(urlToExtension(fileUrl) === ""
           ? { ["extensions tried"]: magicExtensions.join(`, `) }
           : {}),
