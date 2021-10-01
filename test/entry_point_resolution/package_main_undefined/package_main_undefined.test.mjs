@@ -10,6 +10,7 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const rootPackageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
+const indexFileUrl = resolveUrl("./index", testDirectoryUrl)
 const indexJsFileUrl = resolveUrl("./index.js", testDirectoryUrl)
 const test = async () => {
   const warnings = []
@@ -38,9 +39,13 @@ await removeFileSystemNode(indexJsFileUrl, { allowUseless: true })
         code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
         message: `Cannot find project entry point
 --- reason ---
-Cannot find package main file "./index"
+File not found for package.json "main" field
+--- main ---
+undefined
 --- package.json path ---
 ${urlToFileSystemPath(rootPackageFileUrl)}
+--- url tried ---
+${urlToFileSystemPath(indexFileUrl)}
 --- extensions tried ---
 .js, .json, .node`,
       },

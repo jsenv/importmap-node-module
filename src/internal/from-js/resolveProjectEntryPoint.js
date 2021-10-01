@@ -109,8 +109,8 @@ export const resolveProjectEntryPoint = async ({
   }
 
   const packageMainResolutionInfo = await resolvePackageMain({
-    warn,
     packageInfo: projectPackageInfo,
+    packageConditions,
   })
   if (!packageMainResolutionInfo.found) {
     warn({

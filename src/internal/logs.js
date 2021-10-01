@@ -5,17 +5,71 @@ import {
   resolveUrl,
 } from "@jsenv/filesystem"
 
+export const createPreferExportsFieldWarning = ({
+  packageInfo,
+  packageEntryFieldName,
+}) => {
+  const packageName = packageInfo.object.name
+  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName]
+
+  return {
+    code: "PREFER_EXPORTS_FIELD",
+    message: createDetailedMessage(
+      `A package is using a non-standard "${packageEntryFieldName}" field. To get rid of this warning check suggestion below`,
+      {
+        "package.json path": urlToFileSystemPath(packageInfo.url),
+        "suggestion 1": `Add the following to "packageManualOverrides"
+{
+  "${packageName}": {
+    exports: {
+      import: "${packageEntrySpecifier}"
+    }
+  }
+}
+As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
+        ...getCreatePullRequestSuggestion({
+          packageInfo,
+          packageEntryFieldName,
+        }),
+      },
+    ),
+  }
+}
+
+const getCreatePullRequestSuggestion = ({
+  packageInfo,
+  packageEntryFieldName,
+}) => {
+  const repositoryUrl = getRepositoryUrl(packageInfo)
+  if (!repositoryUrl) {
+    return null
+  }
+  return {
+    "suggestion 2": `Create a pull request in ${repositoryUrl} to use "exports" instead of "${packageEntryFieldName}"`,
+  }
+}
+
+const getRepositoryUrl = (packageInfo) => {
+  const repository = packageInfo.object.repository
+  if (typeof repository === "string") {
+    return repository
+  }
+  if (typeof repository === "object") {
+    return repository.url
+  }
+  return undefined
+}
+
 export const createPackageNameMustBeAStringWarning = ({
   packageName,
   packageInfo,
 }) => {
   return {
     code: "PACKAGE_NAME_MUST_BE_A_STRING",
-    message: `Package name field must be a string
---- package name field ---
-${packageName}
---- package.json path ---
-${urlToFileSystemPath(packageInfo.url)}`,
+    message: createDetailedMessage(`Package name field must be a string`, {
+      "package name field": packageName,
+      "package.json path": urlToFileSystemPath(packageInfo.url),
+    }),
   }
 }
 

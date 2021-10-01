@@ -38,9 +38,13 @@ await removeFileSystemNode(mainJsFileUrl, { allowUseless: true })
         code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
         message: `Cannot find project entry point
 --- reason ---
-Cannot find package main file "./main.js"
+File not found for package.json "main" field
+--- main ---
+./main.js
 --- package.json path ---
-${urlToFileSystemPath(rootPackageFileUrl)}`,
+${urlToFileSystemPath(rootPackageFileUrl)}
+--- url tried ---
+${urlToFileSystemPath(mainJsFileUrl)}`,
       },
     ],
     importmaps: {

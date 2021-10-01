@@ -97,7 +97,7 @@ This parameters is **required** and accepted values are documented in [@jsenv/fi
 
 _importMapFiles_ parameter is an object where keys are importmap file relative urls and values are parameters controlling the mappings that will be written in the importmap file.
 
-## initialImportMap
+### initialImportMap
 
 _initialImportMap_ parameter is an importMap object that can be used to provide initial mappings.
 This parameter is optional and by default it's an empty object.
@@ -119,7 +119,7 @@ await writeImportMapFiles({
 })
 ```
 
-## mappingsForNodeResolution
+### mappingsForNodeResolution
 
 When _mappingsForNodeResolution_ is enabled, the mappings required to implement node module resolution are generated.
 The following source of information are used to create complete and coherent mappings in the importmap.
@@ -130,11 +130,11 @@ The following source of information are used to create complete and coherent map
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
-## mappingsForDevDependencies
+### mappingsForDevDependencies
 
 When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
 
-## checkImportResolution
+### checkImportResolution
 
 _checkImportResolution_ is a boolean parameter controlling if script tries to resolve all import found in your js files using the importmap.
 
@@ -142,7 +142,7 @@ It is recommended to enable this parameter, it gives more confidence in the gene
 
 This import resolution is auto enabled when [removeUnusedMappings](#removeUnusedMappings) or [extensionlessAutomapping](#extensionlessAutomapping) are used.
 
-## removeUnusedMappings
+### removeUnusedMappings
 
 _removeUnusedMappings_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
 
@@ -150,7 +150,7 @@ During development, you can start or stop using a mapping often so it's convenie
 
 In production you likely want to keep only the mappings actually used by your js files. In that case enable removeUnusedMappings: it will drastically decrease the importmap file size.
 
-## runtime
+### runtime
 
 A string parameter indicating where the importmap will be used. The default runtime is `"browser"`.
 The runtime is used to determine what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
@@ -173,7 +173,7 @@ await writeImportMapFiles({
 })
 ```
 
-## packageUserConditions
+### packageUserConditions
 
 Controls which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
@@ -195,7 +195,7 @@ await writeImportMapFiles({
 })
 ```
 
-## extensionlessAutomapping
+### extensionlessAutomapping
 
 _extensionlessAutomapping_ parameter is a boolean controlling if mappings are generated for import(s) without extension found in your js files. Should be combined with _magicExtensions_ as shown in the code below.
 
@@ -206,8 +206,37 @@ await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./test.importmap": {
+      mappingsForNodeResolution: true,
+    },
+  },
+})
+```
+
+## packagesManualOverrides
+
+Ideally package.json should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
+
+_packagesManualOverrides_ parameter is an object that can be used to override some of your dependencies package.json.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
       extensionlessAutomapping: true,
       magicExtensions: [".ts", ".tsx"],
+    },
+  },
+  // overrides "react-redux" package because it uses a non-standard "module" field
+  // to expose "es/index.js" entry point
+  // see https://github.com/reduxjs/react-redux/blob/9021feb9ff573b01b73084f1a7d10b322e6f0201/package.json#L18
+  packageManualOverrides: {
+    "react-redux": {
+      exports: {
+        import: "./es/index.js",
+      },
     },
   },
 })
