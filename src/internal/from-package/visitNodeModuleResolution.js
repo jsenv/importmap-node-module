@@ -6,7 +6,10 @@ import {
   urlToFileSystemPath,
 } from "@jsenv/filesystem"
 
-import { createPreferExportsFieldWarning, createPackageNameMustBeAStringWarning } from "../logs.js"
+import {
+  createPreferExportsFieldWarning,
+  createPackageNameMustBeAStringWarning,
+} from "../logs.js"
 
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"

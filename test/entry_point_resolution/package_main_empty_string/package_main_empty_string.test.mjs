@@ -1,10 +1,9 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/filesystem"
+import { resolveUrl } from "@jsenv/filesystem"
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
 const test = async () => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
@@ -30,11 +29,7 @@ const test = async () => {
         code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
         message: `Cannot find project entry point
 --- reason ---
-Cannot find package main file "./index"
---- package.json path ---
-${urlToFileSystemPath(packageFileUrl)}
---- extensions tried ---
-.js, .json, .node`,
+explicitely disabled in package.json ("main" is an empty string)`,
       },
     ],
     importmaps: {
