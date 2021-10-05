@@ -27,7 +27,7 @@ export const visitNodeModuleResolution = async ({
   projectDirectoryUrl,
   visitors,
   packagesManualOverrides,
-  exportsFieldWarningEnabled,
+  exportsFieldWarningConfig,
 }) => {
   const projectPackageFileUrl = resolveUrl(
     "./package.json",
@@ -54,6 +54,7 @@ export const visitNodeModuleResolution = async ({
     packageVisitors,
     packageInfo,
     packageImporterInfo,
+    isDevDependency,
   }) => {
     const packageName = packageInfo.object.name
     if (typeof packageName !== "string") {
@@ -86,16 +87,22 @@ export const visitNodeModuleResolution = async ({
     await visitDependencies({
       packageVisitors,
       packageInfo,
+      isDevDependency,
     })
 
     await visitPackage({
       packageVisitors,
       packageInfo,
       packageImporterInfo,
+      isDevDependency,
     })
   }
 
-  const visitDependencies = async ({ packageVisitors, packageInfo }) => {
+  const visitDependencies = async ({
+    packageVisitors,
+    packageInfo,
+    isDevDependency,
+  }) => {
     const dependencyMap = packageDependenciesFromPackageObject(
       packageInfo.object,
     )
@@ -121,6 +128,7 @@ export const visitNodeModuleResolution = async ({
             packageInfo,
             dependencyName,
             dependencyInfo,
+            isDevDependency: true,
           })
           return
         }
@@ -130,6 +138,7 @@ export const visitNodeModuleResolution = async ({
           packageInfo,
           dependencyName,
           dependencyInfo,
+          isDevDependency,
         })
       }),
     )
@@ -140,6 +149,7 @@ export const visitNodeModuleResolution = async ({
     packageInfo,
     dependencyName,
     dependencyInfo,
+    isDevDependency,
   }) => {
     const dependencyData = await findDependency({
       packageFileUrl: packageInfo.url,
@@ -179,6 +189,7 @@ export const visitNodeModuleResolution = async ({
         object: dependencyPackageJsonObject,
       },
       packageImporterInfo: packageInfo,
+      isDevDependency,
     })
   }
 
@@ -186,6 +197,7 @@ export const visitNodeModuleResolution = async ({
     packageVisitors,
     packageInfo,
     packageImporterInfo,
+    isDevDependency,
   }) => {
     const packageDerivedInfo = computePackageDerivedInfo({
       projectDirectoryUrl,
@@ -389,6 +401,7 @@ export const visitNodeModuleResolution = async ({
         packageVisitors,
         packageInfo,
         packageDerivedInfo,
+        isDevDependency,
       })
     }
   }
@@ -397,6 +410,7 @@ export const visitNodeModuleResolution = async ({
     packageVisitors,
     packageInfo,
     packageDerivedInfo,
+    isDevDependency,
   }) => {
     const {
       packageIsRoot,
@@ -413,16 +427,20 @@ export const visitNodeModuleResolution = async ({
         packageConditions: visitor.packageConditions,
       })
 
-      if (
-        exportsFieldWarningEnabled &&
-        mainResolutionInfo.packageEntryFieldName !== "main"
-      ) {
-        warn(
-          createPreferExportsFieldWarning({
-            packageInfo,
-            packageEntryFieldName: mainResolutionInfo.packageEntryFieldName,
-          }),
-        )
+      if (mainResolutionInfo.packageEntryFieldName !== "main") {
+        const shouldWarn = shouldWarnAboutExportsField({
+          exportsFieldWarningConfig,
+          isDevDependency,
+        })
+        const exportsFieldMessage = createPreferExportsFieldWarning({
+          packageInfo,
+          packageEntryFieldName: mainResolutionInfo.packageEntryFieldName,
+        })
+        if (shouldWarn) {
+          warn(exportsFieldMessage)
+        } else {
+          logger.debug(exportsFieldMessage)
+        }
       }
 
       if (!mainResolutionInfo.found) {
@@ -514,6 +532,7 @@ export const visitNodeModuleResolution = async ({
     },
     packageImporterInfo: null,
     packageVisitors: visitors,
+    isDevDependency: false,
   })
 }
 
@@ -675,6 +694,21 @@ const computePackageDerivedInfo = ({
     packageDirectoryUrlExpected,
     packageDirectoryRelativeUrl,
   }
+}
+
+const shouldWarnAboutExportsField = ({
+  exportsFieldWarningConfig,
+  isDevDependency,
+}) => {
+  if (!exportsFieldWarningConfig) {
+    return false
+  }
+
+  if (isDevDependency) {
+    return exportsFieldWarningConfig.devDependencies
+  }
+
+  return exportsFieldWarningConfig.dependencies
 }
 
 const createExportsWildcardIgnoredWarning = ({ key, value, packageInfo }) => {

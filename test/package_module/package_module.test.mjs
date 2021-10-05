@@ -33,6 +33,7 @@ const test = async () => {
       warnings.push(warning)
     },
     writeFiles: false,
+    exportsFieldWarningConfig: { dependencies: true },
   })
   return { warnings, importmaps }
 }
