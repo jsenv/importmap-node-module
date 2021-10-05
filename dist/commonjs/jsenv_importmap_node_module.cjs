@@ -61,17 +61,72 @@ const packageConditionsFromPackageUserConditions = ({
   return [...packageUserConditions, "import", runtime, "default"];
 };
 
+const createPreferExportsFieldWarning = ({
+  packageInfo,
+  packageEntryFieldName
+}) => {
+  const packageName = packageInfo.object.name;
+  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName];
+  return {
+    code: "PREFER_EXPORTS_FIELD",
+    message: logger.createDetailedMessage(`A package is using a non-standard "${packageEntryFieldName}" field. To get rid of this warning check suggestion below`, {
+      "package.json path": filesystem.urlToFileSystemPath(packageInfo.url),
+      "suggestion 1": `Add the following to "packageManualOverrides"
+{
+  "${packageName}": {
+    exports: {
+      import: "${packageEntrySpecifier}"
+    }
+  }
+}
+As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
+      ...getCreatePullRequestSuggestion({
+        packageInfo,
+        packageEntryFieldName
+      })
+    })
+  };
+};
+
+const getCreatePullRequestSuggestion = ({
+  packageInfo,
+  packageEntryFieldName
+}) => {
+  const repositoryUrl = getRepositoryUrl(packageInfo);
+
+  if (!repositoryUrl) {
+    return null;
+  }
+
+  return {
+    "suggestion 2": `Create a pull request in ${repositoryUrl} to use "exports" instead of "${packageEntryFieldName}"`
+  };
+};
+
+const getRepositoryUrl = packageInfo => {
+  const repository = packageInfo.object.repository;
+
+  if (typeof repository === "string") {
+    return repository;
+  }
+
+  if (typeof repository === "object") {
+    return repository.url;
+  }
+
+  return undefined;
+};
+
 const createPackageNameMustBeAStringWarning = ({
   packageName,
   packageInfo
 }) => {
   return {
     code: "PACKAGE_NAME_MUST_BE_A_STRING",
-    message: `Package name field must be a string
---- package name field ---
-${packageName}
---- package.json path ---
-${filesystem.urlToFileSystemPath(packageInfo.url)}`
+    message: logger.createDetailedMessage(`Package name field must be a string`, {
+      "package name field": packageName,
+      "package.json path": filesystem.urlToFileSystemPath(packageInfo.url)
+    })
   };
 };
 const createImportResolutionFailedWarning = ({
@@ -293,27 +348,66 @@ const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
 };
 
 const resolvePackageMain = async ({
-  packageInfo // nodeResolutionConditions = [],
-
+  packageInfo,
+  packageConditions
 }) => {
-  const packageMain = packageInfo.object.main; // main is explicitely empty meaning
+  const packageDirectoryUrl = filesystem.resolveUrl("./", packageInfo.url);
+  const packageEntryFieldName = decidePackageEntryFieldName({
+    packageConditions,
+    packageInfo
+  });
+  return tryToResolvePackageEntryFile({
+    packageEntryFieldName,
+    packageDirectoryUrl,
+    packageInfo
+  });
+};
+
+const decidePackageEntryFieldName = ({
+  packageConditions,
+  packageInfo
+}) => {
+  if (packageConditions.includes("import")) {
+    const packageModule = packageInfo.object.module;
+
+    if (typeof packageModule === "string") {
+      return "module";
+    }
+
+    const packageJsNextMain = packageInfo.object["jsnext:main"];
+
+    if (typeof packageJsNextMain === "string") {
+      return "jsnext:main";
+    }
+  }
+
+  return "main";
+};
+
+const tryToResolvePackageEntryFile = async ({
+  packageEntryFieldName,
+  packageDirectoryUrl,
+  packageInfo
+}) => {
+  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName]; // explicitely empty meaning
   // it is assumed that we should not find a file
 
-  if (packageMain === "") {
+  if (packageEntrySpecifier === "") {
     return {
-      found: false
+      found: false,
+      packageEntryFieldName
     };
   }
 
-  const relativeUrlToTry = packageMain ? packageMain.endsWith("/") ? `${packageMain}index` : packageMain : "./index";
-  const urlFirstCandidate = filesystem.resolveUrl(relativeUrlToTry, packageInfo.url);
-  const packageDirectoryUrl = filesystem.resolveUrl("./", packageInfo.url);
+  const relativeUrlToTry = packageEntrySpecifier ? packageEntrySpecifier.endsWith("/") ? `${packageEntrySpecifier}index` : packageEntrySpecifier : "./index";
+  const urlFirstCandidate = filesystem.resolveUrl(relativeUrlToTry, packageDirectoryUrl);
 
   if (!urlFirstCandidate.startsWith(packageDirectoryUrl)) {
     return {
       found: false,
-      warning: createPackageMainFileMustBeRelativeWarning({
-        packageMain,
+      packageEntryFieldName,
+      warning: createPackageEntryMustBeRelativeWarning({
+        packageEntryFieldName,
         packageInfo
       })
     };
@@ -329,14 +423,15 @@ const resolvePackageMain = async ({
   });
 
   if (!found) {
-    const warning = createPackageMainFileNotFoundWarning({
-      specifier: relativeUrlToTry,
+    const warning = createPackageEntryNotFoundWarning({
+      packageEntryFieldName,
       packageInfo,
       fileUrl: urlFirstCandidate,
       magicExtensions: [".js", ".json", ".node"]
     });
     return {
       found: false,
+      packageEntryFieldName,
       relativeUrl: filesystem.urlToRelativeUrl(urlFirstCandidate, packageInfo.url),
       warning
     };
@@ -344,34 +439,36 @@ const resolvePackageMain = async ({
 
   return {
     found: true,
+    packageEntryFieldName,
     relativeUrl: filesystem.urlToRelativeUrl(url, packageInfo.url)
   };
 };
 
-const createPackageMainFileMustBeRelativeWarning = ({
-  packageMain,
+const createPackageEntryMustBeRelativeWarning = ({
+  packageEntryFieldName,
   packageInfo
 }) => {
   return {
-    code: "PACKAGE_MAIN_FILE_MUST_BE_RELATIVE",
-    message: `"main" field in package.json must be inside package.json folder.
---- main ---
-${packageMain}
---- package.json path ---
-${filesystem.urlToFileSystemPath(packageInfo.url)}`
+    code: "PACKAGE_ENTRY_MUST_BE_RELATIVE",
+    message: logger.createDetailedMessage(`"${packageEntryFieldName}" field in package.json must be inside package.json directory`, {
+      [packageEntryFieldName]: packageInfo.object[packageEntryFieldName],
+      "package.json path": filesystem.urlToFileSystemPath(packageInfo.url)
+    })
   };
 };
 
-const createPackageMainFileNotFoundWarning = ({
-  specifier,
+const createPackageEntryNotFoundWarning = ({
+  packageEntryFieldName,
   packageInfo,
   fileUrl,
   magicExtensions
 }) => {
   return {
-    code: "PACKAGE_MAIN_FILE_NOT_FOUND",
-    message: logger.createDetailedMessage(`Cannot find package main file "${specifier}"`, {
+    code: "PACKAGE_ENTRY_NOT_FOUND",
+    message: logger.createDetailedMessage(`File not found for package.json "${packageEntryFieldName}" field`, {
+      [packageEntryFieldName]: packageInfo.object[packageEntryFieldName],
       "package.json path": filesystem.urlToFileSystemPath(packageInfo.url),
+      "url tried": filesystem.urlToFileSystemPath(fileUrl),
       ...(filesystem.urlToExtension(fileUrl) === "" ? {
         ["extensions tried"]: magicExtensions.join(`, `)
       } : {})
@@ -1136,7 +1233,8 @@ const visitNodeModuleResolution = async ({
   warn,
   projectDirectoryUrl,
   visitors,
-  packagesManualOverrides
+  packagesManualOverrides,
+  exportsFieldWarningEnabled
 }) => {
   const projectPackageFileUrl = filesystem.resolveUrl("./package.json", projectDirectoryUrl);
   const findNodeModulePackage = createFindNodeModulePackage();
@@ -1497,8 +1595,16 @@ const visitNodeModuleResolution = async ({
     await packageVisitors.reduce(async (previous, visitor) => {
       await previous;
       const mainResolutionInfo = await resolvePackageMain({
-        packageInfo
+        packageInfo,
+        packageConditions: visitor.packageConditions
       });
+
+      if (exportsFieldWarningEnabled && mainResolutionInfo.packageEntryFieldName !== "main") {
+        warn(createPreferExportsFieldWarning({
+          packageInfo,
+          packageEntryFieldName: mainResolutionInfo.packageEntryFieldName
+        }));
+      }
 
       if (!mainResolutionInfo.found) {
         const {
@@ -1907,8 +2013,8 @@ const resolveProjectEntryPoint = async ({
   }
 
   const packageMainResolutionInfo = await resolvePackageMain({
-    warn,
-    packageInfo: projectPackageInfo
+    packageInfo: projectPackageInfo,
+    packageConditions
   });
 
   if (!packageMainResolutionInfo.found) {
@@ -2771,6 +2877,7 @@ const writeImportMapFiles = async ({
     warn(warning);
   },
   writeFiles = true,
+  exportsFieldWarningEnabled = false,
   // for unit test
   jsConfigFileUrl
 }) => {
@@ -2847,6 +2954,7 @@ const writeImportMapFiles = async ({
     await visitNodeModuleResolution({
       logger: logger$1,
       warn,
+      exportsFieldWarningEnabled,
       projectDirectoryUrl,
       visitors: nodeResolutionVisitors,
       packagesManualOverrides
@@ -2880,7 +2988,8 @@ const writeImportMapFiles = async ({
       const projectEntryPoint = await resolveProjectEntryPoint({
         warn,
         projectDirectoryUrl,
-        packageUserConditions
+        packageUserConditions,
+        runtime
       });
 
       if (projectEntryPoint) {

@@ -27,6 +27,7 @@ export const visitNodeModuleResolution = async ({
   projectDirectoryUrl,
   visitors,
   packagesManualOverrides,
+  exportsFieldWarningEnabled,
 }) => {
   const projectPackageFileUrl = resolveUrl(
     "./package.json",
@@ -412,7 +413,10 @@ export const visitNodeModuleResolution = async ({
         packageConditions: visitor.packageConditions,
       })
 
-      if (mainResolutionInfo.packageEntryFieldName !== "main") {
+      if (
+        exportsFieldWarningEnabled &&
+        mainResolutionInfo.packageEntryFieldName !== "main"
+      ) {
         warn(
           createPreferExportsFieldWarning({
             packageInfo,

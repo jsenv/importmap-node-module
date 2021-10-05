@@ -1,4 +1,4 @@
-import { buildProject, getBabelPluginMapForNode } from "@jsenv/core"
+import { buildProject } from "@jsenv/core"
 
 import * as jsenvConfig from "../../jsenv.config.mjs"
 
@@ -9,6 +9,8 @@ await buildProject({
   entryPointMap: {
     "./index.js": "./jsenv_importmap_node_module.cjs",
   },
-  babelPluginMap: getBabelPluginMapForNode(),
+  runtimeSupport: {
+    node: "14.7.0",
+  },
   buildDirectoryClean: true,
 })

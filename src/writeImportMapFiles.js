@@ -25,6 +25,7 @@ export const writeImportMapFiles = async ({
     warn(warning)
   },
   writeFiles = true,
+  exportsFieldWarningEnabled = false,
   // for unit test
   jsConfigFileUrl,
 }) => {
@@ -96,6 +97,7 @@ export const writeImportMapFiles = async ({
     await visitNodeModuleResolution({
       logger,
       warn,
+      exportsFieldWarningEnabled,
       projectDirectoryUrl,
       visitors: nodeResolutionVisitors,
       packagesManualOverrides,
