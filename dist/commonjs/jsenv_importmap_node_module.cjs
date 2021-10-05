@@ -1234,7 +1234,7 @@ const visitNodeModuleResolution = async ({
   projectDirectoryUrl,
   visitors,
   packagesManualOverrides,
-  exportsFieldWarningEnabled
+  exportsFieldWarningConfig
 }) => {
   const projectPackageFileUrl = filesystem.resolveUrl("./package.json", projectDirectoryUrl);
   const findNodeModulePackage = createFindNodeModulePackage();
@@ -1255,7 +1255,8 @@ const visitNodeModuleResolution = async ({
   const visit = async ({
     packageVisitors,
     packageInfo,
-    packageImporterInfo
+    packageImporterInfo,
+    isDevDependency
   }) => {
     const packageName = packageInfo.object.name;
 
@@ -1284,18 +1285,21 @@ const visitNodeModuleResolution = async ({
 
     await visitDependencies({
       packageVisitors,
-      packageInfo
+      packageInfo,
+      isDevDependency
     });
     await visitPackage({
       packageVisitors,
       packageInfo,
-      packageImporterInfo
+      packageImporterInfo,
+      isDevDependency
     });
   };
 
   const visitDependencies = async ({
     packageVisitors,
-    packageInfo
+    packageInfo,
+    isDevDependency
   }) => {
     const dependencyMap = packageDependenciesFromPackageObject(packageInfo.object);
     await Promise.all(Object.keys(dependencyMap).map(async dependencyName => {
@@ -1318,7 +1322,8 @@ const visitNodeModuleResolution = async ({
           packageVisitors: visitorsForDevDependencies,
           packageInfo,
           dependencyName,
-          dependencyInfo
+          dependencyInfo,
+          isDevDependency: true
         });
         return;
       }
@@ -1327,7 +1332,8 @@ const visitNodeModuleResolution = async ({
         packageVisitors,
         packageInfo,
         dependencyName,
-        dependencyInfo
+        dependencyInfo,
+        isDevDependency
       });
     }));
   };
@@ -1336,7 +1342,8 @@ const visitNodeModuleResolution = async ({
     packageVisitors,
     packageInfo,
     dependencyName,
-    dependencyInfo
+    dependencyInfo,
+    isDevDependency
   }) => {
     const dependencyData = await findDependency({
       packageFileUrl: packageInfo.url,
@@ -1380,14 +1387,16 @@ const visitNodeModuleResolution = async ({
         name: dependencyName,
         object: dependencyPackageJsonObject
       },
-      packageImporterInfo: packageInfo
+      packageImporterInfo: packageInfo,
+      isDevDependency
     });
   };
 
   const visitPackage = async ({
     packageVisitors,
     packageInfo,
-    packageImporterInfo
+    packageImporterInfo,
+    isDevDependency
   }) => {
     const packageDerivedInfo = computePackageDerivedInfo({
       projectDirectoryUrl,
@@ -1575,7 +1584,8 @@ const visitNodeModuleResolution = async ({
       await visitPackageMain({
         packageVisitors,
         packageInfo,
-        packageDerivedInfo
+        packageDerivedInfo,
+        isDevDependency
       });
     }
   };
@@ -1583,7 +1593,8 @@ const visitNodeModuleResolution = async ({
   const visitPackageMain = async ({
     packageVisitors,
     packageInfo,
-    packageDerivedInfo
+    packageDerivedInfo,
+    isDevDependency
   }) => {
     const {
       packageIsRoot,
@@ -1599,11 +1610,21 @@ const visitNodeModuleResolution = async ({
         packageConditions: visitor.packageConditions
       });
 
-      if (exportsFieldWarningEnabled && mainResolutionInfo.packageEntryFieldName !== "main") {
-        warn(createPreferExportsFieldWarning({
+      if (mainResolutionInfo.packageEntryFieldName !== "main") {
+        const shouldWarn = shouldWarnAboutExportsField({
+          exportsFieldWarningConfig,
+          isDevDependency
+        });
+        const exportsFieldMessage = createPreferExportsFieldWarning({
           packageInfo,
           packageEntryFieldName: mainResolutionInfo.packageEntryFieldName
-        }));
+        });
+
+        if (shouldWarn) {
+          warn(exportsFieldMessage);
+        } else {
+          logger$1.debug(exportsFieldMessage);
+        }
       }
 
       if (!mainResolutionInfo.found) {
@@ -1699,7 +1720,8 @@ const visitNodeModuleResolution = async ({
       object: projectPackageObject
     },
     packageImporterInfo: null,
-    packageVisitors: visitors
+    packageVisitors: visitors,
+    isDevDependency: false
   });
 };
 
@@ -1854,6 +1876,21 @@ const computePackageDerivedInfo = ({
     packageDirectoryUrlExpected,
     packageDirectoryRelativeUrl
   };
+};
+
+const shouldWarnAboutExportsField = ({
+  exportsFieldWarningConfig,
+  isDevDependency
+}) => {
+  if (!exportsFieldWarningConfig) {
+    return false;
+  }
+
+  if (isDevDependency) {
+    return exportsFieldWarningConfig.devDependencies;
+  }
+
+  return exportsFieldWarningConfig.dependencies;
 };
 
 const createExportsWildcardIgnoredWarning = ({
@@ -2877,7 +2914,7 @@ const writeImportMapFiles = async ({
     warn(warning);
   },
   writeFiles = true,
-  exportsFieldWarningEnabled = false,
+  exportsFieldWarningConfig,
   // for unit test
   jsConfigFileUrl
 }) => {
@@ -2954,10 +2991,10 @@ const writeImportMapFiles = async ({
     await visitNodeModuleResolution({
       logger: logger$1,
       warn,
-      exportsFieldWarningEnabled,
       projectDirectoryUrl,
       visitors: nodeResolutionVisitors,
-      packagesManualOverrides
+      packagesManualOverrides,
+      exportsFieldWarningConfig
     });
   }
 
