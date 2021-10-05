@@ -57,7 +57,7 @@
     "@babel/preset-env": "7.15.6",
     "@jsenv/assert": "2.3.1",
     "@jsenv/codecov-upload": "3.5.0",
-    "@jsenv/core": "22.0.1",
+    "@jsenv/core": "22.0.3",
     "@jsenv/eslint-config": "16.0.6",
     "@jsenv/github-release-package": "1.2.3",
     "@jsenv/importmap-eslint-resolver": "5.1.2",

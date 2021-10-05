@@ -18,5 +18,5 @@ await writeImportMapFiles({
       useForJsConfigJSON: true,
     },
   },
-  exportsFieldWarningConfig: { dependencies: true },
+  // exportsFieldWarningConfig: { dependencies: true },
 })
