@@ -9,6 +9,8 @@ import {
   urlToRelativeUrl,
   resolveUrl,
 } from "@jsenv/filesystem"
+import { createDetailedMessage } from "@jsenv/logger"
+
 import { specifierIsRelative } from "./specifierIsRelative.js"
 
 export const visitPackageExports = ({
@@ -224,13 +226,13 @@ const createSubpathIsUnexpectedWarning = ({
 }) => {
   return {
     code: "EXPORTS_SUBPATH_UNEXPECTED",
-    message: `unexpected subpath in package.json exports: value must be an object or a string.
---- value ---
-${subpathValue}
---- value at ---
-${subpathValueTrace.join(".")}
---- package.json path ---
-${urlToFileSystemPath(packageInfo)}`,
+    message: createDetailedMessage(
+      `unexpected value in package.json exports: value must be an object or a string`,
+      {
+        [subpathValueTrace.join(".")]: subpathValue,
+        "package.json path": urlToFileSystemPath(packageInfo.url),
+      },
+    ),
   }
 }
 
@@ -238,16 +240,18 @@ const createSubpathKeysAreMixedWarning = ({
   subpathValue,
   subpathValueTrace,
   packageInfo,
+  conditionalKeys,
 }) => {
   return {
     code: "EXPORTS_SUBPATH_MIXED_KEYS",
-    message: `unexpected subpath keys in package.json exports: cannot mix relative and conditional keys.
---- value ---
-${JSON.stringify(subpathValue, null, "  ")}
---- value at ---
-${subpathValueTrace.join(".")}
---- package.json path ---
-${urlToFileSystemPath(packageInfo)}`,
+    message: createDetailedMessage(
+      `unexpected keys in package.json exports: cannot mix relative and conditional keys`,
+      {
+        [subpathValueTrace.join(".")]: JSON.stringify(subpathValue, null, "  "),
+        "unexpected keys": conditionalKeys.map((key) => `"${key}"`).join("\n"),
+        "package.json path": urlToFileSystemPath(packageInfo.url),
+      },
+    ),
   }
 }
 
@@ -258,12 +262,12 @@ const createSubpathValueMustBeRelativeWarning = ({
 }) => {
   return {
     code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
-    message: `unexpected subpath value in package.json exports: value must be a relative to the package.
---- value ---
-${value}
---- value at ---
-${valueTrace.join(".")}
---- package.json path ---
-${urlToFileSystemPath(packageInfo)}`,
+    message: createDetailedMessage(
+      `unexpected value in package.json exports: value must be a relative to the package`,
+      {
+        [valueTrace.join(".")]: value,
+        "package.json path": urlToFileSystemPath(packageInfo.url),
+      },
+    ),
   }
 }
