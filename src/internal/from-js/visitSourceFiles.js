@@ -310,15 +310,22 @@ const createImportResolver = ({
         importer,
       ),
     })
-    const packageDirectoryUrl = packageDirectoryUrlFromUrl(
-      url,
+
+    const importerUrl = httpUrlToFileUrl(importer, {
+      projectDirectoryUrl,
+      baseUrl,
+    })
+    const importerPackageDirectoryUrl = packageDirectoryUrlFromUrl(
+      importerUrl,
       projectDirectoryUrl,
     )
-    const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
     const scope =
-      packageDirectoryUrl === projectDirectoryUrl
+      importerPackageDirectoryUrl === projectDirectoryUrl
         ? undefined
-        : `./${urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`
+        : `./${urlToRelativeUrl(
+            importerPackageDirectoryUrl,
+            projectDirectoryUrl,
+          )}`
     const automapping = {
       scope,
       from: specifier,
@@ -369,6 +376,11 @@ const createImportResolver = ({
     }
     if (magicExtension) {
       if (!extensionlessAutomapping) {
+        const packageDirectoryUrl = packageDirectoryUrlFromUrl(
+          url,
+          projectDirectoryUrl,
+        )
+        const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
         const mappingFoundInPackageExports =
           await extensionIsMappedInPackageExports(packageFileUrl)
         if (!mappingFoundInPackageExports) {
