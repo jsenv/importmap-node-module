@@ -1,4 +1,4 @@
-import { fork } from "node:child_process"
+import { Worker } from "node:worker_threads"
 import { fileURLToPath } from "node:url"
 import {
   measurePerformanceMultipleTimes,
@@ -7,21 +7,21 @@ import {
 } from "@jsenv/performance-impact"
 
 export const measureImport = async ({ iterations = 10 } = {}) => {
-  const childProcessFileUrl = new URL(
-    "./child_process_measuring_import.mjs",
+  if (!global.gc) {
+    throw new Error("missing --expose-gc")
+  }
+  const workerFileUrl = new URL(
+    "./worker_measuring_import.mjs",
     import.meta.url,
   )
-  const childProcessFilePath = fileURLToPath(childProcessFileUrl)
+  const workerFilePath = fileURLToPath(workerFileUrl)
 
   const metrics = await measurePerformanceMultipleTimes(
     async () => {
-      const childProcess = fork(childProcessFilePath, {
-        execArgv: ["--expose-gc"],
-      })
-      const { msEllapsed, heapUsed } = await new Promise((resolve) => {
-        childProcess.on("message", (message) => {
-          resolve(message)
-        })
+      const worker = new Worker(workerFilePath)
+      const { msEllapsed, heapUsed } = await new Promise((resolve, reject) => {
+        worker.on("message", resolve)
+        worker.on("error", reject)
       })
 
       return {

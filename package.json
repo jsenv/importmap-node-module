@@ -29,7 +29,7 @@
   "scripts": {
     "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
     "generate-importmap": "node ./script/importmap/generate_importmap.mjs",
-    "measure-performances": "node ./script/performance/generate_performance_report.mjs --local",
+    "measure-performances": "node --expose-gc ./script/performance/generate_performance_report.mjs --local",
     "dist": "npm run build",
     "build": "node --experimental-import-meta-resolve ./script/build/build.mjs",
     "test": "node ./script/test/test.mjs",
