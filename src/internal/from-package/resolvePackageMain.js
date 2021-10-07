@@ -9,11 +9,13 @@ import {
 import { resolveFile } from "../resolveFile.js"
 
 export const resolvePackageMain = async ({
+  warn,
   packageInfo,
   packageConditions,
 }) => {
   const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
   const packageEntryFieldName = decidePackageEntryFieldName({
+    warn,
     packageConditions,
     packageInfo,
   })
@@ -24,19 +26,65 @@ export const resolvePackageMain = async ({
   })
 }
 
-const decidePackageEntryFieldName = ({ packageConditions, packageInfo }) => {
-  if (packageConditions.includes("import")) {
-    const packageModule = packageInfo.object.module
-    if (typeof packageModule === "string") {
-      return "module"
+const decidePackageEntryFieldName = ({
+  warn,
+  packageConditions,
+  packageInfo,
+}) => {
+  let fieldFound
+  packageConditions.find((condition) => {
+    if (condition === "import") {
+      const moduleFieldValue = packageInfo.object.module
+      if (typeof moduleFieldValue === "string") {
+        fieldFound = "module"
+        return true
+      }
+      const jsNextFieldValue = packageInfo.object["jsnext:main"]
+      if (typeof jsNextFieldValue === "string") {
+        fieldFound = "jsnext:main"
+        return true
+      }
+      return false
     }
+    if (condition === "browser") {
+      const browserFieldValue = packageInfo.object.browser
+      if (typeof browserFieldValue === "string") {
+        fieldFound = "browser"
+        return true
+      }
+      if (typeof browserFieldValue === "object") {
+        // the browser field can be an object, for now it's not supported
+        // see https://github.com/defunctzombie/package-browser-field-spec
+        // as a workaround it's possible to use "packageManualOverrides"
+        const suggestedOverride = {
+          [packageInfo.object.name]: {
+            exports: {
+              browser: browserFieldValue,
+            },
+          },
+        }
+        warn({
+          code: "BROWSER_FIELD_NOT_IMPLEMENTED",
+          message: createDetailedMessage(
+            `Found an object "browser" field in a package.json, this is not supported.`,
+            {
+              "package.json path": urlToFileSystemPath(packageInfo.url),
+              "suggestion": `Add the following into "packageManualOverrides"
+${JSON.stringify(suggestedOverride, null, "  ")}
+As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
+            },
+          ),
+        })
+        return false
+      }
 
-    const packageJsNextMain = packageInfo.object["jsnext:main"]
-    if (typeof packageJsNextMain === "string") {
-      return "jsnext:main"
+      return false
     }
+    return false
+  })
+  if (fieldFound) {
+    return fieldFound
   }
-
   return "main"
 }
 

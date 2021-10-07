@@ -14,12 +14,12 @@ const fooPackageJsonFileUrl = resolveUrl(
   "./node_modules/foo/package.json",
   testDirectoryUrl,
 )
-const fooModuleJsFileUrl = resolveUrl(
-  "./node_modules/foo/module.mjs",
+const fooBrowserJsFileUrl = resolveUrl(
+  "./node_modules/foo/browser.js",
   testDirectoryUrl,
 )
 
-const test = async () => {
+const test = async ({ runtime } = {}) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -27,6 +27,7 @@ const test = async () => {
       "test.importmap": {
         mappingsForNodeResolution: true,
         checkImportResolution: true,
+        runtime,
       },
     },
     onWarn: (warning) => {
@@ -38,25 +39,25 @@ const test = async () => {
   return { warnings, importmaps }
 }
 
-await removeFileSystemNode(fooModuleJsFileUrl, { allowUseless: true })
+await removeFileSystemNode(fooBrowserJsFileUrl, { allowUseless: true })
 
 const preferExportFieldWarning = {
   code: "PREFER_EXPORTS_FIELD",
-  message: `A package is using a non-standard "module" field. To get rid of this warning check suggestion below
+  message: `A package is using a non-standard "browser" field. To get rid of this warning check suggestion below
 --- package.json path ---
 ${urlToFileSystemPath(fooPackageJsonFileUrl)}
---- suggestion 1 ---
-Add the following to "packageManualOverrides"
+--- suggestion ---
+Add the following into "packageManualOverrides"
 {
   "foo": {
-    exports: {
-      import: "./module.mjs"
+    "exports": {
+      "browser": "./browser.js"
     }
   }
 }
 As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides
 --- suggestion 2 ---
-Create a pull request in https://github.com/reduxjs/react-redux to use "exports" instead of "module"`,
+Create a pull request in https://github.com/foo/bar to use "exports" instead of "browser"`,
 }
 
 {
@@ -66,13 +67,13 @@ Create a pull request in https://github.com/reduxjs/react-redux to use "exports"
       preferExportFieldWarning,
       {
         code: "PACKAGE_ENTRY_NOT_FOUND",
-        message: `File not found for package.json "module" field
---- module ---
-./module.mjs
+        message: `File not found for package.json "browser" field
+--- browser ---
+./browser.js
 --- package.json path ---
 ${urlToFileSystemPath(fooPackageJsonFileUrl)}
 --- url tried ---
-${urlToFileSystemPath(fooModuleJsFileUrl)}`,
+${urlToFileSystemPath(fooBrowserJsFileUrl)}`,
       },
       {
         code: "IMPORT_RESOLUTION_FAILED",
@@ -93,7 +94,7 @@ file not found on filesystem`,
           "root/": "./",
           "foo/": "./node_modules/foo/",
           "root": "./main.mjs",
-          "foo": "./node_modules/foo/module.mjs",
+          "foo": "./node_modules/foo/browser.js",
         },
         scopes: {},
       },
@@ -102,7 +103,7 @@ file not found on filesystem`,
   assert({ actual, expected })
 }
 
-await writeFile(fooModuleJsFileUrl)
+await writeFile(fooBrowserJsFileUrl)
 
 {
   const actual = await test()
@@ -114,7 +115,28 @@ await writeFile(fooModuleJsFileUrl)
           "root/": "./",
           "foo/": "./node_modules/foo/",
           "root": "./main.mjs",
-          "foo": "./node_modules/foo/module.mjs",
+          "foo": "./node_modules/foo/browser.js",
+        },
+        scopes: {},
+      },
+    },
+  }
+  assert({ actual, expected })
+}
+
+{
+  const actual = await test({
+    runtime: "node",
+  })
+  const expected = {
+    warnings: [],
+    importmaps: {
+      "test.importmap": {
+        imports: {
+          "root/": "./",
+          "foo/": "./node_modules/foo/",
+          "root": "./main.mjs",
+          "foo": "./node_modules/foo/foo.js",
         },
         scopes: {},
       },
