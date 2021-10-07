@@ -14,6 +14,7 @@ import { resolvePackageMain } from "../from-package/resolvePackageMain.js"
 const entryPointResolutionFailureMessage = `Cannot find project entry point`
 
 export const resolveProjectEntryPoint = async ({
+  logger,
   projectDirectoryUrl,
   warn,
   packageUserConditions,
@@ -109,6 +110,7 @@ export const resolveProjectEntryPoint = async ({
   }
 
   const packageMainResolutionInfo = await resolvePackageMain({
+    logger,
     warn,
     packageInfo: projectPackageInfo,
     packageConditions,

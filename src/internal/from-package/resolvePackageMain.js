@@ -6,16 +6,24 @@ import {
   urlToRelativeUrl,
 } from "@jsenv/filesystem"
 
+import {
+  createPreferExportsFieldWarning,
+  createBrowserFieldNotImplementedWarning,
+} from "../logs.js"
 import { resolveFile } from "../resolveFile.js"
 
 export const resolvePackageMain = async ({
+  logger,
   warn,
+  exportsFieldSeverity = "warn",
   packageInfo,
   packageConditions,
 }) => {
   const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
   const packageEntryFieldName = decidePackageEntryFieldName({
+    logger,
     warn,
+    exportsFieldSeverity,
     packageConditions,
     packageInfo,
   })
@@ -27,21 +35,23 @@ export const resolvePackageMain = async ({
 }
 
 const decidePackageEntryFieldName = ({
+  logger,
   warn,
+  exportsFieldSeverity,
   packageConditions,
   packageInfo,
 }) => {
-  let fieldFound
+  let nonStandardFieldFound
   packageConditions.find((condition) => {
     if (condition === "import") {
       const moduleFieldValue = packageInfo.object.module
       if (typeof moduleFieldValue === "string") {
-        fieldFound = "module"
+        nonStandardFieldFound = "module"
         return true
       }
       const jsNextFieldValue = packageInfo.object["jsnext:main"]
       if (typeof jsNextFieldValue === "string") {
-        fieldFound = "jsnext:main"
+        nonStandardFieldFound = "jsnext:main"
         return true
       }
       return false
@@ -49,32 +59,21 @@ const decidePackageEntryFieldName = ({
     if (condition === "browser") {
       const browserFieldValue = packageInfo.object.browser
       if (typeof browserFieldValue === "string") {
-        fieldFound = "browser"
+        nonStandardFieldFound = "browser"
         return true
       }
       if (typeof browserFieldValue === "object") {
         // the browser field can be an object, for now it's not supported
         // see https://github.com/defunctzombie/package-browser-field-spec
         // as a workaround it's possible to use "packageManualOverrides"
-        const suggestedOverride = {
-          [packageInfo.object.name]: {
-            exports: {
-              browser: browserFieldValue,
-            },
-          },
-        }
-        warn({
-          code: "BROWSER_FIELD_NOT_IMPLEMENTED",
-          message: createDetailedMessage(
-            `Found an object "browser" field in a package.json, this is not supported.`,
-            {
-              "package.json path": urlToFileSystemPath(packageInfo.url),
-              "suggestion": `Add the following into "packageManualOverrides"
-${JSON.stringify(suggestedOverride, null, "  ")}
-As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
-            },
-          ),
+        const browserFieldWarning = createBrowserFieldNotImplementedWarning({
+          packageInfo,
         })
+        if (exportsFieldSeverity === "warn") {
+          warn(browserFieldWarning)
+        } else {
+          logger.debug(browserFieldWarning.message)
+        }
         return false
       }
 
@@ -82,8 +81,17 @@ As explained in https://github.com/jsenv/importmap-node-module#packagesmanualove
     }
     return false
   })
-  if (fieldFound) {
-    return fieldFound
+  if (nonStandardFieldFound) {
+    const exportsFieldWarning = createPreferExportsFieldWarning({
+      packageInfo,
+      packageEntryFieldName: nonStandardFieldFound,
+    })
+    if (exportsFieldSeverity === "warn") {
+      warn(exportsFieldWarning)
+    } else {
+      logger.debug(exportsFieldWarning.message)
+    }
+    return nonStandardFieldFound
   }
   return "main"
 }

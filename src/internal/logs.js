@@ -39,6 +39,29 @@ As explained in https://github.com/jsenv/importmap-node-module#packagesmanualove
   }
 }
 
+export const createBrowserFieldNotImplementedWarning = ({ packageInfo }) => {
+  const suggestedOverride = {
+    [packageInfo.object.name]: {
+      exports: {
+        browser: packageInfo.object.browser,
+      },
+    },
+  }
+
+  return {
+    code: "BROWSER_FIELD_NOT_IMPLEMENTED",
+    message: createDetailedMessage(
+      `Found an object "browser" field in a package.json, this is not supported.`,
+      {
+        "package.json path": urlToFileSystemPath(packageInfo.url),
+        "suggestion": `Add the following into "packageManualOverrides"
+${JSON.stringify(suggestedOverride, null, "  ")}
+As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
+      },
+    ),
+  }
+}
+
 const getCreatePullRequestSuggestion = ({
   packageInfo,
   packageEntryFieldName,

@@ -6,10 +6,7 @@ import {
   urlToFileSystemPath,
 } from "@jsenv/filesystem"
 
-import {
-  createPreferExportsFieldWarning,
-  createPackageNameMustBeAStringWarning,
-} from "../logs.js"
+import { createPackageNameMustBeAStringWarning } from "../logs.js"
 
 import { resolvePackageMain } from "./resolvePackageMain.js"
 import { visitPackageImportMap } from "./visitPackageImportMap.js"
@@ -422,27 +419,19 @@ export const visitNodeModuleResolution = async ({
 
     await packageVisitors.reduce(async (previous, visitor) => {
       await previous
+      const exportsFieldSeverity = shouldWarnAboutExportsField({
+        exportsFieldWarningConfig,
+        isDevDependency,
+      })
+        ? "warn"
+        : "debug"
       const mainResolutionInfo = await resolvePackageMain({
+        logger,
         warn,
+        exportsFieldSeverity,
         packageInfo,
         packageConditions: visitor.packageConditions,
       })
-
-      if (mainResolutionInfo.packageEntryFieldName !== "main") {
-        const shouldWarn = shouldWarnAboutExportsField({
-          exportsFieldWarningConfig,
-          isDevDependency,
-        })
-        const exportsFieldMessage = createPreferExportsFieldWarning({
-          packageInfo,
-          packageEntryFieldName: mainResolutionInfo.packageEntryFieldName,
-        })
-        if (shouldWarn) {
-          warn(exportsFieldMessage)
-        } else {
-          logger.debug(exportsFieldMessage)
-        }
-      }
 
       if (!mainResolutionInfo.found) {
         const { warning } = mainResolutionInfo

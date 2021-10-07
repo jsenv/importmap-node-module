@@ -138,6 +138,7 @@ export const writeImportMapFiles = async ({
         }
 
         const projectEntryPoint = await resolveProjectEntryPoint({
+          logger,
           warn,
           projectDirectoryUrl,
           packageUserConditions,
