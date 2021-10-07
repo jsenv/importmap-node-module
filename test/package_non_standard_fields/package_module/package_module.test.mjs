@@ -45,12 +45,12 @@ const preferExportFieldWarning = {
   message: `A package is using a non-standard "module" field. To get rid of this warning check suggestion below
 --- package.json path ---
 ${urlToFileSystemPath(fooPackageJsonFileUrl)}
---- suggestion 1 ---
-Add the following to "packageManualOverrides"
+--- suggestion ---
+Add the following into "packageManualOverrides"
 {
   "foo": {
-    exports: {
-      import: "./module.mjs"
+    "exports": {
+      "import": "./module.mjs"
     }
   }
 }
