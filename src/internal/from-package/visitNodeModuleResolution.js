@@ -423,6 +423,7 @@ export const visitNodeModuleResolution = async ({
     await packageVisitors.reduce(async (previous, visitor) => {
       await previous
       const mainResolutionInfo = await resolvePackageMain({
+        warn,
         packageInfo,
         packageConditions: visitor.packageConditions,
       })

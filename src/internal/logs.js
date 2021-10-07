@@ -11,6 +11,15 @@ export const createPreferExportsFieldWarning = ({
 }) => {
   const packageName = packageInfo.object.name
   const packageEntrySpecifier = packageInfo.object[packageEntryFieldName]
+  const exportsSubpathCondition =
+    packageEntryFieldName === "browser" ? "browser" : "import"
+  const suggestedOverride = {
+    [packageName]: {
+      exports: {
+        [exportsSubpathCondition]: packageEntrySpecifier,
+      },
+    },
+  }
 
   return {
     code: "PREFER_EXPORTS_FIELD",
@@ -18,14 +27,8 @@ export const createPreferExportsFieldWarning = ({
       `A package is using a non-standard "${packageEntryFieldName}" field. To get rid of this warning check suggestion below`,
       {
         "package.json path": urlToFileSystemPath(packageInfo.url),
-        "suggestion 1": `Add the following to "packageManualOverrides"
-{
-  "${packageName}": {
-    exports: {
-      import: "${packageEntrySpecifier}"
-    }
-  }
-}
+        "suggestion": `Add the following into "packageManualOverrides"
+${JSON.stringify(suggestedOverride, null, "  ")}
 As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
         ...getCreatePullRequestSuggestion({
           packageInfo,
