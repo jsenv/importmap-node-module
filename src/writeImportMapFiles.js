@@ -6,7 +6,7 @@ import {
   readFile,
   urlToFileSystemPath,
 } from "@jsenv/filesystem"
-import { sortImportMap } from "@jsenv/importmap"
+import { composeTwoImportMaps, sortImportMap } from "@jsenv/importmap"
 
 import { assertInitialImportMap } from "./internal/assertInitialImportMap.js"
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js"
@@ -103,6 +103,19 @@ export const writeImportMapFiles = async ({
       exportsFieldWarningConfig,
     })
   }
+
+  importMapFileRelativeUrls.forEach((importMapFileRelativeUrl) => {
+    const importMapConfig = importMapFiles[importMapFileRelativeUrl]
+    const { terminalImportMap } = importMapConfig
+    if (terminalImportMap) {
+      const importMap = importMaps[importMapFileRelativeUrl]
+      const importMapModified = composeTwoImportMaps(
+        importMap,
+        terminalImportMap,
+      )
+      importMaps[importMapFileRelativeUrl] = importMapModified
+    }
+  })
 
   await importMapFileRelativeUrls.reduce(
     async (previous, importMapFileRelativeUrl) => {
