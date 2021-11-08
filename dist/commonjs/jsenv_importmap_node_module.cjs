@@ -67,23 +67,45 @@ const createPreferExportsFieldWarning = ({
 }) => {
   const packageName = packageInfo.object.name;
   const packageEntrySpecifier = packageInfo.object[packageEntryFieldName];
+  const exportsSubpathCondition = packageEntryFieldName === "browser" ? "browser" : "import";
+  const suggestedOverride = {
+    [packageName]: {
+      exports: {
+        [exportsSubpathCondition]: packageEntrySpecifier
+      }
+    }
+  };
   return {
     code: "PREFER_EXPORTS_FIELD",
     message: logger.createDetailedMessage(`A package is using a non-standard "${packageEntryFieldName}" field. To get rid of this warning check suggestion below`, {
       "package.json path": filesystem.urlToFileSystemPath(packageInfo.url),
-      "suggestion 1": `Add the following to "packageManualOverrides"
-{
-  "${packageName}": {
-    exports: {
-      import: "${packageEntrySpecifier}"
-    }
-  }
-}
+      "suggestion": `Add the following into "packageManualOverrides"
+${JSON.stringify(suggestedOverride, null, "  ")}
 As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
       ...getCreatePullRequestSuggestion({
         packageInfo,
         packageEntryFieldName
       })
+    })
+  };
+};
+const createBrowserFieldNotImplementedWarning = ({
+  packageInfo
+}) => {
+  const suggestedOverride = {
+    [packageInfo.object.name]: {
+      exports: {
+        browser: packageInfo.object.browser
+      }
+    }
+  };
+  return {
+    code: "BROWSER_FIELD_NOT_IMPLEMENTED",
+    message: logger.createDetailedMessage(`Found an object "browser" field in a package.json, this is not supported.`, {
+      "package.json path": filesystem.urlToFileSystemPath(packageInfo.url),
+      "suggestion": `Add the following into "packageManualOverrides"
+${JSON.stringify(suggestedOverride, null, "  ")}
+As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`
     })
   };
 };
@@ -348,11 +370,17 @@ const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
 };
 
 const resolvePackageMain = async ({
+  logger,
+  warn,
+  exportsFieldSeverity = "warn",
   packageInfo,
   packageConditions
 }) => {
   const packageDirectoryUrl = filesystem.resolveUrl("./", packageInfo.url);
   const packageEntryFieldName = decidePackageEntryFieldName({
+    logger,
+    warn,
+    exportsFieldSeverity,
     packageConditions,
     packageInfo
   });
@@ -364,21 +392,76 @@ const resolvePackageMain = async ({
 };
 
 const decidePackageEntryFieldName = ({
+  logger,
+  warn,
+  exportsFieldSeverity,
   packageConditions,
   packageInfo
 }) => {
-  if (packageConditions.includes("import")) {
-    const packageModule = packageInfo.object.module;
+  let nonStandardFieldFound;
+  packageConditions.find(condition => {
+    if (condition === "import") {
+      const moduleFieldValue = packageInfo.object.module;
 
-    if (typeof packageModule === "string") {
-      return "module";
+      if (typeof moduleFieldValue === "string") {
+        nonStandardFieldFound = "module";
+        return true;
+      }
+
+      const jsNextFieldValue = packageInfo.object["jsnext:main"];
+
+      if (typeof jsNextFieldValue === "string") {
+        nonStandardFieldFound = "jsnext:main";
+        return true;
+      }
+
+      return false;
     }
 
-    const packageJsNextMain = packageInfo.object["jsnext:main"];
+    if (condition === "browser") {
+      const browserFieldValue = packageInfo.object.browser;
 
-    if (typeof packageJsNextMain === "string") {
-      return "jsnext:main";
+      if (typeof browserFieldValue === "string") {
+        nonStandardFieldFound = "browser";
+        return true;
+      }
+
+      if (typeof browserFieldValue === "object") {
+        // the browser field can be an object, for now it's not supported
+        // see https://github.com/defunctzombie/package-browser-field-spec
+        // as a workaround it's possible to use "packageManualOverrides"
+        const browserFieldWarning = createBrowserFieldNotImplementedWarning({
+          packageInfo
+        });
+
+        if (exportsFieldSeverity === "warn") {
+          warn(browserFieldWarning);
+        } else {
+          logger.debug(browserFieldWarning.message);
+        }
+
+        return false;
+      }
+
+      return false;
     }
+
+    return false;
+  });
+
+  if (nonStandardFieldFound) {
+    const exportsFieldWarning = createPreferExportsFieldWarning({
+      packageInfo,
+      packageEntryFieldName: nonStandardFieldFound
+    });
+
+    if (exportsFieldSeverity === "warn") {
+      warn(exportsFieldWarning);
+    } else {
+      logger.debug(exportsFieldWarning.message);
+    }
+
+    return nonStandardFieldFound;
   }
 
   return "main";
@@ -936,30 +1019,26 @@ const createSubpathIsUnexpectedWarning = ({
 }) => {
   return {
     code: "EXPORTS_SUBPATH_UNEXPECTED",
-    message: `unexpected subpath in package.json exports: value must be an object or a string.
---- value ---
-${subpathValue}
---- value at ---
-${subpathValueTrace.join(".")}
---- package.json path ---
-${filesystem.urlToFileSystemPath(packageInfo)}`
+    message: logger.createDetailedMessage(`unexpected value in package.json exports: value must be an object or a string`, {
+      [subpathValueTrace.join(".")]: subpathValue,
+      "package.json path": filesystem.urlToFileSystemPath(packageInfo.url)
+    })
   };
 };
 
 const createSubpathKeysAreMixedWarning = ({
   subpathValue,
   subpathValueTrace,
-  packageInfo
+  packageInfo,
+  conditionalKeys
 }) => {
   return {
     code: "EXPORTS_SUBPATH_MIXED_KEYS",
-    message: `unexpected subpath keys in package.json exports: cannot mix relative and conditional keys.
---- value ---
-${JSON.stringify(subpathValue, null, "  ")}
---- value at ---
-${subpathValueTrace.join(".")}
---- package.json path ---
-${filesystem.urlToFileSystemPath(packageInfo)}`
+    message: logger.createDetailedMessage(`unexpected keys in package.json exports: cannot mix relative and conditional keys`, {
+      [subpathValueTrace.join(".")]: JSON.stringify(subpathValue, null, "  "),
+      "unexpected keys": conditionalKeys.map(key => `"${key}"`).join("\n"),
+      "package.json path": filesystem.urlToFileSystemPath(packageInfo.url)
+    })
   };
 };
 
@@ -970,13 +1049,10 @@ const createSubpathValueMustBeRelativeWarning = ({
 }) => {
   return {
     code: "EXPORTS_SUBPATH_VALUE_MUST_BE_RELATIVE",
-    message: `unexpected subpath value in package.json exports: value must be a relative to the package.
---- value ---
-${value}
---- value at ---
-${valueTrace.join(".")}
---- package.json path ---
-${filesystem.urlToFileSystemPath(packageInfo)}`
+    message: logger.createDetailedMessage(`unexpected value in package.json exports: value must be a relative to the package`, {
+      [valueTrace.join(".")]: value,
+      "package.json path": filesystem.urlToFileSystemPath(packageInfo.url)
+    })
   };
 };
 
@@ -1605,27 +1681,17 @@ const visitNodeModuleResolution = async ({
     } = packageDerivedInfo;
     await packageVisitors.reduce(async (previous, visitor) => {
       await previous;
+      const exportsFieldSeverity = shouldWarnAboutExportsField({
+        exportsFieldWarningConfig,
+        isDevDependency
+      }) ? "warn" : "debug";
       const mainResolutionInfo = await resolvePackageMain({
+        logger: logger$1,
+        warn,
+        exportsFieldSeverity,
         packageInfo,
         packageConditions: visitor.packageConditions
       });
-
-      if (mainResolutionInfo.packageEntryFieldName !== "main") {
-        const shouldWarn = shouldWarnAboutExportsField({
-          exportsFieldWarningConfig,
-          isDevDependency
-        });
-        const exportsFieldMessage = createPreferExportsFieldWarning({
-          packageInfo,
-          packageEntryFieldName: mainResolutionInfo.packageEntryFieldName
-        });
-
-        if (shouldWarn) {
-          warn(exportsFieldMessage);
-        } else {
-          logger$1.debug(exportsFieldMessage);
-        }
-      }
 
       if (!mainResolutionInfo.found) {
         const {
@@ -1959,6 +2025,7 @@ const optimizeImportMap = ({
 
 const entryPointResolutionFailureMessage = `Cannot find project entry point`;
 const resolveProjectEntryPoint = async ({
+  logger: logger$1,
   projectDirectoryUrl,
   warn,
   packageUserConditions,
@@ -2050,6 +2117,8 @@ const resolveProjectEntryPoint = async ({
   }
 
   const packageMainResolutionInfo = await resolvePackageMain({
+    logger: logger$1,
+    warn,
     packageInfo: projectPackageInfo,
     packageConditions
   });
@@ -2705,9 +2774,12 @@ const createImportResolver = ({
       magicExtensionEnabled: true,
       magicExtensions: magicExtensionWithImporterExtension(magicExtensions || [], importer)
     });
-    const packageDirectoryUrl = packageDirectoryUrlFromUrl(url, projectDirectoryUrl);
-    const packageFileUrl = filesystem.resolveUrl("package.json", packageDirectoryUrl);
-    const scope = packageDirectoryUrl === projectDirectoryUrl ? undefined : `./${filesystem.urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl)}`;
+    const importerUrl = httpUrlToFileUrl(importer, {
+      projectDirectoryUrl,
+      baseUrl
+    });
+    const importerPackageDirectoryUrl = packageDirectoryUrlFromUrl(importerUrl, projectDirectoryUrl);
+    const scope = importerPackageDirectoryUrl === projectDirectoryUrl ? undefined : `./${filesystem.urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl)}`;
     const automapping = {
       scope,
       from: specifier,
@@ -2760,6 +2832,8 @@ const createImportResolver = ({
 
     if (magicExtension) {
       if (!extensionlessAutomapping) {
+        const packageDirectoryUrl = packageDirectoryUrlFromUrl(url, projectDirectoryUrl);
+        const packageFileUrl = filesystem.resolveUrl("package.json", packageDirectoryUrl);
         const mappingFoundInPackageExports = await extensionIsMappedInPackageExports(packageFileUrl);
 
         if (!mappingFoundInPackageExports) {
@@ -3023,6 +3097,7 @@ const writeImportMapFiles = async ({
       }
 
       const projectEntryPoint = await resolveProjectEntryPoint({
+        logger: logger$1,
         warn,
         projectDirectoryUrl,
         packageUserConditions,

@@ -18,12 +18,8 @@ on: pull_request_target
 
 jobs:
   performance_impact:
-    # Explicit OS version (ubuntu-20.04 instead of ubuntu-latest)
-    # to make build more predictable
     runs-on: ubuntu-20.04
     name: performance impact
-    env:
-      CI: true
     steps:
       - name: Setup git
         # "checkout@v2" documentation available at https://github.com/actions/checkout
@@ -32,9 +28,7 @@ jobs:
         # "setup-node@v1" documentation available at https://github.com/actions/setup-node
         uses: actions/setup-node@v1
         with:
-          # Explicit node version ("16.6.1" instead of "lts")
-          # to make build more predictable
-          node-version: "16.6.1"
+          node-version: "16.13.0"
       - name: Setup npm
         run: npm install
       - name: Report performance impact

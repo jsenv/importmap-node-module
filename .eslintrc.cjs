@@ -1,6 +1,6 @@
 /*
  * This file uses "@jsenv/eslint-config" to configure ESLint
- * See https://github.com/jsenv/eslint-config#eslint-config
+ * See https://github.com/jsenv/eslint-config#eslint-config----
  */
 
 const {
@@ -55,6 +55,7 @@ const eslintConfig = composeEslintConfig(
           node: true,
         },
       },
+      "import/extensions": [".js", ".mjs"],
     },
     rules: jsenvEslintRulesForImport,
   },
@@ -67,6 +68,7 @@ const eslintConfig = composeEslintConfig(
       __filename: "off",
       __dirname: "off",
       require: "off",
+      exports: "off",
     },
     overrides: [
       {
@@ -79,6 +81,7 @@ const eslintConfig = composeEslintConfig(
           __filename: true,
           __dirname: true,
           require: true,
+          exports: true,
         },
 
         // inside *.cjs files, use commonjs module resolution
