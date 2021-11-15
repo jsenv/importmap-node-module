@@ -329,7 +329,10 @@ const createImportResolver = ({
     const specifierUrl = resolveUrl(specifier, url)
     const automapping = {
       scope,
-      from: `./${urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}`,
+      from:
+        specifier.startsWith("./") || specifier.startsWith("../")
+          ? `./${urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}`
+          : specifier,
       to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
     }
     if (gotBareSpecifierError) {
