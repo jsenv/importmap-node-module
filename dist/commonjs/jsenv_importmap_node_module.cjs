@@ -2780,12 +2780,13 @@ const createImportResolver = ({
     });
     const importerPackageDirectoryUrl = packageDirectoryUrlFromUrl(importerUrl, projectDirectoryUrl);
     const scope = importerPackageDirectoryUrl === projectDirectoryUrl ? undefined : `./${filesystem.urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl)}`;
-    const specifierUrl = filesystem.resolveUrl(specifier, url);
-    const automapping = {
+    const automapping = getAutomapping({
+      specifier,
       scope,
-      from: specifier.startsWith("./") || specifier.startsWith("../") ? `./${filesystem.urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}` : specifier,
-      to: `./${filesystem.urlToRelativeUrl(url, projectDirectoryUrl)}`
-    };
+      projectDirectoryUrl,
+      importerUrl,
+      url
+    });
 
     if (gotBareSpecifierError) {
       if (!found) {
@@ -2873,6 +2874,29 @@ const createImportResolver = ({
 
   return {
     applyImportResolution
+  };
+};
+
+const getAutomapping = ({
+  specifier,
+  scope,
+  projectDirectoryUrl,
+  importerUrl,
+  url
+}) => {
+  if (specifier.startsWith("./") || specifier.startsWith("../")) {
+    const specifierUrl = filesystem.resolveUrl(specifier, importerUrl);
+    return {
+      scope,
+      from: `./${filesystem.urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}`,
+      to: `./${filesystem.urlToRelativeUrl(url, projectDirectoryUrl)}`
+    };
+  }
+
+  return {
+    scope,
+    from: specifier,
+    to: `./${filesystem.urlToRelativeUrl(url, projectDirectoryUrl)}`
   };
 };
 
