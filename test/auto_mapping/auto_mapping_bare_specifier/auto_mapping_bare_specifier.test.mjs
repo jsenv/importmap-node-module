@@ -43,7 +43,7 @@ update import specifier to "./file.js"
 --- suggestion 2 ---
 use bareSpecifierAutomapping: true
 --- suggestion 3 ---
-add mapping to "initialImportMap"
+add mapping to "manualImportMap"
 {
   "imports": {
     "file": "./file.js"

@@ -10,7 +10,7 @@ const test = async () => {
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
-        initialImportMap: {
+        manualImportMap: {
           imports: {
             "http://example.com/foo.js": "http://example.com/bar.js",
           },

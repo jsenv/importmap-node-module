@@ -46,7 +46,7 @@ update import specifier to "./file.js"
 --- suggestion 2 ---
 use extensionlessAutomapping: true
 --- suggestion 3 ---
-add mapping to "initialImportMap"
+add mapping to "manualImportMap"
 {
   "scopes": {
     "./node_modules/leftpad/": {

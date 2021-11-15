@@ -181,7 +181,7 @@ const getImportResolutionFailedSuggestions = ({
     if (magicExtension) {
       addSuggestion(`use extensionlessAutomapping: true`)
     }
-    addSuggestion(`add mapping to "initialImportMap"
+    addSuggestion(`add mapping to "manualImportMap"
 ${mappingToImportmapString(automapping)}`)
   }
 
