@@ -10,15 +10,15 @@ var core = require('@babel/core');
 var isSpecifierForNodeCoreModule_js = require('@jsenv/importmap/src/isSpecifierForNodeCoreModule.js');
 var node_module = require('module');
 
-const assertInitialImportMap = value => {
+const assertManualImportMap = value => {
   if (value === null) {
-    throw new TypeError(`initialImportMap must be an object, got null`);
+    throw new TypeError(`manualImportMap must be an object, got null`);
   }
 
   const type = typeof value;
 
   if (type !== "object") {
-    throw new TypeError(`initialImportMap must be an object, received ${value}`);
+    throw new TypeError(`manualImportMap must be an object, received ${value}`);
   }
 
   const {
@@ -29,15 +29,15 @@ const assertInitialImportMap = value => {
   const extraKeys = Object.keys(rest);
 
   if (extraKeys.length > 0) {
-    throw new TypeError(`initialImportMap can have "imports" and "scopes", found unexpected keys ${extraKeys}`);
+    throw new TypeError(`manualImportMap can have "imports" and "scopes", found unexpected keys ${extraKeys}`);
   }
 
   if (typeof imports !== "object") {
-    throw new TypeError(`initialImportMap.imports must be an object, found ${imports}`);
+    throw new TypeError(`manualImportMap.imports must be an object, found ${imports}`);
   }
 
   if (typeof scopes !== "object") {
-    throw new TypeError(`initialImportMap.scopes must be an object, found ${imports}`);
+    throw new TypeError(`manualImportMap.scopes must be an object, found ${imports}`);
   }
 };
 
@@ -226,7 +226,7 @@ const getImportResolutionFailedSuggestions = ({
       addSuggestion(`use extensionlessAutomapping: true`);
     }
 
-    addSuggestion(`add mapping to "initialImportMap"
+    addSuggestion(`add mapping to "manualImportMap"
 ${mappingToImportmapString(automapping)}`);
   }
 
@@ -2780,9 +2780,10 @@ const createImportResolver = ({
     });
     const importerPackageDirectoryUrl = packageDirectoryUrlFromUrl(importerUrl, projectDirectoryUrl);
     const scope = importerPackageDirectoryUrl === projectDirectoryUrl ? undefined : `./${filesystem.urlToRelativeUrl(importerPackageDirectoryUrl, projectDirectoryUrl)}`;
+    const specifierUrl = filesystem.resolveUrl(specifier, url);
     const automapping = {
       scope,
-      from: specifier,
+      from: specifier.startsWith("./") || specifier.startsWith("../") ? `./${filesystem.urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}` : specifier,
       to: `./${filesystem.urlToRelativeUrl(url, projectDirectoryUrl)}`
     };
 
@@ -3017,12 +3018,8 @@ const writeImportMapFiles = async ({
   const nodeResolutionVisitors = [];
   importMapFileRelativeUrls.forEach(importMapFileRelativeUrl => {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl];
-    const {
-      initialImportMap = {}
-    } = importMapConfig;
-    assertInitialImportMap(initialImportMap);
-    const topLevelMappings = initialImportMap.imports || {};
-    const scopedMappings = initialImportMap.scopes || {};
+    const topLevelMappings = {};
+    const scopedMappings = {};
     const importMap = {
       imports: topLevelMappings,
       scopes: scopedMappings
@@ -3072,6 +3069,19 @@ const writeImportMapFiles = async ({
     });
   }
 
+  importMapFileRelativeUrls.forEach(importMapFileRelativeUrl => {
+    const importMapConfig = importMapFiles[importMapFileRelativeUrl];
+    const {
+      manualImportMap
+    } = importMapConfig;
+
+    if (manualImportMap) {
+      assertManualImportMap(manualImportMap);
+      const importMap = importMaps[importMapFileRelativeUrl];
+      const importMapModified = importmap.composeTwoImportMaps(importMap, manualImportMap);
+      importMaps[importMapFileRelativeUrl] = importMapModified;
+    }
+  });
   await importMapFileRelativeUrls.reduce(async (previous, importMapFileRelativeUrl) => {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl];
     const {
