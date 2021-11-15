@@ -9,7 +9,7 @@ const importMaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
-      initialImportMap: {
+      manualImportMap: {
         imports: {
           "#env": "./env.dev.js",
         },

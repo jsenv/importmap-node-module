@@ -4,6 +4,7 @@ import { readFile, resolveUrl, urlToFileSystemPath } from "@jsenv/filesystem"
 
 const require = createRequire(import.meta.url)
 
+// eslint-disable-next-line import/no-unresolved
 const parser = require("@babel/parser")
 const { loadOptionsAsync } = require("@babel/core")
 

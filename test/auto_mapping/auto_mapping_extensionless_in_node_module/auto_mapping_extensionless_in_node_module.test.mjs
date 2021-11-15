@@ -46,11 +46,11 @@ update import specifier to "./file.js"
 --- suggestion 2 ---
 use extensionlessAutomapping: true
 --- suggestion 3 ---
-add mapping to "initialImportMap"
+add mapping to "manualImportMap"
 {
   "scopes": {
     "./node_modules/leftpad/": {
-      "./file": "./node_modules/leftpad/file.js"
+      "./node_modules/leftpad/file": "./node_modules/leftpad/file.js"
     }
   }
 }`,
@@ -93,7 +93,7 @@ file not found on filesystem`,
         },
         scopes: {
           "./node_modules/leftpad/": {
-            "./file": "./node_modules/leftpad/file.js",
+            "./node_modules/leftpad/file": "./node_modules/leftpad/file.js",
           },
         },
       },
@@ -116,8 +116,9 @@ file not found on filesystem`,
         },
         scopes: {
           "./node_modules/leftpad/": {
-            "./other-file": "./node_modules/leftpad/other-file.ts",
-            "./file": "./node_modules/leftpad/file.js",
+            "./node_modules/leftpad/other-file":
+              "./node_modules/leftpad/other-file.ts",
+            "./node_modules/leftpad/file": "./node_modules/leftpad/file.js",
           },
         },
       },

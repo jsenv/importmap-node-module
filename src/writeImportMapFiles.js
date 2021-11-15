@@ -8,7 +8,7 @@ import {
 } from "@jsenv/filesystem"
 import { composeTwoImportMaps, sortImportMap } from "@jsenv/importmap"
 
-import { assertInitialImportMap } from "./internal/assertInitialImportMap.js"
+import { assertManualImportMap } from "./internal/manual_importmap.js"
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js"
 import { visitNodeModuleResolution } from "./internal/from-package/visitNodeModuleResolution.js"
 import { optimizeImportMap } from "./internal/optimizeImportMap.js"
@@ -54,10 +54,8 @@ export const writeImportMapFiles = async ({
   importMapFileRelativeUrls.forEach((importMapFileRelativeUrl) => {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl]
 
-    const { initialImportMap = {} } = importMapConfig
-    assertInitialImportMap(initialImportMap)
-    const topLevelMappings = initialImportMap.imports || {}
-    const scopedMappings = initialImportMap.scopes || {}
+    const topLevelMappings = {}
+    const scopedMappings = {}
     const importMap = {
       imports: topLevelMappings,
       scopes: scopedMappings,
@@ -106,13 +104,11 @@ export const writeImportMapFiles = async ({
 
   importMapFileRelativeUrls.forEach((importMapFileRelativeUrl) => {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl]
-    const { terminalImportMap } = importMapConfig
-    if (terminalImportMap) {
+    const { manualImportMap } = importMapConfig
+    if (manualImportMap) {
+      assertManualImportMap(manualImportMap)
       const importMap = importMaps[importMapFileRelativeUrl]
-      const importMapModified = composeTwoImportMaps(
-        importMap,
-        terminalImportMap,
-      )
+      const importMapModified = composeTwoImportMaps(importMap, manualImportMap)
       importMaps[importMapFileRelativeUrl] = importMapModified
     }
   })

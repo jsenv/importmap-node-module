@@ -26,7 +26,7 @@ await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./project.importmap": {
-      initialImportMap: {
+      manualImportMap: {
         imports: {
           "src/": "./src/",
         }

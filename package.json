@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/importmap-node-module",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Generate importmap for node_modules",
   "license": "MIT",
   "repository": {
@@ -27,8 +27,8 @@
     "/index.js"
   ],
   "scripts": {
-    "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
-    "generate-importmap": "node ./script/importmap/generate_importmap.mjs",
+    "eslint-check": "node ./node_modules/eslint/bin/eslint.js . --ext=.js,.mjs",
+    "importmap-generate": "node ./script/importmap/generate_importmap.mjs",
     "measure-performances": "node --expose-gc ./script/performance/generate_performance_report.mjs --log",
     "dist": "npm run build",
     "build": "node --experimental-import-meta-resolve ./script/build/build.mjs",
@@ -37,36 +37,37 @@
     "prettier-format": "node ./script/prettier/prettier_format.mjs",
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",
-    "postinstall": "npm run generate-importmap",
+    "postinstall": "npm run importmap-generate",
     "prepublishOnly": "node ./script/publish/remove_postinstall.mjs && npm run dist",
     "postpublish": "node ./script/publish/restore_postinstall.mjs"
   },
   "dependencies": {
     "@babel/core": "7.16.0",
-    "@babel/traverse": "7.16.0",
+    "@babel/traverse": "7.16.3",
     "@jsenv/cancellation": "3.0.0",
     "@jsenv/filesystem": "2.5.1",
-    "@jsenv/importmap": "1.1.0",
+    "@jsenv/importmap": "1.2.0",
     "@jsenv/logger": "4.0.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "7.16.0",
+    "@babel/eslint-parser": "7.16.3",
     "@babel/plugin-proposal-class-properties": "7.16.0",
     "@babel/plugin-proposal-decorators": "7.16.0",
     "@babel/plugin-syntax-jsx": "7.16.0",
-    "@jsenv/babel-preset": "1.1.1",
     "@jsenv/assert": "2.3.2",
-    "@jsenv/core": "23.5.0",
-    "@jsenv/eslint-config": "16.0.8",
+    "@jsenv/babel-preset": "1.1.1",
+    "@jsenv/core": "23.8.7",
+    "@jsenv/eslint-config": "16.0.9",
     "@jsenv/github-release-package": "1.2.3",
     "@jsenv/importmap-eslint-resolver": "5.1.2",
     "@jsenv/package-publish": "1.6.2",
     "@jsenv/performance-impact": "2.2.1",
     "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/prettier-config": "1.2.0",
+    "@jsenv/server": "10.0.11",
     "babel-plugin-transform-async-to-promises": "0.8.15",
-    "eslint": "7.32.0",
-    "eslint-plugin-import": "2.25.2",
+    "eslint": "8.2.0",
+    "eslint-plugin-import": "2.25.3",
     "prettier": "2.4.1"
   }
 }

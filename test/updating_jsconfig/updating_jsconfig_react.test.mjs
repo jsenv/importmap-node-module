@@ -28,7 +28,7 @@ await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
-      initialImportMap: {
+      manualImportMap: {
         imports: { foo: "./bar.js" },
       },
       useForJsConfigJSON: true,

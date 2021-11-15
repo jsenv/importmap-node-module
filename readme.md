@@ -97,28 +97,6 @@ This parameters is **required** and accepted values are documented in [@jsenv/fi
 
 _importMapFiles_ parameter is an object where keys are importmap file relative urls and values are parameters controlling the mappings that will be written in the importmap file.
 
-### initialImportMap
-
-_initialImportMap_ parameter is an importMap object that can be used to provide initial mappings.
-This parameter is optional and by default it's an empty object.
-
-```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./test.importmap": {
-      initialImportMap: {
-        imports: {
-          "#env": "./env.js",
-        },
-      },
-    },
-  },
-})
-```
-
 ### mappingsForNodeResolution
 
 When _mappingsForNodeResolution_ is enabled, the mappings required to implement node module resolution are generated.
@@ -133,6 +111,28 @@ The following source of information are used to create complete and coherent map
 ### mappingsForDevDependencies
 
 When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
+
+### manualImportMap
+
+_manualImportMapp_ parameter is an importMap object. Mappings declared in this parameter are added to mappings generated for node resolution. This can be used to provide additional mappings and/or override node mappings.
+This parameter is optional and by default it's an empty object.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      manualImportMap: {
+        imports: {
+          "#env": "./env.js",
+        },
+      },
+    },
+  },
+})
+```
 
 ### checkImportResolution
 

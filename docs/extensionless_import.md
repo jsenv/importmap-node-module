@@ -32,4 +32,4 @@ In this situation, you can do one of the following:
    }
    ```
 
-4. Remap manually each extensionless import and pass that importmap in [initialImportMap](#initialImportMap)
+4. Remap manually each extensionless import and pass that importmap in [manualImportMap](#manualImportMap)
