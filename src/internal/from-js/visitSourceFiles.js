@@ -326,15 +326,13 @@ const createImportResolver = ({
             importerPackageDirectoryUrl,
             projectDirectoryUrl,
           )}`
-    const specifierUrl = resolveUrl(specifier, url)
-    const automapping = {
+    const automapping = getAutomapping({
+      specifier,
       scope,
-      from:
-        specifier.startsWith("./") || specifier.startsWith("../")
-          ? `./${urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}`
-          : specifier,
-      to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
-    }
+      projectDirectoryUrl,
+      importerUrl,
+      url,
+    })
     if (gotBareSpecifierError) {
       if (!found) {
         warn(
@@ -423,6 +421,29 @@ const createImportResolver = ({
   }
 
   return { applyImportResolution }
+}
+
+const getAutomapping = ({
+  specifier,
+  scope,
+  projectDirectoryUrl,
+  importerUrl,
+  url,
+}) => {
+  if (specifier.startsWith("./") || specifier.startsWith("../")) {
+    const specifierUrl = resolveUrl(specifier, importerUrl)
+    return {
+      scope,
+      from: `./${urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}`,
+      to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
+    }
+  }
+
+  return {
+    scope,
+    from: specifier,
+    to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
+  }
 }
 
 const fileUrlToHttpUrl = (url, { projectDirectoryUrl, baseUrl }) =>

@@ -28,8 +28,8 @@ const expected = {
   },
   scopes: {
     "./node_modules/react-redux/": {
-      "./node_modules/react-redux/es/answer":
-        "./node_modules/react-redux/es/answer.js",
+      "./node_modules/react-redux/es/utils/answer":
+        "./node_modules/react-redux/es/utils/answer.js",
     },
   },
 }
@@ -41,10 +41,11 @@ assert({ actual, expected })
     "http://example.com",
   )
   const actual = resolveImport({
-    specifier: "./answer",
+    specifier: "./utils/answer",
     importer: "http://example.com/node_modules/react-redux/es/index.js",
     importMap: importMapNormalized,
   })
-  const expected = "http://example.com/node_modules/react-redux/es/answer.js"
+  const expected =
+    "http://example.com/node_modules/react-redux/es/utils/answer.js"
   assert({ actual, expected })
 }
