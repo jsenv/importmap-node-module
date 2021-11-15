@@ -34,7 +34,6 @@ const expected = {
 }
 assert({ actual, expected })
 
-// THIS SHOULD FAIL
 {
   const importMapNormalized = normalizeImportMap(
     importmap,

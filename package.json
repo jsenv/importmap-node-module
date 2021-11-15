@@ -37,7 +37,7 @@
     "prettier-format": "node ./script/prettier/prettier_format.mjs",
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",
-    "postinstall": "npm run generate-importmap",
+    "postinstall": "npm run importmap-generate",
     "prepublishOnly": "node ./script/publish/remove_postinstall.mjs && npm run dist",
     "postpublish": "node ./script/publish/restore_postinstall.mjs"
   },
@@ -46,7 +46,7 @@
     "@babel/traverse": "7.16.3",
     "@jsenv/cancellation": "3.0.0",
     "@jsenv/filesystem": "2.5.1",
-    "@jsenv/importmap": "1.1.0",
+    "@jsenv/importmap": "1.2.0",
     "@jsenv/logger": "4.0.1"
   },
   "devDependencies": {
