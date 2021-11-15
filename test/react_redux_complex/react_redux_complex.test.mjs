@@ -28,7 +28,8 @@ const expected = {
   },
   scopes: {
     "./node_modules/react-redux/": {
-      "./answer": "./node_modules/react-redux/es/answer.js",
+      "./node_modules/react-redux/es/answer":
+        "./node_modules/react-redux/es/answer.js",
     },
   },
 }
