@@ -20,8 +20,9 @@ export const importMapToVsCodeConfigPaths = ({ imports = {} }) => {
       return importValue
     })
 
-    if (key in paths) {
-      paths[key] = [...paths[key], ...candidatesForPath]
+    const existingPaths = paths[key]
+    if (existingPaths) {
+      paths[key] = [...existingPaths, ...candidatesForPath]
     } else {
       paths[key] = candidatesForPath
     }
