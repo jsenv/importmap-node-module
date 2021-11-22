@@ -6,7 +6,11 @@ import {
   readFile,
   urlToFileSystemPath,
 } from "@jsenv/filesystem"
-import { composeTwoImportMaps, sortImportMap } from "@jsenv/importmap"
+import {
+  composeTwoImportMaps,
+  sortImportMap,
+  moveImportMap,
+} from "@jsenv/importmap"
 
 import { assertManualImportMap } from "./internal/manual_importmap.js"
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js"
@@ -102,6 +106,7 @@ export const writeImportMapFiles = async ({
     })
   }
 
+  // manual importmap
   importMapFileRelativeUrls.forEach((importMapFileRelativeUrl) => {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl]
     const { manualImportMap } = importMapConfig
@@ -115,6 +120,7 @@ export const writeImportMapFiles = async ({
 
   await importMapFileRelativeUrls.reduce(
     async (previous, importMapFileRelativeUrl) => {
+      await previous
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
       const {
         checkImportResolution,
@@ -174,28 +180,6 @@ export const writeImportMapFiles = async ({
     Promise.resolve(),
   )
 
-  Object.keys(importMaps).forEach((key) => {
-    const importMap = importMaps[key]
-    const importMapNormalized = sortImportMap(optimizeImportMap(importMap))
-    importMaps[key] = importMapNormalized
-  })
-
-  if (writeFiles) {
-    await importMapFileRelativeUrls.reduce(
-      async (previous, importMapFileRelativeUrl) => {
-        await previous
-        const importmapFileUrl = resolveUrl(
-          importMapFileRelativeUrl,
-          projectDirectoryUrl,
-        )
-        const importMap = importMaps[importMapFileRelativeUrl]
-        await writeFile(importmapFileUrl, JSON.stringify(importMap, null, "  "))
-        logger.info(`-> ${urlToFileSystemPath(importmapFileUrl)}`)
-      },
-      Promise.resolve(),
-    )
-  }
-
   const firstUpdatingJsConfig = importMapFileRelativeUrls.find(
     (importMapFileRelativeUrl) => {
       const importMapFileConfig = importMapFiles[importMapFileRelativeUrl]
@@ -223,6 +207,31 @@ export const writeImportMapFiles = async ({
     }
     await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "))
     logger.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`)
+  }
+
+  Object.keys(importMaps).forEach((key) => {
+    let importMap = importMaps[key]
+    importMap = optimizeImportMap(importMap)
+    const importmapFileUrl = resolveUrl(key, projectDirectoryUrl)
+    importMap = moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl)
+    importMap = sortImportMap(importMap)
+    importMaps[key] = importMap
+  })
+
+  if (writeFiles) {
+    await importMapFileRelativeUrls.reduce(
+      async (previous, importMapFileRelativeUrl) => {
+        await previous
+        const importmapFileUrl = resolveUrl(
+          importMapFileRelativeUrl,
+          projectDirectoryUrl,
+        )
+        const importMap = importMaps[importMapFileRelativeUrl]
+        await writeFile(importmapFileUrl, JSON.stringify(importMap, null, "  "))
+        logger.info(`-> ${urlToFileSystemPath(importmapFileUrl)}`)
+      },
+      Promise.resolve(),
+    )
   }
 
   return importMaps

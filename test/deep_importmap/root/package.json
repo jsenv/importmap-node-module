@@ -1,0 +1,7 @@
+{
+  "name": "root",
+  "main": "./src/directory/main.js",
+  "dependencies": {
+    "example": "*"
+  }
+}

@@ -29,7 +29,7 @@ const assertManualImportMap = value => {
   const extraKeys = Object.keys(rest);
 
   if (extraKeys.length > 0) {
-    throw new TypeError(`manualImportMap can have "imports" and "scopes", found unexpected keys ${extraKeys}`);
+    throw new TypeError(`manualImportMap can have "imports" and "scopes", found unexpected keys: "${extraKeys}"`);
   }
 
   if (typeof imports !== "object") {
@@ -2994,9 +2994,10 @@ const importMapToVsCodeConfigPaths = ({
 
       return importValue;
     });
+    const existingPaths = paths[key];
 
-    if (key in paths) {
-      paths[key] = [...paths[key], ...candidatesForPath];
+    if (existingPaths) {
+      paths[key] = [...existingPaths, ...candidatesForPath];
     } else {
       paths[key] = candidatesForPath;
     }
@@ -3091,7 +3092,8 @@ const writeImportMapFiles = async ({
       packagesManualOverrides,
       exportsFieldWarningConfig
     });
-  }
+  } // manual importmap
+
 
   importMapFileRelativeUrls.forEach(importMapFileRelativeUrl => {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl];
@@ -3107,6 +3109,7 @@ const writeImportMapFiles = async ({
     }
   });
   await importMapFileRelativeUrls.reduce(async (previous, importMapFileRelativeUrl) => {
+    await previous;
     const importMapConfig = importMapFiles[importMapFileRelativeUrl];
     const {
       checkImportResolution,
@@ -3156,9 +3159,12 @@ const writeImportMapFiles = async ({
     }
   }, Promise.resolve());
   Object.keys(importMaps).forEach(key => {
-    const importMap = importMaps[key];
-    const importMapNormalized = importmap.sortImportMap(optimizeImportMap(importMap));
-    importMaps[key] = importMapNormalized;
+    let importMap = importMaps[key];
+    importMap = optimizeImportMap(importMap);
+    const importmapFileUrl = filesystem.resolveUrl(key, projectDirectoryUrl);
+    importMap = importmap.moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl);
+    importMap = importmap.sortImportMap(importMap);
+    importMaps[key] = importMap;
   });
 
   if (writeFiles) {
