@@ -115,6 +115,7 @@ export const writeImportMapFiles = async ({
 
   await importMapFileRelativeUrls.reduce(
     async (previous, importMapFileRelativeUrl) => {
+      await previous
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
       const {
         checkImportResolution,
