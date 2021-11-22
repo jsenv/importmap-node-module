@@ -6,7 +6,11 @@ import {
   readFile,
   urlToFileSystemPath,
 } from "@jsenv/filesystem"
-import { composeTwoImportMaps, sortImportMap } from "@jsenv/importmap"
+import {
+  composeTwoImportMaps,
+  sortImportMap,
+  moveImportMap,
+} from "@jsenv/importmap"
 
 import { assertManualImportMap } from "./internal/manual_importmap.js"
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js"
@@ -102,6 +106,7 @@ export const writeImportMapFiles = async ({
     })
   }
 
+  // manual importmap
   importMapFileRelativeUrls.forEach((importMapFileRelativeUrl) => {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl]
     const { manualImportMap } = importMapConfig
@@ -176,9 +181,12 @@ export const writeImportMapFiles = async ({
   )
 
   Object.keys(importMaps).forEach((key) => {
-    const importMap = importMaps[key]
-    const importMapNormalized = sortImportMap(optimizeImportMap(importMap))
-    importMaps[key] = importMapNormalized
+    let importMap = importMaps[key]
+    importMap = optimizeImportMap(importMap)
+    const importmapFileUrl = resolveUrl(key, projectDirectoryUrl)
+    importMap = moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl)
+    importMap = sortImportMap(importMap)
+    importMaps[key] = importMap
   })
 
   if (writeFiles) {

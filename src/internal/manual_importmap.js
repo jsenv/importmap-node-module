@@ -12,7 +12,7 @@ export const assertManualImportMap = (value) => {
   const extraKeys = Object.keys(rest)
   if (extraKeys.length > 0) {
     throw new TypeError(
-      `manualImportMap can have "imports" and "scopes", found unexpected keys ${extraKeys}`,
+      `manualImportMap can have "imports" and "scopes", found unexpected keys: "${extraKeys}"`,
     )
   }
 
