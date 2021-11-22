@@ -180,31 +180,6 @@ export const writeImportMapFiles = async ({
     Promise.resolve(),
   )
 
-  Object.keys(importMaps).forEach((key) => {
-    let importMap = importMaps[key]
-    importMap = optimizeImportMap(importMap)
-    const importmapFileUrl = resolveUrl(key, projectDirectoryUrl)
-    importMap = moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl)
-    importMap = sortImportMap(importMap)
-    importMaps[key] = importMap
-  })
-
-  if (writeFiles) {
-    await importMapFileRelativeUrls.reduce(
-      async (previous, importMapFileRelativeUrl) => {
-        await previous
-        const importmapFileUrl = resolveUrl(
-          importMapFileRelativeUrl,
-          projectDirectoryUrl,
-        )
-        const importMap = importMaps[importMapFileRelativeUrl]
-        await writeFile(importmapFileUrl, JSON.stringify(importMap, null, "  "))
-        logger.info(`-> ${urlToFileSystemPath(importmapFileUrl)}`)
-      },
-      Promise.resolve(),
-    )
-  }
-
   const firstUpdatingJsConfig = importMapFileRelativeUrls.find(
     (importMapFileRelativeUrl) => {
       const importMapFileConfig = importMapFiles[importMapFileRelativeUrl]
@@ -232,6 +207,31 @@ export const writeImportMapFiles = async ({
     }
     await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "))
     logger.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`)
+  }
+
+  Object.keys(importMaps).forEach((key) => {
+    let importMap = importMaps[key]
+    importMap = optimizeImportMap(importMap)
+    const importmapFileUrl = resolveUrl(key, projectDirectoryUrl)
+    importMap = moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl)
+    importMap = sortImportMap(importMap)
+    importMaps[key] = importMap
+  })
+
+  if (writeFiles) {
+    await importMapFileRelativeUrls.reduce(
+      async (previous, importMapFileRelativeUrl) => {
+        await previous
+        const importmapFileUrl = resolveUrl(
+          importMapFileRelativeUrl,
+          projectDirectoryUrl,
+        )
+        const importMap = importMaps[importMapFileRelativeUrl]
+        await writeFile(importmapFileUrl, JSON.stringify(importMap, null, "  "))
+        logger.info(`-> ${urlToFileSystemPath(importmapFileUrl)}`)
+      },
+      Promise.resolve(),
+    )
   }
 
   return importMaps
