@@ -124,6 +124,7 @@ await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./test.importmap": {
+      mappingsForNodeResolution: true,
       manualImportMap: {
         imports: {
           "#env": "./env.js",
@@ -138,9 +139,11 @@ await writeImportMapFiles({
 
 _checkImportResolution_ is a boolean parameter controlling if script tries to resolve all import found in your js files using the importmap.
 
-It is recommended to enable this parameter, it gives more confidence in the generated importmap and outputs nice logs for for imports that cannot be resolved.
+It is recommended to enable this parameter, it gives more confidence in the generated importmap and outputs nice warnings in case some import cannot be resolved.
 
-This import resolution is auto enabled when [removeUnusedMappings](#removeUnusedMappings) or [extensionlessAutomapping](#extensionlessAutomapping) are used.
+The import resolution starts from your project entry point which is determined using your package.json "exports" or "main" field.
+
+This import resolution check is auto enabled when [removeUnusedMappings](#removeUnusedMappings) or [extensionlessAutomapping](#extensionlessAutomapping) are used.
 
 ### removeUnusedMappings
 
