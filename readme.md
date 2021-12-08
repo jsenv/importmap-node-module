@@ -87,16 +87,22 @@ await writeImportMapFiles({
 
 ## projectDirectoryUrl
 
-_projectDirectoryUrl_ parameter is a string url leading to a folder with a _package.json_.
-This parameters is **required** and accepted values are documented in [@jsenv/filesystem#assertAndNormalizeDirectoryUrl](https://github.com/jsenv/filesystem/blob/main/docs/API.md#assertandnormalizedirectoryurl)
+_projectDirectoryUrl_ is a string/url leading to a folder with a _package.json_.
+
+_projectDirectoryUrl_ is **required**.
 
 ## importMapFiles
 
-_importMapFiles_ parameter is an object where keys are importmap file relative urls and values are parameters controlling the mappings that will be written in the importmap file.
+_importMapFiles_ is an object where keys are file relative urls and value are objects configuring which mappings will be written in the importmap files.
+
+_importMapFiles_ is **required**.
 
 ### mappingsForNodeResolution
 
-When _mappingsForNodeResolution_ is enabled, the mappings required to implement node module resolution are generated.
+_mappingsForNodeResolution_ is a boolean. When enabled mappings required to implement node module resolution are generated.
+
+_mappingsForNodeResolution_ is optional.
+
 The following source of information are used to create complete and coherent mappings in the importmap.
 
 - Your _package.json_
@@ -107,12 +113,15 @@ The following source of information are used to create complete and coherent map
 
 ### mappingsForDevDependencies
 
-When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
+_mappingsForDevDependencies_ is a boolean. When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
+
+_mappingsForDevDependencies_ is optional.
 
 ### runtime
 
-A string parameter indicating where the importmap will be used. The default runtime is `"browser"`.
-The runtime is used to determine what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
+_runtime_ is a string used to determine what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
+
+_runtime_ is optional and defaults to `"browser"`.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -134,7 +143,9 @@ await writeImportMapFiles({
 
 ### packageUserConditions
 
-Controls which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+_packageUserConditions_ is an array controlling which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+
+_packageUserConditions_ is optional.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -156,8 +167,9 @@ await writeImportMapFiles({
 
 ### manualImportMap
 
-_manualImportMapp_ parameter is an importMap object. Mappings declared in this parameter are added to mappings generated for node resolution. This can be used to provide additional mappings and/or override node mappings.
-This parameter is optional and by default it's an empty object.
+_manualImportMap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
+
+_manualImportMap_ is optional.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -179,7 +191,9 @@ await writeImportMapFiles({
 
 ### entryPointsToCheck
 
-_entryPointsToCheck_ is a boolean parameter. When enabled _writeImportMapFiles_ will try to resolve import found in js files.
+_entryPointsToCheck_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import.
+
+_entryPointsToCheck_ is optional.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -195,11 +209,11 @@ await writeImportMapFiles({
 })
 ```
 
-It is recommended to enable this parameter, it gives more confidence in the generated importmap and outputs nice warnings when some import cannot be resolved.
+It is recommended to use _entryPointsToCheck_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
 
 ### removeUnusedMappings
 
-_removeUnusedMappings_ is a boolean parameter. When enabled mappings will be treeshaked according to the import found in js files. It must be used with _entryPointsToCheck_.
+_removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files. It must be used with _entryPointsToCheck_.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -222,7 +236,7 @@ In production you likely want to keep only the mappings actually used by your js
 
 ### extensionlessAutomapping
 
-_extensionlessAutomapping_ is a boolean parameter. When enabled mappings are generated for import(s) without extension found in your js files. It must be used with _entryPointsToCheck_ and _magicExtensions_.
+_extensionlessAutomapping_ is a boolean. When enabled mappings are generated for import(s) without extension found in your js files. It must be used with _entryPointsToCheck_ and _magicExtensions_.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -242,9 +256,9 @@ await writeImportMapFiles({
 
 ## packagesManualOverrides
 
-_packagesManualOverrides_ is an object parameter. It can be used to override some of your dependencies package.json.
+_packagesManualOverrides_ is an object that can be used to override some of your dependencies package.json.
 
-This parameter exists in case some of your dependencies use non standard fields to configure their entry points in their _package.json_. Ideally they should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
+_packagesManualOverrides_ exists in case some of your dependencies use non standard fields to configure their entry points in their _package.json_. Ideally they should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
