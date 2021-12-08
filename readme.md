@@ -77,12 +77,9 @@ await writeImportMapFiles({
     "./importmap_for_dev.importmap": {
       mappingsForNodeResolution: true,
       mappingsForDevDependencies: true,
-      checkImportResolution: true,
     },
     "./importmap_for_prod.importmap": {
       mappingsForNodeResolution: true,
-      checkImportResolution: true,
-      removeUnusedMappings: true,
     },
   },
 })
@@ -111,47 +108,6 @@ The following source of information are used to create complete and coherent map
 ### mappingsForDevDependencies
 
 When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
-
-### manualImportMap
-
-_manualImportMapp_ parameter is an importMap object. Mappings declared in this parameter are added to mappings generated for node resolution. This can be used to provide additional mappings and/or override node mappings.
-This parameter is optional and by default it's an empty object.
-
-```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-      manualImportMap: {
-        imports: {
-          "#env": "./env.js",
-        },
-      },
-    },
-  },
-})
-```
-
-### checkImportResolution
-
-_checkImportResolution_ is a boolean parameter controlling if script tries to resolve all import found in your js files using the importmap.
-
-It is recommended to enable this parameter, it gives more confidence in the generated importmap and outputs nice warnings in case some import cannot be resolved.
-
-The import resolution starts from your project entry point which is determined using your package.json "exports" or "main" field.
-
-This import resolution check is auto enabled when [removeUnusedMappings](#removeUnusedMappings) or [extensionlessAutomapping](#extensionlessAutomapping) are used.
-
-### removeUnusedMappings
-
-_removeUnusedMappings_ parameter is a boolean controlling if mappings will be treeshaked according to the import found in your files.
-
-During development, you can start or stop using a mapping often so it's convenient to have all mappings.
-
-In production you likely want to keep only the mappings actually used by your js files. In that case enable removeUnusedMappings: it will drastically decrease the importmap file size.
 
 ### runtime
 
@@ -198,9 +154,10 @@ await writeImportMapFiles({
 })
 ```
 
-### extensionlessAutomapping
+### manualImportMap
 
-_extensionlessAutomapping_ parameter is a boolean controlling if mappings are generated for import(s) without extension found in your js files. Should be combined with _magicExtensions_ as shown in the code below.
+_manualImportMapp_ parameter is an importMap object. Mappings declared in this parameter are added to mappings generated for node resolution. This can be used to provide additional mappings and/or override node mappings.
+This parameter is optional and by default it's an empty object.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -210,6 +167,74 @@ await writeImportMapFiles({
   importMapFiles: {
     "./test.importmap": {
       mappingsForNodeResolution: true,
+      manualImportMap: {
+        imports: {
+          "#env": "./env.js",
+        },
+      },
+    },
+  },
+})
+```
+
+### entryPointsToCheck
+
+_entryPointsToCheck_ is a boolean parameter. When enabled _writeImportMapFiles_ will try to resolve import found in js files.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./project.importmap": {
+      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./main.js"],
+    },
+  },
+})
+```
+
+It is recommended to enable this parameter, it gives more confidence in the generated importmap and outputs nice warnings when some import cannot be resolved.
+
+### removeUnusedMappings
+
+_removeUnusedMappings_ is a boolean parameter. When enabled mappings will be treeshaked according to the import found in js files. It must be used with _entryPointsToCheck_.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./main.js"],
+      removeUnusedMappings: true,
+    },
+  },
+})
+```
+
+During development, you can start or stop using a mapping often so it's convenient to have all mappings.
+
+In production you likely want to keep only the mappings actually used by your js files. In that case enable removeUnusedMappings: it will drastically decrease the importmap file size.
+
+### extensionlessAutomapping
+
+_extensionlessAutomapping_ is a boolean parameter. When enabled mappings are generated for import(s) without extension found in your js files. It must be used with _entryPointsToCheck_ and _magicExtensions_.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./main.js"],
+      extensionlessAutomapping: true,
+      magicExtensions: [".js"],
     },
   },
 })
@@ -217,9 +242,9 @@ await writeImportMapFiles({
 
 ## packagesManualOverrides
 
-Ideally package.json should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
+_packagesManualOverrides_ is an object parameter. It can be used to override some of your dependencies package.json.
 
-_packagesManualOverrides_ parameter is an object that can be used to override some of your dependencies package.json.
+This parameter exists in case some of your dependencies use non standard fields to configure their entry points in their _package.json_. Ideally they should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"

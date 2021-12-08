@@ -16,7 +16,6 @@ import { assertManualImportMap } from "./internal/manual_importmap.js"
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js"
 import { visitNodeModuleResolution } from "./internal/from-package/visitNodeModuleResolution.js"
 import { optimizeImportMap } from "./internal/optimizeImportMap.js"
-import { resolveProjectEntryPoint } from "./internal/from-js/resolveProjectEntryPoint.js"
 import { visitSourceFiles } from "./internal/from-js/visitSourceFiles.js"
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js"
 
@@ -123,58 +122,53 @@ export const writeImportMapFiles = async ({
       await previous
       const importMapConfig = importMapFiles[importMapFileRelativeUrl]
       const {
-        checkImportResolution,
-        // ideally we could enable extensionlessAutomapping and bareSpecifierAutomappingonly for a subset
+        // we could deduce it from the package.json but:
+        // 1. project might not use package.json
+        // 2. it's a bit magic
+        // 3. it's kinda possible to assume an export from "exports" field is the main entry point
+        //    but for project with many entry points they cannot be distinguised from
+        //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
+        entryPointsToCheck,
+        // ideally we could enable extensionlessAutomapping and bareSpecifierAutomapping only for a subset
         // of files. Not that hard to do, especially using @jsenv/url-meta
         // but that's super extra fine tuning that I don't have time/energy to do for now
         bareSpecifierAutomapping,
         extensionlessAutomapping,
         magicExtensions,
         removeUnusedMappings,
-        packageUserConditions,
         runtime = "browser",
       } = importMapConfig
 
-      if (
-        checkImportResolution ||
-        bareSpecifierAutomapping ||
-        extensionlessAutomapping ||
-        removeUnusedMappings
-      ) {
-        if (checkImportResolution === false) {
-          logger.warn(
-            `"checkImportResolution" cannot be disabled when automapping or "removeUnusedMappings" are enabled`,
-          )
-        }
-        if (extensionlessAutomapping && !magicExtensions) {
-          logger.warn(
-            `"magicExtensions" is required when "extensionlessAutomapping" is enabled`,
-          )
-        }
+      if (removeUnusedMappings && !entryPointsToCheck) {
+        logger.warn(
+          `"entryPointsToCheck" is required when "removeUnusedMappings" is enabled`,
+        )
+      }
+      if (extensionlessAutomapping && !entryPointsToCheck) {
+        logger.warn(
+          `"entryPointsToCheck" is required when "extensionlessAutomapping" is enabled`,
+        )
+      }
+      if (extensionlessAutomapping && !magicExtensions) {
+        logger.warn(
+          `"magicExtensions" is required when "extensionlessAutomapping" is enabled`,
+        )
+      }
 
-        const projectEntryPoint = await resolveProjectEntryPoint({
+      if (entryPointsToCheck) {
+        const importMap = await visitSourceFiles({
           logger,
           warn,
           projectDirectoryUrl,
-          packageUserConditions,
+          entryPointsToCheck,
+          importMap: importMaps[importMapFileRelativeUrl],
+          bareSpecifierAutomapping,
+          extensionlessAutomapping,
+          magicExtensions,
+          removeUnusedMappings,
           runtime,
         })
-
-        if (projectEntryPoint) {
-          const importMap = await visitSourceFiles({
-            logger,
-            warn,
-            projectDirectoryUrl,
-            projectEntryPoint,
-            importMap: importMaps[importMapFileRelativeUrl],
-            bareSpecifierAutomapping,
-            extensionlessAutomapping,
-            magicExtensions,
-            removeUnusedMappings,
-            runtime,
-          })
-          importMaps[importMapFileRelativeUrl] = importMap
-        }
+        importMaps[importMapFileRelativeUrl] = importMap
       }
     },
     Promise.resolve(),
