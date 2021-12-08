@@ -16,7 +16,7 @@ const test = async () => {
     importMapFiles: {
       "test.importmap": {
         mappingsForNodeResolution: true,
-        entryPointsToCheck: ["./index.js"],
+        entryPointsToCheck: ["./main.mjs"],
       },
     },
     onWarn: (warning) => {
