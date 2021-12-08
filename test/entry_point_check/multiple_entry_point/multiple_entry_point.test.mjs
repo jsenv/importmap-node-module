@@ -4,13 +4,13 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const test = async () => {
+const test = async (params) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
-        checkImportResolution: true,
+        ...params,
       },
     },
     onWarn: (warning) => {
@@ -22,19 +22,22 @@ const test = async () => {
 }
 
 {
-  const actual = await test()
-  const expected = {
-    warnings: [
-      {
-        code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
-        message: `Cannot find project entry point
---- reason ---
-explicitely disabled in package.json ("main" is an empty string)`,
+  const actual = await test({
+    manualImportMap: {
+      imports: {
+        "root/": "./",
       },
-    ],
+    },
+    entryPointsToCheck: ["./first/first.js", "second/second.js"],
+    removeUnusedMappings: true,
+  })
+  const expected = {
+    warnings: [],
     importmaps: {
       "test.importmap": {
-        imports: {},
+        imports: {
+          "root/": "./",
+        },
         scopes: {},
       },
     },

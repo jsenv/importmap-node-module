@@ -1,23 +1,17 @@
 import { assert } from "@jsenv/assert"
-import {
-  resolveUrl,
-  urlToFileSystemPath,
-  removeFileSystemNode,
-  writeFile,
-} from "@jsenv/filesystem"
+import { resolveUrl, removeFileSystemNode, writeFile } from "@jsenv/filesystem"
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const rootPackageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
 const mainJsFileUrl = resolveUrl("./main.js", testDirectoryUrl)
-const test = async () => {
+const test = async (params) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
-        checkImportResolution: true,
+        ...params,
       },
     },
     onWarn: (warning) => {
@@ -27,24 +21,21 @@ const test = async () => {
   })
   return { warnings, importmaps }
 }
-
 await removeFileSystemNode(mainJsFileUrl, { allowUseless: true })
 
 {
-  const actual = await test()
+  const actual = await test({
+    entryPointsToCheck: ["./main.js"],
+  })
   const expected = {
     warnings: [
       {
-        code: "PROJECT_ENTRY_POINT_RESOLUTION_FAILED",
-        message: `Cannot find project entry point
+        code: "IMPORT_RESOLUTION_FAILED",
+        message: `Import resolution failed for "./main.js"
+--- import source ---
+entryPointsToCheck parameter
 --- reason ---
-File not found for package.json "main" field
---- main ---
-./main.js
---- package.json path ---
-${urlToFileSystemPath(rootPackageFileUrl)}
---- url tried ---
-${urlToFileSystemPath(mainJsFileUrl)}`,
+file not found on filesystem`,
       },
     ],
     importmaps: {
@@ -60,7 +51,9 @@ ${urlToFileSystemPath(mainJsFileUrl)}`,
 await writeFile(mainJsFileUrl)
 
 {
-  const actual = await test()
+  const actual = await test({
+    entryPointsToCheck: ["./main.js"],
+  })
   const expected = {
     warnings: [],
     importmaps: {

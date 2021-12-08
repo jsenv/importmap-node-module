@@ -33,7 +33,7 @@ export const visitSourceFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
-  projectEntryPoint,
+  entryPointsToCheck,
   runtime,
   importMap,
   bareSpecifierAutomapping,
@@ -154,9 +154,17 @@ export const visitSourceFiles = async ({
     )
   })
 
-  await visitUrl(`./${projectEntryPoint}`, baseUrl, {
-    importedBy: "project package.json",
-  })
+  await entryPointsToCheck.reduce(async (previous, entryPointToCheck) => {
+    await previous
+
+    // normalize the entry point specifier
+    const entryPointUrl = resolveUrl(entryPointToCheck, baseUrl)
+    const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl)
+    const entryPointSpecifier = `./${entryPointRelativeUrl}`
+    await visitUrl(entryPointSpecifier, baseUrl, {
+      importedBy: "entryPointsToCheck parameter",
+    })
+  }, Promise.resolve())
 
   if (removeUnusedMappings) {
     const importsUsed = {}

@@ -9,12 +9,13 @@ const importMaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
+      mappingsForNodeResolution: true,
       manualImportMap: {
         imports: {
           "#env": "./env.dev.js",
         },
       },
-      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./index.js"],
       removeUnusedMappings: true,
     },
   },

@@ -9,9 +9,10 @@ const importmaps = await writeImportMapFiles({
   importMapFiles: {
     "test.importmap": {
       mappingsForNodeResolution: true,
-      removeUnusedMappings: true,
       // ignoreJsFiles: true,
       packageIncludedPredicate: ({ name }) => name !== "foo",
+      entryPointsToCheck: ["./index.js"],
+      removeUnusedMappings: true,
     },
   },
   writeFiles: false,

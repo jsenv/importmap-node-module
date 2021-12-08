@@ -15,6 +15,7 @@ const test = async () => {
             "http://example.com/foo.js": "http://example.com/bar.js",
           },
         },
+        entryPointsToCheck: ["./index.js"],
         removeUnusedMappings: true,
       },
     },
