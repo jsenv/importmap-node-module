@@ -1,33 +1,34 @@
-# This file configure a GitHub workflow responsible to perform
-# various checks related to the codebase.
+# This is a GitHub workflow YAML file
+# see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 #
-# For that reason it's runned on every pull request and push to main.
+# If you want to update this file it's recommended to use a YAML validator
+# https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml
+# configured to validate with https://json.schemastore.org/github-workflow.json
 #
-# It does the following:
-#  - Check linting passes (no eslint error on files)
-#  - Run tests and ensure none is failing
-#  - Update tests code coverage
+# This workflow is responsible to perform various checks related to the codebase,
+# For every push to main or on a pull request, it
+# - ensures there is no eslint error on files
+# - ensures there is no test failing
+# - uploads code coverage from tests to codecov
 #
-# If all these steps are passing the workflow ends up
-# publishing package on npm if needed. It will publish the npm package
-# using the token found in secrets.NPM_TOKEN. Be sure to create this
-# token in the GitHub repository.
+# If all these steps are passing and there is a secrets.NPM_TOKEN and version in package.json
+# is not already published, workflow published the package on npm.
 
 name: main
 
 on:
   push:
     branches:
-      - "**"
+      - master
   pull_request:
     branches:
-      - "master"
+      - "**"
 
 jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15, windows-2019]
+        os: [ubuntu-20.04, macos-10.15, windows-2022]
         node: [16.13.0]
     runs-on: ${{ matrix.os }}
     name: test on ${{ matrix.os }} and node ${{ matrix.node }}
@@ -35,19 +36,22 @@ jobs:
       CI: true
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
-      - name: NPM installation
+      - name: Install node modules
         run: npm install
-      - name: check lint
-        run: npm run eslint-check
-      - name: check tests
+      - name: Generate importmap
+        run: npm run importmap
+      - name: Run ESLint
+        run: npm run eslint
+      - name: Run tests
         run: npm run test-with-coverage
-      - name: upload coverage
+      - name: Upload coverage
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          # see "coverageJsonFileRelativeUrl" in script/test/test.mjs
           files: ./coverage/coverage.json
           verbose: true
 
@@ -58,17 +62,17 @@ jobs:
     name: release
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: "16.13.0"
-      - name: npm install
+      - name: Install node modules
         run: npm install
-      - name: publish package
+      - name: Publish package
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: env.NPM_TOKEN != null
         run: node ./.github/workflows/main/publish_package.mjs
-      - name: ensure github release
+      - name: Ensure GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node ./.github/workflows/main/github_release.mjs
