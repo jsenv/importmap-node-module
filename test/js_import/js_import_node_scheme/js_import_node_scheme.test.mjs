@@ -10,6 +10,7 @@ const importmaps = await writeImportMapFiles({
   importMapFiles: {
     "test.importmap": {
       mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./index.js"],
       removeUnusedMappings: true,
       runtime: "node",
     },

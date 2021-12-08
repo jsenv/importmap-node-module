@@ -11,6 +11,7 @@ const test = async ({ runtime }) => {
     importMapFiles: {
       "test.importmap": {
         runtime,
+        entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
       },
     },

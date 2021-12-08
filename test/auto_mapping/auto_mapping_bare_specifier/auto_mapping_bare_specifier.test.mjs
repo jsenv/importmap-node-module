@@ -11,6 +11,7 @@ const test = async ({ bareSpecifierAutomapping = false } = {}) => {
     importMapFiles: {
       "test.importmap": {
         mappingsForNodeResolution: true,
+        entryPointsToCheck: ["./index.js"],
         removeUnusedMappings: true,
         bareSpecifierAutomapping,
       },

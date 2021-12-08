@@ -9,6 +9,7 @@ const test = async ({ projectDirectoryUrl, runtime }) => {
     importMapFiles: {
       "test.importmap": {
         mappingsForNodeResolution: true,
+        entryPointsToCheck: ["./index.js"],
         removeUnusedMappings: true,
         runtime,
       },

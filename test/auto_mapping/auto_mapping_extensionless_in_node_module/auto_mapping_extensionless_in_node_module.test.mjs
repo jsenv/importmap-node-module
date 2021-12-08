@@ -15,6 +15,7 @@ const test = async ({
     importMapFiles: {
       "test.importmap": {
         mappingsForNodeResolution: true,
+        entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
         extensionlessAutomapping,
         magicExtensions,
