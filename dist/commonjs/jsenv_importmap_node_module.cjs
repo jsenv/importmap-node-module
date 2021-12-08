@@ -2159,11 +2159,7 @@ const tryExportSubpath = async ({
   return filesystem.urlToRelativeUrl(subpathUrl, projectPackageFileUrl);
 };
 
-/* global __filename */
-const filenameContainsBackSlashes = __filename.indexOf("\\") > -1;
-const url = filenameContainsBackSlashes ? `file:///${__filename.replace(/\\/g, "/")}` : `file://${__filename}`;
-
-const require$1 = node_module.createRequire(url);
+const require$1 = node_module.createRequire((typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('jsenv_importmap_node_module.cjs', document.baseURI).href)));
 
 const traverse = require$1("@babel/traverse");
 
@@ -3158,25 +3154,6 @@ const writeImportMapFiles = async ({
       }
     }
   }, Promise.resolve());
-  Object.keys(importMaps).forEach(key => {
-    let importMap = importMaps[key];
-    importMap = optimizeImportMap(importMap);
-    const importmapFileUrl = filesystem.resolveUrl(key, projectDirectoryUrl);
-    importMap = importmap.moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl);
-    importMap = importmap.sortImportMap(importMap);
-    importMaps[key] = importMap;
-  });
-
-  if (writeFiles) {
-    await importMapFileRelativeUrls.reduce(async (previous, importMapFileRelativeUrl) => {
-      await previous;
-      const importmapFileUrl = filesystem.resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
-      const importMap = importMaps[importMapFileRelativeUrl];
-      await filesystem.writeFile(importmapFileUrl, JSON.stringify(importMap, null, "  "));
-      logger$1.info(`-> ${filesystem.urlToFileSystemPath(importmapFileUrl)}`);
-    }, Promise.resolve());
-  }
-
   const firstUpdatingJsConfig = importMapFileRelativeUrls.find(importMapFileRelativeUrl => {
     const importMapFileConfig = importMapFiles[importMapFileRelativeUrl];
     return importMapFileConfig.useForJsConfigJSON;
@@ -3200,6 +3177,25 @@ const writeImportMapFiles = async ({
     };
     await filesystem.writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "));
     logger$1.info(`-> ${filesystem.urlToFileSystemPath(jsConfigFileUrl)}`);
+  }
+
+  Object.keys(importMaps).forEach(key => {
+    let importMap = importMaps[key];
+    importMap = optimizeImportMap(importMap);
+    const importmapFileUrl = filesystem.resolveUrl(key, projectDirectoryUrl);
+    importMap = importmap.moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl);
+    importMap = importmap.sortImportMap(importMap);
+    importMaps[key] = importMap;
+  });
+
+  if (writeFiles) {
+    await importMapFileRelativeUrls.reduce(async (previous, importMapFileRelativeUrl) => {
+      await previous;
+      const importmapFileUrl = filesystem.resolveUrl(importMapFileRelativeUrl, projectDirectoryUrl);
+      const importMap = importMaps[importMapFileRelativeUrl];
+      await filesystem.writeFile(importmapFileUrl, JSON.stringify(importMap, null, "  "));
+      logger$1.info(`-> ${filesystem.urlToFileSystemPath(importmapFileUrl)}`);
+    }, Promise.resolve());
   }
 
   return importMaps;

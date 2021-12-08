@@ -25,11 +25,11 @@ jobs:
         # "checkout@v2" documentation available at https://github.com/actions/checkout
         uses: actions/checkout@v2
       - name: Setup node ${{ matrix.node }}
-        # "setup-node@v1" documentation available at https://github.com/actions/setup-node
-        uses: actions/setup-node@v1
+        # "setup-node@v2" documentation available at https://github.com/actions/setup-node
+        uses: actions/setup-node@v2
         with:
           node-version: "16.13.0"
-      - name: Setup npm
+      - name: Install node modules
         run: npm install
       - name: Report performance impact
         run: node --expose-gc ./.github/workflows/performance_impact/report_performance_impact.mjs
