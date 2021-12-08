@@ -213,7 +213,9 @@ It is recommended to use _entryPointsToCheck_ as it gives confidence in the gene
 
 ### removeUnusedMappings
 
-_removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files. It must be used with _entryPointsToCheck_.
+_removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files.
+
+_removeUnusedMappings_ is optional. It must be used with _entryPointsToCheck_.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -236,7 +238,9 @@ In production you likely want to keep only the mappings actually used by your js
 
 ### extensionlessAutomapping
 
-_extensionlessAutomapping_ is a boolean. When enabled mappings are generated for import(s) without extension found in your js files. It must be used with _entryPointsToCheck_ and _magicExtensions_.
+_extensionlessAutomapping_ is a boolean. When enabled mappings are generated for import(s) without extension found in your js files.
+
+_extensionlessAutomapping_ is optional. It must be used with _entryPointsToCheck_ and _magicExtensions_.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -257,6 +261,8 @@ await writeImportMapFiles({
 ## packagesManualOverrides
 
 _packagesManualOverrides_ is an object that can be used to override some of your dependencies package.json.
+
+_packagesManualOverrides_ is optional.
 
 _packagesManualOverrides_ exists in case some of your dependencies use non standard fields to configure their entry points in their _package.json_. Ideally they should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
 
