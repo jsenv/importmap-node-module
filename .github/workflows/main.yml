@@ -46,7 +46,7 @@ jobs:
       - name: Run ESLint
         run: npm run eslint
       - name: Run tests
-        run: npm run test-with-coverage
+        run: npm run test
       - name: Upload coverage
         uses: codecov/codecov-action@v2
         with:
