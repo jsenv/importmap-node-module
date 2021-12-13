@@ -1,8 +1,8 @@
 # import map node module [![npm package](https://img.shields.io/npm/v/@jsenv/importmap-node-module.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/importmap-node-module) [![github workflow](https://github.com/jsenv/importmap-node-module/workflows/main/badge.svg)](https://github.com/jsenv/importmap-node-module/actions?workflow=main) [![codecov coverage](https://codecov.io/gh/jsenv/importmap-node-module/branch/master/graph/badge.svg)](https://codecov.io/gh/jsenv/importmap-node-module)
 
-Generates [import map](https://github.com/WICG/import-maps) with mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). This importmap can be used to make code dependent on node module resolution executable in a browser.
+Generate [import map](https://github.com/WICG/import-maps) file with mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). It can be used to make code dependent on node module resolution executable in a browser.
 
-_Example of code relying on node module resolution_
+_Example of code relying on node module resolution:_
 
 ```js
 import lodash from "lodash"
@@ -102,12 +102,6 @@ _importMapFiles_ is **required**.
 _mappingsForNodeResolution_ is a boolean. When enabled mappings required to implement node module resolution are generated.
 
 _mappingsForNodeResolution_ is optional.
-
-The following source of information are used to create complete and coherent mappings in the importmap.
-
-- Your _package.json_
-- All dependencies declared in _package.json_ are searched into _node_modules_, recursively.
-- In every _package.json_, `"main"`, `"exports"` and `"imports"` field.
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
