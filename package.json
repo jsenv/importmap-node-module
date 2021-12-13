@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/importmap-node-module",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Generate importmap for node_modules",
   "license": "MIT",
   "repository": {
@@ -16,13 +16,11 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./index.js",
-      "require": "./dist/commonjs/jsenv_importmap_node_module.cjs"
+      "import": "./index.js"
     },
     "./*": "./*"
   },
   "files": [
-    "/dist/",
     "/src/",
     "/index.js"
   ],
@@ -30,7 +28,6 @@
     "eslint": "node ./node_modules/eslint/bin/eslint.js . --ext=.js,.mjs",
     "importmap": "node ./script/importmap/importmap.mjs",
     "performance": "node --expose-gc ./script/performance/performance.mjs --log",
-    "build": "node --experimental-import-meta-resolve ./script/build/build.mjs",
     "test": "node ./script/test/test.mjs",
     "test-with-coverage": "npm run test -- --coverage",
     "prettier": "prettier --write ."

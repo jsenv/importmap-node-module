@@ -1,6 +1,5 @@
 !/.github/
 /.jsenv/
 /coverage/
-/dist/
 /test/**/node_modules/malformed/
 /node_modules/
