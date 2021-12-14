@@ -149,11 +149,6 @@ export const writeImportMapFiles = async ({
           `"entryPointsToCheck" is required when "extensionlessAutomapping" is enabled`,
         )
       }
-      if (extensionlessAutomapping && !magicExtensions) {
-        logger.warn(
-          `"magicExtensions" is required when "extensionlessAutomapping" is enabled`,
-        )
-      }
 
       if (entryPointsToCheck) {
         const importMap = await visitSourceFiles({

@@ -234,7 +234,7 @@ In production you likely want to keep only the mappings actually used by your js
 
 _extensionlessAutomapping_ is a boolean. When enabled mappings are generated for import(s) without extension found in your js files.
 
-_extensionlessAutomapping_ is optional. It must be used with _entryPointsToCheck_ and _magicExtensions_.
+_extensionlessAutomapping_ is optional. It must be used with _entryPointsToCheck_.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -246,7 +246,41 @@ await writeImportMapFiles({
       mappingsForNodeResolution: true,
       entryPointsToCheck: ["./main.js"],
       extensionlessAutomapping: true,
-      magicExtensions: [".js"],
+    },
+  },
+})
+```
+
+When:
+
+- _extensionlessAutomapping_ is enabled
+- and an imported file cannot be found
+- and the import specifier has no extension
+
+Then we'll try to add the importer extension and see if that leads to a file.
+
+```js
+import "./helper"
+```
+
+| importer path        | path tried             |
+| -------------------- | ---------------------- |
+| /Users/dmail/file.js | /Users/dmail/helper.js |
+| /Users/dmail/file.ts | /Users/dmail/helper.ts |
+
+You can suggest more extensions to try with _magicExtensions_
+
+```diff
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./main.js"],
+      extensionlessAutomapping: true,
++     magicExtensions: [".js", ".jsx"]
     },
   },
 })
