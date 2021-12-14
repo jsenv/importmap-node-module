@@ -8,7 +8,7 @@ const traverse = require("@babel/traverse")
 
 export const parseImportSpecifiers = async (
   url,
-  { urlResponseText, babelOptions } = {},
+  { urlResponseText, babelOptions = {} } = {},
 ) => {
   const ast = await parseAsync(urlResponseText, {
     ...babelOptions,

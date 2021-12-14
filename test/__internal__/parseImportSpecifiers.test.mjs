@@ -24,8 +24,16 @@ import "./bar.js"
   })
   const actual = specifiers
   const expected = {
-    "./foo": { type: "import-static" },
-    "./bar.js": { type: "import-static" },
+    "./foo": {
+      line: 1,
+      column: 7,
+      type: "import-static",
+    },
+    "./bar.js": {
+      line: 2,
+      column: 7,
+      type: "import-static",
+    },
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(testDirectoryUrl)
@@ -44,7 +52,11 @@ import(id)
   })
   const actual = specifiers
   const expected = {
-    "./foo": { type: "import-dynamic" },
+    "./foo": {
+      line: 1,
+      column: 7,
+      type: "import-dynamic",
+    },
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(testDirectoryUrl)
@@ -58,7 +70,11 @@ import(id)
   })
   const actual = specifiers
   const expected = {
-    "./foo": { type: "export-named" },
+    "./foo": {
+      line: 1,
+      column: 19,
+      type: "export-named",
+    },
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(testDirectoryUrl)
@@ -72,7 +88,11 @@ import(id)
   })
   const actual = specifiers
   const expected = {
-    "./foo": { type: "export-all" },
+    "./foo": {
+      line: 1,
+      column: 14,
+      type: "export-all",
+    },
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(testDirectoryUrl)

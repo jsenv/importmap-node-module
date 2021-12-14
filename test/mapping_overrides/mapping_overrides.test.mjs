@@ -10,14 +10,6 @@ const test = async (options) => {
     importMapFiles: {
       "test.importmap": {
         mappingsForNodeResolution: true,
-        mappingOverrides: {
-          scopes: {
-            "./node_modules/react-redux/": {
-              "react": "./node_modules/preact/compat/src/index.js",
-              "react-dom": "./node_modules/preact/compat/src/index.js",
-            },
-          },
-        },
         ...options,
       },
     },
