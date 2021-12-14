@@ -95,10 +95,10 @@ export const visitSourceFiles = async ({
       if (scope) {
         // make scope relative again
         scope = `./${urlToRelativeUrl(scope, baseUrl)}`
-        // make from relative again
-        if (from.startsWith(baseUrl)) {
-          from = `./${urlToRelativeUrl(from, baseUrl)}`
-        }
+      }
+      // make from relative again
+      if (from.startsWith(baseUrl)) {
+        from = `./${urlToRelativeUrl(from, baseUrl)}`
       }
 
       markMappingAsUsed({
