@@ -506,9 +506,10 @@ const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
 
   if (afterLastNodeModulesDirectory[0] === "@") {
     // scoped package
-    return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories
+    const remainingPathToPackageDirectory = remainingDirectories
       .slice(0, 2)
-      .join("/")}`
+      .join("/")
+    return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingPathToPackageDirectory}/`
   }
   return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories[0]}/`
 }
