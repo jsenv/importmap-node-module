@@ -33,7 +33,9 @@ const actual = {
 const expected = {
   warnings: [],
   importmap: {
-    imports: {},
+    imports: {
+      b: "./node_modules/b/index.js",
+    },
     scopes: {},
   },
 }
