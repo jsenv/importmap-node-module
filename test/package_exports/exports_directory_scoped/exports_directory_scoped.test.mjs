@@ -17,22 +17,14 @@ const importmaps = await writeImportMapFiles({
 const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
+    "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
+    "exporting-folder":
+      "./node_modules/foo/node_modules/exporting-folder/index.js",
     "foo/ding": "./node_modules/foo/dong",
     "root/": "./",
     "root": "./index.js",
     "foo": "./node_modules/foo/index.js",
   },
-  scopes: {
-    "./node_modules/foo/node_modules/exporting-folder/": {
-      "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
-      "exporting-folder":
-        "./node_modules/foo/node_modules/exporting-folder/index.js",
-    },
-    "./node_modules/foo/": {
-      "exporting-folder/": "./node_modules/foo/node_modules/exporting-folder/",
-      "exporting-folder":
-        "./node_modules/foo/node_modules/exporting-folder/index.js",
-    },
-  },
+  scopes: {},
 }
 assert({ actual, expected })

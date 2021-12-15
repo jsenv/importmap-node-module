@@ -20,31 +20,18 @@ const importmaps = await writeImportMapFiles({
 const actual = importmaps["test.importmap"]
 const expected = {
   imports: {
+    "@dmail/project-structure/":
+      "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/",
+    "@dmail/project-structure":
+      "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/whatever.js",
     "@jsenv/bundling/": "./node_modules/@jsenv/bundling/",
     "@jsenv/bundling": "./node_modules/@jsenv/bundling/whatever.js",
+    "@jsenv/core/": "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/",
+    "@jsenv/core":
+      "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/whatever.js",
     "root/": "./",
     "root": "./index.js",
   },
-  scopes: {
-    "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/":
-      {
-        "@dmail/project-structure/":
-          "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/",
-      },
-    "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/": {
-      "@dmail/project-structure/":
-        "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/",
-      "@dmail/project-structure":
-        "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/node_modules/@dmail/project-structure/whatever.js",
-      "@jsenv/core/":
-        "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/",
-    },
-    "./node_modules/@jsenv/bundling/": {
-      "@jsenv/core/":
-        "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/",
-      "@jsenv/core":
-        "./node_modules/@jsenv/bundling/node_modules/@jsenv/core/whatever.js",
-    },
-  },
+  scopes: {},
 }
 assert({ actual, expected })

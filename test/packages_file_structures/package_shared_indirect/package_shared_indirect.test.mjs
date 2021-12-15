@@ -27,8 +27,6 @@ const importmaps = await writeImportMapFiles({
       "./node_modules/bar/": {
         "./node_modules/bar/": "./node_modules/bar/",
         "bar/": "./node_modules/bar/",
-        // disabled because we are testing with file protocol
-        //  "./": "./node_modules/bar/",
       },
       "./node_modules/foo/": {
         bar: "./node_modules/bar/bar.js",

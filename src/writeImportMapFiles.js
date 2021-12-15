@@ -73,6 +73,7 @@ export const writeImportMapFiles = async ({
       runtime = "browser",
     } = importMapConfig
     if (mappingsForNodeResolution) {
+      const mappingsToPutTopLevel = {}
       nodeResolutionVisitors.push({
         mappingsForDevDependencies,
         packageConditions: packageConditionsFromPackageUserConditions({
@@ -86,12 +87,18 @@ export const writeImportMapFiles = async ({
               ...(scopedMappings[scope] || {}),
               [from]: to,
             }
-            if (!topLevelMappings[from]) {
-              topLevelMappings[from] = to
-            }
+
+            mappingsToPutTopLevel[from] = to
           } else {
             topLevelMappings[from] = to
           }
+        },
+        onVisitDone: () => {
+          Object.keys(mappingsToPutTopLevel).forEach((key) => {
+            if (!topLevelMappings[key]) {
+              topLevelMappings[key] = mappingsToPutTopLevel[key]
+            }
+          })
         },
       })
     }
@@ -106,6 +113,7 @@ export const writeImportMapFiles = async ({
       packagesManualOverrides,
       exportsFieldWarningConfig,
     })
+    nodeResolutionVisitors.forEach((visitor) => visitor.onVisitDone())
   }
 
   // manual importmap

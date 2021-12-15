@@ -33,16 +33,14 @@ const test = async (options) => {
     imports: {
       "react-redux/": "./node_modules/react-redux/",
       "react-redux": "./node_modules/react-redux/index.js",
+      "react/": "./node_modules/react/",
+      "react": "./node_modules/react/index.js",
       "root/": "./",
       "root": "./index.js",
     },
     scopes: {
       "./node_modules/react-redux/": {
-        "react/": "./node_modules/react/",
-        "react": "./node_modules/preact/compat/src/index.js", // GOOD
-      },
-      "./node_modules/react/": {
-        "react/": "./node_modules/react/",
+        react: "./node_modules/preact/compat/src/index.js", // GOOD
       },
     },
   }
