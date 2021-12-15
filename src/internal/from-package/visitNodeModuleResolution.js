@@ -545,13 +545,13 @@ const triggerVisitorOnMapping = (visitor, { scope, from, to }) => {
         from: packageName,
         to: scope,
       })
+    } else {
+      visitor.onMapping({
+        scope,
+        from,
+        to,
+      })
     }
-
-    visitor.onMapping({
-      scope,
-      from,
-      to,
-    })
     return
   }
 
