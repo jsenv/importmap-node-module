@@ -226,9 +226,14 @@ await writeImportMapFiles({
 })
 ```
 
-During development, you can start or stop using a mapping often so it's convenient to have all mappings.
+It can be convenient to keep unused mappings: you won't have to re-generate the importmap when you start using a new mapping.
 
-In production you likely want to keep only the mappings actually used by your js files. In that case enable removeUnusedMappings: it will drastically decrease the importmap file size.
+Considering:
+
+- There is a LOT of mapping to generate in order to mimic node resolution,
+- And that as project becomes mature, it becomes uncommon to start using a new mapping
+
+It is recommended to enable _removeUnusedMappings_.
 
 ### extensionlessAutomapping
 
