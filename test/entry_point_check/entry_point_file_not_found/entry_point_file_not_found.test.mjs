@@ -1,5 +1,10 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl, removeFileSystemNode, writeFile } from "@jsenv/filesystem"
+import {
+  resolveUrl,
+  removeFileSystemNode,
+  writeFile,
+  urlToFileSystemPath,
+} from "@jsenv/filesystem"
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
@@ -24,6 +29,7 @@ const test = async (params) => {
 await removeFileSystemNode(mainJsFileUrl, { allowUseless: true })
 
 {
+  const importedFileUrl = `${testDirectoryUrl}main.js`
   const actual = await test({
     entryPointsToCheck: ["./main.js"],
   })
@@ -35,7 +41,7 @@ await removeFileSystemNode(mainJsFileUrl, { allowUseless: true })
 --- import source ---
 entryPointsToCheck parameter
 --- reason ---
-file not found on filesystem`,
+file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
       },
     ],
     importmaps: {

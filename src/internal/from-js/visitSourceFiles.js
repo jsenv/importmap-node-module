@@ -380,7 +380,7 @@ const createImportResolver = ({
         createImportResolutionFailedWarning({
           specifier,
           importedBy,
-          url,
+          importUrl,
         }),
       )
       return { found: false }
@@ -399,7 +399,7 @@ const createImportResolver = ({
             createImportResolutionFailedWarning({
               specifier,
               importedBy,
-              url,
+              importUrl,
               magicExtension,
               automapping,
             }),

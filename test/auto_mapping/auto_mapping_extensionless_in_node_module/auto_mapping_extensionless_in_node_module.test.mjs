@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/filesystem"
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/filesystem"
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
@@ -30,6 +30,7 @@ const test = async ({
 }
 
 {
+  const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/file`
   const actual = await test()
   const expected = {
     warnings: [
@@ -41,7 +42,7 @@ ${testDirectoryUrl}node_modules/leftpad/index.js:1:7
 > 1 | import "./file"
     |       ^
 --- reason ---
-file not found on filesystem
+file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}
 --- suggestion 1 ---
 update import specifier to "./file.js"
 --- suggestion 2 ---
@@ -70,6 +71,7 @@ add mapping to "manualImportMap"
 }
 
 {
+  const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/other-file`
   const actual = await test({
     extensionlessAutomapping: true,
     magicExtensions: [".js"],
@@ -84,7 +86,7 @@ ${testDirectoryUrl}node_modules/leftpad/file.js:1:7
 > 1 | import "./other-file"
     |       ^
 --- reason ---
-file not found on filesystem`,
+file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
       },
     ],
     importmaps: {

@@ -61,6 +61,7 @@ Create a pull request in https://github.com/foo/bar to use "exports" instead of 
 }
 
 {
+  const importedFileUrl = `${testDirectoryUrl}node_modules/foo/browser.js`
   const actual = await test()
   const expected = {
     warnings: [
@@ -85,7 +86,7 @@ ${rootMainJsFileUrl}:2:7
     |       ^
   3 |${" "}
 --- reason ---
-file not found on filesystem`,
+file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
       },
     ],
     importmaps: {

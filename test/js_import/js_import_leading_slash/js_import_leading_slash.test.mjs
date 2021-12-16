@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/filesystem"
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/filesystem"
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
@@ -23,7 +23,7 @@ const test = async ({ runtime }) => {
   return { warnings, importmaps }
 }
 
-// TODO: fix on windows
+// TODO: make it work on windows
 if (process.platform !== "win32") {
   const actual = await test({ runtime: "browser" })
   const expected = {
@@ -38,8 +38,9 @@ if (process.platform !== "win32") {
   assert({ actual, expected })
 }
 
-// TODO: fix on windows
+// TODO: make it work on windows
 if (process.platform !== "win32") {
+  const importedFileUrl = `file:///foo.js`
   const actual = await test({ runtime: "node" })
   const expected = {
     warnings: [
@@ -53,7 +54,7 @@ ${testDirectoryUrl}main.js:2:7
     |       ^
   3 |${" "}
 --- reason ---
-file not found on filesystem`,
+file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
       },
     ],
     importmaps: {
