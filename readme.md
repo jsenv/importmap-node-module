@@ -323,6 +323,41 @@ await writeImportMapFiles({
 })
 ```
 
+# TypeScript
+
+This repository can generate importmap to make code produced by the TypeScript compiler executable in a browser.
+
+You need to have your _package.json_ and _node_modules_ into the directory where typescript output js files.
+You can achieve this with the following "scripts" in your _package.json_.
+
+```json
+{
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "tsc",
+    "postbuild": "cp package.json dist && ln -sf ../node_modules ./dist/node_modules"
+  }
+}
+```
+
+Then you can use the script below to produce the importmap.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./dist/", import.meta.url),
+  importMapFiles: {
+    "./project.importmap": {
+      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./index.js"],
+      extensionlessAutomapping: true,
+      removeUnusedMappings: true,
+    },
+  },
+})
+```
+
 # See also
 
 - [Configuring VSCode and ESLint for importmap](./docs/vscode_and_eslint.md#configure-vscode-and-eslint-for-importmap)
