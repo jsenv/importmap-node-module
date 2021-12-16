@@ -2,7 +2,6 @@ import {
   resolveUrl,
   readFileSystemNodeStat,
   urlToFilename,
-  urlToExtension,
 } from "@jsenv/filesystem"
 import { firstOperationMatching } from "@jsenv/cancellation"
 
@@ -45,15 +44,6 @@ export const resolveFile = async (
   }
 
   if (!magicExtensionEnabled) {
-    return {
-      found: false,
-      url: fileUrl,
-    }
-  }
-
-  // file already has an extension, magic extension cannot be used
-  const extension = urlToExtension(fileUrl)
-  if (extension !== "") {
     return {
       found: false,
       url: fileUrl,
