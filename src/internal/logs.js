@@ -102,6 +102,7 @@ export const createPackageNameMustBeAStringWarning = ({
 export const createImportResolutionFailedWarning = ({
   specifier,
   importedBy,
+  url,
   gotBareSpecifierError,
   magicExtension,
   suggestsNodeRuntime,
@@ -115,7 +116,7 @@ export const createImportResolutionFailedWarning = ({
         "import source": importedBy,
         "reason": gotBareSpecifierError
           ? `there is no mapping for this bare specifier`
-          : `file not found on filesystem`,
+          : `file not found on filesystem at ${urlToFileSystemPath(url)}`,
         ...getImportResolutionFailedSuggestions({
           suggestsNodeRuntime,
           gotBareSpecifierError,
