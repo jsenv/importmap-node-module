@@ -224,6 +224,7 @@ const createImportResolver = ({
       baseUrl,
     })
 
+    const extensionsToTry = getExtensionsToTry(magicExtensions || [], importer)
     if (importFileUrl) {
       return handleFileUrl({
         specifier,
@@ -231,6 +232,7 @@ const createImportResolver = ({
         importTrace,
         gotBareSpecifierError,
         importUrl: importFileUrl,
+        extensionsToTry,
       })
     }
 
@@ -244,10 +246,9 @@ const createImportResolver = ({
       importTrace,
       gotBareSpecifierError,
       importUrl,
+      extensionsToTry,
     })
   }
-
-  const tryImportResolution = ({ specifier, importer }) => {}
 
   const resolveImportUrl = ({ specifier, importer }) => {
     try {
@@ -313,10 +314,11 @@ const createImportResolver = ({
     importTrace,
     gotBareSpecifierError,
     importUrl,
+    extensionsToTry,
   }) => {
     const { magicExtension, found, url } = await resolveFile(importUrl, {
       magicExtensionEnabled: true,
-      magicExtensions: getExtensionsToTry(magicExtensions || [], importer),
+      extensionsToTry,
     })
 
     const importerUrl = httpUrlToFileUrl(importer, {

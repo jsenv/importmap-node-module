@@ -2,7 +2,6 @@ import { createDetailedMessage } from "@jsenv/logger"
 import {
   resolveUrl,
   urlToFileSystemPath,
-  urlToExtension,
   urlToRelativeUrl,
 } from "@jsenv/filesystem"
 
@@ -127,10 +126,11 @@ const tryToResolvePackageEntryFile = async ({
     }
   }
 
+  const extensionsToTry = [".js", ".json", ".node"]
   const { found, url } = await resolveFile(urlFirstCandidate, {
     magicDirectoryIndexEnabled: true,
     magicExtensionEnabled: true,
-    magicExtensions: [".js", ".json", ".node"],
+    extensionsToTry,
   })
 
   if (!found) {
@@ -138,7 +138,7 @@ const tryToResolvePackageEntryFile = async ({
       packageEntryFieldName,
       packageInfo,
       fileUrl: urlFirstCandidate,
-      magicExtensions: [".js", ".json", ".node"],
+      extensionsTried: extensionsToTry,
     })
 
     return {
@@ -176,7 +176,7 @@ const createPackageEntryNotFoundWarning = ({
   packageEntryFieldName,
   packageInfo,
   fileUrl,
-  magicExtensions,
+  extensionsTried,
 }) => {
   return {
     code: "PACKAGE_ENTRY_NOT_FOUND",
@@ -186,8 +186,8 @@ const createPackageEntryNotFoundWarning = ({
         [packageEntryFieldName]: packageInfo.object[packageEntryFieldName],
         "package.json path": urlToFileSystemPath(packageInfo.url),
         "url tried": urlToFileSystemPath(fileUrl),
-        ...(urlToExtension(fileUrl) === ""
-          ? { ["extensions tried"]: magicExtensions.join(`, `) }
+        ...(extensionsTried.length > 0
+          ? { ["extensions tried"]: extensionsTried.join(`, `) }
           : {}),
       },
     ),

@@ -7,7 +7,7 @@ import { firstOperationMatching } from "@jsenv/cancellation"
 
 export const resolveFile = async (
   fileUrl,
-  { magicDirectoryIndexEnabled, magicExtensionEnabled, magicExtensions },
+  { magicDirectoryIndexEnabled, magicExtensionEnabled, extensionsToTry },
 ) => {
   const fileStat = await readFileSystemNodeStat(fileUrl, {
     nullIfNotFound: true,
@@ -29,7 +29,7 @@ export const resolveFile = async (
       const result = await resolveFile(indexFileUrl, {
         magicExtensionEnabled,
         magicDirectoryIndexEnabled: false,
-        magicExtensions,
+        extensionsToTry,
       })
       return {
         magicDirectoryIndex: true,
@@ -52,7 +52,7 @@ export const resolveFile = async (
 
   const extensionLeadingToAFile = await findExtensionLeadingToFile(
     fileUrl,
-    magicExtensions,
+    extensionsToTry,
   )
   // magic extension not found
   if (extensionLeadingToAFile === null) {
@@ -69,17 +69,17 @@ export const resolveFile = async (
   }
 }
 
-const findExtensionLeadingToFile = async (fileUrl, magicExtensions) => {
+const findExtensionLeadingToFile = async (fileUrl, extensionsToTry) => {
   const urlDirectoryUrl = resolveUrl("./", fileUrl)
   const urlFilename = urlToFilename(fileUrl)
   const extensionLeadingToFile = await firstOperationMatching({
-    array: magicExtensions,
-    start: async (extensionCandidate) => {
-      const urlCandidate = `${urlDirectoryUrl}${urlFilename}${extensionCandidate}`
+    array: extensionsToTry,
+    start: async (extensionToTry) => {
+      const urlCandidate = `${urlDirectoryUrl}${urlFilename}${extensionToTry}`
       const stats = await readFileSystemNodeStat(urlCandidate, {
         nullIfNotFound: true,
       })
-      return stats && stats.isFile() ? extensionCandidate : null
+      return stats && stats.isFile() ? extensionToTry : null
     },
     predicate: (extension) => Boolean(extension),
   })
