@@ -140,11 +140,10 @@ export const writeImportMapFiles = async ({
         //    but for project with many entry points they cannot be distinguised from
         //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
         entryPointsToCheck,
-        // ideally we could enable extensionlessAutomapping and bareSpecifierAutomapping only for a subset
+        // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
         // of files. Not that hard to do, especially using @jsenv/url-meta
         // but that's super extra fine tuning that I don't have time/energy to do for now
         bareSpecifierAutomapping,
-        extensionlessAutomapping,
         magicExtensions,
         removeUnusedMappings,
         runtime = "browser",
@@ -155,9 +154,9 @@ export const writeImportMapFiles = async ({
           `"entryPointsToCheck" is required when "removeUnusedMappings" is enabled`,
         )
       }
-      if (extensionlessAutomapping && !entryPointsToCheck) {
+      if (magicExtensions && !entryPointsToCheck) {
         logger.warn(
-          `"entryPointsToCheck" is required when "extensionlessAutomapping" is enabled`,
+          `"entryPointsToCheck" is required when "magicExtensions" is enabled`,
         )
       }
 
@@ -169,7 +168,6 @@ export const writeImportMapFiles = async ({
           entryPointsToCheck,
           importMap: importMaps[importMapFileRelativeUrl],
           bareSpecifierAutomapping,
-          extensionlessAutomapping,
           magicExtensions,
           removeUnusedMappings,
           runtime,

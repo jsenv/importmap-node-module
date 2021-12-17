@@ -141,7 +141,7 @@ export const createBareSpecifierAutomappingMessage = ({
   })
 }
 
-export const createExtensionLessAutomappingMessage = ({
+export const createExtensionAutomappingMessage = ({
   specifier,
   importedBy,
   automapping,
@@ -151,8 +151,8 @@ export const createExtensionLessAutomappingMessage = ({
     "import source": importedBy,
     "mapping": mappingToImportmapString(automapping),
     "reason": mappingFoundInPackageExports
-      ? `no file extension and mapping found in package exports`
-      : `no file extension and "bareSpecifierAutomapping" enabled`,
+      ? `mapping found in package exports`
+      : `"bareSpecifierAutomapping" enabled`,
   })
 }
 

@@ -25,7 +25,7 @@ import { showSource } from "./showSource.js"
 import { resolveFile } from "../resolveFile.js"
 import {
   createBareSpecifierAutomappingMessage,
-  createExtensionLessAutomappingMessage,
+  createExtensionAutomappingMessage,
   createImportResolutionFailedWarning,
 } from "../logs.js"
 
@@ -37,7 +37,6 @@ export const visitSourceFiles = async ({
   runtime,
   importMap,
   bareSpecifierAutomapping,
-  extensionlessAutomapping,
   magicExtensions, //  = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   removeUnusedMappings,
 }) => {
@@ -89,7 +88,6 @@ export const visitSourceFiles = async ({
     projectDirectoryUrl,
     baseUrl,
     bareSpecifierAutomapping,
-    extensionlessAutomapping,
     magicExtensions,
     onImportMapping: ({ scope, from }) => {
       if (scope) {
@@ -197,7 +195,6 @@ const createImportResolver = ({
   baseUrl,
   projectDirectoryUrl,
   bareSpecifierAutomapping,
-  extensionlessAutomapping,
   magicExtensions,
   onImportMapping,
   performAutomapping,
@@ -313,10 +310,7 @@ const createImportResolver = ({
   }) => {
     const { magicExtension, found, url } = await resolveFile(importUrl, {
       magicExtensionEnabled: true,
-      magicExtensions: magicExtensionWithImporterExtension(
-        magicExtensions || [],
-        importer,
-      ),
+      magicExtensions: getExtensionsToTry(magicExtensions || [], importer),
     })
 
     const importerUrl = httpUrlToFileUrl(importer, {
@@ -386,7 +380,7 @@ const createImportResolver = ({
       return { found: false }
     }
     if (magicExtension) {
-      if (!extensionlessAutomapping) {
+      if (!magicExtensions) {
         const packageDirectoryUrl = packageDirectoryUrlFromUrl(
           url,
           projectDirectoryUrl,
@@ -407,7 +401,7 @@ const createImportResolver = ({
           return { found: false }
         }
         logger.debug(
-          createExtensionLessAutomappingMessage({
+          createExtensionAutomappingMessage({
             specifier,
             importedBy,
             automapping,
@@ -418,7 +412,7 @@ const createImportResolver = ({
         return foundFileUrl(url)
       }
       logger.debug(
-        createExtensionLessAutomappingMessage({
+        createExtensionAutomappingMessage({
           specifier,
           importedBy,
           automapping,
@@ -516,10 +510,15 @@ const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
   return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories[0]}/`
 }
 
-const magicExtensionWithImporterExtension = (magicExtensions, importer) => {
-  const importerExtension = urlToExtension(importer)
-  const magicExtensionsWithoutImporterExtension = magicExtensions.filter(
-    (ext) => ext !== importerExtension,
-  )
-  return [importerExtension, ...magicExtensionsWithoutImporterExtension]
+const getExtensionsToTry = (magicExtensions, importer) => {
+  const extensionsSet = new Set()
+  magicExtensions.forEach((magicExtension) => {
+    if (magicExtension === "inherit") {
+      const importerExtension = urlToExtension(importer)
+      extensionsSet.add(importerExtension)
+    } else {
+      extensionsSet.add(magicExtension)
+    }
+  })
+  return Array.from(extensionsSet.values())
 }

@@ -235,11 +235,11 @@ Considering:
 
 It is recommended to enable _removeUnusedMappings_.
 
-### extensionlessAutomapping
+### magicExtensions
 
-_extensionlessAutomapping_ is a boolean. When enabled mappings are generated for import(s) without extension found in your js files.
+_magicExtensions_ is an array of strings. Each string represent an extension that will be tried when an import cannot be resolved to a file.
 
-_extensionlessAutomapping_ is optional. It must be used with _entryPointsToCheck_.
+_magicExtensions_ is optional. It must be used with _entryPointsToCheck_.
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
@@ -250,19 +250,13 @@ await writeImportMapFiles({
     "./test.importmap": {
       mappingsForNodeResolution: true,
       entryPointsToCheck: ["./main.js"],
-      extensionlessAutomapping: true,
+      magicExtensions: ["inherit", ".js"],
     },
   },
 })
 ```
 
-When:
-
-- _extensionlessAutomapping_ is enabled
-- and an imported file cannot be found
-- and the import specifier has no extension
-
-Then we'll try to add the importer extension and see if that leads to a file.
+`"inherit"` means the extension tried in taken from the importer.
 
 ```js
 import "./helper"
@@ -273,23 +267,7 @@ import "./helper"
 | /Users/dmail/file.js | /Users/dmail/helper.js |
 | /Users/dmail/file.ts | /Users/dmail/helper.ts |
 
-You can suggest more extensions to try with _magicExtensions_
-
-```diff
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./main.js"],
-      extensionlessAutomapping: true,
-+     magicExtensions: [".js", ".jsx"]
-    },
-  },
-})
-```
+All other values in _magicExtensions_ are file extensions that will be tried one after an other.
 
 ## packagesManualOverrides
 
@@ -306,7 +284,6 @@ await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./test.importmap": {
-      extensionlessAutomapping: true,
       magicExtensions: [".ts", ".tsx"],
     },
   },
@@ -351,7 +328,7 @@ await writeImportMapFiles({
     "./project.importmap": {
       mappingsForNodeResolution: true,
       entryPointsToCheck: ["./index.js"],
-      extensionlessAutomapping: true,
+      magicExtensions: ["inherit"],
       removeUnusedMappings: true,
     },
   },
