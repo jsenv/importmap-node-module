@@ -205,36 +205,6 @@ await writeImportMapFiles({
 
 It is recommended to use _entryPointsToCheck_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
 
-### removeUnusedMappings
-
-_removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files.
-
-_removeUnusedMappings_ is optional. It must be used with _entryPointsToCheck_.
-
-```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./main.js"],
-      removeUnusedMappings: true,
-    },
-  },
-})
-```
-
-It can be convenient to keep unused mappings: you won't have to re-generate the importmap when you start using a new mapping.
-
-Considering:
-
-- There is a LOT of mapping to generate in order to mimic node resolution,
-- And that as project becomes mature, it becomes uncommon to start using a new mapping
-
-It is recommended to enable _removeUnusedMappings_.
-
 ### magicExtensions
 
 _magicExtensions_ is an array of strings. Each string represent an extension that will be tried when an import cannot be resolved to a file.
@@ -269,6 +239,29 @@ import "./helper"
 
 All other values in _magicExtensions_ are file extensions that will be tried one after an other.
 
+### removeUnusedMappings
+
+_removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files.
+
+_removeUnusedMappings_ is optional. It must be used with _entryPointsToCheck_.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./main.js"],
+      removeUnusedMappings: true,
+    },
+  },
+})
+```
+
+It is recommended to enable _removeUnusedMappings_ so that importmap contains only the mappings actually used by your codebase.
+
 ## packagesManualOverrides
 
 _packagesManualOverrides_ is an object that can be used to override some of your dependencies package.json.
@@ -284,7 +277,7 @@ await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importMapFiles: {
     "./test.importmap": {
-      magicExtensions: [".ts", ".tsx"],
+      mappingsForNodeResolution: true,
     },
   },
   // overrides "react-redux" package because it uses a non-standard "module" field
