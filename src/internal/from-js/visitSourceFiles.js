@@ -214,29 +214,46 @@ const createImportResolver = ({
       }
     }
 
-    const { gotBareSpecifierError, importUrl } = resolveImportUrl({
+    let importResolution = resolveImportUrl({
       specifier,
       importer,
     })
+    const extensionsToTry = getExtensionsToTry(magicExtensions || [], importer)
+    if (importResolution.gotBareSpecifierError) {
+      // If a magic extension can avoid the bare specifier error
+      // let's use it.
+      extensionsToTry.find((extensionToTry) => {
+        const resolutionResult = resolveImportUrl({
+          specifier: `${specifier}${extensionToTry}`,
+          importer,
+        })
+        if (resolutionResult.gotBareSpecifierError) {
+          return false
+        }
+        importResolution = resolutionResult
+        return true
+      })
+    }
 
-    const importFileUrl = httpUrlToFileUrl(importUrl, {
+    const importFileUrl = httpUrlToFileUrl(importResolution.url, {
       projectDirectoryUrl,
       baseUrl,
     })
-
-    const extensionsToTry = getExtensionsToTry(magicExtensions || [], importer)
     if (importFileUrl) {
       return handleFileUrl({
         specifier,
         importer,
         importTrace,
-        gotBareSpecifierError,
+        gotBareSpecifierError: importResolution.gotBareSpecifierError,
         importUrl: importFileUrl,
         extensionsToTry,
       })
     }
 
-    if (importUrl.startsWith("http:") || importUrl.startsWith("https:")) {
+    if (
+      importResolution.url.startsWith("http:") ||
+      importResolution.url.startsWith("https:")
+    ) {
       return handleHttpUrl()
     }
 
@@ -244,15 +261,15 @@ const createImportResolver = ({
       specifier,
       importer,
       importTrace,
-      gotBareSpecifierError,
-      importUrl,
+      gotBareSpecifierError: importResolution.gotBareSpecifierError,
+      importUrl: importResolution.url,
       extensionsToTry,
     })
   }
 
   const resolveImportUrl = ({ specifier, importer }) => {
     try {
-      const importUrl = resolveImport({
+      const url = resolveImport({
         specifier,
         importer,
         importMap: importMapNormalized,
@@ -263,12 +280,12 @@ const createImportResolver = ({
 
       return {
         gotBareSpecifierError: false,
-        importUrl,
+        url,
       }
     } catch (e) {
       return {
         gotBareSpecifierError: true,
-        importUrl: resolveUrl(specifier, importer),
+        url: resolveUrl(specifier, importer),
       }
     }
   }
