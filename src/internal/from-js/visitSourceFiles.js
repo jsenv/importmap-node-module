@@ -112,12 +112,12 @@ export const visitSourceFiles = async ({
   })
 
   const visitUrl = memoizeAsyncFunctionBySpecifierAndImporter(
-    async (specifier, importer, { importedBy }) => {
+    async (specifier, importer, { importTrace }) => {
       const { found, ignore, url, body } =
         await importResolver.applyImportResolution({
           specifier,
           importer,
-          importedBy,
+          importTrace,
         })
 
       if (!found || ignore) {
@@ -141,7 +141,7 @@ export const visitSourceFiles = async ({
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
         await visitUrl(specifier, url, {
-          importedBy: showSource({
+          importTrace: showSource({
             url: fileUrl,
             line: specifierInfo.line,
             column: specifierInfo.column,
@@ -160,7 +160,7 @@ export const visitSourceFiles = async ({
     const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl)
     const entryPointSpecifier = `./${entryPointRelativeUrl}`
     await visitUrl(entryPointSpecifier, baseUrl, {
-      importedBy: "entryPointsToCheck parameter",
+      importTrace: "entryPointsToCheck parameter",
     })
   }, Promise.resolve())
 
@@ -202,7 +202,11 @@ const createImportResolver = ({
   const importMapNormalized = normalizeImportMap(importMap, baseUrl)
   const BARE_SPECIFIER_ERROR = {}
 
-  const applyImportResolution = async ({ specifier, importer, importedBy }) => {
+  const applyImportResolution = async ({
+    specifier,
+    importer,
+    importTrace,
+  }) => {
     if (runtime === "node" && isSpecifierForNodeCoreModule(specifier)) {
       return {
         found: true,
@@ -224,7 +228,7 @@ const createImportResolver = ({
       return handleFileUrl({
         specifier,
         importer,
-        importedBy,
+        importTrace,
         gotBareSpecifierError,
         importUrl: importFileUrl,
       })
@@ -237,11 +241,13 @@ const createImportResolver = ({
     return handleFileUrl({
       specifier,
       importer,
-      importedBy,
+      importTrace,
       gotBareSpecifierError,
       importUrl,
     })
   }
+
+  const tryImportResolution = ({ specifier, importer }) => {}
 
   const resolveImportUrl = ({ specifier, importer }) => {
     try {
@@ -304,7 +310,7 @@ const createImportResolver = ({
   const handleFileUrl = async ({
     specifier,
     importer,
-    importedBy,
+    importTrace,
     gotBareSpecifierError,
     importUrl,
   }) => {
@@ -340,7 +346,7 @@ const createImportResolver = ({
         warn(
           createImportResolutionFailedWarning({
             specifier,
-            importedBy,
+            importTrace,
             gotBareSpecifierError,
             suggestsNodeRuntime:
               runtime !== "node" && isSpecifierForNodeCoreModule(specifier),
@@ -352,7 +358,7 @@ const createImportResolver = ({
         warn(
           createImportResolutionFailedWarning({
             specifier,
-            importedBy,
+            importTrace,
             gotBareSpecifierError,
             automapping,
           }),
@@ -362,7 +368,7 @@ const createImportResolver = ({
       logger.debug(
         createBareSpecifierAutomappingMessage({
           specifier,
-          importedBy,
+          importTrace,
           automapping,
         }),
       )
@@ -373,7 +379,7 @@ const createImportResolver = ({
       warn(
         createImportResolutionFailedWarning({
           specifier,
-          importedBy,
+          importTrace,
           importUrl,
         }),
       )
@@ -392,7 +398,7 @@ const createImportResolver = ({
           warn(
             createImportResolutionFailedWarning({
               specifier,
-              importedBy,
+              importTrace,
               importUrl,
               magicExtension,
               automapping,
@@ -403,7 +409,7 @@ const createImportResolver = ({
         logger.debug(
           createExtensionAutomappingMessage({
             specifier,
-            importedBy,
+            importTrace,
             automapping,
             mappingFoundInPackageExports,
           }),
@@ -414,7 +420,7 @@ const createImportResolver = ({
       logger.debug(
         createExtensionAutomappingMessage({
           specifier,
-          importedBy,
+          importTrace,
           automapping,
         }),
       )
