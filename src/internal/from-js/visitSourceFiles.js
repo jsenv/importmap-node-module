@@ -218,7 +218,10 @@ const createImportResolver = ({
       specifier,
       importer,
     })
-    const extensionsToTry = getExtensionsToTry(magicExtensions || [], importer)
+    const extensionsToTry = getExtensionsToTry(
+      magicExtensions || ["inherit"],
+      importer,
+    )
     if (importResolution.gotBareSpecifierError) {
       // If a magic extension can avoid the bare specifier error
       // let's use it.

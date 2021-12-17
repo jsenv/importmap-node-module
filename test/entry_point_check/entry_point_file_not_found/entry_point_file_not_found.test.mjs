@@ -38,7 +38,7 @@ await removeFileSystemNode(mainJsFileUrl, { allowUseless: true })
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "./main.js"
---- import source ---
+--- import trace ---
 entryPointsToCheck parameter
 --- reason ---
 file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,

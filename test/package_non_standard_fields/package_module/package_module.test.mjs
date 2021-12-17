@@ -73,12 +73,14 @@ Create a pull request in https://github.com/reduxjs/react-redux to use "exports"
 --- package.json path ---
 ${urlToFileSystemPath(fooPackageJsonFileUrl)}
 --- url tried ---
-${urlToFileSystemPath(fooModuleJsFileUrl)}`,
+${urlToFileSystemPath(fooModuleJsFileUrl)}
+--- extensions tried ---
+.js, .json, .node`,
       },
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "foo"
---- import source ---
+--- import trace ---
 ${rootMainJsFileUrl}:2:7
   1 | // eslint-disable-next-line import/no-unresolved
 > 2 | import "foo"

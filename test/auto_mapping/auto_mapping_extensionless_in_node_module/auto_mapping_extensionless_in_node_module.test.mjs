@@ -5,7 +5,7 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const test = async ({ magicExtensions } = {}) => {
+const test = async (params) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -14,7 +14,7 @@ const test = async ({ magicExtensions } = {}) => {
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
-        magicExtensions,
+        ...params,
       },
     },
     onWarn: (warning) => {
@@ -33,7 +33,7 @@ const test = async ({ magicExtensions } = {}) => {
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "./file"
---- import source ---
+--- import trace ---
 ${testDirectoryUrl}node_modules/leftpad/index.js:1:7
 > 1 | import "./file"
     |       ^
@@ -76,7 +76,7 @@ add mapping to "manualImportMap"
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "./other-file"
---- import source ---
+--- import trace ---
 ${testDirectoryUrl}node_modules/leftpad/file.js:1:7
 > 1 | import "./other-file"
     |       ^
@@ -102,7 +102,7 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
 
 {
   const actual = await test({
-    magicExtensions: [".ts"],
+    magicExtensions: ["inherit", ".ts"],
   })
   const expected = {
     warnings: [],

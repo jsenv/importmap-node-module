@@ -4,7 +4,7 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const test = async ({ bareSpecifierAutomapping = false } = {}) => {
+const test = async (params) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -13,7 +13,7 @@ const test = async ({ bareSpecifierAutomapping = false } = {}) => {
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./index.js"],
         removeUnusedMappings: true,
-        bareSpecifierAutomapping,
+        ...params,
       },
     },
     onWarn: (warning) => {
@@ -31,7 +31,7 @@ const test = async ({ bareSpecifierAutomapping = false } = {}) => {
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "file"
---- import source ---
+--- import trace ---
 ${testDirectoryUrl}index.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
 > 2 | import "file"

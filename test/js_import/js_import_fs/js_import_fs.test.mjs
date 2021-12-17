@@ -31,7 +31,7 @@ const test = async ({ runtime } = {}) => {
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "fs"
---- import source ---
+--- import trace ---
 ${testDirectoryUrl}index.js:1:7
 > 1 | import "fs"
     |       ^
