@@ -5,10 +5,7 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const test = async ({
-  extensionlessAutomapping = false,
-  magicExtensions,
-} = {}) => {
+const test = async ({ magicExtensions } = {}) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -17,7 +14,6 @@ const test = async ({
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
-        extensionlessAutomapping,
         magicExtensions,
       },
     },
@@ -46,7 +42,7 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}
 --- suggestion 1 ---
 update import specifier to "./file.js"
 --- suggestion 2 ---
-use extensionlessAutomapping: true
+use magicExtensions: ["inherit"]
 --- suggestion 3 ---
 add mapping to "manualImportMap"
 {
@@ -73,7 +69,6 @@ add mapping to "manualImportMap"
 {
   const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/other-file`
   const actual = await test({
-    extensionlessAutomapping: true,
     magicExtensions: [".js"],
   })
   const expected = {
@@ -107,7 +102,6 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
 
 {
   const actual = await test({
-    extensionlessAutomapping: true,
     magicExtensions: [".ts"],
   })
   const expected = {

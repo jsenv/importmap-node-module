@@ -180,7 +180,7 @@ const getImportResolutionFailedSuggestions = ({
       addSuggestion(`use bareSpecifierAutomapping: true`)
     }
     if (magicExtension) {
-      addSuggestion(`use extensionlessAutomapping: true`)
+      addSuggestion(`use magicExtensions: ["inherit"]`)
     }
     addSuggestion(`add mapping to "manualImportMap"
 ${mappingToImportmapString(automapping)}`)

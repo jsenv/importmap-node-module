@@ -4,11 +4,7 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const test = async ({
-  extensionlessAutomapping = false,
-  magicExtensions,
-  packagesManualOverrides,
-} = {}) => {
+const test = async ({ magicExtensions, packagesManualOverrides } = {}) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -17,7 +13,6 @@ const test = async ({
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
-        extensionlessAutomapping,
         magicExtensions,
       },
     },
@@ -32,7 +27,6 @@ const test = async ({
 
 {
   const actual = await test({
-    extensionlessAutomapping: true,
     magicExtensions: [".ts"],
     packagesManualOverrides: {
       lodash: {

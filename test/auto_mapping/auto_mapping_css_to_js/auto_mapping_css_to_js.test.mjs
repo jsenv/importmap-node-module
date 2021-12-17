@@ -13,7 +13,7 @@ const test = async (params) => {
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
-        extensionlessAutomapping: true,
+        magicExtensions: ["inherit"],
         ...params,
       },
     },
@@ -26,7 +26,6 @@ const test = async (params) => {
 }
 
 const actual = await test({
-  extensionlessAutomapping: true,
   magicExtensions: [".ts"],
 })
 const expected = {
