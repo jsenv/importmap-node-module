@@ -5,10 +5,7 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 
-const test = async ({
-  extensionlessAutomapping = false,
-  magicExtensions,
-} = {}) => {
+const test = async (params) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -17,8 +14,7 @@ const test = async ({
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
-        extensionlessAutomapping,
-        magicExtensions,
+        ...params,
       },
     },
     onWarn: (warning) => {
@@ -37,7 +33,7 @@ const test = async ({
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "./file"
---- import source ---
+--- import trace ---
 ${testDirectoryUrl}node_modules/leftpad/index.js:1:7
 > 1 | import "./file"
     |       ^
@@ -46,7 +42,7 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}
 --- suggestion 1 ---
 update import specifier to "./file.js"
 --- suggestion 2 ---
-use extensionlessAutomapping: true
+use magicExtensions: ["inherit"]
 --- suggestion 3 ---
 add mapping to "manualImportMap"
 {
@@ -73,7 +69,6 @@ add mapping to "manualImportMap"
 {
   const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/other-file`
   const actual = await test({
-    extensionlessAutomapping: true,
     magicExtensions: [".js"],
   })
   const expected = {
@@ -81,7 +76,7 @@ add mapping to "manualImportMap"
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "./other-file"
---- import source ---
+--- import trace ---
 ${testDirectoryUrl}node_modules/leftpad/file.js:1:7
 > 1 | import "./other-file"
     |       ^
@@ -107,8 +102,7 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
 
 {
   const actual = await test({
-    extensionlessAutomapping: true,
-    magicExtensions: [".ts"],
+    magicExtensions: ["inherit", ".ts"],
   })
   const expected = {
     warnings: [],

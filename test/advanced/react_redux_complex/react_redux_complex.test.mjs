@@ -12,7 +12,6 @@ const importmaps = await writeImportMapFiles({
     "test.importmap": {
       mappingsForNodeResolution: true,
       entryPointsToCheck: ["./index.js"],
-      extensionlessAutomapping: true,
       magicExtensions: [".js"],
     },
   },

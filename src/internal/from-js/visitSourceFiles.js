@@ -25,7 +25,7 @@ import { showSource } from "./showSource.js"
 import { resolveFile } from "../resolveFile.js"
 import {
   createBareSpecifierAutomappingMessage,
-  createExtensionLessAutomappingMessage,
+  createExtensionAutomappingMessage,
   createImportResolutionFailedWarning,
 } from "../logs.js"
 
@@ -37,7 +37,6 @@ export const visitSourceFiles = async ({
   runtime,
   importMap,
   bareSpecifierAutomapping,
-  extensionlessAutomapping,
   magicExtensions, //  = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   removeUnusedMappings,
 }) => {
@@ -89,7 +88,6 @@ export const visitSourceFiles = async ({
     projectDirectoryUrl,
     baseUrl,
     bareSpecifierAutomapping,
-    extensionlessAutomapping,
     magicExtensions,
     onImportMapping: ({ scope, from }) => {
       if (scope) {
@@ -114,12 +112,12 @@ export const visitSourceFiles = async ({
   })
 
   const visitUrl = memoizeAsyncFunctionBySpecifierAndImporter(
-    async (specifier, importer, { importedBy }) => {
+    async (specifier, importer, { importTrace }) => {
       const { found, ignore, url, body } =
         await importResolver.applyImportResolution({
           specifier,
           importer,
-          importedBy,
+          importTrace,
         })
 
       if (!found || ignore) {
@@ -143,7 +141,7 @@ export const visitSourceFiles = async ({
       Object.keys(specifiers).map(async (specifier) => {
         const specifierInfo = specifiers[specifier]
         await visitUrl(specifier, url, {
-          importedBy: showSource({
+          importTrace: showSource({
             url: fileUrl,
             line: specifierInfo.line,
             column: specifierInfo.column,
@@ -162,7 +160,7 @@ export const visitSourceFiles = async ({
     const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl)
     const entryPointSpecifier = `./${entryPointRelativeUrl}`
     await visitUrl(entryPointSpecifier, baseUrl, {
-      importedBy: "entryPointsToCheck parameter",
+      importTrace: "entryPointsToCheck parameter",
     })
   }, Promise.resolve())
 
@@ -197,7 +195,6 @@ const createImportResolver = ({
   baseUrl,
   projectDirectoryUrl,
   bareSpecifierAutomapping,
-  extensionlessAutomapping,
   magicExtensions,
   onImportMapping,
   performAutomapping,
@@ -205,7 +202,11 @@ const createImportResolver = ({
   const importMapNormalized = normalizeImportMap(importMap, baseUrl)
   const BARE_SPECIFIER_ERROR = {}
 
-  const applyImportResolution = async ({ specifier, importer, importedBy }) => {
+  const applyImportResolution = async ({
+    specifier,
+    importer,
+    importTrace,
+  }) => {
     if (runtime === "node" && isSpecifierForNodeCoreModule(specifier)) {
       return {
         found: true,
@@ -213,42 +214,65 @@ const createImportResolver = ({
       }
     }
 
-    const { gotBareSpecifierError, importUrl } = resolveImportUrl({
+    let importResolution = resolveImportUrl({
       specifier,
       importer,
     })
+    const extensionsToTry = getExtensionsToTry(
+      magicExtensions || ["inherit"],
+      importer,
+    )
+    if (importResolution.gotBareSpecifierError) {
+      // If a magic extension can avoid the bare specifier error
+      // let's use it.
+      extensionsToTry.find((extensionToTry) => {
+        const resolutionResult = resolveImportUrl({
+          specifier: `${specifier}${extensionToTry}`,
+          importer,
+        })
+        if (resolutionResult.gotBareSpecifierError) {
+          return false
+        }
+        importResolution = resolutionResult
+        return true
+      })
+    }
 
-    const importFileUrl = httpUrlToFileUrl(importUrl, {
+    const importFileUrl = httpUrlToFileUrl(importResolution.url, {
       projectDirectoryUrl,
       baseUrl,
     })
-
     if (importFileUrl) {
       return handleFileUrl({
         specifier,
         importer,
-        importedBy,
-        gotBareSpecifierError,
+        importTrace,
+        gotBareSpecifierError: importResolution.gotBareSpecifierError,
         importUrl: importFileUrl,
+        extensionsToTry,
       })
     }
 
-    if (importUrl.startsWith("http:") || importUrl.startsWith("https:")) {
+    if (
+      importResolution.url.startsWith("http:") ||
+      importResolution.url.startsWith("https:")
+    ) {
       return handleHttpUrl()
     }
 
     return handleFileUrl({
       specifier,
       importer,
-      importedBy,
-      gotBareSpecifierError,
-      importUrl,
+      importTrace,
+      gotBareSpecifierError: importResolution.gotBareSpecifierError,
+      importUrl: importResolution.url,
+      extensionsToTry,
     })
   }
 
   const resolveImportUrl = ({ specifier, importer }) => {
     try {
-      const importUrl = resolveImport({
+      const url = resolveImport({
         specifier,
         importer,
         importMap: importMapNormalized,
@@ -259,12 +283,12 @@ const createImportResolver = ({
 
       return {
         gotBareSpecifierError: false,
-        importUrl,
+        url,
       }
     } catch (e) {
       return {
         gotBareSpecifierError: true,
-        importUrl: resolveUrl(specifier, importer),
+        url: resolveUrl(specifier, importer),
       }
     }
   }
@@ -307,16 +331,14 @@ const createImportResolver = ({
   const handleFileUrl = async ({
     specifier,
     importer,
-    importedBy,
+    importTrace,
     gotBareSpecifierError,
     importUrl,
+    extensionsToTry,
   }) => {
     const { magicExtension, found, url } = await resolveFile(importUrl, {
       magicExtensionEnabled: true,
-      magicExtensions: magicExtensionWithImporterExtension(
-        magicExtensions || [],
-        importer,
-      ),
+      extensionsToTry,
     })
 
     const importerUrl = httpUrlToFileUrl(importer, {
@@ -346,7 +368,7 @@ const createImportResolver = ({
         warn(
           createImportResolutionFailedWarning({
             specifier,
-            importedBy,
+            importTrace,
             gotBareSpecifierError,
             suggestsNodeRuntime:
               runtime !== "node" && isSpecifierForNodeCoreModule(specifier),
@@ -358,7 +380,7 @@ const createImportResolver = ({
         warn(
           createImportResolutionFailedWarning({
             specifier,
-            importedBy,
+            importTrace,
             gotBareSpecifierError,
             automapping,
           }),
@@ -368,7 +390,7 @@ const createImportResolver = ({
       logger.debug(
         createBareSpecifierAutomappingMessage({
           specifier,
-          importedBy,
+          importTrace,
           automapping,
         }),
       )
@@ -379,14 +401,14 @@ const createImportResolver = ({
       warn(
         createImportResolutionFailedWarning({
           specifier,
-          importedBy,
+          importTrace,
           importUrl,
         }),
       )
       return { found: false }
     }
     if (magicExtension) {
-      if (!extensionlessAutomapping) {
+      if (!magicExtensions) {
         const packageDirectoryUrl = packageDirectoryUrlFromUrl(
           url,
           projectDirectoryUrl,
@@ -398,7 +420,7 @@ const createImportResolver = ({
           warn(
             createImportResolutionFailedWarning({
               specifier,
-              importedBy,
+              importTrace,
               importUrl,
               magicExtension,
               automapping,
@@ -407,9 +429,9 @@ const createImportResolver = ({
           return { found: false }
         }
         logger.debug(
-          createExtensionLessAutomappingMessage({
+          createExtensionAutomappingMessage({
             specifier,
-            importedBy,
+            importTrace,
             automapping,
             mappingFoundInPackageExports,
           }),
@@ -418,9 +440,9 @@ const createImportResolver = ({
         return foundFileUrl(url)
       }
       logger.debug(
-        createExtensionLessAutomappingMessage({
+        createExtensionAutomappingMessage({
           specifier,
-          importedBy,
+          importTrace,
           automapping,
         }),
       )
@@ -516,10 +538,15 @@ const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
   return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories[0]}/`
 }
 
-const magicExtensionWithImporterExtension = (magicExtensions, importer) => {
-  const importerExtension = urlToExtension(importer)
-  const magicExtensionsWithoutImporterExtension = magicExtensions.filter(
-    (ext) => ext !== importerExtension,
-  )
-  return [importerExtension, ...magicExtensionsWithoutImporterExtension]
+const getExtensionsToTry = (magicExtensions, importer) => {
+  const extensionsSet = new Set()
+  magicExtensions.forEach((magicExtension) => {
+    if (magicExtension === "inherit") {
+      const importerExtension = urlToExtension(importer)
+      extensionsSet.add(importerExtension)
+    } else {
+      extensionsSet.add(magicExtension)
+    }
+  })
+  return Array.from(extensionsSet.values())
 }

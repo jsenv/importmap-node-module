@@ -101,7 +101,7 @@ export const createPackageNameMustBeAStringWarning = ({
 
 export const createImportResolutionFailedWarning = ({
   specifier,
-  importedBy,
+  importTrace,
   importUrl,
   gotBareSpecifierError,
   magicExtension,
@@ -113,7 +113,7 @@ export const createImportResolutionFailedWarning = ({
     message: createDetailedMessage(
       `Import resolution failed for "${specifier}"`,
       {
-        "import source": importedBy,
+        "import trace": importTrace,
         "reason": gotBareSpecifierError
           ? `there is no mapping for this bare specifier`
           : `file not found on filesystem at ${urlToFileSystemPath(importUrl)}`,
@@ -131,28 +131,28 @@ export const createImportResolutionFailedWarning = ({
 
 export const createBareSpecifierAutomappingMessage = ({
   specifier,
-  importedBy,
+  importTrace,
   automapping,
 }) => {
   return createDetailedMessage(`Auto mapping for "${specifier}"`, {
-    "import source": importedBy,
+    "import trace": importTrace,
     "mapping": mappingToImportmapString(automapping),
     "reason": `bare specifier and "bareSpecifierAutomapping" enabled`,
   })
 }
 
-export const createExtensionLessAutomappingMessage = ({
+export const createExtensionAutomappingMessage = ({
   specifier,
-  importedBy,
+  importTrace,
   automapping,
   mappingFoundInPackageExports,
 }) => {
   return createDetailedMessage(`Auto mapping for "${specifier}"`, {
-    "import source": importedBy,
+    "import trace": importTrace,
     "mapping": mappingToImportmapString(automapping),
     "reason": mappingFoundInPackageExports
-      ? `no file extension and mapping found in package exports`
-      : `no file extension and "bareSpecifierAutomapping" enabled`,
+      ? `mapping found in package exports`
+      : `"bareSpecifierAutomapping" enabled`,
   })
 }
 
@@ -180,7 +180,7 @@ const getImportResolutionFailedSuggestions = ({
       addSuggestion(`use bareSpecifierAutomapping: true`)
     }
     if (magicExtension) {
-      addSuggestion(`use extensionlessAutomapping: true`)
+      addSuggestion(`use magicExtensions: ["inherit"]`)
     }
     addSuggestion(`add mapping to "manualImportMap"
 ${mappingToImportmapString(automapping)}`)

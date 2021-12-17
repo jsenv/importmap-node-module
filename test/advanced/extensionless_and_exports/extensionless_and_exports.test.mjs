@@ -4,43 +4,34 @@ import { resolveUrl } from "@jsenv/filesystem"
 import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-
 const warnings = []
 const importmaps = await writeImportMapFiles({
-  // logLevel: "debug",
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
-    "test.importmap": {
+    "./test.importmap": {
       mappingsForNodeResolution: true,
       entryPointsToCheck: ["./index.js"],
-      bareSpecifierAutomapping: true,
-      // magicExtensions: [".js"],
+      magicExtensions: ["inherit"],
+      removeUnusedMappings: true,
     },
   },
-  writeFiles: false,
   onWarn: (warning) => {
     warnings.push(warning)
   },
+  writeFiles: false,
 })
+
 const actual = {
   warnings,
-  importmaps,
+  importmap: importmaps["./test.importmap"],
 }
 const expected = {
   warnings: [],
-  importmaps: {
-    "test.importmap": {
-      imports: {
-        "root/": "./",
-        "root": "./index.js",
-        "foo": "./node_modules/foo/index.js",
-      },
-      scopes: {
-        "./node_modules/foo/": {
-          file: "./node_modules/foo/file.js",
-        },
-      },
+  importmap: {
+    imports: {
+      "foo/file.js": "./node_modules/foo/file.js",
     },
+    scopes: {},
   },
 }
 assert({ actual, expected })

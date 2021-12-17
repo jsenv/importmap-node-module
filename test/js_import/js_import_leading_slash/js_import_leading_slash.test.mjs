@@ -47,7 +47,7 @@ if (process.platform !== "win32") {
       {
         code: "IMPORT_RESOLUTION_FAILED",
         message: `Import resolution failed for "/foo.js"
---- import source ---
+--- import trace ---
 ${testDirectoryUrl}main.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
 > 2 | import "/foo.js"
