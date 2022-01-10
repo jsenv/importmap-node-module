@@ -24,7 +24,11 @@ const test = async (params) => {
 const actual = await test({
   manualImportMap: {
     imports: {
-      foo: "./foo.js",
+      a: "./a.js",
+      b: "./b.js",
+      a_everything: "./everything.js",
+      b_everything: "./everything.js",
+      c_everything: "./everything.js",
     },
   },
   entryPointsToCheck: ["./main.html"],
@@ -35,7 +39,11 @@ const expected = {
   importmaps: {
     "test.importmap": {
       imports: {
-        foo: "./foo.js",
+        a: "./a.js",
+        // b.js is gone, no one needs it
+        a_everything: "./everything.js",
+        b_everything: "./everything.js",
+        c_everything: "./everything.js",
       },
       scopes: {},
     },

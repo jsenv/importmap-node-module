@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <script type="module">
+      // eslint-disable-next-line import/no-unresolved
+      import "file"
+    </script>
+    <script type="module">
+      // eslint-disable-next-line import/no-unresolved
+      import("a")
+    </script>
+    <script type="module" src="./b.js"></script>
+    <script type="module" src="./c.js"></script>
+  </body>
+</html>
