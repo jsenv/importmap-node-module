@@ -6,7 +6,7 @@ const require = createRequire(import.meta.url)
 
 const traverse = require("@babel/traverse")
 
-export const parseImportSpecifiers = async (
+export const parseSpecifiersFromJs = async (
   url,
   { urlResponseText, babelOptions = {} } = {},
 ) => {

@@ -20,7 +20,7 @@ import {
   memoizeAsyncFunctionBySpecifierAndImporter,
 } from "../memoizeAsyncFunction.js"
 
-import { parseImportSpecifiers } from "./parseImportSpecifiers.js"
+import { parseSpecifiersFromJs } from "./js_parser.js"
 import { showSource } from "./showSource.js"
 import { resolveFile } from "../resolveFile.js"
 import {
@@ -132,7 +132,7 @@ export const visitSourceFiles = async ({
   const visitUrlResponse = memoizeAsyncFunctionByUrl(
     async (url, { contentType, body }) => {
       if (contentType === "application/javascript") {
-        const specifiers = await parseImportSpecifiers(url, {
+        const specifiers = await parseSpecifiersFromJs(url, {
           urlResponseText: body,
           babelOptions,
         })
