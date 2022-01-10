@@ -113,7 +113,7 @@ export const visitSourceFiles = async ({
 
   const visitUrl = memoizeAsyncFunctionBySpecifierAndImporter(
     async (specifier, importer, { importTrace }) => {
-      const { found, ignore, url, body } =
+      const { found, ignore, url, body, contentType } =
         await importResolver.applyImportResolution({
           specifier,
           importer,
@@ -123,34 +123,40 @@ export const visitSourceFiles = async ({
       if (!found || ignore) {
         return
       }
-
       if (!visitUrlResponse.isInMemory(url)) {
-        await visitUrlResponse(url, { body })
+        await visitUrlResponse(url, { contentType, body })
       }
     },
   )
 
-  const visitUrlResponse = memoizeAsyncFunctionByUrl(async (url, { body }) => {
-    const specifiers = await parseImportSpecifiers(url, {
-      urlResponseText: body,
-      babelOptions,
-    })
-    const fileUrl =
-      httpUrlToFileUrl(url, { projectDirectoryUrl, baseUrl }) || url
-    await Promise.all(
-      Object.keys(specifiers).map(async (specifier) => {
-        const specifierInfo = specifiers[specifier]
-        await visitUrl(specifier, url, {
-          importTrace: showSource({
-            url: fileUrl,
-            line: specifierInfo.line,
-            column: specifierInfo.column,
-            source: body,
-          }),
+  const visitUrlResponse = memoizeAsyncFunctionByUrl(
+    async (url, { contentType, body }) => {
+      if (contentType === "application/javascript") {
+        const specifiers = await parseImportSpecifiers(url, {
+          urlResponseText: body,
+          babelOptions,
         })
-      }),
-    )
-  })
+        const fileUrl =
+          httpUrlToFileUrl(url, { projectDirectoryUrl, baseUrl }) || url
+        await Promise.all(
+          Object.keys(specifiers).map(async (specifier) => {
+            const specifierInfo = specifiers[specifier]
+            await visitUrl(specifier, url, {
+              importTrace: showSource({
+                url: fileUrl,
+                line: specifierInfo.line,
+                column: specifierInfo.column,
+                source: body,
+              }),
+            })
+          }),
+        )
+      }
+      if (contentType === "text/html") {
+        // TODO
+      }
+    },
+  )
 
   await entryPointsToCheck.reduce(async (previous, entryPointToCheck) => {
     await previous
@@ -308,16 +314,23 @@ const createImportResolver = ({
 
   const foundFileUrl = async (url) => {
     const extension = urlToExtension(url)
-    const isJs = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(
-      extension,
-    )
+    const contentType =
+      extension === ".html"
+        ? "text/html"
+        : [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(extension)
+        ? "application/javascript"
+        : "application/octet-stream"
     const httpUrl = fileUrlToHttpUrl(url, { projectDirectoryUrl, baseUrl })
 
-    if (isJs) {
+    if (
+      contentType === "application/javascrip" ||
+      contentType === "text/html"
+    ) {
       return {
         found: true,
         url: httpUrl || url,
         body: await readFile(url, { as: "string" }),
+        contentType,
       }
     }
 
