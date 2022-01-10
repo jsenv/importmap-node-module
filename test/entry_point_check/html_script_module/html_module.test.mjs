@@ -7,6 +7,7 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 const test = async (params) => {
   const warnings = []
   const importmaps = await writeImportMapFiles({
+    // logLevel: "debug",
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
@@ -26,6 +27,7 @@ const actual = await test({
     imports: {
       a: "./a.js",
       b: "./b.js",
+      inline_everything: "./everything.js",
       a_everything: "./everything.js",
       b_everything: "./everything.js",
       c_everything: "./everything.js",
@@ -39,11 +41,12 @@ const expected = {
   importmaps: {
     "test.importmap": {
       imports: {
-        a: "./a.js",
-        // b.js is gone, no one needs it
+        inline_everything: "./everything.js",
         a_everything: "./everything.js",
         b_everything: "./everything.js",
         c_everything: "./everything.js",
+        a: "./a.js",
+        // b.js is gone, no one needs it
       },
       scopes: {},
     },

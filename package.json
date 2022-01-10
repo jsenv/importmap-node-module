@@ -39,7 +39,8 @@
     "@jsenv/cancellation": "3.0.0",
     "@jsenv/filesystem": "2.6.0",
     "@jsenv/importmap": "1.2.0",
-    "@jsenv/logger": "4.0.1"
+    "@jsenv/logger": "4.0.1",
+    "parse5": "6.0.1"
   },
   "devDependencies": {
     "@babel/eslint-parser": "7.16.5",

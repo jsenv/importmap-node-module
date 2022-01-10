@@ -1,3 +1,9 @@
+// TODO: turn this into a npm package, see "url_trace.js" in @jsenv/core
+// maybe we could keep it inside @jsenv/core to avoid creating yet an other GitHub repository
+// and just reuse the package there
+// Or this package could be moved entirely to @jsenv/core codebase into packages/importmap-node-module
+// because they are very dependent from each other (both needs to parse js and HTML for example)
+
 // https://github.com/postcss/postcss/blob/fd30d3df5abc0954a0ec642a3cdc644ab2aacf9c/lib/css-syntax-error.js#L43
 // https://github.com/postcss/postcss/blob/fd30d3df5abc0954a0ec642a3cdc644ab2aacf9c/lib/terminal-highlight.js#L50
 // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-code-frame/src/index.js#L1
