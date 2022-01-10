@@ -56,6 +56,7 @@
     "@jsenv/performance-impact": "2.2.1",
     "@jsenv/server": "12.2.1",
     "eslint": "8.6.0",
+    "eslint-plugin-html": "6.2.0",
     "eslint-plugin-import": "2.25.4",
     "prettier": "2.5.1"
   }
