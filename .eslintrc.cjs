@@ -59,6 +59,13 @@ const eslintConfig = composeEslintConfig(
     rules: jsenvEslintRulesForImport,
   },
 
+  {
+    plugins: ["html"],
+    settings: {
+      extensions: [".html"],
+    },
+  },
+
   // package is "type": "module" so:
   // 1. disable commonjs globals by default
   // 2. Re-enable commonjs into *.cjs files

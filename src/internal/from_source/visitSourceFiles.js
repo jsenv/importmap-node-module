@@ -20,7 +20,8 @@ import {
   memoizeAsyncFunctionBySpecifierAndImporter,
 } from "../memoizeAsyncFunction.js"
 
-import { parseImportSpecifiers } from "./parseImportSpecifiers.js"
+import { parseSpecifiersFromJs } from "./js_parser.js"
+import { parseHTMLRessources } from "./html_parser.js"
 import { showSource } from "./showSource.js"
 import { resolveFile } from "../resolveFile.js"
 import {
@@ -40,6 +41,13 @@ export const visitSourceFiles = async ({
   magicExtensions, //  = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   removeUnusedMappings,
 }) => {
+  const baseUrl =
+    runtime === "browser" ? "http://jsenv.com" : projectDirectoryUrl
+  const asFileUrl = (url) =>
+    moveUrl({ url, from: baseUrl, to: projectDirectoryUrl })
+  const asHttpUrl = (url) =>
+    moveUrl({ url, from: projectDirectoryUrl, to: baseUrl })
+
   const imports = {}
   const scopes = {}
   const addMapping = ({ scope, from, to }) => {
@@ -67,19 +75,6 @@ export const visitSourceFiles = async ({
     }
   }
 
-  const baseUrl =
-    runtime === "browser"
-      ? fileUrlToHttpUrl(projectDirectoryUrl, {
-          projectDirectoryUrl,
-          baseUrl: "http://jsenv.com",
-        })
-      : projectDirectoryUrl
-
-  // https://babeljs.io/docs/en/babel-core#loadoptions
-  const babelOptions = await loadOptionsAsync({
-    root: urlToFileSystemPath(projectDirectoryUrl),
-  })
-
   const importResolver = createImportResolver({
     logger,
     warn,
@@ -87,6 +82,8 @@ export const visitSourceFiles = async ({
     importMap,
     projectDirectoryUrl,
     baseUrl,
+    asFileUrl,
+    asHttpUrl,
     bareSpecifierAutomapping,
     magicExtensions,
     onImportMapping: ({ scope, from }) => {
@@ -111,9 +108,14 @@ export const visitSourceFiles = async ({
     },
   })
 
-  const visitUrl = memoizeAsyncFunctionBySpecifierAndImporter(
+  // https://babeljs.io/docs/en/babel-core#loadoptions
+  const babelOptions = await loadOptionsAsync({
+    root: urlToFileSystemPath(projectDirectoryUrl),
+  })
+
+  const visitSpecifier = memoizeAsyncFunctionBySpecifierAndImporter(
     async (specifier, importer, { importTrace }) => {
-      const { found, ignore, url, body } =
+      const { found, ignore, url, body, contentType } =
         await importResolver.applyImportResolution({
           specifier,
           importer,
@@ -123,34 +125,55 @@ export const visitSourceFiles = async ({
       if (!found || ignore) {
         return
       }
-
       if (!visitUrlResponse.isInMemory(url)) {
-        await visitUrlResponse(url, { body })
+        await visitUrlResponse(url, { contentType, body })
       }
     },
   )
 
-  const visitUrlResponse = memoizeAsyncFunctionByUrl(async (url, { body }) => {
-    const specifiers = await parseImportSpecifiers(url, {
-      urlResponseText: body,
-      babelOptions,
-    })
-    const fileUrl =
-      httpUrlToFileUrl(url, { projectDirectoryUrl, baseUrl }) || url
-    await Promise.all(
-      Object.keys(specifiers).map(async (specifier) => {
-        const specifierInfo = specifiers[specifier]
-        await visitUrl(specifier, url, {
-          importTrace: showSource({
-            url: fileUrl,
-            line: specifierInfo.line,
-            column: specifierInfo.column,
-            source: body,
-          }),
+  const visitUrlResponse = memoizeAsyncFunctionByUrl(
+    async (url, { contentType, body }) => {
+      if (contentType === "application/javascript") {
+        const specifiers = await parseSpecifiersFromJs({
+          code: body,
+          url,
+          babelOptions,
         })
-      }),
-    )
-  })
+        await Promise.all(
+          Object.keys(specifiers).map(async (specifier) => {
+            const specifierInfo = specifiers[specifier]
+            const importTrace = showSource({
+              url: asFileUrl(url) || url,
+              line: specifierInfo.line,
+              column: specifierInfo.column,
+              source: body,
+            })
+            await visitSpecifier(specifier, url, { importTrace })
+          }),
+        )
+        return
+      }
+      if (contentType === "text/html") {
+        const htmlRessources = await parseHTMLRessources({
+          code: body,
+          url,
+          asFileUrl,
+        })
+        await Promise.all(
+          htmlRessources.map(async (htmlRessource) => {
+            if (htmlRessource.isExternal) {
+              return
+            }
+            await visitUrlResponse(htmlRessource.url, {
+              contentType: htmlRessource.contentType,
+              body: htmlRessource.content,
+            })
+          }),
+        )
+        return
+      }
+    },
+  )
 
   await entryPointsToCheck.reduce(async (previous, entryPointToCheck) => {
     await previous
@@ -159,7 +182,7 @@ export const visitSourceFiles = async ({
     const entryPointUrl = resolveUrl(entryPointToCheck, baseUrl)
     const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl)
     const entryPointSpecifier = `./${entryPointRelativeUrl}`
-    await visitUrl(entryPointSpecifier, baseUrl, {
+    await visitSpecifier(entryPointSpecifier, baseUrl, {
       importTrace: "entryPointsToCheck parameter",
     })
   }, Promise.resolve())
@@ -192,6 +215,8 @@ const createImportResolver = ({
   warn,
   runtime,
   importMap,
+  asFileUrl,
+  asHttpUrl,
   baseUrl,
   projectDirectoryUrl,
   bareSpecifierAutomapping,
@@ -238,10 +263,7 @@ const createImportResolver = ({
       })
     }
 
-    const importFileUrl = httpUrlToFileUrl(importResolution.url, {
-      projectDirectoryUrl,
-      baseUrl,
-    })
+    const importFileUrl = asFileUrl(importResolution.url)
     if (importFileUrl) {
       return handleFileUrl({
         specifier,
@@ -308,16 +330,23 @@ const createImportResolver = ({
 
   const foundFileUrl = async (url) => {
     const extension = urlToExtension(url)
-    const isJs = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(
-      extension,
-    )
-    const httpUrl = fileUrlToHttpUrl(url, { projectDirectoryUrl, baseUrl })
+    const contentType =
+      extension === ".html"
+        ? "text/html"
+        : [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(extension)
+        ? "application/javascript"
+        : "application/octet-stream"
+    const httpUrl = asHttpUrl(url)
 
-    if (isJs) {
+    if (
+      contentType === "application/javascript" ||
+      contentType === "text/html"
+    ) {
       return {
         found: true,
         url: httpUrl || url,
         body: await readFile(url, { as: "string" }),
+        contentType,
       }
     }
 
@@ -341,10 +370,7 @@ const createImportResolver = ({
       extensionsToTry,
     })
 
-    const importerUrl = httpUrlToFileUrl(importer, {
-      projectDirectoryUrl,
-      baseUrl,
-    })
+    const importerUrl = asFileUrl(importer)
     const importerPackageDirectoryUrl = packageDirectoryUrlFromUrl(
       importerUrl,
       projectDirectoryUrl,
@@ -477,12 +503,6 @@ const getAutomapping = ({
     to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
   }
 }
-
-const fileUrlToHttpUrl = (url, { projectDirectoryUrl, baseUrl }) =>
-  moveUrl({ url, from: projectDirectoryUrl, to: baseUrl })
-
-const httpUrlToFileUrl = (url, { projectDirectoryUrl, baseUrl }) =>
-  moveUrl({ url, from: baseUrl, to: projectDirectoryUrl })
 
 const moveUrl = ({ url, from, to }) => {
   if (urlIsInsideOf(url, from)) {

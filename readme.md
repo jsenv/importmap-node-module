@@ -185,7 +185,7 @@ await writeImportMapFiles({
 
 ### entryPointsToCheck
 
-_entryPointsToCheck_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import.
+_entryPointsToCheck_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import. You can also pass HTML file(s).
 
 _entryPointsToCheck_ is optional.
 
