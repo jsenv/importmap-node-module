@@ -6,11 +6,12 @@ const require = createRequire(import.meta.url)
 
 const traverse = require("@babel/traverse")
 
-export const parseSpecifiersFromJs = async (
+export const parseSpecifiersFromJs = async ({
+  code,
   url,
-  { urlResponseText, babelOptions = {} } = {},
-) => {
-  const ast = await parseAsync(urlResponseText, {
+  babelOptions = {},
+}) => {
+  const ast = await parseAsync(code, {
     ...babelOptions,
     sourceType: "module",
     filename: url.startsWith("file://") ? urlToFileSystemPath(url) : url,

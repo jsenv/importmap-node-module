@@ -19,8 +19,9 @@ const fileUrl = resolveUrl("test.js", testDirectoryUrl)
 import "./bar.js"
 `,
   )
-  const specifiers = await parseSpecifiersFromJs(fileUrl, {
-    urlResponseText: await readFile(fileUrl),
+  const specifiers = await parseSpecifiersFromJs({
+    code: await readFile(fileUrl),
+    url: fileUrl,
   })
   const actual = specifiers
   const expected = {
@@ -47,8 +48,9 @@ import "./bar.js"
 import(id)
 `,
   )
-  const specifiers = await parseSpecifiersFromJs(fileUrl, {
-    urlResponseText: await readFile(fileUrl),
+  const specifiers = await parseSpecifiersFromJs({
+    code: await readFile(fileUrl),
+    url: fileUrl,
   })
   const actual = specifiers
   const expected = {
@@ -65,8 +67,9 @@ import(id)
 // export from named
 {
   await writeFile(fileUrl, `export {toto} from "./foo"`)
-  const specifiers = await parseSpecifiersFromJs(fileUrl, {
-    urlResponseText: await readFile(fileUrl),
+  const specifiers = await parseSpecifiersFromJs({
+    code: await readFile(fileUrl),
+    url: fileUrl,
   })
   const actual = specifiers
   const expected = {
@@ -83,8 +86,9 @@ import(id)
 // export from all
 {
   await writeFile(fileUrl, `export * from "./foo"`)
-  const specifiers = await parseSpecifiersFromJs(fileUrl, {
-    urlResponseText: await readFile(fileUrl),
+  const specifiers = await parseSpecifiersFromJs({
+    code: await readFile(fileUrl),
+    url: fileUrl,
   })
   const actual = specifiers
   const expected = {
