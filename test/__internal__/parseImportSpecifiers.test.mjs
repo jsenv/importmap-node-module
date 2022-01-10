@@ -6,7 +6,7 @@ import {
 } from "@jsenv/filesystem"
 import { assert } from "@jsenv/assert"
 
-import { parseImportSpecifiers } from "@jsenv/importmap-node-module/src/internal/from-js/parseImportSpecifiers.js"
+import { parseImportSpecifiers } from "@jsenv/importmap-node-module/src/internal/from_source/parseImportSpecifiers.js"
 
 const testDirectoryUrl = resolveUrl("./fixtures/", import.meta.url)
 const fileUrl = resolveUrl("test.js", testDirectoryUrl)
