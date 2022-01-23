@@ -3,7 +3,8 @@ import {
   readFileSystemNodeStat,
   urlToFilename,
 } from "@jsenv/filesystem"
-import { firstOperationMatching } from "@jsenv/cancellation"
+
+import { findAsync } from "./find_async.js"
 
 export const resolveFile = async (
   fileUrl,
@@ -72,7 +73,7 @@ export const resolveFile = async (
 const findExtensionLeadingToFile = async (fileUrl, extensionsToTry) => {
   const urlDirectoryUrl = resolveUrl("./", fileUrl)
   const urlFilename = urlToFilename(fileUrl)
-  const extensionLeadingToFile = await firstOperationMatching({
+  const extensionLeadingToFile = await findAsync({
     array: extensionsToTry,
     start: async (extensionToTry) => {
       const urlCandidate = `${urlDirectoryUrl}${urlFilename}${extensionToTry}`

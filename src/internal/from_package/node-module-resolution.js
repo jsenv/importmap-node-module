@@ -1,4 +1,3 @@
-import { firstOperationMatching } from "@jsenv/cancellation"
 import {
   urlToRelativeUrl,
   resolveUrl,
@@ -7,6 +6,7 @@ import {
 } from "@jsenv/filesystem"
 
 import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js"
+import { findAsync } from "../find_async.js"
 import {
   readPackageFile,
   PACKAGE_NOT_FOUND,
@@ -38,7 +38,7 @@ export const createFindNodeModulePackage = () => {
           })
         : []),
     ]
-    return firstOperationMatching({
+    return findAsync({
       array: nodeModuleCandidates,
       start: async (nodeModuleCandidate) => {
         const packageFileUrlCandidate = `${nodeModuleCandidate}${dependencyName}/package.json`

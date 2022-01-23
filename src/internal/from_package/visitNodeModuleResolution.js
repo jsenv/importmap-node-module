@@ -15,10 +15,6 @@ import { visitPackageExports } from "./visitPackageExports.js"
 import { createFindNodeModulePackage } from "./node-module-resolution.js"
 
 export const visitNodeModuleResolution = async ({
-  // nothing is actually listening for this cancellationToken for now
-  // it's not very important but it would be better to register on it
-  // an stops what we are doing if asked to do so
-  // cancellationToken = createCancellationTokenForProcess(),
   logger,
   warn,
   projectDirectoryUrl,

@@ -21,8 +21,6 @@
       "skipFiles": [
         // force-array-multiline
         // "node_modules/**",
-        "node_modules/@babel/template/**",
-        "node_modules/@dmail/cancellation/**",
         "<node_internals>/**"
       ]
     }
