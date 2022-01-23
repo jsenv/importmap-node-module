@@ -1,5 +1,10 @@
 import { firstOperationMatching } from "@jsenv/cancellation"
-import { urlToRelativeUrl, resolveUrl } from "@jsenv/filesystem"
+import {
+  urlToRelativeUrl,
+  resolveUrl,
+  urlToParentUrl,
+  ensureWindowsDriveLetter,
+} from "@jsenv/filesystem"
 
 import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js"
 import {
@@ -84,9 +89,21 @@ const getNodeModuleCandidatesInsideProject = ({
   return [...candidates, `${projectDirectoryUrl}node_modules/`]
 }
 
-const getNodeModuleCandidatesOutsideProject = () => {
-  //   const nodeModulesRootDirectoryUrl = someIsBrowser
-  // ? projectDirectoryUrl
-  // : ensureWindowsDriveLetter("file:///", projectDirectoryUrl)
-  return []
+const getNodeModuleCandidatesOutsideProject = ({ projectDirectoryUrl }) => {
+  const candidates = []
+  const parentDirectoryUrl = urlToParentUrl(projectDirectoryUrl)
+  const { pathname } = new URL(parentDirectoryUrl)
+  const directories = pathname.slice(1, -1).split("/")
+  let i = directories.length
+  while (i--) {
+    const nodeModulesDirectoryUrl = ensureWindowsDriveLetter(
+      `file:///${directories.slice(0, i + 1).join("/")}/node_modules/`,
+      projectDirectoryUrl,
+    )
+    candidates.push(nodeModulesDirectoryUrl)
+  }
+  return [
+    ...candidates,
+    ensureWindowsDriveLetter(`file:///node_modules`, projectDirectoryUrl),
+  ]
 }
