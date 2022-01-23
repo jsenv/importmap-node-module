@@ -1,0 +1,11 @@
+{
+  "name": "root",
+  "type": "module",
+  "dependencies": {
+    "foo": "*"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./*": "./*"
+  }
+}

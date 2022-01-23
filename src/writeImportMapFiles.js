@@ -76,6 +76,7 @@ export const writeImportMapFiles = async ({
       const mappingsToPutTopLevel = {}
       nodeResolutionVisitors.push({
         mappingsForDevDependencies,
+        runtime,
         packageConditions: packageConditionsFromPackageUserConditions({
           runtime,
           packageUserConditions,
@@ -105,10 +106,14 @@ export const writeImportMapFiles = async ({
   })
 
   if (nodeResolutionVisitors.length > 0) {
+    const nodeModulesOutsideProjectAllowed = nodeResolutionVisitors.every(
+      (visitor) => visitor.runtime === "node",
+    )
     await visitNodeModuleResolution({
       logger,
       warn,
       projectDirectoryUrl,
+      nodeModulesOutsideProjectAllowed,
       visitors: nodeResolutionVisitors,
       packagesManualOverrides,
       exportsFieldWarningConfig,
