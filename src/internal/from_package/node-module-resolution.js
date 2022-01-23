@@ -15,26 +15,31 @@ export const createFindNodeModulePackage = () => {
       return readPackageFile(packageFileUrl)
     },
   )
-
   return ({
     projectDirectoryUrl,
+    nodeModulesOutsideProjectAllowed,
     packagesManualOverrides = {},
     packageFileUrl,
     dependencyName,
   }) => {
-    const nodeModuleCandidates = getNodeModuleCandidates(
-      packageFileUrl,
-      projectDirectoryUrl,
-    )
-
+    const nodeModuleCandidates = [
+      ...getNodeModuleCandidatesInsideProject({
+        projectDirectoryUrl,
+        packageFileUrl,
+      }),
+      ...(nodeModulesOutsideProjectAllowed
+        ? getNodeModuleCandidatesOutsideProject({
+            projectDirectoryUrl,
+          })
+        : []),
+    ]
     return firstOperationMatching({
       array: nodeModuleCandidates,
       start: async (nodeModuleCandidate) => {
-        const packageFileUrlCandidate = `${projectDirectoryUrl}${nodeModuleCandidate}${dependencyName}/package.json`
+        const packageFileUrlCandidate = `${nodeModuleCandidate}${dependencyName}/package.json`
         const packageObjectCandidate = await readPackageFileMemoized(
           packageFileUrlCandidate,
         )
-
         return {
           packageFileUrl: packageFileUrlCandidate,
           packageJsonObject: applyPackageManualOverride(
@@ -51,31 +56,37 @@ export const createFindNodeModulePackage = () => {
   }
 }
 
-const getNodeModuleCandidates = (fileUrl, projectDirectoryUrl) => {
-  const fileDirectoryUrl = resolveUrl("./", fileUrl)
-
-  if (fileDirectoryUrl === projectDirectoryUrl) {
-    return [`node_modules/`]
+const getNodeModuleCandidatesInsideProject = ({
+  projectDirectoryUrl,
+  packageFileUrl,
+}) => {
+  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
+  if (packageDirectoryUrl === projectDirectoryUrl) {
+    return [`${projectDirectoryUrl}node_modules/`]
   }
-
-  const fileDirectoryRelativeUrl = urlToRelativeUrl(
-    fileDirectoryUrl,
+  const packageDirectoryRelativeUrl = urlToRelativeUrl(
+    packageDirectoryUrl,
     projectDirectoryUrl,
   )
   const candidates = []
   const relativeNodeModuleDirectoryArray =
-    fileDirectoryRelativeUrl.split("node_modules/")
+    packageDirectoryRelativeUrl.split("node_modules/")
   // remove the first empty string
   relativeNodeModuleDirectoryArray.shift()
-
   let i = relativeNodeModuleDirectoryArray.length
   while (i--) {
     candidates.push(
-      `node_modules/${relativeNodeModuleDirectoryArray
+      `${projectDirectoryUrl}node_modules/${relativeNodeModuleDirectoryArray
         .slice(0, i + 1)
         .join("node_modules/")}node_modules/`,
     )
   }
+  return [...candidates, `${projectDirectoryUrl}node_modules/`]
+}
 
-  return [...candidates, "node_modules/"]
+const getNodeModuleCandidatesOutsideProject = () => {
+  //   const nodeModulesRootDirectoryUrl = someIsBrowser
+  // ? projectDirectoryUrl
+  // : ensureWindowsDriveLetter("file:///", projectDirectoryUrl)
+  return []
 }

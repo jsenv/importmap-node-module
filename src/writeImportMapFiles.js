@@ -109,6 +109,9 @@ export const writeImportMapFiles = async ({
       logger,
       warn,
       projectDirectoryUrl,
+      nodeModulesOutsideProjectAllowed: nodeResolutionVisitors.every(
+        (visitor) => visitor.runtime === "node",
+      ),
       visitors: nodeResolutionVisitors,
       packagesManualOverrides,
       exportsFieldWarningConfig,

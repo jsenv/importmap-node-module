@@ -22,6 +22,7 @@ export const visitNodeModuleResolution = async ({
   logger,
   warn,
   projectDirectoryUrl,
+  nodeModulesOutsideProjectAllowed,
   visitors,
   packagesManualOverrides,
   exportsFieldWarningConfig,
@@ -488,6 +489,7 @@ export const visitNodeModuleResolution = async ({
     }
     const dependencyPromise = findNodeModulePackage({
       projectDirectoryUrl,
+      nodeModulesOutsideProjectAllowed,
       packageFileUrl,
       dependencyName,
       packagesManualOverrides,
