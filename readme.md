@@ -329,5 +329,5 @@ await writeImportMapFiles({
 
 # See also
 
-- [./docs/example/readme.md](./docs/examples/readme.md)
+- [./docs/example/](./docs/examples/)
 - [Configuring VSCode and ESLint for importmap](./docs/vscode_and_eslint.md#configure-vscode-and-eslint-for-importmap)
