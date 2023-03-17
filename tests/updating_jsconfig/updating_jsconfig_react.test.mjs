@@ -27,6 +27,7 @@ await writeFile(
 // act
 await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
+  logLevel: "warn",
   importMapFiles: {
     "test.importmap": {
       manualImportMap: {

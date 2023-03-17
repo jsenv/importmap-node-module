@@ -16,7 +16,7 @@ import "./bar.js"
 `,
   )
   const specifiers = await parseSpecifiersFromJs({
-    code: await readFile(fileUrl),
+    code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
   })
   const actual = specifiers
@@ -45,7 +45,7 @@ import(id)
 `,
   )
   const specifiers = await parseSpecifiersFromJs({
-    code: await readFile(fileUrl),
+    code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
   })
   const actual = specifiers
@@ -64,7 +64,7 @@ import(id)
 {
   await writeFile(fileUrl, `export {toto} from "./foo"`)
   const specifiers = await parseSpecifiersFromJs({
-    code: await readFile(fileUrl),
+    code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
   })
   const actual = specifiers
@@ -83,7 +83,7 @@ import(id)
 {
   await writeFile(fileUrl, `export * from "./foo"`)
   const specifiers = await parseSpecifiersFromJs({
-    code: await readFile(fileUrl),
+    code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
   })
   const actual = specifiers

@@ -7,6 +7,7 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module"
 const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
 await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
+  logLevel: "warn",
   importMapFiles: {
     "dev.importmap": {
       mappingsForNodeResolution: true,

@@ -25,8 +25,7 @@ export const readPackageFile = async (packageFileUrl) => {
 }
 
 const formatPackageSyntaxErrorLog = ({ syntaxError, packageFileUrl }) => {
-  return `
-error while parsing package.json.
+  return `error while parsing package.json.
 --- syntax error message ---
 ${syntaxError.message}
 --- package.json path ---
