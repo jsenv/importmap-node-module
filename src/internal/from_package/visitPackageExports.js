@@ -4,11 +4,7 @@ https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_
 
 */
 
-import {
-  urlToFileSystemPath,
-  urlToRelativeUrl,
-  resolveUrl,
-} from "@jsenv/filesystem"
+import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/urls"
 import { createDetailedMessage } from "@jsenv/logger"
 
 import { specifierIsRelative } from "./specifierIsRelative.js"

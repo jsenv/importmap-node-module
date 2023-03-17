@@ -1,5 +1,6 @@
 import { resolveUrl, moveImportMap } from "@jsenv/importmap"
-import { readFile, urlToFileSystemPath } from "@jsenv/filesystem"
+import { readFile } from "@jsenv/filesystem"
+import { urlToFileSystemPath } from "@jsenv/urls"
 
 export const visitPackageImportMap = async ({
   warn,

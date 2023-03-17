@@ -1,4 +1,5 @@
-import { readFile, urlToFileSystemPath } from "@jsenv/filesystem"
+import { readFile } from "@jsenv/filesystem"
+import { urlToFileSystemPath } from "@jsenv/urls"
 
 export const PACKAGE_NOT_FOUND = {}
 export const PACKAGE_WITH_SYNTAX_ERROR = {}
@@ -24,8 +25,7 @@ export const readPackageFile = async (packageFileUrl) => {
 }
 
 const formatPackageSyntaxErrorLog = ({ syntaxError, packageFileUrl }) => {
-  return `
-error while parsing package.json.
+  return `error while parsing package.json.
 --- syntax error message ---
 ${syntaxError.message}
 --- package.json path ---

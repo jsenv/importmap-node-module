@@ -1,13 +1,13 @@
 import { loadOptionsAsync } from "@babel/core"
 
+import { readFile } from "@jsenv/filesystem"
 import {
   resolveUrl,
-  readFile,
   urlToExtension,
   urlToRelativeUrl,
   urlIsInsideOf,
   urlToFileSystemPath,
-} from "@jsenv/filesystem"
+} from "@jsenv/urls"
 import {
   normalizeImportMap,
   resolveImport,

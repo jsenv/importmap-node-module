@@ -1,9 +1,5 @@
-import {
-  urlToRelativeUrl,
-  resolveUrl,
-  urlToParentUrl,
-  ensureWindowsDriveLetter,
-} from "@jsenv/filesystem"
+import { ensureWindowsDriveLetter } from "@jsenv/filesystem"
+import { urlToRelativeUrl, resolveUrl, urlToParentUrl } from "@jsenv/urls"
 
 import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js"
 import { findAsync } from "../find_async.js"

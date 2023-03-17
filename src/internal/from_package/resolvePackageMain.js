@@ -1,9 +1,5 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import {
-  resolveUrl,
-  urlToFileSystemPath,
-  urlToRelativeUrl,
-} from "@jsenv/filesystem"
+import { resolveUrl, urlToFileSystemPath, urlToRelativeUrl } from "@jsenv/urls"
 
 import {
   createPreferExportsFieldWarning,

@@ -2,10 +2,9 @@ import { createLogger } from "@jsenv/logger"
 import {
   assertAndNormalizeDirectoryUrl,
   writeFile,
-  resolveUrl,
   readFile,
-  urlToFileSystemPath,
 } from "@jsenv/filesystem"
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
 import {
   composeTwoImportMaps,
   sortImportMap,

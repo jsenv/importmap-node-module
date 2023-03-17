@@ -1,10 +1,6 @@
 import { createDetailedMessage } from "@jsenv/logger"
-import {
-  resolveUrl,
-  readFile,
-  urlToRelativeUrl,
-  urlToFileSystemPath,
-} from "@jsenv/filesystem"
+import { readFile } from "@jsenv/filesystem"
+import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/urls"
 
 import { createPackageNameMustBeAStringWarning } from "../logs.js"
 

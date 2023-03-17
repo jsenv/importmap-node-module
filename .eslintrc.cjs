@@ -1,8 +1,3 @@
-/*
- * This file uses "@jsenv/eslint-config" to configure ESLint
- * See https://github.com/jsenv/eslint-config#eslint-config----
- */
-
 const {
   composeEslintConfig,
   eslintConfigBase,
@@ -15,10 +10,12 @@ const {
 const eslintConfig = composeEslintConfig(
   eslintConfigBase,
 
-  // Enables top level await
+  // use "@babel/eslint-parser" until top level await is supported by ESLint default parser
+  // + to support import assertions in some files
   {
+    parser: "@babel/eslint-parser",
     parserOptions: {
-      ecmaVersion: 2022,
+      requireConfigFile: false,
     },
   },
 
@@ -32,26 +29,14 @@ const eslintConfig = composeEslintConfig(
     },
   },
 
-  // Reuse jsenv eslint rules
-  {
-    rules: {
-      ...jsenvEslintRules,
-      // Example of code changing the ESLint configuration to enable a rule:
-      // 'prefer-const':  ['error']
-    },
-  },
-
   // Enable import plugin
   {
     plugins: ["import"],
     settings: {
       "import/resolver": {
-        // Tell ESLint to use the importmap to resolve imports.
-        // Read more in https://github.com/jsenv/importmap-node-module#Configure-vscode-and-eslint-for-importmap
-        "@jsenv/importmap-eslint-resolver": {
-          projectDirectoryUrl: __dirname,
-          importMapFileRelativeUrl: "./node_resolution.importmap",
-          node: true,
+        "@jsenv/eslint-import-resolver": {
+          rootDirectoryUrl: __dirname,
+          packageConditions: ["node", "development", "import"],
         },
       },
       "import/extensions": [".js", ".mjs"],
@@ -63,6 +48,16 @@ const eslintConfig = composeEslintConfig(
     plugins: ["html"],
     settings: {
       extensions: [".html"],
+    },
+  },
+
+  // Reuse jsenv eslint rules
+  {
+    rules: {
+      ...jsenvEslintRules,
+      // Example of code changing the ESLint configuration to enable a rule:
+      "camelcase": ["off"],
+      "dot-notation": ["off"],
     },
   },
 
@@ -88,13 +83,6 @@ const eslintConfig = composeEslintConfig(
           __dirname: true,
           require: true,
           exports: true,
-        },
-
-        // inside *.cjs files, use commonjs module resolution
-        settings: {
-          "import/resolver": {
-            node: {},
-          },
         },
       },
     ],
