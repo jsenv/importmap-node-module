@@ -1,4 +1,5 @@
-import { readFile, urlToFileSystemPath } from "@jsenv/filesystem"
+import { readFile } from "@jsenv/filesystem"
+import { urlToFileSystemPath } from "@jsenv/urls"
 
 export const PACKAGE_NOT_FOUND = {}
 export const PACKAGE_WITH_SYNTAX_ERROR = {}

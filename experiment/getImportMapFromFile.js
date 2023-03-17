@@ -1,8 +1,5 @@
-import {
-  assertAndNormalizeDirectoryUrl,
-  resolveUrl,
-  readFile,
-} from "@jsenv/filesystem"
+import { assertAndNormalizeDirectoryUrl, readFile } from "@jsenv/filesystem"
+import { resolveUrl } from "@jsenv/urls"
 import { moveImportMap, sortImportMap } from "@jsenv/importmap"
 
 export const getImportMapFromFile = async ({

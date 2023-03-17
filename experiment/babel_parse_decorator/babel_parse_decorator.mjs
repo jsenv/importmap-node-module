@@ -1,6 +1,7 @@
 import { createRequire } from "node:module"
 // import { loadOptions } from "@babel/core"
-import { readFile, resolveUrl, urlToFileSystemPath } from "@jsenv/filesystem"
+import { readFile } from "@jsenv/filesystem"
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
 
 const require = createRequire(import.meta.url)
 

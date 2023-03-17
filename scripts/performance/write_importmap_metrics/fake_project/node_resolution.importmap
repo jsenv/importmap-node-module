@@ -1,0 +1,13 @@
+{
+  "imports": {
+    "nested/": "./node_modules/nested/",
+    "nested": "./node_modules/nested/index.js",
+    "root/": "./",
+    "bar/": "./node_modules/nested/node_modules/bar/",
+    "foo/": "./node_modules/nested/node_modules/foo/",
+    "root": "./index.js",
+    "bar": "./node_modules/nested/node_modules/bar/bar.js",
+    "foo": "./node_modules/nested/node_modules/foo/foo.js"
+  },
+  "scopes": {}
+}

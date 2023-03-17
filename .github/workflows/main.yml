@@ -46,12 +46,12 @@ jobs:
       - name: Run ESLint
         run: npm run eslint
       - name: Run tests
-        run: npm run test-with-coverage
+        run: npm run test:coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          # see "coverageJsonFileRelativeUrl" in script/test/test.mjs
+          # see "coverageJsonFileRelativeUrl" in scripts/test.mjs
           files: ./coverage/coverage.json
           verbose: true
 
