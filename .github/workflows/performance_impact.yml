@@ -32,6 +32,6 @@ jobs:
       - name: Install node modules
         run: npm install
       - name: Report performance impact
-        run: node --expose-gc ./.github/workflows/performance_impact/report_performance_impact.mjs
+        run: node --expose-gc ./.github/workflows/report_performance_impact.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
