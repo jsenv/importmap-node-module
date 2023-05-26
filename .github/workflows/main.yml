@@ -28,21 +28,19 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15, windows-2022]
-        node: [16.13.0]
+        os: [ubuntu-20.04, macos-12, windows-2022]
+        node: [18.12.1]
     runs-on: ${{ matrix.os }}
     name: test on ${{ matrix.os }} and node ${{ matrix.node }}
     env:
       CI: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: Install node modules
         run: npm install
-      - name: Generate importmap
-        run: npm run importmap
       - name: Run ESLint
         run: npm run eslint
       - name: Run tests
@@ -51,7 +49,7 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          # see "coverageJsonFileRelativeUrl" in scripts/test.mjs
+          # see "coverageJsonFileRelativeUrl" in scripts/test/test.mjs
           files: ./coverage/coverage.json
           verbose: true
 
@@ -61,10 +59,10 @@ jobs:
     runs-on: ubuntu-20.04
     name: release
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: "16.13.0"
+          node-version: "18.5.0"
       - name: Install node modules
         run: npm install
       - name: Publish package

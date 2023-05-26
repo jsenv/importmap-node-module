@@ -38,7 +38,7 @@ export const visitSourceFiles = async ({
   runtime,
   importMap,
   bareSpecifierAutomapping,
-  magicExtensions, //  = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
+  magicExtensions, // = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   removeUnusedMappings,
 }) => {
   const baseUrl =

@@ -28,7 +28,7 @@ jobs:
         # "setup-node@v2" documentation available at https://github.com/actions/setup-node
         uses: actions/setup-node@v2
         with:
-          node-version: "16.13.0"
+          node-version: "18.12.1"
       - name: Install node modules
         run: npm install
       - name: Report performance impact

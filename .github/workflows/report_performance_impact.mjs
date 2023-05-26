@@ -14,5 +14,8 @@ await reportPerformanceImpact({
   ...readGitHubWorkflowEnv(),
   logLevel: "debug",
   installCommand: "npm install",
-  performanceReportPath: "./scripts/performance.mjs#performanceReport",
+  performanceReportPath: new URL(
+    "../../scripts/performance.mjs#performanceReport",
+    import.meta.url,
+  ),
 })
