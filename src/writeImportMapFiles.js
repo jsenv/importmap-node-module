@@ -28,6 +28,7 @@ export const writeImportMapFiles = async ({
   },
   writeFiles = true,
   exportsFieldWarningConfig,
+  babelConfigFileUrl,
   // for unit test
   jsConfigFileUrl,
 }) => {
@@ -178,6 +179,7 @@ export const writeImportMapFiles = async ({
           magicExtensions,
           removeUnusedMappings,
           runtime,
+          babelConfigFileUrl,
         });
         importMaps[importMapFileRelativeUrl] = importMap;
       }

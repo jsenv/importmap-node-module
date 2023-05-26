@@ -40,6 +40,7 @@ export const visitSourceFiles = async ({
   bareSpecifierAutomapping,
   magicExtensions, // = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   removeUnusedMappings,
+  babelConfigFileUrl,
 }) => {
   const baseUrl =
     runtime === "browser" ? "http://jsenv.com" : projectDirectoryUrl;
@@ -109,9 +110,13 @@ export const visitSourceFiles = async ({
   });
 
   // https://babeljs.io/docs/en/babel-core#loadoptions
-  const babelOptions = await loadOptionsAsync({
-    root: urlToFileSystemPath(projectDirectoryUrl),
-  });
+  const babelOptions = babelConfigFileUrl
+    ? await loadOptionsAsync({
+        configFile: urlToFileSystemPath(babelConfigFileUrl),
+      })
+    : await loadOptionsAsync({
+        root: urlToFileSystemPath(projectDirectoryUrl),
+      });
 
   const visitSpecifier = memoizeAsyncFunctionBySpecifierAndImporter(
     async (specifier, importer, { importTrace }) => {
