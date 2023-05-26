@@ -1,21 +1,21 @@
-import { createDetailedMessage } from "@jsenv/logger"
-import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/urls"
+import { createDetailedMessage } from "@jsenv/logger";
+import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/urls";
 
 export const createPreferExportsFieldWarning = ({
   packageInfo,
   packageEntryFieldName,
 }) => {
-  const packageName = packageInfo.object.name
-  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName]
+  const packageName = packageInfo.object.name;
+  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName];
   const exportsSubpathCondition =
-    packageEntryFieldName === "browser" ? "browser" : "import"
+    packageEntryFieldName === "browser" ? "browser" : "import";
   const suggestedOverride = {
     [packageName]: {
       exports: {
         [exportsSubpathCondition]: packageEntrySpecifier,
       },
     },
-  }
+  };
 
   return {
     code: "PREFER_EXPORTS_FIELD",
@@ -32,8 +32,8 @@ As explained in https://github.com/jsenv/importmap-node-module#packagesmanualove
         }),
       },
     ),
-  }
-}
+  };
+};
 
 export const createBrowserFieldNotImplementedWarning = ({ packageInfo }) => {
   const suggestedOverride = {
@@ -42,7 +42,7 @@ export const createBrowserFieldNotImplementedWarning = ({ packageInfo }) => {
         browser: packageInfo.object.browser,
       },
     },
-  }
+  };
 
   return {
     code: "BROWSER_FIELD_NOT_IMPLEMENTED",
@@ -55,32 +55,32 @@ ${JSON.stringify(suggestedOverride, null, "  ")}
 As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
       },
     ),
-  }
-}
+  };
+};
 
 const getCreatePullRequestSuggestion = ({
   packageInfo,
   packageEntryFieldName,
 }) => {
-  const repositoryUrl = getRepositoryUrl(packageInfo)
+  const repositoryUrl = getRepositoryUrl(packageInfo);
   if (!repositoryUrl) {
-    return null
+    return null;
   }
   return {
     "suggestion 2": `Create a pull request in ${repositoryUrl} to use "exports" instead of "${packageEntryFieldName}"`,
-  }
-}
+  };
+};
 
 const getRepositoryUrl = (packageInfo) => {
-  const repository = packageInfo.object.repository
+  const repository = packageInfo.object.repository;
   if (typeof repository === "string") {
-    return repository
+    return repository;
   }
   if (typeof repository === "object") {
-    return repository.url
+    return repository.url;
   }
-  return undefined
-}
+  return undefined;
+};
 
 export const createPackageNameMustBeAStringWarning = ({
   packageName,
@@ -92,8 +92,8 @@ export const createPackageNameMustBeAStringWarning = ({
       "package name field": packageName,
       "package.json path": urlToFileSystemPath(packageInfo.url),
     }),
-  }
-}
+  };
+};
 
 export const createImportResolutionFailedWarning = ({
   specifier,
@@ -122,8 +122,8 @@ export const createImportResolutionFailedWarning = ({
         // "extensions tried": magicExtensions.join(`, `),
       },
     ),
-  }
-}
+  };
+};
 
 export const createBareSpecifierAutomappingMessage = ({
   specifier,
@@ -134,8 +134,8 @@ export const createBareSpecifierAutomappingMessage = ({
     "import trace": importTrace,
     "mapping": mappingToImportmapString(automapping),
     "reason": `bare specifier and "bareSpecifierAutomapping" enabled`,
-  })
-}
+  });
+};
 
 export const createExtensionAutomappingMessage = ({
   specifier,
@@ -149,8 +149,8 @@ export const createExtensionAutomappingMessage = ({
     "reason": mappingFoundInPackageExports
       ? `mapping found in package exports`
       : `"bareSpecifierAutomapping" enabled`,
-  })
-}
+  });
+};
 
 const getImportResolutionFailedSuggestions = ({
   suggestsNodeRuntime,
@@ -158,41 +158,41 @@ const getImportResolutionFailedSuggestions = ({
   magicExtension,
   automapping,
 }) => {
-  const suggestions = {}
+  const suggestions = {};
 
   const addSuggestion = (suggestion) => {
-    const suggestionCount = Object.keys(suggestions).length
-    suggestions[`suggestion ${suggestionCount + 1}`] = suggestion
-  }
+    const suggestionCount = Object.keys(suggestions).length;
+    suggestions[`suggestion ${suggestionCount + 1}`] = suggestion;
+  };
 
   if (suggestsNodeRuntime) {
-    addSuggestion(`use runtime: "node"`)
+    addSuggestion(`use runtime: "node"`);
   }
   if (automapping) {
     addSuggestion(
       `update import specifier to "${mappingToUrlRelativeToFile(automapping)}"`,
-    )
+    );
     if (gotBareSpecifierError) {
-      addSuggestion(`use bareSpecifierAutomapping: true`)
+      addSuggestion(`use bareSpecifierAutomapping: true`);
     }
     if (magicExtension) {
-      addSuggestion(`use magicExtensions: ["inherit"]`)
+      addSuggestion(`use magicExtensions: ["inherit"]`);
     }
     addSuggestion(`add mapping to "manualImportMap"
-${mappingToImportmapString(automapping)}`)
+${mappingToImportmapString(automapping)}`);
   }
 
-  return suggestions
-}
+  return suggestions;
+};
 
 const mappingToUrlRelativeToFile = (mapping) => {
   if (!mapping.scope) {
-    return mapping.to
+    return mapping.to;
   }
-  const scopeUrl = resolveUrl(mapping.scope, "file:///")
-  const toUrl = resolveUrl(mapping.to, "file:///")
-  return `./${urlToRelativeUrl(toUrl, scopeUrl)}`
-}
+  const scopeUrl = resolveUrl(mapping.scope, "file:///");
+  const toUrl = resolveUrl(mapping.to, "file:///");
+  return `./${urlToRelativeUrl(toUrl, scopeUrl)}`;
+};
 
 const mappingToImportmapString = ({ scope, from, to }) => {
   if (scope) {
@@ -206,7 +206,7 @@ const mappingToImportmapString = ({ scope, from, to }) => {
       },
       null,
       "  ",
-    )
+    );
   }
 
   return JSON.stringify(
@@ -217,8 +217,8 @@ const mappingToImportmapString = ({ scope, from, to }) => {
     },
     null,
     "  ",
-  )
-}
+  );
+};
 
 // const mappingToExportsFieldString = ({ scope, from, to }) => {
 //   if (scope) {

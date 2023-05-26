@@ -1,36 +1,36 @@
-import { loadOptionsAsync } from "@babel/core"
+import { loadOptionsAsync } from "@babel/core";
 
-import { readFile } from "@jsenv/filesystem"
+import { readFile } from "@jsenv/filesystem";
 import {
   resolveUrl,
   urlToExtension,
   urlToRelativeUrl,
   urlIsInsideOf,
   urlToFileSystemPath,
-} from "@jsenv/urls"
+} from "@jsenv/urls";
 import {
   normalizeImportMap,
   resolveImport,
   composeTwoImportMaps,
-} from "@jsenv/importmap"
-import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js"
+} from "@jsenv/importmap";
+import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js";
 
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
-} from "../memoizeAsyncFunction.js"
+} from "../memoizeAsyncFunction.js";
 
-import { parseSpecifiersFromJs } from "./js_parser.js"
-import { parseHTMLRessources } from "./html_parser.js"
-import { showSource } from "./showSource.js"
-import { resolveFile } from "../resolveFile.js"
+import { parseSpecifiersFromJs } from "./js_parser.js";
+import { parseHTMLRessources } from "./html_parser.js";
+import { showSource } from "./showSource.js";
+import { resolveFile } from "../resolveFile.js";
 import {
   createBareSpecifierAutomappingMessage,
   createExtensionAutomappingMessage,
   createImportResolutionFailedWarning,
-} from "../logs.js"
+} from "../logs.js";
 
-export const visitSourceFiles = async ({
+export const visitFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
@@ -38,42 +38,43 @@ export const visitSourceFiles = async ({
   runtime,
   importMap,
   bareSpecifierAutomapping,
-  magicExtensions, //  = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
+  magicExtensions, // = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
   removeUnusedMappings,
+  babelConfigFileUrl,
 }) => {
   const baseUrl =
-    runtime === "browser" ? "http://jsenv.com" : projectDirectoryUrl
+    runtime === "browser" ? "http://jsenv.com" : projectDirectoryUrl;
   const asFileUrl = (url) =>
-    moveUrl({ url, from: baseUrl, to: projectDirectoryUrl })
+    moveUrl({ url, from: baseUrl, to: projectDirectoryUrl });
   const asHttpUrl = (url) =>
-    moveUrl({ url, from: projectDirectoryUrl, to: baseUrl })
+    moveUrl({ url, from: projectDirectoryUrl, to: baseUrl });
 
-  const imports = {}
-  const scopes = {}
+  const imports = {};
+  const scopes = {};
   const addMapping = ({ scope, from, to }) => {
     if (scope) {
       scopes[scope] = {
         ...(scopes[scope] || {}),
         [from]: to,
-      }
+      };
     } else {
-      imports[from] = to
+      imports[from] = to;
     }
-  }
+  };
 
-  const topLevelMappingsUsed = []
-  const scopedMappingsUsed = {}
+  const topLevelMappingsUsed = [];
+  const scopedMappingsUsed = {};
   const markMappingAsUsed = ({ scope, from, to }) => {
     if (scope) {
       if (scope in scopedMappingsUsed) {
-        scopedMappingsUsed[scope].push({ from, to })
+        scopedMappingsUsed[scope].push({ from, to });
       } else {
-        scopedMappingsUsed[scope] = [{ from, to }]
+        scopedMappingsUsed[scope] = [{ from, to }];
       }
     } else {
-      topLevelMappingsUsed.push({ from, to })
+      topLevelMappingsUsed.push({ from, to });
     }
-  }
+  };
 
   const importResolver = createImportResolver({
     logger,
@@ -89,29 +90,33 @@ export const visitSourceFiles = async ({
     onImportMapping: ({ scope, from }) => {
       if (scope) {
         // make scope relative again
-        scope = `./${urlToRelativeUrl(scope, baseUrl)}`
+        scope = `./${urlToRelativeUrl(scope, baseUrl)}`;
       }
       // make from relative again
       if (from.startsWith(baseUrl)) {
-        from = `./${urlToRelativeUrl(from, baseUrl)}`
+        from = `./${urlToRelativeUrl(from, baseUrl)}`;
       }
 
       markMappingAsUsed({
         scope,
         from,
         to: scope ? importMap.scopes[scope][from] : importMap.imports[from],
-      })
+      });
     },
     performAutomapping: (automapping) => {
-      addMapping(automapping)
-      markMappingAsUsed(automapping)
+      addMapping(automapping);
+      markMappingAsUsed(automapping);
     },
-  })
+  });
 
   // https://babeljs.io/docs/en/babel-core#loadoptions
-  const babelOptions = await loadOptionsAsync({
-    root: urlToFileSystemPath(projectDirectoryUrl),
-  })
+  const babelOptions = babelConfigFileUrl
+    ? await loadOptionsAsync({
+        configFile: urlToFileSystemPath(babelConfigFileUrl),
+      })
+    : await loadOptionsAsync({
+        root: urlToFileSystemPath(projectDirectoryUrl),
+      });
 
   const visitSpecifier = memoizeAsyncFunctionBySpecifierAndImporter(
     async (specifier, importer, { importTrace }) => {
@@ -120,16 +125,16 @@ export const visitSourceFiles = async ({
           specifier,
           importer,
           importTrace,
-        })
+        });
 
       if (!found || ignore) {
-        return
+        return;
       }
       if (!visitUrlResponse.isInMemory(url)) {
-        await visitUrlResponse(url, { contentType, body })
+        await visitUrlResponse(url, { contentType, body });
       }
     },
-  )
+  );
 
   const visitUrlResponse = memoizeAsyncFunctionByUrl(
     async (url, { contentType, body }) => {
@@ -138,77 +143,77 @@ export const visitSourceFiles = async ({
           code: body,
           url,
           babelOptions,
-        })
+        });
         await Promise.all(
           Object.keys(specifiers).map(async (specifier) => {
-            const specifierInfo = specifiers[specifier]
+            const specifierInfo = specifiers[specifier];
             const importTrace = showSource({
               url: asFileUrl(url) || url,
               line: specifierInfo.line,
               column: specifierInfo.column,
               source: body,
-            })
-            await visitSpecifier(specifier, url, { importTrace })
+            });
+            await visitSpecifier(specifier, url, { importTrace });
           }),
-        )
-        return
+        );
+        return;
       }
       if (contentType === "text/html") {
         const htmlRessources = await parseHTMLRessources({
           code: body,
           url,
           asFileUrl,
-        })
+        });
         await Promise.all(
           htmlRessources.map(async (htmlRessource) => {
             if (htmlRessource.isExternal) {
-              return
+              return;
             }
             await visitUrlResponse(htmlRessource.url, {
               contentType: htmlRessource.contentType,
               body: htmlRessource.content,
-            })
+            });
           }),
-        )
-        return
+        );
+        return;
       }
     },
-  )
+  );
 
   await entryPointsToCheck.reduce(async (previous, entryPointToCheck) => {
-    await previous
+    await previous;
 
     // normalize the entry point specifier
-    const entryPointUrl = resolveUrl(entryPointToCheck, baseUrl)
-    const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl)
-    const entryPointSpecifier = `./${entryPointRelativeUrl}`
+    const entryPointUrl = resolveUrl(entryPointToCheck, baseUrl);
+    const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl);
+    const entryPointSpecifier = `./${entryPointRelativeUrl}`;
     await visitSpecifier(entryPointSpecifier, baseUrl, {
       importTrace: "entryPointsToCheck parameter",
-    })
-  }, Promise.resolve())
+    });
+  }, Promise.resolve());
 
   if (removeUnusedMappings) {
-    const importsUsed = {}
+    const importsUsed = {};
     topLevelMappingsUsed.forEach(({ from, to }) => {
-      importsUsed[from] = to
-    })
-    const scopesUsed = {}
+      importsUsed[from] = to;
+    });
+    const scopesUsed = {};
     Object.keys(scopedMappingsUsed).forEach((scope) => {
-      const mappingsUsed = scopedMappingsUsed[scope]
-      const scopedMappings = {}
+      const mappingsUsed = scopedMappingsUsed[scope];
+      const scopedMappings = {};
       mappingsUsed.forEach(({ from, to }) => {
-        scopedMappings[from] = to
-      })
-      scopesUsed[scope] = scopedMappings
-    })
+        scopedMappings[from] = to;
+      });
+      scopesUsed[scope] = scopedMappings;
+    });
     return {
       imports: importsUsed,
       scopes: scopesUsed,
-    }
+    };
   }
 
-  return composeTwoImportMaps(importMap, { imports, scopes })
-}
+  return composeTwoImportMaps(importMap, { imports, scopes });
+};
 
 const createImportResolver = ({
   logger,
@@ -224,8 +229,8 @@ const createImportResolver = ({
   onImportMapping,
   performAutomapping,
 }) => {
-  const importMapNormalized = normalizeImportMap(importMap, baseUrl)
-  const BARE_SPECIFIER_ERROR = {}
+  const importMapNormalized = normalizeImportMap(importMap, baseUrl);
+  const BARE_SPECIFIER_ERROR = {};
 
   const applyImportResolution = async ({
     specifier,
@@ -236,17 +241,17 @@ const createImportResolver = ({
       return {
         found: true,
         ignore: true,
-      }
+      };
     }
 
     let importResolution = resolveImportUrl({
       specifier,
       importer,
-    })
+    });
     const extensionsToTry = getExtensionsToTry(
       magicExtensions || ["inherit"],
       importer,
-    )
+    );
     if (importResolution.gotBareSpecifierError) {
       // If a magic extension can avoid the bare specifier error
       // let's use it.
@@ -254,16 +259,16 @@ const createImportResolver = ({
         const resolutionResult = resolveImportUrl({
           specifier: `${specifier}${extensionToTry}`,
           importer,
-        })
+        });
         if (resolutionResult.gotBareSpecifierError) {
-          return false
+          return false;
         }
-        importResolution = resolutionResult
-        return true
-      })
+        importResolution = resolutionResult;
+        return true;
+      });
     }
 
-    const importFileUrl = asFileUrl(importResolution.url)
+    const importFileUrl = asFileUrl(importResolution.url);
     if (importFileUrl) {
       return handleFileUrl({
         specifier,
@@ -272,14 +277,14 @@ const createImportResolver = ({
         gotBareSpecifierError: importResolution.gotBareSpecifierError,
         importUrl: importFileUrl,
         extensionsToTry,
-      })
+      });
     }
 
     if (
       importResolution.url.startsWith("http:") ||
       importResolution.url.startsWith("https:")
     ) {
-      return handleHttpUrl()
+      return handleHttpUrl();
     }
 
     return handleFileUrl({
@@ -289,8 +294,8 @@ const createImportResolver = ({
       gotBareSpecifierError: importResolution.gotBareSpecifierError,
       importUrl: importResolution.url,
       extensionsToTry,
-    })
-  }
+    });
+  };
 
   const resolveImportUrl = ({ specifier, importer }) => {
     try {
@@ -301,19 +306,19 @@ const createImportResolver = ({
         defaultExtension: false,
         onImportMapping,
         createBareSpecifierError: () => BARE_SPECIFIER_ERROR,
-      })
+      });
 
       return {
         gotBareSpecifierError: false,
         url,
-      }
+      };
     } catch (e) {
       return {
         gotBareSpecifierError: true,
         url: resolveUrl(specifier, importer),
-      }
+      };
     }
-  }
+  };
 
   const handleHttpUrl = async () => {
     // NICE TO HAVE: perform an http request and check for 404 and things like that
@@ -325,18 +330,18 @@ const createImportResolver = ({
       found: true,
       ignore: true,
       body: null,
-    }
-  }
+    };
+  };
 
   const foundFileUrl = async (url) => {
-    const extension = urlToExtension(url)
+    const extension = urlToExtension(url);
     const contentType =
       extension === ".html"
         ? "text/html"
         : [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(extension)
         ? "application/javascript"
-        : "application/octet-stream"
-    const httpUrl = asHttpUrl(url)
+        : "application/octet-stream";
+    const httpUrl = asHttpUrl(url);
 
     if (
       contentType === "application/javascript" ||
@@ -347,15 +352,15 @@ const createImportResolver = ({
         url: httpUrl || url,
         body: await readFile(url, { as: "string" }),
         contentType,
-      }
+      };
     }
 
     return {
       found: true,
       ignore: true,
       url: httpUrl || url,
-    }
-  }
+    };
+  };
 
   const handleFileUrl = async ({
     specifier,
@@ -368,27 +373,27 @@ const createImportResolver = ({
     const { magicExtension, found, url } = await resolveFile(importUrl, {
       magicExtensionEnabled: true,
       extensionsToTry,
-    })
+    });
 
-    const importerUrl = asFileUrl(importer)
+    const importerUrl = asFileUrl(importer);
     const importerPackageDirectoryUrl = packageDirectoryUrlFromUrl(
       importerUrl,
       projectDirectoryUrl,
-    )
+    );
     const scope =
       importerPackageDirectoryUrl === projectDirectoryUrl
         ? undefined
         : `./${urlToRelativeUrl(
             importerPackageDirectoryUrl,
             projectDirectoryUrl,
-          )}`
+          )}`;
     const automapping = getAutomapping({
       specifier,
       scope,
       projectDirectoryUrl,
       importerUrl,
       url,
-    })
+    });
     if (gotBareSpecifierError) {
       if (!found) {
         warn(
@@ -399,8 +404,8 @@ const createImportResolver = ({
             suggestsNodeRuntime:
               runtime !== "node" && isSpecifierForNodeCoreModule(specifier),
           }),
-        )
-        return { found: false }
+        );
+        return { found: false };
       }
       if (!bareSpecifierAutomapping) {
         warn(
@@ -410,8 +415,8 @@ const createImportResolver = ({
             gotBareSpecifierError,
             automapping,
           }),
-        )
-        return { found: false }
+        );
+        return { found: false };
       }
       logger.debug(
         createBareSpecifierAutomappingMessage({
@@ -419,9 +424,9 @@ const createImportResolver = ({
           importTrace,
           automapping,
         }),
-      )
-      performAutomapping(automapping)
-      return foundFileUrl(url)
+      );
+      performAutomapping(automapping);
+      return foundFileUrl(url);
     }
     if (!found) {
       warn(
@@ -430,18 +435,18 @@ const createImportResolver = ({
           importTrace,
           importUrl,
         }),
-      )
-      return { found: false }
+      );
+      return { found: false };
     }
     if (magicExtension) {
       if (!magicExtensions) {
         const packageDirectoryUrl = packageDirectoryUrlFromUrl(
           url,
           projectDirectoryUrl,
-        )
-        const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl)
+        );
+        const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl);
         const mappingFoundInPackageExports =
-          await extensionIsMappedInPackageExports(packageFileUrl)
+          await extensionIsMappedInPackageExports(packageFileUrl);
         if (!mappingFoundInPackageExports) {
           warn(
             createImportResolutionFailedWarning({
@@ -451,8 +456,8 @@ const createImportResolver = ({
               magicExtension,
               automapping,
             }),
-          )
-          return { found: false }
+          );
+          return { found: false };
         }
         logger.debug(
           createExtensionAutomappingMessage({
@@ -461,9 +466,9 @@ const createImportResolver = ({
             automapping,
             mappingFoundInPackageExports,
           }),
-        )
-        performAutomapping(automapping)
-        return foundFileUrl(url)
+        );
+        performAutomapping(automapping);
+        return foundFileUrl(url);
       }
       logger.debug(
         createExtensionAutomappingMessage({
@@ -471,15 +476,15 @@ const createImportResolver = ({
           importTrace,
           automapping,
         }),
-      )
-      performAutomapping(automapping)
-      return foundFileUrl(url)
+      );
+      performAutomapping(automapping);
+      return foundFileUrl(url);
     }
-    return foundFileUrl(url)
-  }
+    return foundFileUrl(url);
+  };
 
-  return { applyImportResolution }
-}
+  return { applyImportResolution };
+};
 
 const getAutomapping = ({
   specifier,
@@ -489,84 +494,91 @@ const getAutomapping = ({
   url,
 }) => {
   if (specifier.startsWith("./") || specifier.startsWith("../")) {
-    const specifierUrl = resolveUrl(specifier, importerUrl)
+    const specifierUrl = resolveUrl(specifier, importerUrl);
     return {
       scope,
       from: `./${urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}`,
       to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
-    }
+    };
   }
 
   return {
     scope,
     from: specifier,
     to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
-  }
-}
+  };
+};
 
 const moveUrl = ({ url, from, to }) => {
   if (urlIsInsideOf(url, from)) {
-    const relativeUrl = urlToRelativeUrl(url, from)
-    return resolveUrl(relativeUrl, to)
+    const relativeUrl = urlToRelativeUrl(url, from);
+    return resolveUrl(relativeUrl, to);
   }
   if (url === from) {
-    return to
+    return to;
   }
-  return null
-}
+  return null;
+};
 
 const extensionIsMappedInPackageExports = async (packageFileUrl) => {
-  const closestPackageObject = await readFile(packageFileUrl, {
-    as: "json",
-  })
-  // it's imprecise because we are not ensuring the wildcard correspond
-  // to the required mapping, but good enough for now
-  const containsWildcard = Object.keys(closestPackageObject.exports || {}).some(
-    (key) => key.includes("*"),
-  )
-  return containsWildcard
-}
+  try {
+    const closestPackageObject = await readFile(packageFileUrl, {
+      as: "json",
+    });
+    // it's imprecise because we are not ensuring the wildcard correspond
+    // to the required mapping, but good enough for now
+    const containsWildcard = Object.keys(
+      closestPackageObject.exports || {},
+    ).some((key) => key.includes("*"));
+    return containsWildcard;
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      return false;
+    }
+    throw e;
+  }
+};
 
 const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {
-  const relativeUrl = urlToRelativeUrl(url, projectDirectoryUrl)
+  const relativeUrl = urlToRelativeUrl(url, projectDirectoryUrl);
 
   const lastNodeModulesDirectoryStartIndex =
-    relativeUrl.lastIndexOf("node_modules/")
+    relativeUrl.lastIndexOf("node_modules/");
   if (lastNodeModulesDirectoryStartIndex === -1) {
-    return projectDirectoryUrl
+    return projectDirectoryUrl;
   }
 
   const lastNodeModulesDirectoryEndIndex =
-    lastNodeModulesDirectoryStartIndex + `node_modules/`.length
+    lastNodeModulesDirectoryStartIndex + `node_modules/`.length;
 
   const beforeNodeModulesLastDirectory = relativeUrl.slice(
     0,
     lastNodeModulesDirectoryEndIndex,
-  )
+  );
   const afterLastNodeModulesDirectory = relativeUrl.slice(
     lastNodeModulesDirectoryEndIndex,
-  )
-  const remainingDirectories = afterLastNodeModulesDirectory.split("/")
+  );
+  const remainingDirectories = afterLastNodeModulesDirectory.split("/");
 
   if (afterLastNodeModulesDirectory[0] === "@") {
     // scoped package
     const remainingPathToPackageDirectory = remainingDirectories
       .slice(0, 2)
-      .join("/")
-    return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingPathToPackageDirectory}/`
+      .join("/");
+    return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingPathToPackageDirectory}/`;
   }
-  return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories[0]}/`
-}
+  return `${projectDirectoryUrl}${beforeNodeModulesLastDirectory}${remainingDirectories[0]}/`;
+};
 
 const getExtensionsToTry = (magicExtensions, importer) => {
-  const extensionsSet = new Set()
+  const extensionsSet = new Set();
   magicExtensions.forEach((magicExtension) => {
     if (magicExtension === "inherit") {
-      const importerExtension = urlToExtension(importer)
-      extensionsSet.add(importerExtension)
+      const importerExtension = urlToExtension(importer);
+      extensionsSet.add(importerExtension);
     } else {
-      extensionsSet.add(magicExtension)
+      extensionsSet.add(magicExtension);
     }
-  })
-  return Array.from(extensionsSet.values())
-}
+  });
+  return Array.from(extensionsSet.values());
+};

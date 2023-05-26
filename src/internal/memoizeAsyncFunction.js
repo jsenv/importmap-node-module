@@ -1,92 +1,92 @@
 export const memoizeAsyncFunctionByUrl = (fn) => {
-  const cache = {}
+  const cache = {};
   return memoizeAsyncFunction(fn, {
     getMemoryEntryFromArguments: ([url]) => {
       return {
         get: () => {
-          return cache[url]
+          return cache[url];
         },
         set: (promise) => {
-          cache[url] = promise
+          cache[url] = promise;
         },
         delete: () => {
-          delete cache[url]
+          delete cache[url];
         },
-      }
+      };
     },
-  })
-}
+  });
+};
 
 export const memoizeAsyncFunctionBySpecifierAndImporter = (fn) => {
-  const importerCache = {}
+  const importerCache = {};
   return memoizeAsyncFunction(fn, {
     getMemoryEntryFromArguments: ([specifier, importer]) => {
       return {
         get: () => {
-          const specifierCacheForImporter = importerCache[importer]
+          const specifierCacheForImporter = importerCache[importer];
           return specifierCacheForImporter
             ? specifierCacheForImporter[specifier]
-            : null
+            : null;
         },
         set: (promise) => {
-          const specifierCacheForImporter = importerCache[importer]
+          const specifierCacheForImporter = importerCache[importer];
           if (specifierCacheForImporter) {
-            specifierCacheForImporter[specifier] = promise
+            specifierCacheForImporter[specifier] = promise;
           } else {
             importerCache[importer] = {
               [specifier]: promise,
-            }
+            };
           }
         },
         delete: () => {
-          const specifierCacheForImporter = importerCache[importer]
+          const specifierCacheForImporter = importerCache[importer];
           if (specifierCacheForImporter) {
-            delete specifierCacheForImporter[specifier]
+            delete specifierCacheForImporter[specifier];
           }
         },
-      }
+      };
     },
-  })
-}
+  });
+};
 
 const memoizeAsyncFunction = (fn, { getMemoryEntryFromArguments }) => {
   const memoized = async (...args) => {
-    const memoryEntry = getMemoryEntryFromArguments(args)
-    const promiseFromMemory = memoryEntry.get()
+    const memoryEntry = getMemoryEntryFromArguments(args);
+    const promiseFromMemory = memoryEntry.get();
     if (promiseFromMemory) {
-      return promiseFromMemory
+      return promiseFromMemory;
     }
-    const { promise, resolve, reject } = createControllablePromise()
-    memoryEntry.set(promise)
-    let value
-    let error
+    const { promise, resolve, reject } = createControllablePromise();
+    memoryEntry.set(promise);
+    let value;
+    let error;
     try {
-      value = fn(...args)
-      error = false
+      value = fn(...args);
+      error = false;
     } catch (e) {
-      value = e
-      error = true
-      memoryEntry.delete()
+      value = e;
+      error = true;
+      memoryEntry.delete();
     }
     if (error) {
-      reject(error)
+      reject(error);
     } else {
-      resolve(value)
+      resolve(value);
     }
-    return promise
-  }
+    return promise;
+  };
   memoized.isInMemory = (...args) => {
-    return Boolean(getMemoryEntryFromArguments(args).get())
-  }
-  return memoized
-}
+    return Boolean(getMemoryEntryFromArguments(args).get());
+  };
+  return memoized;
+};
 
 const createControllablePromise = () => {
-  let resolve
-  let reject
+  let resolve;
+  let reject;
   const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return { promise, resolve, reject }
-}
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+};

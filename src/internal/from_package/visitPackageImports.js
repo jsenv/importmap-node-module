@@ -4,8 +4,8 @@ https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_
 
 */
 
-import { urlToFileSystemPath } from "@jsenv/urls"
-import { specifierIsRelative } from "./specifierIsRelative.js"
+import { urlToFileSystemPath } from "@jsenv/urls";
+import { specifierIsRelative } from "./specifierIsRelative.js";
 
 export const visitPackageImports = ({
   warn,
@@ -13,7 +13,7 @@ export const visitPackageImports = ({
   packageImports = packageInfo.object.imports,
   packageConditions,
 }) => {
-  const importsSubpaths = {}
+  const importsSubpaths = {};
   const onImportsSubpath = ({ key, value, trace }) => {
     if (!specifierIsRelative(value)) {
       warn(
@@ -22,39 +22,39 @@ export const visitPackageImports = ({
           valueTrace: trace,
           packageInfo,
         }),
-      )
-      return
+      );
+      return;
     }
 
-    const keyNormalized = key
-    const valueNormalized = value
-    importsSubpaths[keyNormalized] = valueNormalized
-  }
+    const keyNormalized = key;
+    const valueNormalized = value;
+    importsSubpaths[keyNormalized] = valueNormalized;
+  };
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     if (typeof subpathValue === "string") {
-      return handleString(subpathValue, subpathValueTrace)
+      return handleString(subpathValue, subpathValueTrace);
     }
 
     if (typeof subpathValue === "object" && subpathValue !== null) {
-      return handleObject(subpathValue, subpathValueTrace)
+      return handleObject(subpathValue, subpathValueTrace);
     }
 
-    return handleRemaining(subpathValue, subpathValueTrace)
-  }
+    return handleRemaining(subpathValue, subpathValueTrace);
+  };
 
   const handleString = (subpathValue, subpathValueTrace) => {
     const firstBareKey = subpathValueTrace
       .slice()
       .reverse()
-      .find((key) => key.startsWith("#"))
+      .find((key) => key.startsWith("#"));
     onImportsSubpath({
       key: firstBareKey,
       value: subpathValue,
       trace: subpathValueTrace,
-    })
-    return true
-  }
+    });
+    return true;
+  };
 
   const handleObject = (subpathValue, subpathValueTrace) => {
     // From Node.js documentation:
@@ -67,15 +67,15 @@ export const visitPackageImports = ({
     // it should be ignored and an other branch be taken until
     // something resolves
     const followConditionBranch = (subpathValue, conditionTrace) => {
-      const bareKeys = []
-      const conditionalKeys = []
+      const bareKeys = [];
+      const conditionalKeys = [];
       Object.keys(subpathValue).forEach((availableKey) => {
         if (availableKey.startsWith("#")) {
-          bareKeys.push(availableKey)
+          bareKeys.push(availableKey);
         } else {
-          conditionalKeys.push(availableKey)
+          conditionalKeys.push(availableKey);
         }
-      })
+      });
 
       if (bareKeys.length > 0 && conditionalKeys.length > 0) {
         warn(
@@ -86,39 +86,39 @@ export const visitPackageImports = ({
             bareKeys,
             conditionalKeys,
           }),
-        )
-        return false
+        );
+        return false;
       }
 
       // there is no condition, visit all bare keys (starting with #)
       if (conditionalKeys.length === 0) {
-        let leadsToSomething = false
+        let leadsToSomething = false;
         bareKeys.forEach((key) => {
           leadsToSomething = visitSubpathValue(subpathValue[key], [
             ...subpathValueTrace,
             ...conditionTrace,
             key,
-          ])
-        })
-        return leadsToSomething
+          ]);
+        });
+        return leadsToSomething;
       }
 
       // there is a condition, keep the first one leading to something
       return conditionalKeys.some((keyCandidate) => {
         if (!packageConditions.includes(keyCandidate)) {
-          return false
+          return false;
         }
-        const valueCandidate = subpathValue[keyCandidate]
+        const valueCandidate = subpathValue[keyCandidate];
         return visitSubpathValue(valueCandidate, [
           ...subpathValueTrace,
           ...conditionTrace,
           keyCandidate,
-        ])
-      })
-    }
+        ]);
+      });
+    };
 
-    return followConditionBranch(subpathValue, [])
-  }
+    return followConditionBranch(subpathValue, []);
+  };
 
   const handleRemaining = (subpathValue, subpathValueTrace) => {
     warn(
@@ -127,14 +127,14 @@ export const visitPackageImports = ({
         subpathValueTrace,
         packageInfo,
       }),
-    )
-    return false
-  }
+    );
+    return false;
+  };
 
-  visitSubpathValue(packageImports, ["imports"])
+  visitSubpathValue(packageImports, ["imports"]);
 
-  return importsSubpaths
-}
+  return importsSubpaths;
+};
 
 const createSubpathIsUnexpectedWarning = ({
   subpathValue,
@@ -150,8 +150,8 @@ ${subpathValue}
 ${subpathValueTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageInfo.url)}`,
-  }
-}
+  };
+};
 
 const createSubpathKeysAreMixedWarning = ({
   subpathValue,
@@ -167,8 +167,8 @@ ${JSON.stringify(subpathValue, null, "  ")}
 ${subpathValueTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageInfo.url)}`,
-  }
-}
+  };
+};
 
 const createSubpathValueMustBeRelativeWarning = ({
   value,
@@ -184,5 +184,5 @@ ${value}
 ${valueTrace.join(".")}
 --- package.json path ---
 ${urlToFileSystemPath(packageInfo.url)}`,
-  }
-}
+  };
+};

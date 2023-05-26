@@ -1,11 +1,11 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const test = async ({ runtime } = {}) => {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -17,15 +17,15 @@ const test = async ({ runtime } = {}) => {
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
-  })
-  return { warnings, importmaps }
-}
+  });
+  return { warnings, importmaps };
+};
 
 {
-  const actual = await test()
+  const actual = await test();
   const expected = {
     warnings: [
       {
@@ -33,7 +33,7 @@ const test = async ({ runtime } = {}) => {
         message: `Import resolution failed for "fs"
 --- import trace ---
 ${testDirectoryUrl}index.js:1:7
-> 1 | import "fs"
+> 1 | import "fs";
     |       ^
   2 |${" "}
 --- reason ---
@@ -48,12 +48,12 @@ use runtime: "node"`,
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 {
-  const actual = await test({ runtime: "node" })
+  const actual = await test({ runtime: "node" });
   const expected = {
     warnings: [],
     importmaps: {
@@ -62,6 +62,6 @@ use runtime: "node"`,
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

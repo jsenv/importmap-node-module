@@ -1,11 +1,11 @@
-import { createDetailedMessage } from "@jsenv/logger"
-import { resolveUrl, urlToFileSystemPath, urlToRelativeUrl } from "@jsenv/urls"
+import { createDetailedMessage } from "@jsenv/logger";
+import { resolveUrl, urlToFileSystemPath, urlToRelativeUrl } from "@jsenv/urls";
 
 import {
   createPreferExportsFieldWarning,
   createBrowserFieldNotImplementedWarning,
-} from "../logs.js"
-import { resolveFile } from "../resolveFile.js"
+} from "../logs.js";
+import { resolveFile } from "../resolveFile.js";
 
 export const resolvePackageMain = async ({
   logger,
@@ -14,20 +14,20 @@ export const resolvePackageMain = async ({
   packageInfo,
   packageConditions,
 }) => {
-  const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
+  const packageDirectoryUrl = resolveUrl("./", packageInfo.url);
   const packageEntryFieldName = decidePackageEntryFieldName({
     logger,
     warn,
     exportsFieldSeverity,
     packageConditions,
     packageInfo,
-  })
+  });
   return tryToResolvePackageEntryFile({
     packageEntryFieldName,
     packageDirectoryUrl,
     packageInfo,
-  })
-}
+  });
+};
 
 const decidePackageEntryFieldName = ({
   logger,
@@ -36,26 +36,26 @@ const decidePackageEntryFieldName = ({
   packageConditions,
   packageInfo,
 }) => {
-  let nonStandardFieldFound
+  let nonStandardFieldFound;
   packageConditions.find((condition) => {
     if (condition === "import") {
-      const moduleFieldValue = packageInfo.object.module
+      const moduleFieldValue = packageInfo.object.module;
       if (typeof moduleFieldValue === "string") {
-        nonStandardFieldFound = "module"
-        return true
+        nonStandardFieldFound = "module";
+        return true;
       }
-      const jsNextFieldValue = packageInfo.object["jsnext:main"]
+      const jsNextFieldValue = packageInfo.object["jsnext:main"];
       if (typeof jsNextFieldValue === "string") {
-        nonStandardFieldFound = "jsnext:main"
-        return true
+        nonStandardFieldFound = "jsnext:main";
+        return true;
       }
-      return false
+      return false;
     }
     if (condition === "browser") {
-      const browserFieldValue = packageInfo.object.browser
+      const browserFieldValue = packageInfo.object.browser;
       if (typeof browserFieldValue === "string") {
-        nonStandardFieldFound = "browser"
-        return true
+        nonStandardFieldFound = "browser";
+        return true;
       }
       if (typeof browserFieldValue === "object") {
         // the browser field can be an object, for now it's not supported
@@ -63,53 +63,53 @@ const decidePackageEntryFieldName = ({
         // as a workaround it's possible to use "packageManualOverrides"
         const browserFieldWarning = createBrowserFieldNotImplementedWarning({
           packageInfo,
-        })
+        });
         if (exportsFieldSeverity === "warn") {
-          warn(browserFieldWarning)
+          warn(browserFieldWarning);
         } else {
-          logger.debug(browserFieldWarning.message)
+          logger.debug(browserFieldWarning.message);
         }
-        return false
+        return false;
       }
 
-      return false
+      return false;
     }
-    return false
-  })
+    return false;
+  });
   if (nonStandardFieldFound) {
     const exportsFieldWarning = createPreferExportsFieldWarning({
       packageInfo,
       packageEntryFieldName: nonStandardFieldFound,
-    })
+    });
     if (exportsFieldSeverity === "warn") {
-      warn(exportsFieldWarning)
+      warn(exportsFieldWarning);
     } else {
-      logger.debug(exportsFieldWarning.message)
+      logger.debug(exportsFieldWarning.message);
     }
-    return nonStandardFieldFound
+    return nonStandardFieldFound;
   }
-  return "main"
-}
+  return "main";
+};
 
 const tryToResolvePackageEntryFile = async ({
   packageEntryFieldName,
   packageDirectoryUrl,
   packageInfo,
 }) => {
-  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName]
+  const packageEntrySpecifier = packageInfo.object[packageEntryFieldName];
   // explicitely empty meaning
   // it is assumed that we should not find a file
   if (packageEntrySpecifier === "") {
-    return { found: false, packageEntryFieldName }
+    return { found: false, packageEntryFieldName };
   }
 
   const relativeUrlToTry = packageEntrySpecifier
     ? packageEntrySpecifier.endsWith("/")
       ? `${packageEntrySpecifier}index`
       : packageEntrySpecifier
-    : "./index"
+    : "./index";
 
-  const urlFirstCandidate = resolveUrl(relativeUrlToTry, packageDirectoryUrl)
+  const urlFirstCandidate = resolveUrl(relativeUrlToTry, packageDirectoryUrl);
 
   if (!urlFirstCandidate.startsWith(packageDirectoryUrl)) {
     return {
@@ -119,15 +119,15 @@ const tryToResolvePackageEntryFile = async ({
         packageEntryFieldName,
         packageInfo,
       }),
-    }
+    };
   }
 
-  const extensionsToTry = [".js", ".json", ".node"]
+  const extensionsToTry = [".js", ".json", ".node"];
   const { found, url } = await resolveFile(urlFirstCandidate, {
     magicDirectoryIndexEnabled: true,
     magicExtensionEnabled: true,
     extensionsToTry,
-  })
+  });
 
   if (!found) {
     const warning = createPackageEntryNotFoundWarning({
@@ -135,22 +135,22 @@ const tryToResolvePackageEntryFile = async ({
       packageInfo,
       fileUrl: urlFirstCandidate,
       extensionsTried: extensionsToTry,
-    })
+    });
 
     return {
       found: false,
       packageEntryFieldName,
       relativeUrl: urlToRelativeUrl(urlFirstCandidate, packageInfo.url),
       warning,
-    }
+    };
   }
 
   return {
     found: true,
     packageEntryFieldName,
     relativeUrl: urlToRelativeUrl(url, packageInfo.url),
-  }
-}
+  };
+};
 
 const createPackageEntryMustBeRelativeWarning = ({
   packageEntryFieldName,
@@ -165,8 +165,8 @@ const createPackageEntryMustBeRelativeWarning = ({
         "package.json path": urlToFileSystemPath(packageInfo.url),
       },
     ),
-  }
-}
+  };
+};
 
 const createPackageEntryNotFoundWarning = ({
   packageEntryFieldName,
@@ -187,5 +187,5 @@ const createPackageEntryNotFoundWarning = ({
           : {}),
       },
     ),
-  }
-}
+  };
+};

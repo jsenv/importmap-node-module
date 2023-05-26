@@ -1,10 +1,10 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
-import { normalizeImportMap, resolveImport } from "@jsenv/importmap"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
+import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
@@ -16,10 +16,10 @@ const importmaps = await writeImportMapFiles({
     },
   },
   writeFiles: false,
-})
+});
 
-const importmap = importmaps["test.importmap"]
-const actual = importmap
+const importmap = importmaps["test.importmap"];
+const actual = importmap;
 const expected = {
   imports: {
     "react-redux": "./node_modules/react-redux/es/index.js",
@@ -32,20 +32,20 @@ const expected = {
         "./node_modules/react-redux/es/utils/answer.js",
     },
   },
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });
 
 {
   const importMapNormalized = normalizeImportMap(
     importmap,
     "http://example.com",
-  )
+  );
   const actual = resolveImport({
     specifier: "./utils/answer",
     importer: "http://example.com/node_modules/react-redux/es/index.js",
     importMap: importMapNormalized,
-  })
+  });
   const expected =
-    "http://example.com/node_modules/react-redux/es/utils/answer.js"
-  assert({ actual, expected })
+    "http://example.com/node_modules/react-redux/es/utils/answer.js";
+  assert({ actual, expected });
 }

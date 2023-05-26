@@ -1,9 +1,9 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
@@ -12,8 +12,8 @@ const importmaps = await writeImportMapFiles({
     },
   },
   writeFiles: false,
-})
-const actual = importmaps["test.importmap"]
+});
+const actual = importmaps["test.importmap"];
 const expected = {
   imports: {
     "@dmail/yo/": "./node_modules/@dmail/yo/",
@@ -35,5 +35,5 @@ const expected = {
       "bar": "./node_modules/foo/node_modules/bar/index.js",
     },
   },
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });

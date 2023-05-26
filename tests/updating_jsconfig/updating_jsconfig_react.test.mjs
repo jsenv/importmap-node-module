@@ -1,11 +1,11 @@
-import { assert } from "@jsenv/assert"
-import { readFile, writeFile } from "@jsenv/filesystem"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { readFile, writeFile } from "@jsenv/filesystem";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./", import.meta.url)
-const jsConfigFileUrl = resolveUrl("jsconfig.json", testDirectoryUrl)
+const testDirectoryUrl = resolveUrl("./", import.meta.url);
+const jsConfigFileUrl = resolveUrl("jsconfig.json", testDirectoryUrl);
 
 // arrange
 await writeFile(
@@ -22,7 +22,7 @@ await writeFile(
     null,
     "  ",
   ),
-)
+);
 
 // act
 await writeImportMapFiles({
@@ -37,10 +37,10 @@ await writeImportMapFiles({
     },
   },
   writeFiles: false,
-})
+});
 
 // assert
-const actual = await readFile(jsConfigFileUrl, { as: "json" })
+const actual = await readFile(jsConfigFileUrl, { as: "json" });
 const expected = {
   compilerOptions: {
     baseUrl: ".",
@@ -51,5 +51,5 @@ const expected = {
     // react is kept
     jsx: "react",
   },
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });

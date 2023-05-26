@@ -1,10 +1,10 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
+const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl);
 
 try {
   await writeImportMapFiles({
@@ -14,13 +14,13 @@ try {
         mappingsForNodeResolution: true,
       },
     },
-  })
-  throw new Error("should throw")
+  });
+  throw new Error("should throw");
 } catch (e) {
-  const actual = e
+  const actual = e;
   const expected = new Error(`Cannot find project package.json file.
 --- package.json url ---
-${packageFileUrl}`)
-  expected.code = "PROJECT_PACKAGE_FILE_NOT_FOUND"
-  assert({ actual, expected })
+${packageFileUrl}`);
+  expected.code = "PROJECT_PACKAGE_FILE_NOT_FOUND";
+  assert({ actual, expected });
 }

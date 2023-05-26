@@ -1,1 +1,1 @@
-import "http://example.com/foo.js"
+import "http://example.com/foo.js";

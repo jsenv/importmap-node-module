@@ -1,16 +1,16 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const fooPackageJsonFileUrl = resolveUrl(
   "./node_modules/foo/package.json",
   testDirectoryUrl,
-)
+);
 
 const test = async () => {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -20,15 +20,15 @@ const test = async () => {
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
     exportsFieldWarningConfig: { dependencies: true },
-  })
-  return { warnings, importmaps }
-}
+  });
+  return { warnings, importmaps };
+};
 
-const actual = await test()
+const actual = await test();
 const expected = {
   warnings: [
     {
@@ -61,5 +61,5 @@ As explained in https://github.com/jsenv/importmap-node-module#packagesmanualove
       scopes: {},
     },
   },
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });

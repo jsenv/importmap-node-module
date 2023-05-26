@@ -1,4 +1,4 @@
-const babelPluginSyntaxJSX = require("@babel/plugin-syntax-jsx")
+const babelPluginSyntaxJSX = require("@babel/plugin-syntax-jsx");
 
 module.exports = {
   plugins: [
@@ -16,4 +16,4 @@ module.exports = {
       },
     ],
   ],
-}
+};

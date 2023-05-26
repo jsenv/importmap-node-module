@@ -1,13 +1,13 @@
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
-import { assert } from "@jsenv/assert"
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
+import { assert } from "@jsenv/assert";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 
 // not found for browser runtime
 {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -16,14 +16,14 @@ const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
-  })
+  });
   const actual = {
     warnings,
     importmap: importmaps["test.importmap"],
-  }
+  };
   const expected = {
     warnings: [
       {
@@ -42,13 +42,13 @@ ${urlToFileSystemPath(new URL("./root/package.json", import.meta.url))}`,
       },
       scopes: {},
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 // found when runtime is node
 {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -58,14 +58,14 @@ ${urlToFileSystemPath(new URL("./root/package.json", import.meta.url))}`,
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
-  })
+  });
   const actual = {
     warnings,
     importmap: importmaps["test.importmap"],
-  }
+  };
   const expected = {
     warnings: [],
     importmap: {
@@ -77,6 +77,6 @@ ${urlToFileSystemPath(new URL("./root/package.json", import.meta.url))}`,
       },
       scopes: {},
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

@@ -8,11 +8,14 @@
 import {
   reportPerformanceImpact,
   readGitHubWorkflowEnv,
-} from "@jsenv/performance-impact"
+} from "@jsenv/performance-impact";
 
 await reportPerformanceImpact({
   ...readGitHubWorkflowEnv(),
   logLevel: "debug",
   installCommand: "npm install",
-  performanceReportPath: "./scripts/performance.mjs#performanceReport",
-})
+  performanceReportUrl: new URL(
+    "../../scripts/performance.mjs#performanceReport",
+    import.meta.url,
+  ),
+});

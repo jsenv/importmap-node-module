@@ -1,21 +1,21 @@
-import { assert } from "@jsenv/assert"
-import { removeEntry, writeSymbolicLink } from "@jsenv/filesystem"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { removeEntry, writeSymbolicLink } from "@jsenv/filesystem";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const projectDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const testDirectoryUrl = resolveUrl("./dir/", projectDirectoryUrl)
+const projectDirectoryUrl = resolveUrl("./root/", import.meta.url);
+const testDirectoryUrl = resolveUrl("./dir/", projectDirectoryUrl);
 
 await removeEntry(`${testDirectoryUrl}/node_modules/siesta`, {
   allowUseless: true,
-})
+});
 await writeSymbolicLink({
   from: `${testDirectoryUrl}/node_modules/siesta`,
   to: projectDirectoryUrl,
-})
+});
 
-const warnings = []
+const warnings = [];
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
@@ -27,14 +27,14 @@ const importmaps = await writeImportMapFiles({
     },
   },
   onWarn: (warning) => {
-    warnings.push(warning)
+    warnings.push(warning);
   },
   writeFiles: false,
-})
+});
 const actual = {
   warnings,
   importmaps,
-}
+};
 const expected = {
   warnings: [],
   importmaps: {
@@ -48,6 +48,6 @@ const expected = {
       scopes: {},
     },
   },
-}
-assert({ actual, expected })
-await removeEntry(`${testDirectoryUrl}/node_modules/siesta`)
+};
+assert({ actual, expected });
+await removeEntry(`${testDirectoryUrl}/node_modules/siesta`);

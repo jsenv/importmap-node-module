@@ -5,7 +5,7 @@ Generate [import map](https://github.com/WICG/import-maps) file with mappings co
 _Example of code relying on node module resolution:_
 
 ```js
-import lodash from "lodash"
+import lodash from "lodash";
 ```
 
 # Usage
@@ -19,7 +19,7 @@ npm install --save-dev @jsenv/importmap-node-module
 2 - Create _generate_importmap.mjs_
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -28,7 +28,7 @@ await writeImportMapFiles({
       mappingsForNodeResolution: true,
     },
   },
-})
+});
 ```
 
 3 - Generate _project.importmap_
@@ -69,7 +69,7 @@ You can read the rest of this document to go further.
 _writeImportMapFiles_ is an async function generating one or many importmap files.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -82,7 +82,7 @@ await writeImportMapFiles({
       mappingsForNodeResolution: true,
     },
   },
-})
+});
 ```
 
 ## projectDirectoryUrl
@@ -118,7 +118,7 @@ _runtime_ is a string used to determine what to pick in [package.json conditions
 _runtime_ is optional and defaults to `"browser"`.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -132,7 +132,7 @@ await writeImportMapFiles({
       runtime: "node",
     },
   },
-})
+});
 ```
 
 ### packageUserConditions
@@ -142,7 +142,7 @@ _packageUserConditions_ is an array controlling which conditions are favored in 
 _packageUserConditions_ is optional.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -156,7 +156,7 @@ await writeImportMapFiles({
       packageUserConditions: ["production"],
     },
   },
-})
+});
 ```
 
 ### manualImportMap
@@ -166,7 +166,7 @@ _manualImportMap_ is an object containing mappings that will be added to the imp
 _manualImportMap_ is optional.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -180,7 +180,7 @@ await writeImportMapFiles({
       },
     },
   },
-})
+});
 ```
 
 ### entryPointsToCheck
@@ -190,7 +190,7 @@ _entryPointsToCheck_ is an array composed of string representing file relative u
 _entryPointsToCheck_ is optional.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -200,7 +200,7 @@ await writeImportMapFiles({
       entryPointsToCheck: ["./main.js"],
     },
   },
-})
+});
 ```
 
 It is recommended to use _entryPointsToCheck_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
@@ -212,7 +212,7 @@ _magicExtensions_ is an array of strings. Each string represent an extension tha
 _magicExtensions_ is optional. It must be used with _entryPointsToCheck_.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -223,13 +223,13 @@ await writeImportMapFiles({
       magicExtensions: ["inherit", ".js"],
     },
   },
-})
+});
 ```
 
 `"inherit"` means the extension tried in taken from the importer.
 
 ```js
-import "./helper"
+import "./helper";
 ```
 
 | importer path        | path tried             |
@@ -246,7 +246,7 @@ _removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked ac
 _removeUnusedMappings_ is optional. It must be used with _entryPointsToCheck_.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -257,7 +257,7 @@ await writeImportMapFiles({
       removeUnusedMappings: true,
     },
   },
-})
+});
 ```
 
 It is recommended to enable _removeUnusedMappings_ so that importmap contains only the mappings actually used by your codebase.
@@ -271,7 +271,7 @@ _packagesManualOverrides_ is optional.
 _packagesManualOverrides_ exists in case some of your dependencies use non standard fields to configure their entry points in their _package.json_. Ideally they should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./", import.meta.url),
@@ -290,7 +290,7 @@ await writeImportMapFiles({
       },
     },
   },
-})
+});
 ```
 
 # TypeScript
@@ -313,7 +313,7 @@ You can achieve this with the following "scripts" in your _package.json_.
 Then you can use the script below to produce the importmap.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({
   projectDirectoryUrl: new URL("./dist/", import.meta.url),
@@ -325,7 +325,7 @@ await writeImportMapFiles({
       removeUnusedMappings: true,
     },
   },
-})
+});
 ```
 
 # See also

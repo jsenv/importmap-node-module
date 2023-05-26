@@ -1,9 +1,9 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const test = async ({ runtime } = {}) => {
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -14,15 +14,15 @@ const test = async ({ runtime } = {}) => {
       },
     },
     writeFiles: false,
-  })
-  return importmaps["test.importmap"]
-}
+  });
+  return importmaps["test.importmap"];
+};
 
 {
   const importMap = await test({
     runtime: "node",
-  })
-  const actual = importMap
+  });
+  const actual = importMap;
   const expected = {
     imports: {
       "root/": "./",
@@ -30,15 +30,15 @@ const test = async ({ runtime } = {}) => {
       "foo": "./node_modules/foo/feature-node.mjs",
     },
     scopes: {},
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 {
   const importMap = await test({
     runtime: "browser",
-  })
-  const actual = importMap
+  });
+  const actual = importMap;
   const expected = {
     imports: {
       "root/": "./",
@@ -46,6 +46,6 @@ const test = async ({ runtime } = {}) => {
       "foo": "./node_modules/foo/feature.mjs",
     },
     scopes: {},
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

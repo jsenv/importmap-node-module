@@ -1,10 +1,10 @@
-import { resolveImport, normalizeImportMap } from "@jsenv/importmap"
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { resolveImport, normalizeImportMap } from "@jsenv/importmap";
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
@@ -13,9 +13,9 @@ const importmaps = await writeImportMapFiles({
     },
   },
   writeFiles: false,
-})
+});
 
-const actual = importmaps["test.importmap"]
+const actual = importmaps["test.importmap"];
 const expected = {
   imports: {
     "root/": "./",
@@ -34,19 +34,19 @@ const expected = {
       "bar": "./node_modules/foo/node_modules/bar/bar.js",
     },
   },
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });
 
-const importMapNormalized = normalizeImportMap(actual, "http://example.com")
+const importMapNormalized = normalizeImportMap(actual, "http://example.com");
 // import 'bar' inside project
 {
   const actual = resolveImport({
     specifier: `bar`,
     importer: `http://example.com/scoped.js`,
     importMap: importMapNormalized,
-  })
-  const expected = `http://example.com/node_modules/bar/bar.js`
-  assert({ actual, expected })
+  });
+  const expected = `http://example.com/node_modules/bar/bar.js`;
+  assert({ actual, expected });
 }
 
 // import 'bar' inside foo
@@ -55,9 +55,9 @@ const importMapNormalized = normalizeImportMap(actual, "http://example.com")
     specifier: `bar`,
     importer: `http://example.com/node_modules/foo/foo.js`,
     importMap: importMapNormalized,
-  })
-  const expected = `http://example.com/node_modules/foo/node_modules/bar/bar.js`
-  assert({ actual, expected })
+  });
+  const expected = `http://example.com/node_modules/foo/node_modules/bar/bar.js`;
+  assert({ actual, expected });
 }
 
 // import 'bar/file.js' inside 'bar'
@@ -66,7 +66,7 @@ const importMapNormalized = normalizeImportMap(actual, "http://example.com")
     specifier: `bar/file.js`,
     importer: `http://example.com/node_modules/foo/node_modules/bar/bar.js`,
     importMap: importMapNormalized,
-  })
-  const expected = `http://example.com/node_modules/foo/node_modules/bar/file.js`
-  assert({ actual, expected })
+  });
+  const expected = `http://example.com/node_modules/foo/node_modules/bar/file.js`;
+  assert({ actual, expected });
 }

@@ -1,4 +1,4 @@
-import { startServer, fetchFileSystem } from "@jsenv/server"
+import { startServer, fetchFileSystem } from "@jsenv/server";
 
 await startServer({
   port: 5697,
@@ -10,6 +10,6 @@ await startServer({
         canReadDirectory: true,
         rootDirectoryUrl: new URL("./", import.meta.url),
       },
-    )
+    );
   },
-})
+});

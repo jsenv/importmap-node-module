@@ -1,3 +1,3 @@
-import { exportBranch } from "./index.js"
+import { exportBranch } from "./index.js";
 
-console.log(exportBranch)
+console.log(exportBranch);

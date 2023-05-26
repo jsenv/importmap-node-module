@@ -1,11 +1,11 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const test = async ({ runtime }) => {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -16,16 +16,16 @@ const test = async ({ runtime }) => {
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
-  })
-  return { warnings, importmaps }
-}
+  });
+  return { warnings, importmaps };
+};
 
 // TODO: make it work on windows
 if (process.platform !== "win32") {
-  const actual = await test({ runtime: "browser" })
+  const actual = await test({ runtime: "browser" });
   const expected = {
     warnings: [],
     importmaps: {
@@ -34,14 +34,14 @@ if (process.platform !== "win32") {
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 // TODO: make it work on windows
 if (process.platform !== "win32") {
-  const importedFileUrl = `file:///foo.js`
-  const actual = await test({ runtime: "node" })
+  const importedFileUrl = `file:///foo.js`;
+  const actual = await test({ runtime: "node" });
   const expected = {
     warnings: [
       {
@@ -50,7 +50,7 @@ if (process.platform !== "win32") {
 --- import trace ---
 ${testDirectoryUrl}main.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
-> 2 | import "/foo.js"
+> 2 | import "/foo.js";
     |       ^
   3 |${" "}
 --- reason ---
@@ -63,6 +63,6 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

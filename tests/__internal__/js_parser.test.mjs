@@ -1,11 +1,11 @@
-import { writeFile, ensureEmptyDirectory, readFile } from "@jsenv/filesystem"
-import { resolveUrl } from "@jsenv/urls"
-import { assert } from "@jsenv/assert"
+import { writeFile, ensureEmptyDirectory, readFile } from "@jsenv/filesystem";
+import { resolveUrl } from "@jsenv/urls";
+import { assert } from "@jsenv/assert";
 
-import { parseSpecifiersFromJs } from "@jsenv/importmap-node-module/src/internal/from_source/js_parser.js"
+import { parseSpecifiersFromJs } from "@jsenv/importmap-node-module/src/internal/from_files/js_parser.js";
 
-const testDirectoryUrl = resolveUrl("./fixtures/", import.meta.url)
-const fileUrl = resolveUrl("test.js", testDirectoryUrl)
+const testDirectoryUrl = resolveUrl("./fixtures/", import.meta.url);
+const fileUrl = resolveUrl("test.js", testDirectoryUrl);
 
 // static top level import
 {
@@ -14,12 +14,12 @@ const fileUrl = resolveUrl("test.js", testDirectoryUrl)
     `import "./foo"
 import "./bar.js"
 `,
-  )
+  );
   const specifiers = await parseSpecifiersFromJs({
     code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
-  })
-  const actual = specifiers
+  });
+  const actual = specifiers;
   const expected = {
     "./foo": {
       line: 1,
@@ -31,9 +31,9 @@ import "./bar.js"
       column: 7,
       type: "import-static",
     },
-  }
-  assert({ actual, expected })
-  await ensureEmptyDirectory(testDirectoryUrl)
+  };
+  assert({ actual, expected });
+  await ensureEmptyDirectory(testDirectoryUrl);
 }
 
 // dynamic top level import
@@ -43,57 +43,57 @@ import "./bar.js"
     `import("./foo")
 import(id)
 `,
-  )
+  );
   const specifiers = await parseSpecifiersFromJs({
     code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
-  })
-  const actual = specifiers
+  });
+  const actual = specifiers;
   const expected = {
     "./foo": {
       line: 1,
       column: 7,
       type: "import-dynamic",
     },
-  }
-  assert({ actual, expected })
-  await ensureEmptyDirectory(testDirectoryUrl)
+  };
+  assert({ actual, expected });
+  await ensureEmptyDirectory(testDirectoryUrl);
 }
 
 // export from named
 {
-  await writeFile(fileUrl, `export {toto} from "./foo"`)
+  await writeFile(fileUrl, `export {toto} from "./foo"`);
   const specifiers = await parseSpecifiersFromJs({
     code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
-  })
-  const actual = specifiers
+  });
+  const actual = specifiers;
   const expected = {
     "./foo": {
       line: 1,
       column: 19,
       type: "export-named",
     },
-  }
-  assert({ actual, expected })
-  await ensureEmptyDirectory(testDirectoryUrl)
+  };
+  assert({ actual, expected });
+  await ensureEmptyDirectory(testDirectoryUrl);
 }
 
 // export from all
 {
-  await writeFile(fileUrl, `export * from "./foo"`)
+  await writeFile(fileUrl, `export * from "./foo"`);
   const specifiers = await parseSpecifiersFromJs({
     code: await readFile(fileUrl, { as: "string" }),
     url: fileUrl,
-  })
-  const actual = specifiers
+  });
+  const actual = specifiers;
   const expected = {
     "./foo": {
       line: 1,
       column: 14,
       type: "export-all",
     },
-  }
-  assert({ actual, expected })
-  await ensureEmptyDirectory(testDirectoryUrl)
+  };
+  assert({ actual, expected });
+  await ensureEmptyDirectory(testDirectoryUrl);
 }
