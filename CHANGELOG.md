@@ -2,3 +2,4 @@
 
 - add `babelConfigFileUrl` param to `writeImportMapFiles`
 - Enable many parser plugins by default such as import assertions
+- Update dependencies
