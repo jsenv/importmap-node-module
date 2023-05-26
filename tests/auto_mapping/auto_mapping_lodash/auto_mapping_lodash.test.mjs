@@ -47,7 +47,7 @@ const test = async ({ magicExtensions, packagesManualOverrides } = {}) => {
 --- import trace ---
 ${testDirectoryUrl}main.js:2:22
   1 | // eslint-disable-next-line import/no-unresolved
-> 2 | import { union } from "lodash/union"
+> 2 | import { union } from "lodash/union";
     |                      ^
   3 | 
 --- reason ---

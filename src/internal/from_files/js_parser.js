@@ -11,6 +11,31 @@ export const parseSpecifiersFromJs = async ({
   url,
   babelOptions = {},
 }) => {
+  const { parserOpts = {} } = babelOptions;
+  const parserPlugins = parserOpts.plugins || [];
+
+  if (!parserPlugins.includes("dynamicImport")) {
+    parserPlugins.push("dynamicImport");
+  }
+  if (!parserPlugins.includes("importAssertions")) {
+    parserPlugins.push("importAssertions");
+  }
+  if (!parserPlugins.includes("classProperties")) {
+    parserPlugins.push("classProperties");
+  }
+  if (!parserPlugins.includes("classPrivateProperties")) {
+    parserPlugins.push("classPrivateProperties");
+  }
+  if (!parserPlugins.includes("classPrivateMethods")) {
+    parserPlugins.push("classPrivateMethods");
+  }
+  if (!parserPlugins.includes("jsx")) {
+    parserPlugins.push("jsx");
+  }
+  const { pathname } = new URL(url);
+  if (pathname.endsWith(".ts") || pathname.endsWith(".tsx")) {
+    parserPlugins.push("typescript");
+  }
   const ast = await parseAsync(code, {
     ...babelOptions,
     sourceType: "module",
@@ -18,7 +43,9 @@ export const parseSpecifiersFromJs = async ({
     plugins: babelOptions.plugins,
     // ranges: true,
     parserOpts: {
+      ...parserOpts,
       ranges: true,
+      plugins: parserPlugins,
     },
   });
 

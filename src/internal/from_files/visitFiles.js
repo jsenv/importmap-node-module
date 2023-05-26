@@ -521,15 +521,22 @@ const moveUrl = ({ url, from, to }) => {
 };
 
 const extensionIsMappedInPackageExports = async (packageFileUrl) => {
-  const closestPackageObject = await readFile(packageFileUrl, {
-    as: "json",
-  });
-  // it's imprecise because we are not ensuring the wildcard correspond
-  // to the required mapping, but good enough for now
-  const containsWildcard = Object.keys(closestPackageObject.exports || {}).some(
-    (key) => key.includes("*"),
-  );
-  return containsWildcard;
+  try {
+    const closestPackageObject = await readFile(packageFileUrl, {
+      as: "json",
+    });
+    // it's imprecise because we are not ensuring the wildcard correspond
+    // to the required mapping, but good enough for now
+    const containsWildcard = Object.keys(
+      closestPackageObject.exports || {},
+    ).some((key) => key.includes("*"));
+    return containsWildcard;
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      return false;
+    }
+    throw e;
+  }
 };
 
 const packageDirectoryUrlFromUrl = (url, projectDirectoryUrl) => {

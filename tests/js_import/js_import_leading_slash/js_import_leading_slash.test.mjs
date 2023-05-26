@@ -50,7 +50,7 @@ if (process.platform !== "win32") {
 --- import trace ---
 ${testDirectoryUrl}main.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
-> 2 | import "/foo.js"
+> 2 | import "/foo.js";
     |       ^
   3 |${" "}
 --- reason ---

@@ -79,7 +79,7 @@ ${urlToFileSystemPath(fooModuleJsFileUrl)}
 --- import trace ---
 ${rootMainJsFileUrl}:2:7
   1 | // eslint-disable-next-line import/no-unresolved
-> 2 | import "foo"
+> 2 | import "foo";
     |       ^
   3 |${" "}
 --- reason ---

@@ -34,7 +34,7 @@ const test = async (params) => {
 --- import trace ---
 ${testDirectoryUrl}index.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
-> 2 | import "file"
+> 2 | import "file";
     |       ^
   3 |${" "}
 --- reason ---
