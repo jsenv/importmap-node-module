@@ -1,21 +1,21 @@
-import { ensureWindowsDriveLetter } from "@jsenv/filesystem"
-import { urlToRelativeUrl, resolveUrl, urlToParentUrl } from "@jsenv/urls"
+import { ensureWindowsDriveLetter } from "@jsenv/filesystem";
+import { urlToRelativeUrl, resolveUrl, urlToParentUrl } from "@jsenv/urls";
 
-import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js"
-import { findAsync } from "../find_async.js"
+import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js";
+import { findAsync } from "../find_async.js";
 import {
   readPackageFile,
   PACKAGE_NOT_FOUND,
   PACKAGE_WITH_SYNTAX_ERROR,
-} from "./readPackageFile.js"
-import { applyPackageManualOverride } from "./applyPackageManualOverride.js"
+} from "./readPackageFile.js";
+import { applyPackageManualOverride } from "./applyPackageManualOverride.js";
 
 export const createFindNodeModulePackage = () => {
   const readPackageFileMemoized = memoizeAsyncFunctionByUrl(
     (packageFileUrl) => {
-      return readPackageFile(packageFileUrl)
+      return readPackageFile(packageFileUrl);
     },
-  )
+  );
   return ({
     projectDirectoryUrl,
     nodeModulesOutsideProjectAllowed,
@@ -33,14 +33,14 @@ export const createFindNodeModulePackage = () => {
             projectDirectoryUrl,
           })
         : []),
-    ]
+    ];
     return findAsync({
       array: nodeModuleCandidates,
       start: async (nodeModuleCandidate) => {
-        const packageFileUrlCandidate = `${nodeModuleCandidate}${dependencyName}/package.json`
+        const packageFileUrlCandidate = `${nodeModuleCandidate}${dependencyName}/package.json`;
         const packageObjectCandidate = await readPackageFileMemoized(
           packageFileUrlCandidate,
-        )
+        );
         return {
           packageFileUrl: packageFileUrlCandidate,
           packageJsonObject: applyPackageManualOverride(
@@ -48,58 +48,58 @@ export const createFindNodeModulePackage = () => {
             packagesManualOverrides,
           ),
           syntaxError: packageObjectCandidate === PACKAGE_WITH_SYNTAX_ERROR,
-        }
+        };
       },
       predicate: ({ packageJsonObject }) => {
-        return packageJsonObject !== PACKAGE_NOT_FOUND
+        return packageJsonObject !== PACKAGE_NOT_FOUND;
       },
-    })
-  }
-}
+    });
+  };
+};
 
 const getNodeModuleCandidatesInsideProject = ({
   projectDirectoryUrl,
   packageFileUrl,
 }) => {
-  const packageDirectoryUrl = resolveUrl("./", packageFileUrl)
+  const packageDirectoryUrl = resolveUrl("./", packageFileUrl);
   if (packageDirectoryUrl === projectDirectoryUrl) {
-    return [`${projectDirectoryUrl}node_modules/`]
+    return [`${projectDirectoryUrl}node_modules/`];
   }
   const packageDirectoryRelativeUrl = urlToRelativeUrl(
     packageDirectoryUrl,
     projectDirectoryUrl,
-  )
-  const candidates = []
+  );
+  const candidates = [];
   const relativeNodeModuleDirectoryArray =
-    packageDirectoryRelativeUrl.split("node_modules/")
+    packageDirectoryRelativeUrl.split("node_modules/");
   // remove the first empty string
-  relativeNodeModuleDirectoryArray.shift()
-  let i = relativeNodeModuleDirectoryArray.length
+  relativeNodeModuleDirectoryArray.shift();
+  let i = relativeNodeModuleDirectoryArray.length;
   while (i--) {
     candidates.push(
       `${projectDirectoryUrl}node_modules/${relativeNodeModuleDirectoryArray
         .slice(0, i + 1)
         .join("node_modules/")}node_modules/`,
-    )
+    );
   }
-  return [...candidates, `${projectDirectoryUrl}node_modules/`]
-}
+  return [...candidates, `${projectDirectoryUrl}node_modules/`];
+};
 
 const getNodeModuleCandidatesOutsideProject = ({ projectDirectoryUrl }) => {
-  const candidates = []
-  const parentDirectoryUrl = urlToParentUrl(projectDirectoryUrl)
-  const { pathname } = new URL(parentDirectoryUrl)
-  const directories = pathname.slice(1, -1).split("/")
-  let i = directories.length
+  const candidates = [];
+  const parentDirectoryUrl = urlToParentUrl(projectDirectoryUrl);
+  const { pathname } = new URL(parentDirectoryUrl);
+  const directories = pathname.slice(1, -1).split("/");
+  let i = directories.length;
   while (i--) {
     const nodeModulesDirectoryUrl = ensureWindowsDriveLetter(
       `file:///${directories.slice(0, i + 1).join("/")}/node_modules/`,
       projectDirectoryUrl,
-    )
-    candidates.push(nodeModulesDirectoryUrl)
+    );
+    candidates.push(nodeModulesDirectoryUrl);
   }
   return [
     ...candidates,
     ensureWindowsDriveLetter(`file:///node_modules`, projectDirectoryUrl),
-  ]
-}
+  ];
+};

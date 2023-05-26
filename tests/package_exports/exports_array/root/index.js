@@ -1,2 +1,2 @@
 // eslint-disable-next-line import/no-unresolved
-export { exportBranch } from "foo"
+export { exportBranch } from "foo";

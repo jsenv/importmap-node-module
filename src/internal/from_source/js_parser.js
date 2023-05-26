@@ -1,10 +1,10 @@
-import { createRequire } from "node:module"
-import { parseAsync } from "@babel/core"
-import { urlToFileSystemPath } from "@jsenv/urls"
+import { createRequire } from "node:module";
+import { parseAsync } from "@babel/core";
+import { urlToFileSystemPath } from "@jsenv/urls";
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 
-const traverse = require("@babel/traverse")
+const traverse = require("@babel/traverse");
 
 export const parseSpecifiersFromJs = async ({
   code,
@@ -20,18 +20,18 @@ export const parseSpecifiersFromJs = async ({
     parserOpts: {
       ranges: true,
     },
-  })
+  });
 
-  const specifiers = {}
+  const specifiers = {};
 
   const addSpecifier = ({ path, type }) => {
-    const specifier = path.node.value
+    const specifier = path.node.value;
     specifiers[specifier] = {
       line: path.node.loc.start.line,
       column: path.node.loc.start.column,
       type,
-    }
-  }
+    };
+  };
 
   traverse.default(ast, {
     // "ImportExpression is replaced with a CallExpression whose callee is an Import node."
@@ -48,24 +48,24 @@ export const parseSpecifiersFromJs = async ({
     CallExpression: (path) => {
       if (path.node.callee.type !== "Import") {
         // Some other function call, not import();
-        return
+        return;
       }
       if (path.node.arguments[0].type !== "StringLiteral") {
         // Non-string argument, probably a variable or expression, e.g.
         // import(moduleId)
         // import('./' + moduleName)
-        return
+        return;
       }
       addSpecifier({
         path: path.get("arguments")[0],
         type: "import-dynamic",
-      })
+      });
     },
     ExportAllDeclaration: (path) => {
       addSpecifier({
         path: path.get("source"),
         type: "export-all",
-      })
+      });
     },
     ExportNamedDeclaration: (path) => {
       if (!path.node.source) {
@@ -74,20 +74,20 @@ export const parseSpecifiersFromJs = async ({
         // export { varName }
         // export const constName = ...
         // export function funcName() {}
-        return
+        return;
       }
       addSpecifier({
         path: path.get("source"),
         type: "export-named",
-      })
+      });
     },
     ImportDeclaration: (path) => {
       addSpecifier({
         path: path.get("source"),
         type: "import-static",
-      })
+      });
     },
-  })
+  });
 
-  return specifiers
-}
+  return specifiers;
+};

@@ -1,9 +1,9 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
@@ -14,13 +14,13 @@ const importmaps = await writeImportMapFiles({
     },
   },
   writeFiles: false,
-})
+});
 
-const actual = importmaps["test.importmap"]
+const actual = importmaps["test.importmap"];
 const expected = {
   imports: {
     foo: "./node_modules/foo/main.import.js",
   },
   scopes: {},
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });

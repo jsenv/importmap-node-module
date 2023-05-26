@@ -5,7 +5,7 @@
  * See https://github.com/jsenv/jsenv-package-publish
  */
 
-import { publishPackage } from "@jsenv/package-publish"
+import { publishPackage } from "@jsenv/package-publish";
 
 await publishPackage({
   rootDirectoryUrl: new URL("../../", import.meta.url),
@@ -14,4 +14,4 @@ await publishPackage({
       token: process.env.NPM_TOKEN,
     },
   },
-})
+});

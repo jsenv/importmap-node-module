@@ -1,13 +1,13 @@
-import { assert } from "@jsenv/assert"
-import { writeFile, removeEntry } from "@jsenv/filesystem"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { writeFile, removeEntry } from "@jsenv/filesystem";
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const mainJsFileUrl = resolveUrl("./main.js", testDirectoryUrl)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
+const mainJsFileUrl = resolveUrl("./main.js", testDirectoryUrl);
 const test = async (params) => {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -16,19 +16,19 @@ const test = async (params) => {
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
-  })
-  return { warnings, importmaps }
-}
-await removeEntry(mainJsFileUrl, { allowUseless: true })
+  });
+  return { warnings, importmaps };
+};
+await removeEntry(mainJsFileUrl, { allowUseless: true });
 
 {
-  const importedFileUrl = `${testDirectoryUrl}main.js`
+  const importedFileUrl = `${testDirectoryUrl}main.js`;
   const actual = await test({
     entryPointsToCheck: ["./main.js"],
-  })
+  });
   const expected = {
     warnings: [
       {
@@ -46,16 +46,16 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
-await writeFile(mainJsFileUrl)
+await writeFile(mainJsFileUrl);
 
 {
   const actual = await test({
     entryPointsToCheck: ["./main.js"],
-  })
+  });
   const expected = {
     warnings: [],
     importmaps: {
@@ -64,6 +64,6 @@ await writeFile(mainJsFileUrl)
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

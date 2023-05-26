@@ -1,19 +1,19 @@
 export const optimizeImportMap = ({ imports, scopes }) => {
   // remove useless duplicates (scoped key+value already defined on imports)
-  const scopesOptimized = {}
+  const scopesOptimized = {};
   Object.keys(scopes).forEach((scope) => {
-    const scopeMappings = scopes[scope]
-    const scopeMappingsOptimized = {}
+    const scopeMappings = scopes[scope];
+    const scopeMappingsOptimized = {};
     Object.keys(scopeMappings).forEach((mappingKey) => {
-      const topLevelMappingValue = imports[mappingKey]
-      const mappingValue = scopeMappings[mappingKey]
+      const topLevelMappingValue = imports[mappingKey];
+      const mappingValue = scopeMappings[mappingKey];
       if (!topLevelMappingValue || topLevelMappingValue !== mappingValue) {
-        scopeMappingsOptimized[mappingKey] = mappingValue
+        scopeMappingsOptimized[mappingKey] = mappingValue;
       }
-    })
+    });
     if (Object.keys(scopeMappingsOptimized).length > 0) {
-      scopesOptimized[scope] = scopeMappingsOptimized
+      scopesOptimized[scope] = scopeMappingsOptimized;
     }
-  })
-  return { imports, scopes: scopesOptimized }
-}
+  });
+  return { imports, scopes: scopesOptimized };
+};

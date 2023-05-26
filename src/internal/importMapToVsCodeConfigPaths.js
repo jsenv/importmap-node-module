@@ -1,32 +1,32 @@
 export const importMapToVsCodeConfigPaths = ({ imports = {} }) => {
-  const paths = {}
+  const paths = {};
 
   Object.keys(imports).forEach((importKey) => {
-    const importValue = imports[importKey]
+    const importValue = imports[importKey];
 
-    let key
+    let key;
     if (importKey.endsWith("/")) {
-      key = `${importKey}*`
+      key = `${importKey}*`;
     } else {
-      key = importKey
+      key = importKey;
     }
 
     const importValueArray =
-      typeof importValue === "string" ? [importValue] : importValue
+      typeof importValue === "string" ? [importValue] : importValue;
     const candidatesForPath = importValueArray.map((importValue) => {
       if (importValue.endsWith("/")) {
-        return `${importValue}*`
+        return `${importValue}*`;
       }
-      return importValue
-    })
+      return importValue;
+    });
 
-    const existingPaths = paths[key]
+    const existingPaths = paths[key];
     if (existingPaths) {
-      paths[key] = [...existingPaths, ...candidatesForPath]
+      paths[key] = [...existingPaths, ...candidatesForPath];
     } else {
-      paths[key] = candidatesForPath
+      paths[key] = candidatesForPath;
     }
-  })
+  });
 
-  return paths
-}
+  return paths;
+};

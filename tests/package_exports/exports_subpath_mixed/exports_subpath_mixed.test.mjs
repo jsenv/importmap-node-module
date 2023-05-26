@@ -1,14 +1,14 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const fooPackageFileUrl = resolveUrl(
   "./root/node_modules/foo/package.json",
   import.meta.url,
-)
-const warnings = []
+);
+const warnings = [];
 const importmaps = await writeImportMapFiles({
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
@@ -17,15 +17,15 @@ const importmaps = await writeImportMapFiles({
     },
   },
   onWarn: (warning) => {
-    warnings.push(warning)
+    warnings.push(warning);
   },
   writeFiles: false,
-})
+});
 
 const actual = {
   warnings,
   importmaps,
-}
+};
 const expected = {
   warnings: [
     {
@@ -51,5 +51,5 @@ ${urlToFileSystemPath(fooPackageFileUrl)}`,
       scopes: {},
     },
   },
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });

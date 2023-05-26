@@ -1,11 +1,11 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const test = async (options) => {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -17,15 +17,15 @@ const test = async (options) => {
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
-  })
+  });
   return {
     warnings,
     importmap: importmaps["test.importmap"],
-  }
-}
+  };
+};
 
 const actual = await test({
   manualImportMap: {
@@ -35,7 +35,7 @@ const actual = await test({
       },
     },
   },
-})
+});
 const expected = {
   warnings: [],
   importmap: {
@@ -48,5 +48,5 @@ const expected = {
       },
     },
   },
-}
-assert({ actual, expected })
+};
+assert({ actual, expected });

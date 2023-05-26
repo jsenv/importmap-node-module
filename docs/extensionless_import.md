@@ -5,7 +5,7 @@ If the code you wants to run contains one ore more extensionless path specifier,
 _extensionless import example_
 
 ```js
-import { foo } from "./file"
+import { foo } from "./file";
 ```
 
 In this situation, you can do one of the following:

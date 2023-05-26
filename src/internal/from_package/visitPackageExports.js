@@ -4,10 +4,10 @@ https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_
 
 */
 
-import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/urls"
-import { createDetailedMessage } from "@jsenv/logger"
+import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/urls";
+import { createDetailedMessage } from "@jsenv/logger";
 
-import { specifierIsRelative } from "./specifierIsRelative.js"
+import { specifierIsRelative } from "./specifierIsRelative.js";
 
 export const visitPackageExports = ({
   projectDirectoryUrl,
@@ -17,12 +17,12 @@ export const visitPackageExports = ({
   packageName = packageInfo.name,
   packageConditions,
 }) => {
-  const exportsSubpaths = {}
-  const packageDirectoryUrl = resolveUrl("./", packageInfo.url)
+  const exportsSubpaths = {};
+  const packageDirectoryUrl = resolveUrl("./", packageInfo.url);
   const packageDirectoryRelativeUrl = urlToRelativeUrl(
     packageDirectoryUrl,
     projectDirectoryUrl,
-  )
+  );
   const onExportsSubpath = ({ key, value, trace }) => {
     if (!specifierIsRelative(value)) {
       warn(
@@ -31,62 +31,62 @@ export const visitPackageExports = ({
           valueTrace: trace,
           packageInfo,
         }),
-      )
-      return
+      );
+      return;
     }
 
-    const keyNormalized = specifierToSource(key, packageName)
+    const keyNormalized = specifierToSource(key, packageName);
     const valueNormalized = addressToDestination(
       value,
       packageDirectoryRelativeUrl,
-    )
-    exportsSubpaths[keyNormalized] = valueNormalized
-  }
+    );
+    exportsSubpaths[keyNormalized] = valueNormalized;
+  };
 
   const visitSubpathValue = (subpathValue, subpathValueTrace) => {
     // false is allowed as alternative to exports: {}
     if (subpathValue === false) {
-      return handleFalse()
+      return handleFalse();
     }
 
     if (typeof subpathValue === "string") {
-      return handleString(subpathValue, subpathValueTrace)
+      return handleString(subpathValue, subpathValueTrace);
     }
 
     if (subpathValue === null) {
-      return handleNull(subpathValue, subpathValueTrace)
+      return handleNull(subpathValue, subpathValueTrace);
     }
 
     if (typeof subpathValue === "object") {
-      return handleObject(subpathValue, subpathValueTrace)
+      return handleObject(subpathValue, subpathValueTrace);
     }
 
-    return handleRemaining(subpathValue, subpathValueTrace)
-  }
+    return handleRemaining(subpathValue, subpathValueTrace);
+  };
 
   const handleFalse = () => {
     // nothing to do
-    return true
-  }
+    return true;
+  };
 
   const handleString = (subpathValue, subpathValueTrace) => {
     const firstRelativeKey = subpathValueTrace
       .slice()
       .reverse()
-      .find((key) => key.startsWith("."))
-    const key = firstRelativeKey || "."
+      .find((key) => key.startsWith("."));
+    const key = firstRelativeKey || ".";
     onExportsSubpath({
       key,
       value: subpathValue,
       trace: subpathValueTrace,
-    })
-    return true
-  }
+    });
+    return true;
+  };
 
   const handleNull = () => {
     // see "null can be used" in https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_subpath_patterns
-    return false
-  }
+    return false;
+  };
 
   const handleObject = (subpathValue, subpathValueTrace) => {
     // From Node.js documentation:
@@ -99,15 +99,15 @@ export const visitPackageExports = ({
     // it should be ignored and an other branch be taken until
     // something resolves
     const followConditionBranch = (subpathValue, conditionTrace) => {
-      const relativeKeys = []
-      const conditionalKeys = []
+      const relativeKeys = [];
+      const conditionalKeys = [];
       Object.keys(subpathValue).forEach((availableKey) => {
         if (availableKey.startsWith(".")) {
-          relativeKeys.push(availableKey)
+          relativeKeys.push(availableKey);
         } else {
-          conditionalKeys.push(availableKey)
+          conditionalKeys.push(availableKey);
         }
-      })
+      });
 
       if (relativeKeys.length > 0 && conditionalKeys.length > 0) {
         warn(
@@ -118,42 +118,42 @@ export const visitPackageExports = ({
             relativeKeys,
             conditionalKeys,
           }),
-        )
-        return false
+        );
+        return false;
       }
 
       // there is no condition, visit all relative keys
       if (conditionalKeys.length === 0) {
-        let leadsToSomething = false
+        let leadsToSomething = false;
         relativeKeys.forEach((key) => {
           leadsToSomething = visitSubpathValue(subpathValue[key], [
             ...subpathValueTrace,
             ...conditionTrace,
             key,
-          ])
-        })
-        return leadsToSomething
+          ]);
+        });
+        return leadsToSomething;
       }
 
       // there is a condition, keep the first one leading to something
       return conditionalKeys.some((keyCandidate) => {
         if (!packageConditions.includes(keyCandidate)) {
-          return false
+          return false;
         }
-        const valueCandidate = subpathValue[keyCandidate]
+        const valueCandidate = subpathValue[keyCandidate];
         return visitSubpathValue(valueCandidate, [
           ...subpathValueTrace,
           ...conditionTrace,
           keyCandidate,
-        ])
-      })
-    }
+        ]);
+      });
+    };
 
     if (Array.isArray(subpathValue)) {
-      subpathValue = exportsObjectFromExportsArray(subpathValue)
+      subpathValue = exportsObjectFromExportsArray(subpathValue);
     }
-    return followConditionBranch(subpathValue, [])
-  }
+    return followConditionBranch(subpathValue, []);
+  };
 
   const handleRemaining = (subpathValue, subpathValueTrace) => {
     warn(
@@ -162,58 +162,58 @@ export const visitPackageExports = ({
         subpathValueTrace,
         packageInfo,
       }),
-    )
-    return false
-  }
+    );
+    return false;
+  };
 
-  visitSubpathValue(packageExports, ["exports"])
+  visitSubpathValue(packageExports, ["exports"]);
 
-  return exportsSubpaths
-}
+  return exportsSubpaths;
+};
 
 const exportsObjectFromExportsArray = (exportsArray) => {
-  const exportsObject = {}
+  const exportsObject = {};
 
   exportsArray.forEach((exportValue) => {
     if (typeof exportValue === "object") {
-      Object.assign(exportsObject, exportValue)
-      return
+      Object.assign(exportsObject, exportValue);
+      return;
     }
     if (typeof exportValue === "string") {
-      exportsObject.default = exportValue
+      exportsObject.default = exportValue;
     }
-  })
+  });
 
-  return exportsObject
-}
+  return exportsObject;
+};
 
 const specifierToSource = (specifier, packageName) => {
   if (specifier === ".") {
-    return packageName
+    return packageName;
   }
 
   if (specifier[0] === "/") {
-    return specifier
+    return specifier;
   }
 
   if (specifier.startsWith("./")) {
-    return `${packageName}${specifier.slice(1)}`
+    return `${packageName}${specifier.slice(1)}`;
   }
 
-  return `${packageName}/${specifier}`
-}
+  return `${packageName}/${specifier}`;
+};
 
 const addressToDestination = (address, packageDirectoryRelativeUrl) => {
   if (address[0] === "/") {
-    return address
+    return address;
   }
 
   if (address.startsWith("./")) {
-    return `./${packageDirectoryRelativeUrl}${address.slice(2)}`
+    return `./${packageDirectoryRelativeUrl}${address.slice(2)}`;
   }
 
-  return `./${packageDirectoryRelativeUrl}${address}`
-}
+  return `./${packageDirectoryRelativeUrl}${address}`;
+};
 
 const createSubpathIsUnexpectedWarning = ({
   subpathValue,
@@ -229,8 +229,8 @@ const createSubpathIsUnexpectedWarning = ({
         "package.json path": urlToFileSystemPath(packageInfo.url),
       },
     ),
-  }
-}
+  };
+};
 
 const createSubpathKeysAreMixedWarning = ({
   subpathValue,
@@ -248,8 +248,8 @@ const createSubpathKeysAreMixedWarning = ({
         "package.json path": urlToFileSystemPath(packageInfo.url),
       },
     ),
-  }
-}
+  };
+};
 
 const createSubpathValueMustBeRelativeWarning = ({
   value,
@@ -265,5 +265,5 @@ const createSubpathValueMustBeRelativeWarning = ({
         "package.json path": urlToFileSystemPath(packageInfo.url),
       },
     ),
-  }
-}
+  };
+};

@@ -1,4 +1,4 @@
-import { executeTestPlan, nodeWorkerThread } from "@jsenv/test"
+import { executeTestPlan, nodeWorkerThread } from "@jsenv/test";
 
 await executeTestPlan({
   rootDirectoryUrl: new URL("../", import.meta.url),
@@ -9,4 +9,5 @@ await executeTestPlan({
       },
     },
   },
-})
+  logShortForCompletedExecutions: true,
+});

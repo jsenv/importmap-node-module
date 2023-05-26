@@ -1,6 +1,6 @@
-import { resolveUrl, moveImportMap } from "@jsenv/importmap"
-import { readFile } from "@jsenv/filesystem"
-import { urlToFileSystemPath } from "@jsenv/urls"
+import { resolveUrl, moveImportMap } from "@jsenv/importmap";
+import { readFile } from "@jsenv/filesystem";
+import { urlToFileSystemPath } from "@jsenv/urls";
 
 export const visitPackageImportMap = async ({
   warn,
@@ -9,14 +9,14 @@ export const visitPackageImportMap = async ({
   projectDirectoryUrl,
 }) => {
   if (typeof packageImportmap === "undefined") {
-    return {}
+    return {};
   }
 
   if (typeof packageImportmap === "string") {
-    const importmapFileUrl = resolveUrl(packageImportmap, packageInfo.url)
+    const importmapFileUrl = resolveUrl(packageImportmap, packageInfo.url);
     try {
-      const importmap = await readFile(importmapFileUrl, { as: "json" })
-      return moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl)
+      const importmap = await readFile(importmapFileUrl, { as: "json" });
+      return moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl);
     } catch (e) {
       if (e.code === "ENOENT") {
         warn(
@@ -24,15 +24,15 @@ export const visitPackageImportMap = async ({
             importmapFileUrl,
             packageInfo,
           }),
-        )
-        return {}
+        );
+        return {};
       }
-      throw e
+      throw e;
     }
   }
 
   if (typeof packageImportmap === "object" && packageImportmap !== null) {
-    return packageImportmap
+    return packageImportmap;
   }
 
   warn(
@@ -40,9 +40,9 @@ export const visitPackageImportMap = async ({
       packageImportmap,
       packageInfo,
     }),
-  )
-  return {}
-}
+  );
+  return {};
+};
 
 const createPackageImportMapNotFoundWarning = ({
   importmapFileUrl,
@@ -55,8 +55,8 @@ const createPackageImportMapNotFoundWarning = ({
 ${importmapFileUrl}
 --- package.json path ---
 ${urlToFileSystemPath(packageInfo.url)}`,
-  }
-}
+  };
+};
 
 const createPackageImportMapUnexpectedWarning = ({
   packageImportmap,
@@ -69,5 +69,5 @@ const createPackageImportMapUnexpectedWarning = ({
 ${packageImportmap}
 --- package.json path ---
 ${urlToFileSystemPath(packageInfo.url)}`,
-  }
-}
+  };
+};

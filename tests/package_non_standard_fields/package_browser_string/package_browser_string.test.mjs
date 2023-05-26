@@ -1,22 +1,22 @@
-import { assert } from "@jsenv/assert"
-import { removeEntry, writeFile } from "@jsenv/filesystem"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { removeEntry, writeFile } from "@jsenv/filesystem";
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
-const rootMainJsFileUrl = resolveUrl("./main.mjs", testDirectoryUrl)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
+const rootMainJsFileUrl = resolveUrl("./main.mjs", testDirectoryUrl);
 const fooPackageJsonFileUrl = resolveUrl(
   "./node_modules/foo/package.json",
   testDirectoryUrl,
-)
+);
 const fooBrowserJsFileUrl = resolveUrl(
   "./node_modules/foo/browser.js",
   testDirectoryUrl,
-)
+);
 
 const test = async ({ runtime } = {}) => {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -27,15 +27,15 @@ const test = async ({ runtime } = {}) => {
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
     exportsFieldWarningConfig: { dependencies: true },
-  })
-  return { warnings, importmaps }
-}
+  });
+  return { warnings, importmaps };
+};
 
-await removeEntry(fooBrowserJsFileUrl, { allowUseless: true })
+await removeEntry(fooBrowserJsFileUrl, { allowUseless: true });
 
 const preferExportFieldWarning = {
   code: "PREFER_EXPORTS_FIELD",
@@ -54,11 +54,11 @@ Add the following into "packageManualOverrides"
 As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides
 --- suggestion 2 ---
 Create a pull request in https://github.com/foo/bar to use "exports" instead of "browser"`,
-}
+};
 
 {
-  const importedFileUrl = `${testDirectoryUrl}node_modules/foo/browser.js`
-  const actual = await test()
+  const importedFileUrl = `${testDirectoryUrl}node_modules/foo/browser.js`;
+  const actual = await test();
   const expected = {
     warnings: [
       preferExportFieldWarning,
@@ -98,14 +98,14 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
-await writeFile(fooBrowserJsFileUrl)
+await writeFile(fooBrowserJsFileUrl);
 
 {
-  const actual = await test()
+  const actual = await test();
   const expected = {
     warnings: [preferExportFieldWarning],
     importmaps: {
@@ -119,14 +119,14 @@ await writeFile(fooBrowserJsFileUrl)
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 {
   const actual = await test({
     runtime: "node",
-  })
+  });
   const expected = {
     warnings: [],
     importmaps: {
@@ -140,6 +140,6 @@ await writeFile(fooBrowserJsFileUrl)
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

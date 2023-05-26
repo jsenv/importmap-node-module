@@ -1,12 +1,12 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 
 const test = async (params) => {
-  const warnings = []
+  const warnings = [];
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
@@ -18,16 +18,16 @@ const test = async (params) => {
       },
     },
     onWarn: (warning) => {
-      warnings.push(warning)
+      warnings.push(warning);
     },
     writeFiles: false,
-  })
-  return { warnings, importmaps }
-}
+  });
+  return { warnings, importmaps };
+};
 
 {
-  const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/file`
-  const actual = await test()
+  const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/file`;
+  const actual = await test();
   const expected = {
     warnings: [
       {
@@ -62,15 +62,15 @@ add mapping to "manualImportMap"
         scopes: {},
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 {
-  const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/other-file`
+  const importedFileUrl = `${testDirectoryUrl}node_modules/leftpad/other-file`;
   const actual = await test({
     magicExtensions: [".js"],
-  })
+  });
   const expected = {
     warnings: [
       {
@@ -96,14 +96,14 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
         },
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 {
   const actual = await test({
     magicExtensions: ["inherit", ".ts"],
-  })
+  });
   const expected = {
     warnings: [],
     importmaps: {
@@ -120,6 +120,6 @@ file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
         },
       },
     },
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

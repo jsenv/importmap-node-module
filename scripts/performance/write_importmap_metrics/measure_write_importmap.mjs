@@ -1,12 +1,12 @@
-import { startMeasures } from "@jsenv/performance-impact"
+import { startMeasures } from "@jsenv/performance-impact";
 
 const measures = startMeasures({
   gc: true,
   memoryHeap: true,
   filesystem: true,
-})
+});
 
-const { writeImportMapFiles } = await import("@jsenv/importmap-node-module")
+const { writeImportMapFiles } = await import("@jsenv/importmap-node-module");
 await writeImportMapFiles({
   logLevel: "warn",
   projectDirectoryUrl: new URL("./fake_project/", import.meta.url),
@@ -16,9 +16,9 @@ await writeImportMapFiles({
       mappingsForDevDependencies: true,
     },
   },
-})
+});
 
-const { duration, memoryHeapUsed, fsRead, fsWrite } = measures.stop()
+const { duration, memoryHeapUsed, fsRead, fsWrite } = measures.stop();
 
 export const writeImportMapMetrics = {
   "write importmap duration": {
@@ -35,4 +35,4 @@ export const writeImportMapMetrics = {
   "number of fs write operation": {
     value: fsWrite,
   },
-}
+};

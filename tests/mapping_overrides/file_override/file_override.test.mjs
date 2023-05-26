@@ -1,9 +1,9 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const test = async (options) => {
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -14,9 +14,9 @@ const test = async (options) => {
       },
     },
     writeFiles: false,
-  })
-  return importmaps["test.importmap"]
-}
+  });
+  return importmaps["test.importmap"];
+};
 
 // manualImportMap allows to override the mapping found in package.json
 {
@@ -26,7 +26,7 @@ const test = async (options) => {
         "./node_modules/foo/button.css": "./node_modules/foo/button.css.js",
       },
     },
-  })
+  });
   const expected = {
     imports: {
       "./node_modules/foo/button.css": "./node_modules/foo/button.css.js",
@@ -36,6 +36,6 @@ const test = async (options) => {
       "foo": "./node_modules/foo/index",
     },
     scopes: {},
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }

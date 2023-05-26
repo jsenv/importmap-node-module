@@ -1,9 +1,9 @@
-import { assert } from "@jsenv/assert"
-import { resolveUrl } from "@jsenv/urls"
+import { assert } from "@jsenv/assert";
+import { resolveUrl } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url)
+const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
 const test = async ({ runtime }) => {
   const importmaps = await writeImportMapFiles({
     projectDirectoryUrl: testDirectoryUrl,
@@ -14,14 +14,14 @@ const test = async ({ runtime }) => {
       },
     },
     writeFiles: false,
-  })
-  return importmaps["test.importmap"]
-}
+  });
+  return importmaps["test.importmap"];
+};
 
 {
   const actual = await test({
     runtime: "browser",
-  })
+  });
   const expected = {
     imports: {
       "foo/file.js": "./node_modules/foo/file.browser.js",
@@ -29,14 +29,14 @@ const test = async ({ runtime }) => {
       "root": "./index.js",
     },
     scopes: {},
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
 
 {
   const actual = await test({
     runtime: "other",
-  })
+  });
   const expected = {
     imports: {
       "foo/file.js": "./node_modules/foo/file.default.js",
@@ -44,6 +44,6 @@ const test = async ({ runtime }) => {
       "root": "./index.js",
     },
     scopes: {},
-  }
-  assert({ actual, expected })
+  };
+  assert({ actual, expected });
 }
