@@ -14,7 +14,7 @@ import {
 import { assertManualImportMap } from "./internal/manual_importmap.js";
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js";
 import { visitNodeModuleResolution } from "./internal/from_package/visitNodeModuleResolution.js";
-import { visitSourceFiles } from "./internal/from_source/visitSourceFiles.js";
+import { visitFiles } from "./internal/from_files/visitFiles.js";
 import { optimizeImportMap } from "./internal/optimizeImportMap.js";
 import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js";
 
@@ -169,7 +169,7 @@ export const writeImportMapFiles = async ({
       }
 
       if (entryPointsToCheck) {
-        const importMap = await visitSourceFiles({
+        const importMap = await visitFiles({
           logger,
           warn,
           projectDirectoryUrl,

@@ -30,7 +30,7 @@ import {
   createImportResolutionFailedWarning,
 } from "../logs.js";
 
-export const visitSourceFiles = async ({
+export const visitFiles = async ({
   logger,
   warn,
   projectDirectoryUrl,
