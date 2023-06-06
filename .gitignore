@@ -12,6 +12,8 @@
 # These files are fetched dynamically by npm and very big
 # -> do not track node module files
 /node_modules/
+/experiment/**/node_modules
+/experiment/**/package-lock.json
 
 /tests/**/*.importmap
 /tests/**/jsconfig.json

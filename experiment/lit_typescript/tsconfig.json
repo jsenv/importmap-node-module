@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "nodenext",
+    "module": "ESNext",
+    "lib": ["esnext.array", "esnext", "es2017", "dom"],
+    "experimentalDecorators": true,
+    "outDir": "dist"
+  },
+  "files": ["index.ts"]
+}
