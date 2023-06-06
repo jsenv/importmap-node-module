@@ -2,5 +2,6 @@
 /.jsenv/
 /coverage/
 /scripts/performance/**/fake_project/
+/experiment/**/dist/
 /tests/**/root/
 /node_modules/
