@@ -2,8 +2,6 @@ import { createDetailedMessage } from "@jsenv/logger";
 import { readFile } from "@jsenv/filesystem";
 import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/urls";
 
-import { createPackageNameMustBeAStringWarning } from "../logs.js";
-
 import { resolvePackageMain } from "./resolvePackageMain.js";
 import { visitPackageImportMap } from "./visitPackageImportMap.js";
 import { visitPackageImports } from "./visitPackageImports.js";
@@ -46,24 +44,6 @@ export const visitNodeModuleResolution = async ({
     packageImporterInfo,
     isDevDependency,
   }) => {
-    const packageName = packageInfo.object.name;
-    if (typeof packageName !== "string") {
-      warn(
-        createPackageNameMustBeAStringWarning({
-          packageName,
-          packageInfo,
-        }),
-      );
-      // if package is root, we don't go further
-      // otherwise package name is deduced from file structure
-      // si it's thoerically safe to keep going
-      // in practice it should never happen because npm won't let
-      // a package without name be published
-      if (!packageImporterInfo) {
-        return;
-      }
-    }
-
     packageVisitors = packageVisitors.filter((visitor) => {
       return (
         !visitor.packageIncludedPredicate ||
