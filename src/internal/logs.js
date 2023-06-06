@@ -82,19 +82,6 @@ const getRepositoryUrl = (packageInfo) => {
   return undefined;
 };
 
-export const createPackageNameMustBeAStringWarning = ({
-  packageName,
-  packageInfo,
-}) => {
-  return {
-    code: "PACKAGE_NAME_MUST_BE_A_STRING",
-    message: createDetailedMessage(`Package name field must be a string`, {
-      "package name field": packageName,
-      "package.json path": urlToFileSystemPath(packageInfo.url),
-    }),
-  };
-};
-
 export const createImportResolutionFailedWarning = ({
   specifier,
   importTrace,

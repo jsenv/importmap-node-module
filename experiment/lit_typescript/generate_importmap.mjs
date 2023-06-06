@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 await writeImportMapFiles({

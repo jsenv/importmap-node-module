@@ -1,3 +1,7 @@
+# 5.4.0
+
+- Allow root package without names
+
 # 5.3.0
 
 - add `babelConfigFileUrl` param to `writeImportMapFiles`
