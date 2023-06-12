@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { parseArgs } from "node:util";
+import { pathToFileURL } from "node:url";
 import { writeImportMapFiles } from "./main.js";
 
 const options = {
@@ -40,7 +41,7 @@ let indir = positionals.length === 2 ? positionals[0] : ".";
 let outfile = positionals.length === 2 ? positionals[1] : positionals[0];
 
 await writeImportMapFiles({
-  projectDirectoryUrl: new URL(indir, import.meta.url),
+  projectDirectoryUrl: new URL(indir, pathToFileURL(`${process.cwd()}/`)),
   importMapFiles: {
     [outfile]: {
       mappingsForNodeResolution: true,
