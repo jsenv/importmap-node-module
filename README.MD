@@ -232,6 +232,30 @@ await writeImportMapFiles({
 
 It is recommended to enable _removeUnusedMappings_ so that importmap contains only the mappings actually used by your codebase.
 
+#### manualImportMap
+
+_manualImportMap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
+
+_manualImportMap_ is optional.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      mappingsForNodeResolution: true,
+      manualImportMap: {
+        imports: {
+          "#env": "./env.js",
+        },
+      },
+    },
+  },
+});
+```
+
 ### packagesManualOverrides
 
 _packagesManualOverrides_ is an object that can be used to override some of your dependencies package.json.
@@ -257,30 +281,6 @@ await writeImportMapFiles({
     "react-redux": {
       exports: {
         import: "./es/index.js",
-      },
-    },
-  },
-});
-```
-
-#### manualImportMap
-
-_manualImportMap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
-
-_manualImportMap_ is optional.
-
-```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-      manualImportMap: {
-        imports: {
-          "#env": "./env.js",
-        },
       },
     },
   },
