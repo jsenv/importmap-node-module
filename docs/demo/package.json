@@ -1,4 +1,6 @@
 {
+  "name": "demo",
+  "private": true,
   "devDependencies": {
     "@jsenv/importmap-node-module": "../.."
   }

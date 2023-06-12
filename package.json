@@ -28,7 +28,7 @@
     "/cli.mjs"
   ],
   "workspaces": [
-    "./demo/"
+    "./docs/demo"
   ],
   "scripts": {
     "eslint": "npx eslint . --ext=.js,.mjs,.cjs,.html",
