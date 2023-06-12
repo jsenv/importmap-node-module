@@ -8,7 +8,9 @@ _Example of code relying on node module resolution:_
 import lodash from "lodash";
 ```
 
-# CLI
+# Usage
+
+## CLI
 
 The simplest way to use this project is with `npx`:
 
@@ -22,7 +24,7 @@ The CLI supports the following options:
 - `--entrypoint`: Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
 - `--remove-unused`: Remove mappings not used by any entrypoint or their transitive dependencies. Requires `--entrypoint`.
 
-# API
+## API
 
 The API supports a few more options than the CLI.
 
@@ -54,7 +56,7 @@ node ./generate_importmap.mjs
 -> /Users/d.maillard/importmap-node-module/docs/demo/project.importmap
 ```
 
-## API options
+# API options
 
 _writeImportMapFiles_ is an async function generating one or many importmap files.
 
