@@ -10,13 +10,12 @@ import {
   sortImportMap,
   moveImportMap,
 } from "@jsenv/importmap";
-
 import { assertManualImportMap } from "./internal/manual_importmap.js";
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js";
-import { visitNodeModuleResolution } from "./internal/from_package/visitNodeModuleResolution.js";
-import { visitFiles } from "./internal/from_files/visitFiles.js";
-import { optimizeImportMap } from "./internal/optimizeImportMap.js";
-import { importMapToVsCodeConfigPaths } from "./internal/importMapToVsCodeConfigPaths.js";
+import { visitNodeModuleResolution } from "./internal/from_package/visit_node_module_resolution.js";
+import { visitFiles } from "./internal/from_files/visit_file.js";
+import { optimizeImportmap } from "./internal/optimize_importmap.js";
+import { importmapToVsCodeConfigPaths } from "./internal/importmap_to_vscode_config_paths.js";
 
 export const writeImportMapFiles = async ({
   logLevel,
@@ -200,7 +199,7 @@ export const writeImportMapFiles = async ({
       compilerOptions: {},
     };
     const importMapUsedForVsCode = importMaps[firstUpdatingJsConfig];
-    const jsConfigPaths = importMapToVsCodeConfigPaths(importMapUsedForVsCode);
+    const jsConfigPaths = importmapToVsCodeConfigPaths(importMapUsedForVsCode);
     const jsConfig = {
       ...jsConfigDefault,
       ...jsConfigCurrent,
@@ -218,7 +217,7 @@ export const writeImportMapFiles = async ({
 
   Object.keys(importMaps).forEach((key) => {
     let importMap = importMaps[key];
-    importMap = optimizeImportMap(importMap);
+    importMap = optimizeImportmap(importMap);
     const importmapFileUrl = resolveUrl(key, projectDirectoryUrl);
     importMap = moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl);
     importMap = sortImportMap(importMap);

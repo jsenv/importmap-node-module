@@ -1,4 +1,4 @@
-export const importMapToVsCodeConfigPaths = ({ imports = {} }) => {
+export const importmapToVsCodeConfigPaths = ({ imports = {} }) => {
   const paths = {};
 
   Object.keys(imports).forEach((importKey) => {

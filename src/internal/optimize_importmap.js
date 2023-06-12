@@ -1,4 +1,4 @@
-export const optimizeImportMap = ({ imports, scopes }) => {
+export const optimizeImportmap = ({ imports, scopes }) => {
   // remove useless duplicates (scoped key+value already defined on imports)
   const scopesOptimized = {};
   Object.keys(scopes).forEach((scope) => {

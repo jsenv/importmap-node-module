@@ -1,5 +1,4 @@
 import { loadOptionsAsync } from "@babel/core";
-
 import { readFile } from "@jsenv/filesystem";
 import {
   resolveUrl,
@@ -14,16 +13,14 @@ import {
   composeTwoImportMaps,
 } from "@jsenv/importmap";
 import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js";
-
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
-} from "../memoizeAsyncFunction.js";
-
+} from "../memoize_async_function.js";
 import { parseSpecifiersFromJs } from "./js_parser.js";
 import { parseHTMLRessources } from "./html_parser.js";
-import { showSource } from "./showSource.js";
-import { resolveFile } from "../resolveFile.js";
+import { showSource } from "./show_source.js";
+import { resolveFile } from "../resolve_file.js";
 import {
   createBareSpecifierAutomappingMessage,
   createExtensionAutomappingMessage,

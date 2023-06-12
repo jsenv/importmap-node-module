@@ -1,1 +1,1 @@
-export { writeImportMapFiles } from "./writeImportMapFiles.js";
+export { writeImportMapFiles } from "./write_importmap_file.js";

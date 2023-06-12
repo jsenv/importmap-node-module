@@ -5,7 +5,7 @@ https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_node_js_package_
 */
 
 import { urlToFileSystemPath } from "@jsenv/urls";
-import { specifierIsRelative } from "./specifierIsRelative.js";
+import { specifierIsRelative } from "./specifier_is_relative.js";
 
 export const visitPackageImports = ({
   warn,
