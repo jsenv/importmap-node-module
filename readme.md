@@ -10,6 +10,25 @@ import lodash from "lodash";
 
 # Usage
 
+## CLI
+
+The simplest way to use this project is with `npx`:
+
+```console
+npx @jsenv/importmap-node-module project.importmap
+```
+
+The CLI supports the following options:
+
+- `--include-dev`: Include devDependencies from package.json.
+- `--entrypoint`: Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
+- `--remove-unused`: Remove mappings not used by any entrypoint or their transitive dependencies. Requires `--entrypoint`.
+
+
+## API
+
+The API supports a few more options than the CLI.
+
 1 - Install _@jsenv/importmap-node-module_
 
 ```console
@@ -37,35 +56,6 @@ await writeImportMapFiles({
 node ./generate_importmap.mjs
 ```
 
-4 - Add _project.importmap_ to your html
-
-```diff
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Title</title>
-    <meta charset="utf-8" />
-    <link rel="icon" href="data:," />
-+   <script type="importmap" src="./project.importmap"></script>
-  </head>
-
-  <body>
-    <script type="module">
-      import lodash from "lodash"
-    </script>
-  </body>
-</html>
-```
-
-If you use a bundler or an other tool, be sure it's compatible with import maps.
-As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration.
-If you don't know what to use, check [@jsenv/core](https://github.com/jsenv/jsenv-core#presentation).
-
-At this stage you have generated an importmap file with mappings corresponding to how node resolve imports.
-You can read the rest of this document to go further.
-
-# writeImportMapFiles
-
 _writeImportMapFiles_ is an async function generating one or many importmap files.
 
 ```js
@@ -85,19 +75,21 @@ await writeImportMapFiles({
 });
 ```
 
-## projectDirectoryUrl
+It supports the following options:
+
+### projectDirectoryUrl
 
 _projectDirectoryUrl_ is a string/url leading to a folder with a _package.json_.
 
 _projectDirectoryUrl_ is **required**.
 
-## importMapFiles
+### importMapFiles
 
 _importMapFiles_ is an object where keys are file relative urls and value are objects configuring which mappings will be written in the importmap files.
 
 _importMapFiles_ is **required**.
 
-### mappingsForNodeResolution
+#### mappingsForNodeResolution
 
 _mappingsForNodeResolution_ is a boolean. When enabled mappings required to implement node module resolution are generated.
 
@@ -105,13 +97,13 @@ _mappingsForNodeResolution_ is optional.
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
-### mappingsForDevDependencies
+#### mappingsForDevDependencies
 
 _mappingsForDevDependencies_ is a boolean. When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
 
 _mappingsForDevDependencies_ is optional.
 
-### runtime
+#### runtime
 
 _runtime_ is a string used to determine what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
 
@@ -135,7 +127,7 @@ await writeImportMapFiles({
 });
 ```
 
-### packageUserConditions
+#### packageUserConditions
 
 _packageUserConditions_ is an array controlling which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
@@ -159,7 +151,7 @@ await writeImportMapFiles({
 });
 ```
 
-### manualImportMap
+#### manualImportMap
 
 _manualImportMap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
 
@@ -183,7 +175,7 @@ await writeImportMapFiles({
 });
 ```
 
-### entryPointsToCheck
+#### entryPointsToCheck
 
 _entryPointsToCheck_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import. You can also pass HTML file(s).
 
@@ -205,7 +197,7 @@ await writeImportMapFiles({
 
 It is recommended to use _entryPointsToCheck_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
 
-### magicExtensions
+#### magicExtensions
 
 _magicExtensions_ is an array of strings. Each string represent an extension that will be tried when an import cannot be resolved to a file.
 
@@ -239,7 +231,7 @@ import "./helper";
 
 All other values in _magicExtensions_ are file extensions that will be tried one after an other.
 
-### removeUnusedMappings
+#### removeUnusedMappings
 
 _removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files.
 
@@ -262,7 +254,7 @@ await writeImportMapFiles({
 
 It is recommended to enable _removeUnusedMappings_ so that importmap contains only the mappings actually used by your codebase.
 
-## packagesManualOverrides
+### packagesManualOverrides
 
 _packagesManualOverrides_ is an object that can be used to override some of your dependencies package.json.
 
@@ -292,6 +284,34 @@ await writeImportMapFiles({
   },
 });
 ```
+
+
+# Using import maps
+
+Add _project.importmap_ to your html
+
+```diff
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8" />
+    <link rel="icon" href="data:," />
++   <script type="importmap" src="./project.importmap"></script>
+  </head>
+
+  <body>
+    <script type="module">
+      import lodash from "lodash"
+    </script>
+  </body>
+</html>
+```
+
+If you use a bundler or an other tool, be sure it's compatible with import maps.
+As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration.
+If you don't know what to use, check [@jsenv/core](https://github.com/jsenv/jsenv-core#presentation).
+
 
 # TypeScript
 

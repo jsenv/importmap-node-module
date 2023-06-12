@@ -7,6 +7,7 @@
     "type": "git",
     "url": "https://github.com/jsenv/importmap-node-module"
   },
+  "bin": "./cli.mjs",
   "engines": {
     "node": ">=16.13.0"
   },
