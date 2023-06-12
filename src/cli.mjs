@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { parseArgs } from "node:util";
-import { writeImportMapFiles } from "./index.js";
+import { writeImportMapFiles } from "./main.js";
 
 const options = {
   "help": {
