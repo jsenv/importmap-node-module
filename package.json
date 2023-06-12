@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/importmap-node-module",
-  "version": "5.4.0",
+  "version": "5.5.0",
   "description": "Generate importmap for node_modules",
   "license": "MIT",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "bin": "./cli.mjs",
   "engines": {
-    "node": ">=16.13.0"
+    "node": ">=16.17.0"
   },
   "publishConfig": {
     "access": "public"
@@ -24,7 +24,11 @@
   },
   "files": [
     "/src/",
-    "/index.js"
+    "/index.js",
+    "/cli.mjs"
+  ],
+  "workspaces": [
+    "./demo/"
   ],
   "scripts": {
     "eslint": "npx eslint . --ext=.js,.mjs,.cjs,.html",

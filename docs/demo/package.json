@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@jsenv/importmap-node-module": "../.."
+  }
+}

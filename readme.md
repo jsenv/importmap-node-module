@@ -24,18 +24,11 @@ The CLI supports the following options:
 - `--entrypoint`: Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
 - `--remove-unused`: Remove mappings not used by any entrypoint or their transitive dependencies. Requires `--entrypoint`.
 
-
 ## API
 
 The API supports a few more options than the CLI.
 
-1 - Install _@jsenv/importmap-node-module_
-
-```console
-npm install --save-dev @jsenv/importmap-node-module
-```
-
-2 - Create _generate_importmap.mjs_
+1 - Create _generate_importmap.mjs_
 
 ```js
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
@@ -50,11 +43,20 @@ await writeImportMapFiles({
 });
 ```
 
+2 - Install dependencies
+
+```console
+npm install --save-dev @jsenv/importmap-node-module
+```
+
 3 - Generate _project.importmap_
 
 ```console
 node ./generate_importmap.mjs
+-> /Users/d.maillard/importmap-node-module/docs/demo/project.importmap
 ```
+
+## API options
 
 _writeImportMapFiles_ is an async function generating one or many importmap files.
 
@@ -146,30 +148,6 @@ await writeImportMapFiles({
     "./prod.importmap": {
       mappingsForNodeResolution: true,
       packageUserConditions: ["production"],
-    },
-  },
-});
-```
-
-#### manualImportMap
-
-_manualImportMap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
-
-_manualImportMap_ is optional.
-
-```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-      manualImportMap: {
-        imports: {
-          "#env": "./env.js",
-        },
-      },
     },
   },
 });
@@ -285,6 +263,29 @@ await writeImportMapFiles({
 });
 ```
 
+#### manualImportMap
+
+_manualImportMap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
+
+_manualImportMap_ is optional.
+
+```js
+import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+
+await writeImportMapFiles({
+  projectDirectoryUrl: new URL("./", import.meta.url),
+  importMapFiles: {
+    "./test.importmap": {
+      mappingsForNodeResolution: true,
+      manualImportMap: {
+        imports: {
+          "#env": "./env.js",
+        },
+      },
+    },
+  },
+});
+```
 
 # Using import maps
 
@@ -310,8 +311,6 @@ Add _project.importmap_ to your html
 
 If you use a bundler or an other tool, be sure it's compatible with import maps.
 As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration.
-If you don't know what to use, check [@jsenv/core](https://github.com/jsenv/jsenv-core#presentation).
-
 
 # TypeScript
 
