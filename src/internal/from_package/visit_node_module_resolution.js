@@ -1,12 +1,11 @@
 import { createDetailedMessage } from "@jsenv/logger";
 import { readFile } from "@jsenv/filesystem";
 import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/urls";
-
-import { resolvePackageMain } from "./resolvePackageMain.js";
-import { visitPackageImportMap } from "./visitPackageImportMap.js";
-import { visitPackageImports } from "./visitPackageImports.js";
-import { visitPackageExports } from "./visitPackageExports.js";
-import { createFindNodeModulePackage } from "./node-module-resolution.js";
+import { resolvePackageMain } from "./resolve_package_main.js";
+import { visitPackageImportmap } from "./visit_package_importmap.js";
+import { visitPackageImports } from "./visit_package_imports.js";
+import { visitPackageExports } from "./visit_package_exports.js";
+import { createFindNodeModulePackage } from "./node_module_resolution.js";
 
 export const visitNodeModuleResolution = async ({
   logger,
@@ -283,7 +282,7 @@ export const visitNodeModuleResolution = async ({
       });
     };
 
-    const importsFromPackageField = await visitPackageImportMap({
+    const importsFromPackageField = await visitPackageImportmap({
       warn,
       packageInfo,
       projectDirectoryUrl,

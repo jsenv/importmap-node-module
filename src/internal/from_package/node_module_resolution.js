@@ -1,14 +1,13 @@
 import { ensureWindowsDriveLetter } from "@jsenv/filesystem";
 import { urlToRelativeUrl, resolveUrl, urlToParentUrl } from "@jsenv/urls";
-
-import { memoizeAsyncFunctionByUrl } from "../memoizeAsyncFunction.js";
+import { memoizeAsyncFunctionByUrl } from "../memoize_async_function.js";
 import { findAsync } from "../find_async.js";
 import {
   readPackageFile,
   PACKAGE_NOT_FOUND,
   PACKAGE_WITH_SYNTAX_ERROR,
-} from "./readPackageFile.js";
-import { applyPackageManualOverride } from "./applyPackageManualOverride.js";
+} from "./read_package_file.js";
+import { applyPackageManualOverride } from "./apply_package_manual_override.js";
 
 export const createFindNodeModulePackage = () => {
   const readPackageFileMemoized = memoizeAsyncFunctionByUrl(

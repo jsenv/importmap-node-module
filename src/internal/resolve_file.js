@@ -1,6 +1,5 @@
 import { readEntryStat } from "@jsenv/filesystem";
 import { resolveUrl, urlToFilename } from "@jsenv/urls";
-
 import { findAsync } from "./find_async.js";
 
 export const resolveFile = async (
