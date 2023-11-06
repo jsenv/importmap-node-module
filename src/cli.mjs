@@ -45,6 +45,7 @@ await writeImportMapFiles({
   importMapFiles: {
     [outfile]: {
       mappingsForNodeResolution: true,
+      mappingsForDevDependencies: values["include-dev"],
       entryPointsToCheck: values.entrypoint,
       removeUnusedMappings: values["remove-unused"],
     },
