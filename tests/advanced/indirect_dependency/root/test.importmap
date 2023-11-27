@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "b": "./node_modules/b/index.js"
+  },
+  "scopes": {}
+}

@@ -3,14 +3,16 @@
  * that is not in its own package.json but in one of its dependency package.json
  */
 
-import { assert } from "@jsenv/assert";
-import { resolveUrl } from "@jsenv/urls";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const warnings = [];
-const importmaps = await writeImportMapFiles({
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
+
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportMapFiles({
+  logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "./test.importmap": {
@@ -20,23 +22,5 @@ const importmaps = await writeImportMapFiles({
       // magicExtensions: [".js"],
     },
   },
-  onWarn: (warning) => {
-    warnings.push(warning);
-  },
-  writeFiles: false,
 });
-
-const actual = {
-  warnings,
-  importmap: importmaps["./test.importmap"],
-};
-const expected = {
-  warnings: [],
-  importmap: {
-    imports: {
-      b: "./node_modules/b/index.js",
-    },
-    scopes: {},
-  },
-};
-assert({ actual, expected });
+importmapFileSnapshot.compare();
