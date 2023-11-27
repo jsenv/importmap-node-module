@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "@jsenv/core/": "./",
+    "@jsenv/core": "./index"
+  },
+  "scopes": {
+    "./node_modules/@jsenv/core/": {
+      "@jsenv/core/": "./node_modules/@jsenv/core/",
+      "@jsenv/core": "./node_modules/@jsenv/core/index"
+    }
+  }
+}

@@ -11,6 +11,7 @@ export const parseSpecifiersFromJs = async ({
   url,
   babelOptions = {},
 }) => {
+  url = String(url);
   const { parserOpts = {} } = babelOptions;
   const parserPlugins = parserOpts.plugins || [];
 
