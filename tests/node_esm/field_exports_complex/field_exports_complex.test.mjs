@@ -7,9 +7,10 @@ const test = async ({ name, runtime, packageUserConditions }) => {
   const importmapFileUrl = new URL(`./root/${name}`, import.meta.url);
   const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   await writeImportMapFiles({
+    logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
-      "test.importmap": {
+      [name]: {
         mappingsForNodeResolution: true,
         runtime,
         packageUserConditions,
