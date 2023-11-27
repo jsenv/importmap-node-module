@@ -13,7 +13,6 @@ await writeImportMapFiles({
       mappingsForNodeResolution: true,
       entryPointsToCheck: ["./index.js"],
       removeUnusedMappings: true,
-      runtime: "node",
     },
   },
 });

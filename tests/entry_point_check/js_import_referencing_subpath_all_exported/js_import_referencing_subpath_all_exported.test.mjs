@@ -11,9 +11,8 @@ await writeImportMapFiles({
   importMapFiles: {
     "test.importmap": {
       mappingsForNodeResolution: true,
+      mappingsForDevDependencies: true,
       entryPointsToCheck: ["./index.js"],
-      removeUnusedMappings: true,
-      runtime: "node",
     },
   },
 });

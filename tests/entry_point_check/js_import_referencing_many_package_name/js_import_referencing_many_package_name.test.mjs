@@ -12,8 +12,6 @@ await writeImportMapFiles({
     "test.importmap": {
       mappingsForNodeResolution: true,
       entryPointsToCheck: ["./index.js"],
-      removeUnusedMappings: true,
-      runtime: "node",
     },
   },
 });
