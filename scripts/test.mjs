@@ -10,4 +10,5 @@ await executeTestPlan({
     },
   },
   logShortForCompletedExecutions: true,
+  concurrency: true,
 });

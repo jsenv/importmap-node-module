@@ -336,8 +336,8 @@ const createImportResolver = ({
       extension === ".html"
         ? "text/html"
         : [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"].includes(extension)
-        ? "application/javascript"
-        : "application/octet-stream";
+          ? "application/javascript"
+          : "application/octet-stream";
     const httpUrl = asHttpUrl(url);
 
     if (
