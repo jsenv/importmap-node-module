@@ -1,36 +1,42 @@
+import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
-import { resolveUrl } from "@jsenv/urls";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const test = async (params) => {
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const test = async ({ bareSpecifierAutomapping }) => {
   const warnings = [];
-  const importmaps = await writeImportMapFiles({
+  const importmapRelativeUrl = bareSpecifierAutomapping
+    ? "test_base_automapping.importmap"
+    : "test.importmap";
+  const importmapFileUrl = new URL(
+    `./root/${importmapRelativeUrl}`,
+    import.meta.url,
+  );
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+  await writeImportMapFiles({
+    logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
-      "test.importmap": {
+      [importmapRelativeUrl]: {
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./index.js"],
         removeUnusedMappings: true,
-        ...params,
+        bareSpecifierAutomapping,
       },
     },
     onWarn: (warning) => {
       warnings.push(warning);
     },
-    writeFiles: false,
   });
-  return { warnings, importmaps };
-};
-
-{
-  const actual = await test();
-  const expected = {
-    warnings: [
-      {
-        code: "IMPORT_RESOLUTION_FAILED",
-        message: `Import resolution failed for "file"
+  importmapFileSnapshot.compare();
+  const actual = warnings;
+  const expected = bareSpecifierAutomapping
+    ? []
+    : [
+        {
+          code: "IMPORT_RESOLUTION_FAILED",
+          message: `Import resolution failed for "file"
 --- import trace ---
 ${testDirectoryUrl}index.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
@@ -50,30 +56,12 @@ add mapping to "manualImportMap"
     "file": "./file.js"
   }
 }`,
-      },
-    ],
-    importmaps: {
-      "test.importmap": {
-        imports: {},
-        scopes: {},
-      },
-    },
-  };
-  assert({ actual, expected });
-}
-
-{
-  const actual = await test({ bareSpecifierAutomapping: true });
-  const expected = {
-    warnings: [],
-    importmaps: {
-      "test.importmap": {
-        imports: {
-          file: "./file.js",
         },
-        scopes: {},
-      },
-    },
-  };
+      ];
   assert({ actual, expected });
-}
+
+  return { warnings };
+};
+
+// await test({});
+await test({ bareSpecifierAutomapping: true });

@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "react-redux": "./node_modules/react-redux/es/index.js",
+    "whatever/": "./",
+    "whatever": "./index.js"
+  },
+  "scopes": {
+    "./node_modules/react-redux/": {
+      "./node_modules/react-redux/es/utils/answer": "./node_modules/react-redux/es/utils/answer.js"
+    }
+  }
+}
