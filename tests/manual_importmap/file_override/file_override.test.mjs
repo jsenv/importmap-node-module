@@ -1,41 +1,23 @@
-import { assert } from "@jsenv/assert";
-import { resolveUrl } from "@jsenv/urls";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const test = async (options) => {
-  const importmaps = await writeImportMapFiles({
-    projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
-      "test.importmap": {
-        mappingsForNodeResolution: true,
-        ...options,
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const importmapFileUrl = new URL(`./root/test.importmap`, import.meta.url);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportMapFiles({
+  logLevel: "warn",
+  projectDirectoryUrl: testDirectoryUrl,
+  importMapFiles: {
+    "test.importmap": {
+      mappingsForNodeResolution: true,
+      // manualImportMap allows to override the mapping found in package.json
+      manualImportMap: {
+        imports: {
+          "./node_modules/foo/button.css": "./node_modules/foo/button.css.js",
+        },
       },
     },
-    writeFiles: false,
-  });
-  return importmaps["test.importmap"];
-};
-
-// manualImportMap allows to override the mapping found in package.json
-{
-  const actual = await test({
-    manualImportMap: {
-      imports: {
-        "./node_modules/foo/button.css": "./node_modules/foo/button.css.js",
-      },
-    },
-  });
-  const expected = {
-    imports: {
-      "./node_modules/foo/button.css": "./node_modules/foo/button.css.js",
-      "root/": "./",
-      "foo/": "./node_modules/foo/",
-      "root": "./index",
-      "foo": "./node_modules/foo/index",
-    },
-    scopes: {},
-  };
-  assert({ actual, expected });
-}
+  },
+});
+importmapFileSnapshot.compare();
