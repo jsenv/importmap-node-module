@@ -1,25 +1,26 @@
 import { visitNodeModuleResolution } from "./visit_node_module_resolution.js";
 
 export const generateImportmapForNodeESMResolution = async (
-  optionsArray,
+  importmapInfos,
   {
     logger,
     warn,
     projectDirectoryUrl,
     packagesManualOverrides,
     exportsFieldWarningConfig,
+    onImportmapGenerated,
   },
 ) => {
-  const importmaps = [];
   const nodeResolutionVisitors = [];
-  for (const options of optionsArray) {
+  for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
+    const importmapInfo = importmapInfos[importmapRelativeUrl];
     const {
       mappingsForNodeResolution,
       mappingsForDevDependencies,
       packageUserConditions,
       packageIncludedPredicate,
       runtime = "browser",
-    } = options;
+    } = importmapInfo.options;
     if (!mappingsForNodeResolution) {
       continue;
     }
@@ -52,33 +53,34 @@ export const generateImportmapForNodeESMResolution = async (
             importsMappings[key] = mappingsToPutTopLevel[key];
           }
         });
-        importmaps.push({
-          imports: importsMappings,
-          scopes: scopesMappings,
-        });
+        onImportmapGenerated(
+          {
+            imports: importsMappings,
+            scopes: scopesMappings,
+          },
+          importmapRelativeUrl,
+        );
       },
     });
   }
 
   if (nodeResolutionVisitors.length === 0) {
-    return importmaps;
+    return;
   }
   const nodeModulesOutsideProjectAllowed = nodeResolutionVisitors.every(
     (visitor) => visitor.runtime === "node",
   );
-  await visitNodeModuleResolution({
+  await visitNodeModuleResolution(nodeResolutionVisitors, {
     logger,
     warn,
     projectDirectoryUrl,
     nodeModulesOutsideProjectAllowed,
-    visitors: nodeResolutionVisitors,
     packagesManualOverrides,
     exportsFieldWarningConfig,
   });
   for (const nodeResolutionVisitor of nodeResolutionVisitors) {
     nodeResolutionVisitor.onVisitDone();
   }
-  return importmaps;
 };
 
 const packageConditionsFromPackageUserConditions = ({

@@ -2,12 +2,13 @@ import { readFileSync, writeFileSync } from "@jsenv/filesystem";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
 export const updateJsConfigForVsCode = (
-  importMapFiles,
+  importmapInfos,
   { logger, projectDirectoryUrl, jsConfigFileUrl, jsConfigDefault },
 ) => {
-  for (const importMapFileRelativeUrl of Object.keys(importMapFiles)) {
-    const importMapFileConfig = importMapFiles[importMapFileRelativeUrl];
-    if (!importMapFileConfig.useForJsConfigJSON) {
+  for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
+    const importmapInfo = importmapInfos[importmapRelativeUrl];
+    const { useForJsConfigJSON } = importmapInfo.options;
+    if (!useForJsConfigJSON) {
       continue;
     }
     jsConfigFileUrl =
@@ -20,7 +21,7 @@ export const updateJsConfigForVsCode = (
     }
     jsConfigCurrent = jsConfigCurrent || { compilerOptions: {} };
 
-    const jsConfigPaths = importmapToVsCodeConfigPaths(importMapUsedForVsCode);
+    const jsConfigPaths = importmapToVsCodeConfigPaths(importmapInfo.importmap);
     const jsConfig = {
       ...jsConfigDefault,
       ...jsConfigCurrent,

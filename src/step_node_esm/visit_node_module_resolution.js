@@ -8,15 +8,17 @@ import { visitPackageImports } from "./visit_package_imports.js";
 import { visitPackageExports } from "./visit_package_exports.js";
 import { createFindNodeModulePackage } from "./node_module_resolution.js";
 
-export const visitNodeModuleResolution = async ({
-  logger,
-  warn,
-  projectDirectoryUrl,
-  nodeModulesOutsideProjectAllowed,
+export const visitNodeModuleResolution = async (
   visitors,
-  packagesManualOverrides,
-  exportsFieldWarningConfig,
-}) => {
+  {
+    logger,
+    warn,
+    projectDirectoryUrl,
+    nodeModulesOutsideProjectAllowed,
+    packagesManualOverrides,
+    exportsFieldWarningConfig,
+  },
+) => {
   const projectPackageFileUrl = resolveUrl(
     "./package.json",
     projectDirectoryUrl,

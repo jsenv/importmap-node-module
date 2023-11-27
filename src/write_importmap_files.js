@@ -10,9 +10,9 @@ import {
   moveImportMap,
 } from "@jsenv/importmap";
 
-import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
+import { generateImportmapForNodeESMResolution } from "./step_node_esm/importmap_for_node_esm.js";
 import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on_entry_points.js";
-import { optimizeImportmap } from "./util/optimize_importmap.js";
+import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
 
 export const writeImportMapFiles = async ({
   logLevel,
@@ -50,36 +50,47 @@ export const writeImportMapFiles = async ({
     throw new Error(`importMapFiles object is empty`);
   }
 
-  const importmaps = {};
-  const importmapOptions = {};
-
+  // prepare importmapInfos
+  const importmapInfos = {};
   for (const importmapRelativeUrl of importmapRelativeUrls) {
+    const options = importMapFiles[importmapRelativeUrl];
     const topLevelMappings = {};
     const scopedMappings = {};
     const importmap = {
       imports: topLevelMappings,
       scopes: scopedMappings,
     };
-    importmaps[importmapRelativeUrl] = importmap;
-
-    const options = importMapFiles[importmapRelativeUrl];
-    importmapOptions[importmapRelativeUrl] = options;
+    importmapInfos[importmapRelativeUrl] = {
+      options,
+      importmap,
+    };
   }
 
-  // manual importmap
+  // generate importmap for node esm (if enabled)
+  await generateImportmapForNodeESMResolution(importmapInfos, {
+    logger,
+    warn,
+    projectDirectoryUrl,
+    packagesManualOverrides,
+    exportsFieldWarningConfig,
+    onImportmapGenerated: (importmap, importmapRelativeUrl) => {
+      importmapInfos[importmapRelativeUrl].importmap = importmap;
+    },
+  });
+
+  // augment with manual importmap (if specified)
   for (const importmapRelativeUrl of importmapRelativeUrls) {
-    const options = importmapOptions[importmapRelativeUrl];
-    const { manualImportMap } = options;
+    const importmapInfo = importmapInfos[importmapRelativeUrl];
+    const { manualImportMap } = importmapInfo.options;
     if (!manualImportMap) {
       continue;
     }
     assertManualImportMap(manualImportMap);
-    const importmap = importmaps[importmapRelativeUrl];
     const importmapAugmentedWithManualOne = composeTwoImportMaps(
-      importmap,
+      importmapInfo.importmap,
       manualImportMap,
     );
-    importmaps[importmapRelativeUrl] = importmapAugmentedWithManualOne;
+    importmapInfo.importmap = importmapAugmentedWithManualOne;
   }
 
   // entry point(s)
@@ -87,7 +98,7 @@ export const writeImportMapFiles = async ({
   // - generate mapping for extentionless imports
   // - remove unused mappings
   for (const importmapRelativeUrl of importmapRelativeUrls) {
-    const options = importmapOptions[importmapRelativeUrl];
+    const importmapInfo = importmapInfos[importmapRelativeUrl];
     const {
       // we could deduce it from the package.json but:
       // 1. project might not use package.json
@@ -103,7 +114,7 @@ export const writeImportMapFiles = async ({
       magicExtensions,
       removeUnusedMappings,
       runtime = "browser",
-    } = options;
+    } = importmapInfo.options;
     if (removeUnusedMappings && !entryPointsToCheck) {
       logger.warn(
         `"entryPointsToCheck" is required when "removeUnusedMappings" is enabled`,
@@ -117,9 +128,8 @@ export const writeImportMapFiles = async ({
     if (!entryPointsToCheck) {
       continue;
     }
-    const importmap = importmaps[importmapRelativeUrl];
     const importmapAfterEntryPointStep = await testImportmapOnEntryPoints(
-      importmap,
+      importmapInfo.importmap,
       {
         logger,
         warn,
@@ -132,7 +142,7 @@ export const writeImportMapFiles = async ({
         babelConfigFileUrl,
       },
     );
-    importmaps[importmapRelativeUrl] = importmapAfterEntryPointStep;
+    importmapInfo.importmap = importmapAfterEntryPointStep;
   }
 
   updateJsConfigForVsCode(importMapFiles, {
@@ -143,24 +153,31 @@ export const writeImportMapFiles = async ({
   });
 
   for (const importmapRelativeUrl of importmapRelativeUrls) {
-    let importmap = importmaps[importmapRelativeUrl];
+    const importmapInfo = importmapInfos[importmapRelativeUrl];
+    let importmap = importmapInfo.importmap;
     importmap = optimizeImportmap(importmap);
     const importmapFileUrl = new URL(importmapRelativeUrl, projectDirectoryUrl)
       .href;
     importmap = moveImportMap(importmap, projectDirectoryUrl, importmapFileUrl);
     importmap = sortImportMap(importmap);
-    importmaps[importmapRelativeUrl] = importmap;
+    importmapInfo.importmap = importmap;
   }
 
   if (writeFiles) {
     for (const importmapRelativeUrl of importmapRelativeUrls) {
+      const importmapInfo = importmapInfos[importmapRelativeUrl];
       const importmapUrl = new URL(importmapRelativeUrl, projectDirectoryUrl);
-      const importmap = importmaps[importmapRelativeUrl];
+      const importmap = importmapInfo.importmap;
       writeFileSync(importmapUrl, JSON.stringify(importmap, null, "  "));
       logger.info(`-> ${urlToFileSystemPath(importmapUrl)}`);
     }
   }
 
+  const importmaps = {};
+  for (const importmapRelativeUrl of importmapRelativeUrls) {
+    importmaps[importmapRelativeUrl] =
+      importmapInfos[importmapRelativeUrl].importmap;
+  }
   return importmaps;
 };
 
@@ -218,4 +235,24 @@ const jsConfigDefault = {
     baseUrl: ".",
     paths: {},
   },
+};
+
+const optimizeImportmap = ({ imports, scopes }) => {
+  // remove useless duplicates (scoped key+value already defined on imports)
+  const scopesOptimized = {};
+  Object.keys(scopes).forEach((scope) => {
+    const scopeMappings = scopes[scope];
+    const scopeMappingsOptimized = {};
+    Object.keys(scopeMappings).forEach((mappingKey) => {
+      const topLevelMappingValue = imports[mappingKey];
+      const mappingValue = scopeMappings[mappingKey];
+      if (!topLevelMappingValue || topLevelMappingValue !== mappingValue) {
+        scopeMappingsOptimized[mappingKey] = mappingValue;
+      }
+    });
+    if (Object.keys(scopeMappingsOptimized).length > 0) {
+      scopesOptimized[scope] = scopeMappingsOptimized;
+    }
+  });
+  return { imports, scopes: scopesOptimized };
 };
