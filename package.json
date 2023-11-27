@@ -37,7 +37,7 @@
   "dependencies": {
     "@babel/core": "7.23.3",
     "@babel/traverse": "7.23.4",
-    "@jsenv/filesystem": "4.6.0",
+    "@jsenv/filesystem": "4.6.1",
     "@jsenv/importmap": "1.2.1",
     "@jsenv/logger": "4.1.1",
     "@jsenv/urls": "2.2.1",

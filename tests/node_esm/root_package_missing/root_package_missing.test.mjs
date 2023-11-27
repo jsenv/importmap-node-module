@@ -1,10 +1,9 @@
 import { assert } from "@jsenv/assert";
-import { resolveUrl } from "@jsenv/urls";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const packageFileUrl = resolveUrl("./package.json", testDirectoryUrl);
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const packageFileUrl = new URL("./package.json", testDirectoryUrl);
 
 try {
   await writeImportMapFiles({

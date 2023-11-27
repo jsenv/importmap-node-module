@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "main-relative/": "./node_modules/main-relative/",
+    "main-relative": "./node_modules/main-relative/lib/index.js",
+    "root/": "./",
+    "root": "./index.js"
+  },
+  "scopes": {}
+}

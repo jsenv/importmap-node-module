@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "foo": "./node_modules/foo/index.js"
+  },
+  "scopes": {
+    "./node_modules/foo/": {
+      "#env": "./node_modules/foo/env.prod.js"
+    }
+  }
+}

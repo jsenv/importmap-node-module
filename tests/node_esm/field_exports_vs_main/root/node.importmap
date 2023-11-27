@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "whatever": "./main.mjs"
+  },
+  "scopes": {}
+}

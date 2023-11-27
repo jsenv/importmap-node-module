@@ -1,10 +1,12 @@
-import { assert } from "@jsenv/assert";
-import { resolveUrl } from "@jsenv/urls";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const importmaps = await writeImportMapFiles({
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportMapFiles({
+  logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
@@ -15,13 +17,5 @@ const importmaps = await writeImportMapFiles({
       removeUnusedMappings: true,
     },
   },
-  writeFiles: false,
 });
-const actual = importmaps["test.importmap"];
-const expected = {
-  imports: {
-    bar: "./node_modules/bar/index.js",
-  },
-  scopes: {},
-};
-assert({ actual, expected });
+importmapFileSnapshot.compare();

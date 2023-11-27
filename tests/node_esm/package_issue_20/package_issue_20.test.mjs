@@ -1,11 +1,15 @@
+import { readFileSync } from "node:fs";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
-import { resolveUrl } from "@jsenv/urls";
 import { assert } from "@jsenv/assert";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const importmaps = await writeImportMapFiles({
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportMapFiles({
+  logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
@@ -14,36 +18,15 @@ const importmaps = await writeImportMapFiles({
       removeUnusedMappings: true,
     },
   },
-  writeFiles: false,
 });
-const importmap = importmaps["test.importmap"];
+importmapFileSnapshot.compare();
 
-{
-  const actual = importmap;
-  const expected = {
-    imports: {
-      "lume-fake": "./node_modules/lume-fake/lume.js",
-    },
-    scopes: {
-      "./node_modules/lume-fake/": {
-        "lowclass-fake":
-          "./node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js",
-      },
-    },
-  };
-  assert({ actual, expected });
-}
-
-{
-  const importMapNormalized = normalizeImportMap(
-    importmap,
-    "http://example.com",
-  );
-  const actual = resolveImport({
-    specifier: "lowclass-fake",
-    importer: `http://example.com/node_modules/lume-fake/index.js`,
-    importMap: importMapNormalized,
-  });
-  const expected = `http://example.com/node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js`;
-  assert({ actual, expected });
-}
+const importmap = JSON.parse(readFileSync(importmapFileUrl, "utf8"));
+const importMapNormalized = normalizeImportMap(importmap, "http://example.com");
+const actual = resolveImport({
+  specifier: "lowclass-fake",
+  importer: `http://example.com/node_modules/lume-fake/index.js`,
+  importMap: importMapNormalized,
+});
+const expected = `http://example.com/node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js`;
+assert({ actual, expected });

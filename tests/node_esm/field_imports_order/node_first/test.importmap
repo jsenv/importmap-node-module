@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "#foo": "./node.js"
+  },
+  "scopes": {}
+}

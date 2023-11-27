@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "main-undefined/": "./node_modules/main-undefined/",
+    "main-undefined": "./node_modules/main-undefined/index.js",
+    "root/": "./",
+    "root": "./index.js"
+  },
+  "scopes": {}
+}

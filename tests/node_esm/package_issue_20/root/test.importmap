@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "lume-fake": "./node_modules/lume-fake/lume.js"
+  },
+  "scopes": {
+    "./node_modules/lume-fake/": {
+      "lowclass-fake": "./node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js"
+    }
+  }
+}

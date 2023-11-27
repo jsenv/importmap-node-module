@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "whatever": "./main-2.cjs"
+  },
+  "scopes": {}
+}

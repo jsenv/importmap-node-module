@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "main-directory": "./node_modules/main-directory/lib/index.js"
+  },
+  "scopes": {}
+}

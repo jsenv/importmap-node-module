@@ -24,7 +24,7 @@ const test = async ({ name, expectedWarnings }) => {
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
-      "test.importmap": {
+      [name]: {
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./main.mjs"],
       },
