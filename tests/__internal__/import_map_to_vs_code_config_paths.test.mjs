@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert";
 
-import { importmapToVsCodeConfigPaths } from "@jsenv/importmap-node-module/src/internal/importmap_to_vscode_config_paths.js";
+import { importmapToVsCodeConfigPaths } from "@jsenv/importmap-node-module/src/step_jsconfig/update_js_config_for_vscode.js";
 
 {
   const actual = importmapToVsCodeConfigPaths({

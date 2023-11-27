@@ -1,10 +1,11 @@
 import { createDetailedMessage } from "@jsenv/logger";
 import { resolveUrl, urlToFileSystemPath, urlToRelativeUrl } from "@jsenv/urls";
+
 import {
   createPreferExportsFieldWarning,
   createBrowserFieldNotImplementedWarning,
-} from "../logs.js";
-import { resolveFile } from "../resolve_file.js";
+} from "../util/logs.js";
+import { resolveFile } from "../util/resolve_file.js";
 
 export const resolvePackageMain = async ({
   logger,

@@ -1,21 +1,24 @@
 import { createDetailedMessage } from "@jsenv/logger";
 import { readFile } from "@jsenv/filesystem";
 import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/urls";
+
 import { resolvePackageMain } from "./resolve_package_main.js";
 import { visitPackageImportmap } from "./visit_package_importmap.js";
 import { visitPackageImports } from "./visit_package_imports.js";
 import { visitPackageExports } from "./visit_package_exports.js";
 import { createFindNodeModulePackage } from "./node_module_resolution.js";
 
-export const visitNodeModuleResolution = async ({
-  logger,
-  warn,
-  projectDirectoryUrl,
-  nodeModulesOutsideProjectAllowed,
+export const visitNodeModuleResolution = async (
   visitors,
-  packagesManualOverrides,
-  exportsFieldWarningConfig,
-}) => {
+  {
+    logger,
+    warn,
+    projectDirectoryUrl,
+    nodeModulesOutsideProjectAllowed,
+    packagesManualOverrides,
+    exportsFieldWarningConfig,
+  },
+) => {
   const projectPackageFileUrl = resolveUrl(
     "./package.json",
     projectDirectoryUrl,

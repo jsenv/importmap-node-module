@@ -13,32 +13,35 @@ import {
   composeTwoImportMaps,
 } from "@jsenv/importmap";
 import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js";
+
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
-} from "../memoize_async_function.js";
-import { parseSpecifiersFromJs } from "./js_parser.js";
-import { parseHTMLRessources } from "./html_parser.js";
-import { showSource } from "./show_source.js";
-import { resolveFile } from "../resolve_file.js";
+} from "../util/memoize_async_function.js";
+import { resolveFile } from "../util/resolve_file.js";
 import {
   createBareSpecifierAutomappingMessage,
   createExtensionAutomappingMessage,
   createImportResolutionFailedWarning,
-} from "../logs.js";
+} from "../util/logs.js";
+import { parseSpecifiersFromJs } from "./js_parser.js";
+import { parseHTMLRessources } from "./html_parser.js";
+import { showSource } from "./show_source.js";
 
-export const visitFiles = async ({
-  logger,
-  warn,
-  projectDirectoryUrl,
-  entryPointsToCheck,
-  runtime,
-  importMap,
-  bareSpecifierAutomapping,
-  magicExtensions, // = [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
-  removeUnusedMappings,
-  babelConfigFileUrl,
-}) => {
+export const testImportmapOnEntryPoints = async (
+  importmap,
+  {
+    logger,
+    warn,
+    projectDirectoryUrl,
+    entryPointsToCheck,
+    bareSpecifierAutomapping,
+    magicExtensions, // [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
+    removeUnusedMappings,
+    runtime,
+    babelConfigFileUrl,
+  },
+) => {
   const baseUrl =
     runtime === "browser" ? "http://jsenv.com" : projectDirectoryUrl;
   const asFileUrl = (url) =>
@@ -77,7 +80,7 @@ export const visitFiles = async ({
     logger,
     warn,
     runtime,
-    importMap,
+    importmap,
     projectDirectoryUrl,
     baseUrl,
     asFileUrl,
@@ -97,7 +100,7 @@ export const visitFiles = async ({
       markMappingAsUsed({
         scope,
         from,
-        to: scope ? importMap.scopes[scope][from] : importMap.imports[from],
+        to: scope ? importmap.scopes[scope][from] : importmap.imports[from],
       });
     },
     performAutomapping: (automapping) => {
@@ -177,9 +180,7 @@ export const visitFiles = async ({
     },
   );
 
-  await entryPointsToCheck.reduce(async (previous, entryPointToCheck) => {
-    await previous;
-
+  for (const entryPointToCheck of entryPointsToCheck) {
     // normalize the entry point specifier
     const entryPointUrl = resolveUrl(entryPointToCheck, baseUrl);
     const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl);
@@ -187,7 +188,7 @@ export const visitFiles = async ({
     await visitSpecifier(entryPointSpecifier, baseUrl, {
       importTrace: "entryPointsToCheck parameter",
     });
-  }, Promise.resolve());
+  }
 
   if (removeUnusedMappings) {
     const importsUsed = {};
@@ -209,14 +210,14 @@ export const visitFiles = async ({
     };
   }
 
-  return composeTwoImportMaps(importMap, { imports, scopes });
+  return composeTwoImportMaps(importmap, { imports, scopes });
 };
 
 const createImportResolver = ({
   logger,
   warn,
   runtime,
-  importMap,
+  importmap,
   asFileUrl,
   asHttpUrl,
   baseUrl,
@@ -226,7 +227,7 @@ const createImportResolver = ({
   onImportMapping,
   performAutomapping,
 }) => {
-  const importMapNormalized = normalizeImportMap(importMap, baseUrl);
+  const importmapNormalized = normalizeImportMap(importmap, baseUrl);
   const BARE_SPECIFIER_ERROR = {};
 
   const applyImportResolution = async ({
@@ -299,7 +300,7 @@ const createImportResolver = ({
       const url = resolveImport({
         specifier,
         importer,
-        importMap: importMapNormalized,
+        importMap: importmapNormalized,
         defaultExtension: false,
         onImportMapping,
         createBareSpecifierError: () => BARE_SPECIFIER_ERROR,

@@ -1,13 +1,13 @@
-import { ensureWindowsDriveLetter } from "@jsenv/filesystem";
-import { urlToRelativeUrl, resolveUrl, urlToParentUrl } from "@jsenv/urls";
-import { memoizeAsyncFunctionByUrl } from "../memoize_async_function.js";
-import { findAsync } from "../find_async.js";
+import { readFile, ensureWindowsDriveLetter } from "@jsenv/filesystem";
 import {
-  readPackageFile,
-  PACKAGE_NOT_FOUND,
-  PACKAGE_WITH_SYNTAX_ERROR,
-} from "./read_package_file.js";
-import { applyPackageManualOverride } from "./apply_package_manual_override.js";
+  urlToRelativeUrl,
+  resolveUrl,
+  urlToParentUrl,
+  urlToFileSystemPath,
+} from "@jsenv/urls";
+
+import { memoizeAsyncFunctionByUrl } from "../util/memoize_async_function.js";
+import { findAsync } from "../util/find_async.js";
 
 export const createFindNodeModulePackage = () => {
   const readPackageFileMemoized = memoizeAsyncFunctionByUrl(
@@ -101,4 +101,80 @@ const getNodeModuleCandidatesOutsideProject = ({ projectDirectoryUrl }) => {
     ...candidates,
     ensureWindowsDriveLetter(`file:///node_modules`, projectDirectoryUrl),
   ];
+};
+
+const applyPackageManualOverride = (packageObject, packagesManualOverrides) => {
+  const { name, version } = packageObject;
+  const overrideKey = Object.keys(packagesManualOverrides).find(
+    (overrideKeyCandidate) => {
+      if (name === overrideKeyCandidate) {
+        return true;
+      }
+      if (`${name}@${version}` === overrideKeyCandidate) {
+        return true;
+      }
+      return false;
+    },
+  );
+  if (overrideKey) {
+    return composeObject(packageObject, packagesManualOverrides[overrideKey]);
+  }
+  return packageObject;
+};
+
+const composeObject = (leftObject, rightObject) => {
+  const composedObject = {
+    ...leftObject,
+  };
+  Object.keys(rightObject).forEach((key) => {
+    const rightValue = rightObject[key];
+
+    if (
+      rightValue === null ||
+      typeof rightValue !== "object" ||
+      key in leftObject === false
+    ) {
+      composedObject[key] = rightValue;
+    } else {
+      const leftValue = leftObject[key];
+      if (leftValue === null || typeof leftValue !== "object") {
+        composedObject[key] = rightValue;
+      } else {
+        composedObject[key] = composeObject(leftValue, rightValue);
+      }
+    }
+  });
+  return composedObject;
+};
+
+const PACKAGE_NOT_FOUND = {};
+const PACKAGE_WITH_SYNTAX_ERROR = {};
+
+const readPackageFile = async (packageFileUrl) => {
+  try {
+    const packageObject = await readFile(packageFileUrl, { as: "json" });
+    return packageObject;
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      return PACKAGE_NOT_FOUND;
+    }
+
+    if (e.name === "SyntaxError") {
+      console.error(
+        formatPackageSyntaxErrorLog({ syntaxError: e, packageFileUrl }),
+      );
+      return PACKAGE_WITH_SYNTAX_ERROR;
+    }
+
+    throw e;
+  }
+};
+
+const formatPackageSyntaxErrorLog = ({ syntaxError, packageFileUrl }) => {
+  return `error while parsing package.json.
+--- syntax error message ---
+${syntaxError.message}
+--- package.json path ---
+${urlToFileSystemPath(packageFileUrl)}
+`;
 };
