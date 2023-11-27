@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "root/": "./",
+    "foo/": "./node_modules/foo/",
+    "root": "./main.mjs",
+    "foo": "./node_modules/foo/browser.js"
+  },
+  "scopes": {}
+}
