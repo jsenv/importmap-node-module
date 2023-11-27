@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "foo/file.js": "./node_modules/foo/file.default.js",
+    "root/": "./",
+    "root": "./index.js"
+  },
+  "scopes": {}
+}

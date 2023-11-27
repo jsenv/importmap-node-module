@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "#foo": "./import.js"
+  },
+  "scopes": {}
+}

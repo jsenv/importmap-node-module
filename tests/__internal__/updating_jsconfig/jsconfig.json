@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "foo": [
+        "./bar.js"
+      ]
+    },
+    "jsx": "react"
+  }
+}

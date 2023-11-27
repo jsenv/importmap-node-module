@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "inline_everything": "./everything.js",
+    "a_everything": "./everything.js",
+    "b_everything": "./everything.js",
+    "c_everything": "./everything.js",
+    "a": "./a.js"
+  },
+  "scopes": {}
+}

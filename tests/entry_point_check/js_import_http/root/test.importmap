@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "http://example.com/foo.js": "http://example.com/bar.js"
+  },
+  "scopes": {}
+}

@@ -1,11 +1,10 @@
 import { writeFile, ensureEmptyDirectory, readFile } from "@jsenv/filesystem";
-import { resolveUrl } from "@jsenv/urls";
 import { assert } from "@jsenv/assert";
 
 import { parseSpecifiersFromJs } from "@jsenv/importmap-node-module/src/step_entry_point/js_parser.js";
 
-const testDirectoryUrl = resolveUrl("./fixtures/", import.meta.url);
-const fileUrl = resolveUrl("test.js", testDirectoryUrl);
+const testDirectoryUrl = new URL("./fixtures/", import.meta.url);
+const fileUrl = new URL("test.js", testDirectoryUrl);
 
 // static top level import
 {

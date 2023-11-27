@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "root/": "./",
+    "root": "./index.js",
+    "foo": "./node_modules/foo/feature-node.mjs"
+  },
+  "scopes": {}
+}

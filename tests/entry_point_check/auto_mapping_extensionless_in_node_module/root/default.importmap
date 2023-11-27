@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "leftpad": "./node_modules/leftpad/index.js"
+  },
+  "scopes": {}
+}

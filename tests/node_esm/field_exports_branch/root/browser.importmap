@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "whatever/": "./",
+    "whatever": "./main.js",
+    "foo": "./node_modules/foo/main.browser.js"
+  },
+  "scopes": {}
+}

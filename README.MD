@@ -1,12 +1,18 @@
 # @jsenv/importmap-node-module [![npm package](https://img.shields.io/npm/v/@jsenv/importmap-node-module.svg?logo=npm&label=package)](https://www.npmjs.com/package/@jsenv/importmap-node-module)
 
-Generate [import map](https://github.com/WICG/import-maps) file with mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). It can be used to make code dependent on node module resolution executable in a browser.
+Generate [import map](https://github.com/WICG/import-maps) with mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm). The importmap can be used to make code dependent on node module resolution executable in a browser.
 
 _Example of code relying on node module resolution:_
 
 ```js
 import lodash from "lodash";
 ```
+
+# How it works
+
+1. Use `package.json` and `node_modules/**/package.json` to generate mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm)
+2. (Optional) Test importmap against all import found in js module files. This step allow to remove unused mappings to keep only thoose actually used in the codebase
+3. Write the mappings into into a file
 
 # Usage
 
