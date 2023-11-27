@@ -1,15 +1,16 @@
 import { createLogger } from "@jsenv/logger";
 import {
   assertAndNormalizeDirectoryUrl,
-  writeFile,
-  readFile,
+  writeFileSync,
+  readFileSync,
 } from "@jsenv/filesystem";
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
+import { urlToFileSystemPath } from "@jsenv/urls";
 import {
   composeTwoImportMaps,
   sortImportMap,
   moveImportMap,
 } from "@jsenv/importmap";
+
 import { assertManualImportMap } from "./internal/manual_importmap.js";
 import { packageConditionsFromPackageUserConditions } from "./internal/package_conditions.js";
 import { visitNodeModuleResolution } from "./internal/from_package/visit_node_module_resolution.js";
@@ -53,7 +54,7 @@ export const writeImportMapFiles = async ({
 
   const importMaps = {};
   const nodeResolutionVisitors = [];
-  importMapFileRelativeUrls.forEach((importMapFileRelativeUrl) => {
+  for (const importMapFileRelativeUrl of importMapFileRelativeUrls) {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl];
 
     const topLevelMappings = {};
@@ -102,7 +103,7 @@ export const writeImportMapFiles = async ({
         },
       });
     }
-  });
+  }
 
   if (nodeResolutionVisitors.length > 0) {
     const nodeModulesOutsideProjectAllowed = nodeResolutionVisitors.every(
@@ -117,11 +118,13 @@ export const writeImportMapFiles = async ({
       packagesManualOverrides,
       exportsFieldWarningConfig,
     });
-    nodeResolutionVisitors.forEach((visitor) => visitor.onVisitDone());
+    for (const nodeResolutionVisitor of nodeResolutionVisitors) {
+      nodeResolutionVisitor.onVisitDone();
+    }
   }
 
   // manual importmap
-  importMapFileRelativeUrls.forEach((importMapFileRelativeUrl) => {
+  for (const importMapFileRelativeUrl of importMapFileRelativeUrls) {
     const importMapConfig = importMapFiles[importMapFileRelativeUrl];
     const { manualImportMap } = importMapConfig;
     if (manualImportMap) {
@@ -133,58 +136,53 @@ export const writeImportMapFiles = async ({
       );
       importMaps[importMapFileRelativeUrl] = importMapModified;
     }
-  });
+  }
 
-  await importMapFileRelativeUrls.reduce(
-    async (previous, importMapFileRelativeUrl) => {
-      await previous;
-      const importMapConfig = importMapFiles[importMapFileRelativeUrl];
-      const {
-        // we could deduce it from the package.json but:
-        // 1. project might not use package.json
-        // 2. it's a bit magic
-        // 3. it's kinda possible to assume an export from "exports" field is the main entry point
-        //    but for project with many entry points they cannot be distinguised from
-        //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
+  for (const importMapFileRelativeUrl of importMapFileRelativeUrls) {
+    const importMapConfig = importMapFiles[importMapFileRelativeUrl];
+    const {
+      // we could deduce it from the package.json but:
+      // 1. project might not use package.json
+      // 2. it's a bit magic
+      // 3. it's kinda possible to assume an export from "exports" field is the main entry point
+      //    but for project with many entry points they cannot be distinguised from
+      //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
+      entryPointsToCheck,
+      // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
+      // of files. Not that hard to do, especially using @jsenv/url-meta
+      // but that's super extra fine tuning that I don't have time/energy to do for now
+      bareSpecifierAutomapping,
+      magicExtensions,
+      removeUnusedMappings,
+      runtime = "browser",
+    } = importMapConfig;
+
+    if (removeUnusedMappings && !entryPointsToCheck) {
+      logger.warn(
+        `"entryPointsToCheck" is required when "removeUnusedMappings" is enabled`,
+      );
+    }
+    if (magicExtensions && !entryPointsToCheck) {
+      logger.warn(
+        `"entryPointsToCheck" is required when "magicExtensions" is enabled`,
+      );
+    }
+    if (entryPointsToCheck) {
+      const importMap = await visitFiles({
+        logger,
+        warn,
+        projectDirectoryUrl,
         entryPointsToCheck,
-        // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
-        // of files. Not that hard to do, especially using @jsenv/url-meta
-        // but that's super extra fine tuning that I don't have time/energy to do for now
+        importMap: importMaps[importMapFileRelativeUrl],
         bareSpecifierAutomapping,
         magicExtensions,
         removeUnusedMappings,
-        runtime = "browser",
-      } = importMapConfig;
-
-      if (removeUnusedMappings && !entryPointsToCheck) {
-        logger.warn(
-          `"entryPointsToCheck" is required when "removeUnusedMappings" is enabled`,
-        );
-      }
-      if (magicExtensions && !entryPointsToCheck) {
-        logger.warn(
-          `"entryPointsToCheck" is required when "magicExtensions" is enabled`,
-        );
-      }
-
-      if (entryPointsToCheck) {
-        const importMap = await visitFiles({
-          logger,
-          warn,
-          projectDirectoryUrl,
-          entryPointsToCheck,
-          importMap: importMaps[importMapFileRelativeUrl],
-          bareSpecifierAutomapping,
-          magicExtensions,
-          removeUnusedMappings,
-          runtime,
-          babelConfigFileUrl,
-        });
-        importMaps[importMapFileRelativeUrl] = importMap;
-      }
-    },
-    Promise.resolve(),
-  );
+        runtime,
+        babelConfigFileUrl,
+      });
+      importMaps[importMapFileRelativeUrl] = importMap;
+    }
+  }
 
   const firstUpdatingJsConfig = importMapFileRelativeUrls.find(
     (importMapFileRelativeUrl) => {
@@ -194,10 +192,15 @@ export const writeImportMapFiles = async ({
   );
   if (firstUpdatingJsConfig) {
     jsConfigFileUrl =
-      jsConfigFileUrl || resolveUrl("./jsconfig.json", projectDirectoryUrl);
-    const jsConfigCurrent = (await readCurrentJsConfig(jsConfigFileUrl)) || {
-      compilerOptions: {},
-    };
+      jsConfigFileUrl || new URL("./jsconfig.json", projectDirectoryUrl);
+    let jsConfigCurrent;
+    try {
+      jsConfigCurrent = readFileSync(jsConfigFileUrl, { as: "json" });
+    } catch (e) {
+      jsConfigCurrent = null;
+    }
+    jsConfigCurrent = jsConfigCurrent || { compilerOptions: {} };
+
     const importMapUsedForVsCode = importMaps[firstUpdatingJsConfig];
     const jsConfigPaths = importmapToVsCodeConfigPaths(importMapUsedForVsCode);
     const jsConfig = {
@@ -211,36 +214,29 @@ export const writeImportMapFiles = async ({
         paths: jsConfigPaths,
       },
     };
-    await writeFile(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "));
+    writeFileSync(jsConfigFileUrl, JSON.stringify(jsConfig, null, "  "));
     logger.info(`-> ${urlToFileSystemPath(jsConfigFileUrl)}`);
   }
 
-  Object.keys(importMaps).forEach((key) => {
+  for (const key of Object.keys(importMaps)) {
     let importMap = importMaps[key];
     importMap = optimizeImportmap(importMap);
-    const importmapFileUrl = resolveUrl(key, projectDirectoryUrl);
+    const importmapFileUrl = new URL(key, projectDirectoryUrl).href;
     importMap = moveImportMap(importMap, projectDirectoryUrl, importmapFileUrl);
     importMap = sortImportMap(importMap);
     importMaps[key] = importMap;
-  });
+  }
 
   if (writeFiles) {
-    await importMapFileRelativeUrls.reduce(
-      async (previous, importMapFileRelativeUrl) => {
-        await previous;
-        const importmapFileUrl = resolveUrl(
-          importMapFileRelativeUrl,
-          projectDirectoryUrl,
-        );
-        const importMap = importMaps[importMapFileRelativeUrl];
-        await writeFile(
-          importmapFileUrl,
-          JSON.stringify(importMap, null, "  "),
-        );
-        logger.info(`-> ${urlToFileSystemPath(importmapFileUrl)}`);
-      },
-      Promise.resolve(),
-    );
+    for (const importMapFileRelativeUrl of importMapFileRelativeUrls) {
+      const importmapFileUrl = new URL(
+        importMapFileRelativeUrl,
+        projectDirectoryUrl,
+      ).href;
+      const importMap = importMaps[importMapFileRelativeUrl];
+      writeFileSync(importmapFileUrl, JSON.stringify(importMap, null, "  "));
+      logger.info(`-> ${urlToFileSystemPath(importmapFileUrl)}`);
+    }
   }
 
   return importMaps;
@@ -269,13 +265,4 @@ const jsConfigDefault = {
     baseUrl: ".",
     paths: {},
   },
-};
-
-const readCurrentJsConfig = async (jsConfigFileUrl) => {
-  try {
-    const currentJSConfig = await readFile(jsConfigFileUrl, { as: "json" });
-    return currentJSConfig;
-  } catch (e) {
-    return null;
-  }
 };
