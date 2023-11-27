@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "#env": "./env.dev.js"
+  },
+  "scopes": {}
+}

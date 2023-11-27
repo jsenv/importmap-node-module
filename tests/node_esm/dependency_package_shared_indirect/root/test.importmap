@@ -1,0 +1,14 @@
+{
+  "imports": {
+    "foo": "./node_modules/foo/foo.js"
+  },
+  "scopes": {
+    "./node_modules/bar/": {
+      "./node_modules/bar/": "./node_modules/bar/",
+      "bar/": "./node_modules/bar/"
+    },
+    "./node_modules/foo/": {
+      "bar": "./node_modules/bar/bar.js"
+    }
+  }
+}

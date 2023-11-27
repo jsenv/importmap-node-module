@@ -3,8 +3,10 @@ import { takeFileSnapshot } from "@jsenv/snapshot";
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
-const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+const devImportmapFileUrl = new URL("./root/dev.importmap", import.meta.url);
+const prodImportmapFileUrl = new URL("./root/prod.importmap", import.meta.url);
+const devImportmapFileSnapshot = takeFileSnapshot(devImportmapFileUrl);
+const prodImportmapFileSnapshot = takeFileSnapshot(prodImportmapFileUrl);
 await writeImportMapFiles({
   logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
@@ -18,4 +20,5 @@ await writeImportMapFiles({
     },
   },
 });
-importmapFileSnapshot.compare();
+devImportmapFileSnapshot.compare();
+prodImportmapFileSnapshot.compare();

@@ -37,10 +37,10 @@ await test({
     {
       code: "CANNOT_FIND_PACKAGE",
       message: `cannot find a dependency.
-  --- dependency ---
-  foo@*
-  --- required by ---
-  ${urlToFileSystemPath(new URL("./root/package.json", import.meta.url))}`,
+--- dependency ---
+foo@*
+--- required by ---
+${urlToFileSystemPath(new URL("./root/package.json", import.meta.url))}`,
     },
   ],
 });
