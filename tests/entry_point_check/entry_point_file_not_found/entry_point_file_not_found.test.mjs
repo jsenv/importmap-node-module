@@ -1,14 +1,15 @@
 import { assert } from "@jsenv/assert";
-import { writeFile, removeEntry } from "@jsenv/filesystem";
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
+import { writeFileSync, removeFileSync } from "@jsenv/filesystem";
+import { urlToFileSystemPath } from "@jsenv/urls";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const mainJsFileUrl = resolveUrl("./main.js", testDirectoryUrl);
-const test = async (params) => {
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const mainJsFileUrl = new URL("./main.js", testDirectoryUrl);
+const getWarnings = async (params) => {
   const warnings = [];
-  const importmaps = await writeImportMapFiles({
+  await writeImportMapFiles({
+    logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
       "test.importmap": {
@@ -18,52 +19,35 @@ const test = async (params) => {
     onWarn: (warning) => {
       warnings.push(warning);
     },
-    writeFiles: false,
   });
-  return { warnings, importmaps };
+  return warnings;
 };
-await removeEntry(mainJsFileUrl, { allowUseless: true });
 
+removeFileSync(mainJsFileUrl, { allowUseless: true });
 {
-  const importedFileUrl = `${testDirectoryUrl}main.js`;
-  const actual = await test({
+  const actual = await getWarnings({
     entryPointsToCheck: ["./main.js"],
   });
-  const expected = {
-    warnings: [
-      {
-        code: "IMPORT_RESOLUTION_FAILED",
-        message: `Import resolution failed for "./main.js"
+  const expected = [
+    {
+      code: "IMPORT_RESOLUTION_FAILED",
+      message: `Import resolution failed for "./main.js"
 --- import trace ---
 entryPointsToCheck parameter
 --- reason ---
-file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
-      },
-    ],
-    importmaps: {
-      "test.importmap": {
-        imports: {},
-        scopes: {},
-      },
+file not found on filesystem at ${urlToFileSystemPath(
+        `${testDirectoryUrl}main.js`,
+      )}`,
     },
-  };
+  ];
   assert({ actual, expected });
 }
 
-await writeFile(mainJsFileUrl);
-
+writeFileSync(mainJsFileUrl);
 {
-  const actual = await test({
+  const actual = await getWarnings({
     entryPointsToCheck: ["./main.js"],
   });
-  const expected = {
-    warnings: [],
-    importmaps: {
-      "test.importmap": {
-        imports: {},
-        scopes: {},
-      },
-    },
-  };
+  const expected = [];
   assert({ actual, expected });
 }
