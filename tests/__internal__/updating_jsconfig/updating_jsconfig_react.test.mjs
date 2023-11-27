@@ -1,33 +1,20 @@
-import { assert } from "@jsenv/assert";
-import { readFile, writeFile } from "@jsenv/filesystem";
-import { resolveUrl } from "@jsenv/urls";
+import { takeFileSnapshot } from "@jsenv/snapshot";
+import { copyFileSync } from "@jsenv/filesystem";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./", import.meta.url);
-const jsConfigFileUrl = resolveUrl("jsconfig.json", testDirectoryUrl);
+const testDirectoryUrl = new URL("./", import.meta.url);
+const jsConfigFileUrl = new URL("jsconfig.json", testDirectoryUrl);
 
-// arrange
-await writeFile(
-  jsConfigFileUrl,
-  JSON.stringify(
-    {
-      compilerOptions: {
-        jsx: "react",
-        paths: {
-          "src/*": ["./src/*"],
-        },
-      },
-    },
-    null,
-    "  ",
-  ),
-);
-
-// act
+const jsConfigSnapshot = takeFileSnapshot(jsConfigFileUrl);
+copyFileSync({
+  from: new URL("./fixtures/jsconfig_start.json", import.meta.url),
+  to: new URL("./jsconfig.json", import.meta.url),
+  overwrite: true,
+});
 await writeImportMapFiles({
-  projectDirectoryUrl: testDirectoryUrl,
   logLevel: "warn",
+  projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
       manualImportMap: {
@@ -36,20 +23,5 @@ await writeImportMapFiles({
       useForJsConfigJSON: true,
     },
   },
-  writeFiles: false,
 });
-
-// assert
-const actual = await readFile(jsConfigFileUrl, { as: "json" });
-const expected = {
-  compilerOptions: {
-    baseUrl: ".",
-    // paths are overwritten
-    paths: {
-      foo: ["./bar.js"],
-    },
-    // react is kept
-    jsx: "react",
-  },
-};
-assert({ actual, expected });
+jsConfigSnapshot.compare();
