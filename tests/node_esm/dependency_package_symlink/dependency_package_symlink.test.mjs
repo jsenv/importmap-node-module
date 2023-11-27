@@ -9,12 +9,10 @@ await writeImportMapFiles({
   logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
-    "dev.importmap": {
+    "test.importmap": {
       mappingsForNodeResolution: true,
-      mappingsForDevDependencies: true,
-    },
-    "prod.importmap": {
-      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./index.js"],
+      removeUnusedMappings: true,
     },
   },
 });

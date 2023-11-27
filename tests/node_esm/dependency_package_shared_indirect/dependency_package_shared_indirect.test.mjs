@@ -1,11 +1,12 @@
-// import { normalizeImportMap, resolveImport } from "@jsenv/importmap"
-import { resolveUrl } from "@jsenv/urls";
-import { assert } from "@jsenv/assert";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const importmaps = await writeImportMapFiles({
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportMapFiles({
+  logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
     "test.importmap": {
@@ -14,27 +15,8 @@ const importmaps = await writeImportMapFiles({
       removeUnusedMappings: true,
     },
   },
-  writeFiles: false,
 });
-
-{
-  const actual = importmaps["test.importmap"];
-  const expected = {
-    imports: {
-      foo: "./node_modules/foo/foo.js",
-    },
-    scopes: {
-      "./node_modules/bar/": {
-        "./node_modules/bar/": "./node_modules/bar/",
-        "bar/": "./node_modules/bar/",
-      },
-      "./node_modules/foo/": {
-        bar: "./node_modules/bar/bar.js",
-      },
-    },
-  };
-  assert({ actual, expected });
-}
+importmapFileSnapshot.compare();
 
 // does not work with file:// protocol because / leads to filesystemroot
 // {

@@ -1,3 +1,8 @@
+/*
+ * A package import something from a dependency
+ * that is not in its own package.json but in one of its dependency package.json
+ */
+
 import { takeFileSnapshot } from "@jsenv/snapshot";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
@@ -9,12 +14,11 @@ await writeImportMapFiles({
   logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
   importMapFiles: {
-    "dev.importmap": {
+    "./test.importmap": {
       mappingsForNodeResolution: true,
-      mappingsForDevDependencies: true,
-    },
-    "prod.importmap": {
-      mappingsForNodeResolution: true,
+      entryPointsToCheck: ["./index.js"],
+      removeUnusedMappings: true,
+      // magicExtensions: [".js"],
     },
   },
 });

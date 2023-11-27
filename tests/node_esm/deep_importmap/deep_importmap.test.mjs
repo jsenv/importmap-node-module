@@ -7,7 +7,7 @@ const importmapFileUrl = new URL(
   "./root/src/directory/test.importmap",
   import.meta.url,
 );
-const importmapSnapshot = takeFileSnapshot(importmapFileUrl);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
 await writeImportMapFiles({
   logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
@@ -25,4 +25,4 @@ await writeImportMapFiles({
     },
   },
 });
-importmapSnapshot.compare();
+importmapFileSnapshot.compare();
