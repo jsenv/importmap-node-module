@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "lodash/": "./node_modules/lodash/"
+  },
+  "scopes": {}
+}

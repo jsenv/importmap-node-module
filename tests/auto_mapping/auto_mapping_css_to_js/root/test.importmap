@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "./file.css": "./file.css.js"
+  },
+  "scopes": {}
+}

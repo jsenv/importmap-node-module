@@ -5,7 +5,6 @@ import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const test = async ({ bareSpecifierAutomapping }) => {
-  const warnings = [];
   const importmapRelativeUrl = bareSpecifierAutomapping
     ? "test_base_automapping.importmap"
     : "test.importmap";
@@ -14,6 +13,7 @@ const test = async ({ bareSpecifierAutomapping }) => {
     import.meta.url,
   );
   const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+  const warnings = [];
   await writeImportMapFiles({
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
