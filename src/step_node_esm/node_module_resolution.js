@@ -1,7 +1,8 @@
 import { ensureWindowsDriveLetter } from "@jsenv/filesystem";
 import { urlToRelativeUrl, resolveUrl, urlToParentUrl } from "@jsenv/urls";
-import { memoizeAsyncFunctionByUrl } from "../memoize_async_function.js";
-import { findAsync } from "../find_async.js";
+
+import { memoizeAsyncFunctionByUrl } from "../util/memoize_async_function.js";
+import { findAsync } from "../util/find_async.js";
 import {
   readPackageFile,
   PACKAGE_NOT_FOUND,

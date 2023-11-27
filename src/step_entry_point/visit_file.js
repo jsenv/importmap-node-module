@@ -13,19 +13,20 @@ import {
   composeTwoImportMaps,
 } from "@jsenv/importmap";
 import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js";
+
 import {
   memoizeAsyncFunctionByUrl,
   memoizeAsyncFunctionBySpecifierAndImporter,
-} from "../memoize_async_function.js";
-import { parseSpecifiersFromJs } from "./js_parser.js";
-import { parseHTMLRessources } from "./html_parser.js";
-import { showSource } from "./show_source.js";
-import { resolveFile } from "../resolve_file.js";
+} from "../util/memoize_async_function.js";
+import { resolveFile } from "../util/resolve_file.js";
 import {
   createBareSpecifierAutomappingMessage,
   createExtensionAutomappingMessage,
   createImportResolutionFailedWarning,
-} from "../logs.js";
+} from "../util/logs.js";
+import { parseSpecifiersFromJs } from "./js_parser.js";
+import { parseHTMLRessources } from "./html_parser.js";
+import { showSource } from "./show_source.js";
 
 export const visitFiles = async ({
   logger,
