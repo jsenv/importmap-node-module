@@ -1,15 +1,19 @@
+import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
-import { resolveUrl } from "@jsenv/urls";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const test = async ({ runtime } = {}) => {
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const test = async ({ name, runtime, expectedWarnings }) => {
+  const importmapFileRelativeUrl = `${name}.importmap`;
+  const importmapFileUrl = new URL(importmapFileRelativeUrl, testDirectoryUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
-  const importmaps = await writeImportMapFiles({
+  await writeImportMapFiles({
+    logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
-      "test.importmap": {
+      [importmapFileRelativeUrl]: {
         mappingsForNodeResolution: true,
         entryPointsToCheck: ["./index.js"],
         removeUnusedMappings: true,
@@ -19,18 +23,19 @@ const test = async ({ runtime } = {}) => {
     onWarn: (warning) => {
       warnings.push(warning);
     },
-    writeFiles: false,
   });
-  return { warnings, importmaps };
+  importmapFileSnapshot.compare();
+  const actual = warnings;
+  const expected = expectedWarnings;
+  assert({ actual, expected });
 };
 
-{
-  const actual = await test();
-  const expected = {
-    warnings: [
-      {
-        code: "IMPORT_RESOLUTION_FAILED",
-        message: `Import resolution failed for "fs"
+await test({
+  name: "runtime_browser",
+  expectedWarnings: [
+    {
+      code: "IMPORT_RESOLUTION_FAILED",
+      message: `Import resolution failed for "fs"
 --- import trace ---
 ${testDirectoryUrl}index.js:1:7
 > 1 | import "fs";
@@ -40,28 +45,12 @@ ${testDirectoryUrl}index.js:1:7
 there is no mapping for this bare specifier
 --- suggestion 1 ---
 use runtime: "node"`,
-      },
-    ],
-    importmaps: {
-      "test.importmap": {
-        imports: {},
-        scopes: {},
-      },
     },
-  };
-  assert({ actual, expected });
-}
+  ],
+});
 
-{
-  const actual = await test({ runtime: "node" });
-  const expected = {
-    warnings: [],
-    importmaps: {
-      "test.importmap": {
-        imports: {},
-        scopes: {},
-      },
-    },
-  };
-  assert({ actual, expected });
-}
+await test({
+  name: "runtime_node",
+  runtime: "node",
+  expectedWarnings: [],
+});

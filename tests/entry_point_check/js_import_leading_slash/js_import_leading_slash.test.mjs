@@ -1,15 +1,25 @@
+import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
-import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
+import { urlToFileSystemPath } from "@jsenv/urls";
 
 import { writeImportMapFiles } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = resolveUrl("./root/", import.meta.url);
-const test = async ({ runtime }) => {
+if (process.platform === "win32") {
+  // TODO: make it work on windows
+  process.exit(0);
+}
+
+const testDirectoryUrl = new URL("./root/", import.meta.url);
+const test = async ({ name, runtime, expectedWarnings }) => {
+  const importmapFileRelativeUrl = `${name}.importmap`;
+  const importmapFileUrl = new URL(importmapFileRelativeUrl, testDirectoryUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
-  const importmaps = await writeImportMapFiles({
+  await writeImportMapFiles({
+    logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
     importMapFiles: {
-      "test.importmap": {
+      [importmapFileRelativeUrl]: {
         runtime,
         entryPointsToCheck: ["./main.js"],
         removeUnusedMappings: true,
@@ -18,35 +28,26 @@ const test = async ({ runtime }) => {
     onWarn: (warning) => {
       warnings.push(warning);
     },
-    writeFiles: false,
   });
-  return { warnings, importmaps };
+  importmapFileSnapshot.compare();
+  const actual = warnings;
+  const expected = expectedWarnings;
+  assert({ actual, expected });
 };
 
-// TODO: make it work on windows
-if (process.platform !== "win32") {
-  const actual = await test({ runtime: "browser" });
-  const expected = {
-    warnings: [],
-    importmaps: {
-      "test.importmap": {
-        imports: {},
-        scopes: {},
-      },
-    },
-  };
-  assert({ actual, expected });
-}
+await test({
+  name: "runtime_browser",
+  runtime: "browser",
+  expectedWarnings: [],
+});
 
-// TODO: make it work on windows
-if (process.platform !== "win32") {
-  const importedFileUrl = `file:///foo.js`;
-  const actual = await test({ runtime: "node" });
-  const expected = {
-    warnings: [
-      {
-        code: "IMPORT_RESOLUTION_FAILED",
-        message: `Import resolution failed for "/foo.js"
+await test({
+  name: "runtime_node",
+  runtime: "node",
+  expectedWarnings: [
+    {
+      code: "IMPORT_RESOLUTION_FAILED",
+      message: `Import resolution failed for "/foo.js"
 --- import trace ---
 ${testDirectoryUrl}main.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
@@ -54,15 +55,7 @@ ${testDirectoryUrl}main.js:2:7
     |       ^
   3 |${" "}
 --- reason ---
-file not found on filesystem at ${urlToFileSystemPath(importedFileUrl)}`,
-      },
-    ],
-    importmaps: {
-      "test.importmap": {
-        imports: {},
-        scopes: {},
-      },
+file not found on filesystem at ${urlToFileSystemPath("file:///foo.js")}`,
     },
-  };
-  assert({ actual, expected });
-}
+  ],
+});
