@@ -38,7 +38,7 @@ export const updateJsConfigForVsCode = (
   }
 };
 
-const importmapToVsCodeConfigPaths = ({ imports = {} }) => {
+export const importmapToVsCodeConfigPaths = ({ imports = {} }) => {
   const paths = {};
 
   Object.keys(imports).forEach((importKey) => {

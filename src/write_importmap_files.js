@@ -145,7 +145,7 @@ export const writeImportMapFiles = async ({
     importmapInfo.importmap = importmapAfterEntryPointStep;
   }
 
-  updateJsConfigForVsCode(importMapFiles, {
+  updateJsConfigForVsCode(importmapInfos, {
     logger,
     projectDirectoryUrl,
     jsConfigFileUrl,

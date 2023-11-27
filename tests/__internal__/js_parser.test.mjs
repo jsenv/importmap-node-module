@@ -2,7 +2,7 @@ import { writeFile, ensureEmptyDirectory, readFile } from "@jsenv/filesystem";
 import { resolveUrl } from "@jsenv/urls";
 import { assert } from "@jsenv/assert";
 
-import { parseSpecifiersFromJs } from "@jsenv/importmap-node-module/src/internal/from_files/js_parser.js";
+import { parseSpecifiersFromJs } from "@jsenv/importmap-node-module/src/step_entry_point/js_parser.js";
 
 const testDirectoryUrl = resolveUrl("./fixtures/", import.meta.url);
 const fileUrl = resolveUrl("test.js", testDirectoryUrl);
