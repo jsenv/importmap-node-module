@@ -28,6 +28,11 @@ const test = async (fixtureName, options) => {
     to: new URL(`./snapshots/${fixtureName}`, import.meta.url),
     overwrite: true,
   });
+  copyFileSync({
+    from: new URL(`./fixtures/${fixtureName}`, import.meta.url),
+    to: new URL("./root/index.html", import.meta.url),
+    overwrite: true,
+  });
 };
 
 const directorySnapshot = takeDirectorySnapshot(snapshotDirectoryUrl);
