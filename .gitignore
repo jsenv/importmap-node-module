@@ -47,3 +47,5 @@
 # Please don't yell at me for doing this.
 /secrets.json
 
+.DS_Store
+
