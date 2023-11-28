@@ -49,7 +49,12 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
       setHtmlNodeAttributes(scriptTypeImportmap, { src: undefined });
       logger.warn(`remove src=${srcAttribute} from <script type="module">`);
     }
-    setHtmlNodeText(scriptTypeImportmap, importmapAsJson);
+    setHtmlNodeText(scriptTypeImportmap, importmapAsJson, {
+      indentation: "auto",
+    });
+    setHtmlNodeAttributes(scriptTypeImportmap, {
+      "content-indented": undefined,
+    });
   } else {
     injectHtmlNodeAsEarlyAsPossible(
       htmlAst,
