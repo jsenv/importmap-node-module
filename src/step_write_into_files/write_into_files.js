@@ -55,6 +55,11 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
     setHtmlNodeAttributes(scriptTypeImportmap, {
       "content-indented": undefined,
     });
+    logger.info(
+      `<script type="importmap"> content updated into "${urlToFileSystemPath(
+        htmlFileUrl,
+      )}"`,
+    );
   } else {
     const importmapNode = createHtmlNode({
       tagName: "script",
@@ -66,6 +71,11 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
       "jsenv-injected-by": "@jsenv/importmap-node-module",
       "content-indented": undefined,
     });
+    logger.info(
+      `<script type="importmap"> injected into "${urlToFileSystemPath(
+        htmlFileUrl,
+      )}"`,
+    );
   }
   const html = stringifyHtmlAst(htmlAst);
   writeFileSync(new URL(htmlFileUrl), html);

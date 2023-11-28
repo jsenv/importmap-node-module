@@ -42,7 +42,7 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
   importmaps: {
-    "./project.importmap": {
+    "./index.html": {
       mappingsForNodeResolution: true,
     },
   },
@@ -59,7 +59,7 @@ npm install --save-dev @jsenv/importmap-node-module
 
 ```console
 node ./generate_importmap.mjs
--> /Users/d.maillard/importmap-node-module/docs/demo/project.importmap
+<script type="importmap"> content updated into "/demo/index.html"
 ```
 
 # API options
@@ -295,28 +295,13 @@ await writeImportmaps({
 
 # Using import maps
 
-Add _project.importmap_ to your html
+At the time of writing this documentation external importmap are not supported by web browsers:
 
-```diff
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Title</title>
-    <meta charset="utf-8" />
-    <link rel="icon" href="data:," />
-+   <script type="importmap" src="./project.importmap"></script>
-  </head>
-
-  <body>
-    <script type="module">
-      import lodash from "lodash"
-    </script>
-  </body>
-</html>
+```console
+External import maps are not yet supported
 ```
 
-If you use a bundler or an other tool, be sure it's compatible with import maps.
-As import map are standard the bundler/tool might be compatible by default or with the help of some plugin/configuration.
+If you plan to use importmap in a web browser you need to tell `@jsenv/importmap-node-module` to inline importmap into the HTML file as show in [API](#API).
 
 # TypeScript
 
