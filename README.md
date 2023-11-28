@@ -8,20 +8,20 @@ _Example of code relying on node module resolution:_
 import lodash from "lodash";
 ```
 
-# How it works
+## How it works
 
 1. Use `package.json` and `node_modules/**/package.json` to generate mappings corresponding to [node esm resolution algorithm](https://nodejs.org/docs/latest-v16.x/api/esm.html#esm_resolution_algorithm)
 2. (Optional) Test importmap against all import found in js module files. This step allow to remove unused mappings to keep only thoose actually used in the codebase
-3. Write the mappings into into a file
+3. Write mappings into a file
 
-# Usage
+## Usage
 
-## CLI
+### CLI
 
 The simplest way to use this project is with `npx`:
 
 ```console
-npx @jsenv/importmap-node-module project.importmap
+npx @jsenv/importmap-node-module index.html
 ```
 
 The CLI supports the following options:
@@ -30,7 +30,7 @@ The CLI supports the following options:
 - `--entrypoint`: Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
 - `--remove-unused`: Remove mappings not used by any entrypoint or their transitive dependencies. Requires `--entrypoint`.
 
-## API
+### API
 
 The API supports a few more options than the CLI.
 
@@ -62,7 +62,7 @@ node ./generate_importmap.mjs
 <script type="importmap"> content updated into "/demo/index.html"
 ```
 
-# API options
+### API options
 
 _writeImportmaps_ is an async function generating one or many importmap and writing them into files.
 
@@ -85,19 +85,19 @@ await writeImportmaps({
 
 It supports the following options:
 
-## projectDirectoryUrl
+#### projectDirectoryUrl
 
 _projectDirectoryUrl_ is a string/url leading to a folder with a _package.json_.
 
 _projectDirectoryUrl_ is **required**.
 
-## importmaps
+#### importmaps
 
 _importmaps_ is an object where keys are file relative urls and value are objects configuring which mappings will be written in the files.
 
 _importmaps_ is **required**.
 
-### mappingsForNodeResolution
+##### mappingsForNodeResolution
 
 _mappingsForNodeResolution_ is a boolean. When enabled mappings required to implement node module resolution are generated.
 
@@ -105,13 +105,13 @@ _mappingsForNodeResolution_ is optional.
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
-### mappingsForDevDependencies
+##### mappingsForDevDependencies
 
 _mappingsForDevDependencies_ is a boolean. When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
 
 _mappingsForDevDependencies_ is optional.
 
-### runtime
+##### runtime
 
 _runtime_ is a string used to determine what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
 
@@ -135,7 +135,7 @@ await writeImportmaps({
 });
 ```
 
-### packageUserConditions
+##### packageUserConditions
 
 _packageUserConditions_ is an array controlling which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
 
@@ -159,7 +159,7 @@ await writeImportmaps({
 });
 ```
 
-### entryPoints
+##### entryPoints
 
 _entryPoints_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import.
 
@@ -181,7 +181,7 @@ await writeImportmaps({
 
 It is recommended to use _entryPoints_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
 
-### magicExtensions
+##### magicExtensions
 
 _magicExtensions_ is an array of strings. Each string represent an extension that will be tried when an import cannot be resolved to a file.
 
@@ -215,7 +215,7 @@ import "./helper";
 
 All other values in _magicExtensions_ are file extensions that will be tried one after an other.
 
-### removeUnusedMappings
+##### removeUnusedMappings
 
 _removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files.
 
@@ -238,7 +238,7 @@ await writeImportmaps({
 
 It is recommended to enable _removeUnusedMappings_ so that importmap contains only the mappings actually used by your codebase.
 
-### manualImportmap
+##### manualImportmap
 
 _manualImportmap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
 
@@ -262,7 +262,7 @@ await writeImportmaps({
 });
 ```
 
-## packagesManualOverrides
+#### packagesManualOverrides
 
 _packagesManualOverrides_ is an object that can be used to override some of your dependencies package.json.
 
@@ -293,7 +293,7 @@ await writeImportmaps({
 });
 ```
 
-# Using import maps
+## Using import maps
 
 At the time of writing this documentation external importmap are not supported by web browsers:
 
@@ -303,7 +303,7 @@ External import maps are not yet supported
 
 If you plan to use importmap in a web browser you need to tell `@jsenv/importmap-node-module` to inline importmap into the HTML file as show in [API](#API).
 
-# TypeScript
+## TypeScript
 
 This repository can generate importmap to make code produced by the TypeScript compiler executable in a browser.
 
@@ -338,7 +338,7 @@ await writeImportmaps({
 });
 ```
 
-# See also
+## See also
 
 - [./docs/example/](./docs/examples/)
 - [Configuring VSCode and ESLint for importmap](./docs/vscode_and_eslint.md#configure-vscode-and-eslint-for-importmap)
