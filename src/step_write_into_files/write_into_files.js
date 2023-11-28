@@ -56,14 +56,16 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
       "content-indented": undefined,
     });
   } else {
-    injectHtmlNodeAsEarlyAsPossible(
-      htmlAst,
-      createHtmlNode({
-        tagName: "script",
-        type: "importmap",
-        textContent: importmapAsJson,
-      }),
-    );
+    const importmapNode = createHtmlNode({
+      tagName: "script",
+      type: "importmap",
+      textContent: importmapAsJson,
+    });
+    injectHtmlNodeAsEarlyAsPossible(htmlAst, importmapNode);
+    setHtmlNodeAttributes(importmapNode, {
+      "jsenv-injected-by": "@jsenv/importmap-node-module",
+      "content-indented": undefined,
+    });
   }
   const html = stringifyHtmlAst(htmlAst);
   writeFileSync(new URL(htmlFileUrl), html);

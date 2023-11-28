@@ -6,7 +6,7 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const snapshotDirectoryUrl = new URL("./snapshots/", import.meta.url);
 
-const test = async (fixtureName) => {
+const test = async (fixtureName, options) => {
   copyFileSync({
     from: new URL(`./fixtures/${fixtureName}`, import.meta.url),
     to: new URL("./root/index.html", import.meta.url),
@@ -21,6 +21,7 @@ const test = async (fixtureName) => {
         removeUnusedMappings: true,
       },
     },
+    ...options,
   });
   copyFileSync({
     from: new URL("./root/index.html", import.meta.url),
@@ -31,6 +32,6 @@ const test = async (fixtureName) => {
 
 const directorySnapshot = takeDirectorySnapshot(snapshotDirectoryUrl);
 await test("index_importmap_empty.html");
-await test("index_importmap_with_src.html");
+await test("index_importmap_with_src.html", { logLevel: "error" });
 await test("index_without_importmap.html");
 directorySnapshot.compare();
