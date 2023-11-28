@@ -180,9 +180,9 @@ export const testImportmapOnEntryPoints = async (
     },
   );
 
-  for (const entryPointToCheck of entryPoints) {
+  for (const entryPoint of entryPoints) {
     // normalize the entry point specifier
-    const entryPointUrl = resolveUrl(entryPointToCheck, baseUrl);
+    const entryPointUrl = resolveUrl(entryPoint, baseUrl);
     const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl);
     const entryPointSpecifier = `./${entryPointRelativeUrl}`;
     await visitSpecifier(entryPointSpecifier, baseUrl, {

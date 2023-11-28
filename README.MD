@@ -165,8 +165,6 @@ _entryPoints_ is an array composed of string representing file relative urls. Ea
 
 _entryPoints_ is optional.
 
-When given
-
 ```js
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 

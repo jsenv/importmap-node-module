@@ -25,9 +25,6 @@ const options = {
 const { values, positionals } = parseArgs({ options, allowPositionals: true });
 const outfile = positionals[0];
 values.entrypoint ??= [];
-if (outfile.endsWith(".html")) {
-  values.entrypoint = [outfile, ...values.entrypoint];
-}
 
 if (values.help || positionals.length === 0) {
   usage();
@@ -64,7 +61,7 @@ await writeImportmaps({
 function usage() {
   console.log(`importmap-node-module: Generate import maps for node's esm resolution algorithm.
 
-Usage: npx @jsenv/importmap-node-module output.importmap [options] [root-directory] 
+Usage: npx @jsenv/importmap-node-module output.importmap [options]
 
 https://github.com/jsenv/importmap-node-module
 
@@ -72,7 +69,7 @@ Options:
   --help                  Display this message.
   --dir                   Files will be resolved against this directory. Defaults to process.cwd()
   --include-dev           Include devDependencies from package.json.
-  --entrypoint file.js    Confirm specified entry points and their transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
+  --entrypoint file.js    Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
   --remove-unused         Remove mappings not used by any entrypoint or their transitive dependencies. Requires --entrypoint.
 
 For more advanced options, see the API.`);
