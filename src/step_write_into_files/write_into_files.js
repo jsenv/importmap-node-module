@@ -31,7 +31,7 @@ export const writeIntoFiles = (
 
 const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
   const htmlAst = parseHtml({
-    html: readFileSync(htmlFileUrl, "utf8"),
+    html: readFileSync(htmlFileUrl, { as: "string" }),
     url: htmlFileUrl,
     storeOriginalPositions: false,
   });
@@ -61,5 +61,5 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
     );
   }
   const html = stringifyHtmlAst(htmlAst);
-  writeFileSync(htmlFileUrl, html);
+  writeFileSync(new URL(htmlFileUrl), html);
 };

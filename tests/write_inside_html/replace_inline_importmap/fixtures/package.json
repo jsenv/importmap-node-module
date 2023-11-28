@@ -1,7 +1,0 @@
-{
-    "name": "fixtures",
-    "private": true,
-    "dependencies": {
-        "foo": "*"
-    }
-}
