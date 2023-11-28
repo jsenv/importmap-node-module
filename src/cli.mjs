@@ -2,11 +2,14 @@
 
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
-import { writeImportMapFiles } from "./main.js";
+import { writeImportmaps } from "./main.js";
 
 const options = {
   "help": {
     type: "boolean",
+  },
+  "dir": {
+    type: "string",
   },
   "include-dev": {
     type: "boolean",
@@ -20,33 +23,39 @@ const options = {
   },
 };
 const { values, positionals } = parseArgs({ options, allowPositionals: true });
+const outfile = positionals[0];
 values.entrypoint ??= [];
+if (outfile.endsWith(".html")) {
+  values.entrypoint = [outfile, ...values.entrypoint];
+}
 
 if (values.help || positionals.length === 0) {
   usage();
   process.exit(0);
 }
 
-if (positionals.length > 2) {
+if (positionals.length > 1) {
   console.error("Error: too many inputs.");
   process.exit(1);
 }
 
 if (values["remove-unused"] && values.entrypoint.length === 0) {
-  console.error("Error: --remove-unused requires at least one --entrypoint.");
-  process.exit(1);
+  if (outfile.endsWith(".html")) {
+    values.entrypoint.push(outfile);
+  } else {
+    console.error("Error: --remove-unused requires at least one --entrypoint.");
+    process.exit(1);
+  }
 }
 
-let indir = positionals.length === 2 ? positionals[0] : ".";
-let outfile = positionals.length === 2 ? positionals[1] : positionals[0];
-
-await writeImportMapFiles({
-  projectDirectoryUrl: new URL(indir, pathToFileURL(`${process.cwd()}/`)),
-  importMapFiles: {
+const currentDirectoryUrl = pathToFileURL(`${process.cwd()}/`);
+await writeImportmaps({
+  projectDirectoryUrl: new URL(values.dir || ".", currentDirectoryUrl),
+  importmaps: {
     [outfile]: {
       mappingsForNodeResolution: true,
       mappingsForDevDependencies: values["include-dev"],
-      entryPointsToCheck: values.entrypoint,
+      entryPoints: values.entrypoint,
       removeUnusedMappings: values["remove-unused"],
     },
   },
@@ -55,14 +64,15 @@ await writeImportMapFiles({
 function usage() {
   console.log(`importmap-node-module: Generate import maps for node's esm resolution algorithm.
 
-Usage: npx @jsenv/importmap-node-module [options] [root-directory] output.importmap
+Usage: npx @jsenv/importmap-node-module output.importmap [options] [root-directory] 
 
 https://github.com/jsenv/importmap-node-module
 
 Options:
   --help                  Display this message.
+  --dir                   Files will be resolved against this directory. Defaults to process.cwd()
   --include-dev           Include devDependencies from package.json.
-  --entrypoint file.js    Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
+  --entrypoint file.js    Confirm specified entry points and their transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
   --remove-unused         Remove mappings not used by any entrypoint or their transitive dependencies. Requires --entrypoint.
 
 For more advanced options, see the API.`);

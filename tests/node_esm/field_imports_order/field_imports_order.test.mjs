@@ -1,23 +1,24 @@
 import { takeFileSnapshot } from "@jsenv/snapshot";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const test = async ({ projectDirectoryUrl, runtime }) => {
   const importmapFileUrl = new URL("./test.importmap", projectDirectoryUrl);
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-  await writeImportMapFiles({
+  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       "test.importmap": {
         mappingsForNodeResolution: true,
-        entryPointsToCheck: ["./index.js"],
+        entryPoints: ["./index.js"],
+
         removeUnusedMappings: true,
         runtime,
       },
     },
   });
-  importmapFileSnapshot.compare();
+  importmapsnapshot.compare();
 };
 
 await test({

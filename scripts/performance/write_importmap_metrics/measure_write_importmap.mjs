@@ -6,11 +6,11 @@ const measures = startMeasures({
   filesystem: true,
 });
 
-const { writeImportMapFiles } = await import("@jsenv/importmap-node-module");
-await writeImportMapFiles({
+const { writeImportmaps } = await import("@jsenv/importmap-node-module");
+await writeImportmaps({
   logLevel: "warn",
   projectDirectoryUrl: new URL("./fake_project/", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./node_resolution.importmap": {
       mappingsForNodeResolution: true,
       mappingsForDevDependencies: true,

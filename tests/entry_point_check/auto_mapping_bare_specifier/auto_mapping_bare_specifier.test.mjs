@@ -1,7 +1,7 @@
 import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const test = async ({ bareSpecifierAutomapping }) => {
@@ -12,15 +12,16 @@ const test = async ({ bareSpecifierAutomapping }) => {
     `./root/${importmapRelativeUrl}`,
     import.meta.url,
   );
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
-  await writeImportMapFiles({
+  await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       [importmapRelativeUrl]: {
         mappingsForNodeResolution: true,
-        entryPointsToCheck: ["./index.js"],
+        entryPoints: ["./index.js"],
+
         removeUnusedMappings: true,
         bareSpecifierAutomapping,
       },
@@ -29,7 +30,7 @@ const test = async ({ bareSpecifierAutomapping }) => {
       warnings.push(warning);
     },
   });
-  importmapFileSnapshot.compare();
+  importmapsnapshot.compare();
   const actual = warnings;
   const expected = bareSpecifierAutomapping
     ? []
@@ -50,7 +51,7 @@ update import specifier to "./file.js"
 --- suggestion 2 ---
 use bareSpecifierAutomapping: true
 --- suggestion 3 ---
-add mapping to "manualImportMap"
+add mapping to "manualImportmap"
 {
   "imports": {
     "file": "./file.js"

@@ -2,16 +2,16 @@ import { assert } from "@jsenv/assert";
 import { writeFileSync, removeFileSync } from "@jsenv/filesystem";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const mainJsFileUrl = new URL("./main.js", testDirectoryUrl);
 const getWarnings = async (params) => {
   const warnings = [];
-  await writeImportMapFiles({
+  await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       "test.importmap": {
         ...params,
       },
@@ -26,14 +26,14 @@ const getWarnings = async (params) => {
 removeFileSync(mainJsFileUrl, { allowUseless: true });
 {
   const actual = await getWarnings({
-    entryPointsToCheck: ["./main.js"],
+    entryPoints: ["./main.js"],
   });
   const expected = [
     {
       code: "IMPORT_RESOLUTION_FAILED",
       message: `Import resolution failed for "./main.js"
 --- import trace ---
-entryPointsToCheck parameter
+entryPoints parameter
 --- reason ---
 file not found on filesystem at ${urlToFileSystemPath(
         `${testDirectoryUrl}main.js`,
@@ -46,7 +46,7 @@ file not found on filesystem at ${urlToFileSystemPath(
 writeFileSync(mainJsFileUrl);
 {
   const actual = await getWarnings({
-    entryPointsToCheck: ["./main.js"],
+    entryPoints: ["./main.js"],
   });
   const expected = [];
   assert({ actual, expected });

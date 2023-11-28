@@ -1,7 +1,7 @@
 import { takeFileSnapshot } from "@jsenv/snapshot";
 import { removeEntrySync, writeSymbolicLinkSync } from "@jsenv/filesystem";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const fixturesDirectoryUrl = new URL("./fixtures/", import.meta.url);
 const testDirectoryUrl = new URL("./fixtures/dir/", import.meta.url);
@@ -18,11 +18,11 @@ try {
     "./fixtures/dir/test.importmap",
     import.meta.url,
   );
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-  await writeImportMapFiles({
+  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       "test.importmap": {
         mappingsForNodeResolution: true,
         mappingsForDevDependencies: true,
@@ -31,7 +31,7 @@ try {
       },
     },
   });
-  importmapFileSnapshot.compare();
+  importmapsnapshot.compare();
 } finally {
   removeEntrySync(`${testDirectoryUrl}/node_modules/siesta`);
 }

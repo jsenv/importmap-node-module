@@ -1,8 +1,8 @@
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./project.importmap": {
       mappingsForNodeResolution: true,
     },

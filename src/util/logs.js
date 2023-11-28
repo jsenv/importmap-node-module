@@ -165,7 +165,7 @@ const getImportResolutionFailedSuggestions = ({
     if (magicExtension) {
       addSuggestion(`use magicExtensions: ["inherit"]`);
     }
-    addSuggestion(`add mapping to "manualImportMap"
+    addSuggestion(`add mapping to "manualImportmap"
 ${mappingToImportmapString(automapping)}`);
   }
 

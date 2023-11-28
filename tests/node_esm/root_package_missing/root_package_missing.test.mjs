@@ -1,14 +1,14 @@
 import { assert } from "@jsenv/assert";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const packageFileUrl = new URL("./package.json", testDirectoryUrl);
 
 try {
-  await writeImportMapFiles({
+  await writeImportmaps({
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       "test.importmap": {
         mappingsForNodeResolution: true,
       },

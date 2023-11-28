@@ -37,11 +37,11 @@ The API supports a few more options than the CLI.
 1 - Create _generate_importmap.mjs_
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./project.importmap": {
       mappingsForNodeResolution: true,
     },
@@ -64,14 +64,14 @@ node ./generate_importmap.mjs
 
 # API options
 
-_writeImportMapFiles_ is an async function generating one or many importmap files.
+_writeImportmaps_ is an async function generating one or many importmap and writing them into files.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./importmap_for_dev.importmap": {
       mappingsForNodeResolution: true,
       mappingsForDevDependencies: true,
@@ -91,11 +91,11 @@ _projectDirectoryUrl_ is a string/url leading to a folder with a _package.json_.
 
 _projectDirectoryUrl_ is **required**.
 
-## importMapFiles
+## importmaps
 
-_importMapFiles_ is an object where keys are file relative urls and value are objects configuring which mappings will be written in the importmap files.
+_importmaps_ is an object where keys are file relative urls and value are objects configuring which mappings will be written in the files.
 
-_importMapFiles_ is **required**.
+_importmaps_ is **required**.
 
 ### mappingsForNodeResolution
 
@@ -118,11 +118,11 @@ _runtime_ is a string used to determine what to pick in [package.json conditions
 _runtime_ is optional and defaults to `"browser"`.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./browser.importmap": {
       mappingsForNodeResolution: true,
       runtime: "browser",
@@ -142,11 +142,11 @@ _packageUserConditions_ is an array controlling which conditions are favored in 
 _packageUserConditions_ is optional.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./dev.importmap": {
       mappingsForNodeResolution: true,
       packageUserConditions: ["development"],
@@ -159,43 +159,45 @@ await writeImportMapFiles({
 });
 ```
 
-### entryPointsToCheck
+### entryPoints
 
-_entryPointsToCheck_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import. You can also pass HTML file(s).
+_entryPoints_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import.
 
-_entryPointsToCheck_ is optional.
+_entryPoints_ is optional.
+
+When given
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./project.importmap": {
       mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./main.js"],
+      entryPoints: ["./main.js"],
     },
   },
 });
 ```
 
-It is recommended to use _entryPointsToCheck_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
+It is recommended to use _entryPoints_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
 
 ### magicExtensions
 
 _magicExtensions_ is an array of strings. Each string represent an extension that will be tried when an import cannot be resolved to a file.
 
-_magicExtensions_ is optional. It must be used with _entryPointsToCheck_.
+_magicExtensions_ is optional. It must be used with _entryPoints_.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./test.importmap": {
       mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./main.js"],
+      entryPoints: ["./main.js"],
       magicExtensions: ["inherit", ".js"],
     },
   },
@@ -219,17 +221,17 @@ All other values in _magicExtensions_ are file extensions that will be tried one
 
 _removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files.
 
-_removeUnusedMappings_ is optional. It must be used with _entryPointsToCheck_.
+_removeUnusedMappings_ is optional. It must be used with _entryPoints_.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./test.importmap": {
       mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./main.js"],
+      entryPoints: ["./main.js"],
       removeUnusedMappings: true,
     },
   },
@@ -238,21 +240,21 @@ await writeImportMapFiles({
 
 It is recommended to enable _removeUnusedMappings_ so that importmap contains only the mappings actually used by your codebase.
 
-### manualImportMap
+### manualImportmap
 
-_manualImportMap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
+_manualImportmap_ is an object containing mappings that will be added to the importmap. This can be used to provide additional mappings and/or override node mappings.
 
-_manualImportMap_ is optional.
+_manualImportmap_ is optional.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./test.importmap": {
       mappingsForNodeResolution: true,
-      manualImportMap: {
+      manualImportmap: {
         imports: {
           "#env": "./env.js",
         },
@@ -271,11 +273,11 @@ _packagesManualOverrides_ is optional.
 _packagesManualOverrides_ exists in case some of your dependencies use non standard fields to configure their entry points in their _package.json_. Ideally they should use `"exports"` field documented in https://nodejs.org/dist/latest-v16.x/docs/api/packages.html#packages_package_entry_points. But not every one has updated to this new field yet.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./test.importmap": {
       mappingsForNodeResolution: true,
     },
@@ -338,14 +340,14 @@ You can achieve this with the following "scripts" in your _package.json_.
 Then you can use the script below to produce the importmap.
 
 ```js
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./dist/", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./project.importmap": {
       mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./index.js"],
+      entryPoints: ["./index.js"],
       magicExtensions: ["inherit"],
       removeUnusedMappings: true,
     },

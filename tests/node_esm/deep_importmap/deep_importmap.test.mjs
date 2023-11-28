@@ -1,28 +1,29 @@
 import { takeFileSnapshot } from "@jsenv/snapshot";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL(
   "./root/src/directory/test.importmap",
   import.meta.url,
 );
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-await writeImportMapFiles({
+const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportmaps({
   logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
-  importMapFiles: {
+  importmaps: {
     "./src/directory/test.importmap": {
       mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./src/directory/main.js"],
-      removeUnusedMappings: true,
-      magicExtensions: [".js"],
-      manualImportMap: {
+      manualImportmap: {
         imports: {
           "directory/": "./src/directory/",
         },
       },
+      entryPoints: ["./src/directory/main.js"],
+      magicExtensions: [".js"],
+
+      removeUnusedMappings: true,
     },
   },
 });
-importmapFileSnapshot.compare();
+importmapsnapshot.compare();

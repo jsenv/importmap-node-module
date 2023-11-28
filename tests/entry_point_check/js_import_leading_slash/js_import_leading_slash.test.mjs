@@ -2,7 +2,7 @@ import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 if (process.platform === "win32") {
   // TODO: make it work on windows
@@ -13,15 +13,16 @@ const testDirectoryUrl = new URL("./root/", import.meta.url);
 const test = async ({ name, runtime, expectedWarnings }) => {
   const importmapFileRelativeUrl = `${name}.importmap`;
   const importmapFileUrl = new URL(importmapFileRelativeUrl, testDirectoryUrl);
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
-  await writeImportMapFiles({
+  await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       [importmapFileRelativeUrl]: {
         runtime,
-        entryPointsToCheck: ["./main.js"],
+        entryPoints: ["./main.js"],
+
         removeUnusedMappings: true,
       },
     },
@@ -29,7 +30,7 @@ const test = async ({ name, runtime, expectedWarnings }) => {
       warnings.push(warning);
     },
   });
-  importmapFileSnapshot.compare();
+  importmapsnapshot.compare();
   const actual = warnings;
   const expected = expectedWarnings;
   assert({ actual, expected });
