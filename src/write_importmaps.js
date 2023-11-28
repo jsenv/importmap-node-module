@@ -1,9 +1,5 @@
 import { createLogger } from "@jsenv/logger";
-import {
-  assertAndNormalizeDirectoryUrl,
-  writeFileSync,
-} from "@jsenv/filesystem";
-import { urlToFileSystemPath } from "@jsenv/urls";
+import { assertAndNormalizeDirectoryUrl } from "@jsenv/filesystem";
 import {
   composeTwoImportMaps,
   sortImportMap,
@@ -13,6 +9,7 @@ import {
 import { generateImportmapForNodeESMResolution } from "./step_node_esm/importmap_for_node_esm.js";
 import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on_entry_points.js";
 import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
+import { writeIntoFiles } from "./step_write_into_files/write_into_files.js";
 
 export const writeImportmaps = async ({
   logLevel,
@@ -104,7 +101,7 @@ export const writeImportmaps = async ({
       // 3. it's kinda possible to assume an export from "exports" field is the main entry point
       //    but for project with many entry points they cannot be distinguised from
       //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
-      entryPoints,
+      entryPoints = [],
       // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
       // of files. Not that hard to do, especially using @jsenv/url-meta
       // but that's super extra fine tuning that I don't have time/energy to do for now
@@ -113,17 +110,28 @@ export const writeImportmaps = async ({
       removeUnusedMappings,
       runtime = "browser",
     } = importmapInfo.options;
-    if (removeUnusedMappings && !entryPoints) {
-      logger.warn(
-        `"entryPoints" is required when "removeUnusedMappings" is enabled`,
-      );
+    if (bareSpecifierAutomapping && entryPoints.length === 0) {
+      if (importmapRelativeUrl.endsWith(".html")) {
+        entryPoints.push(importmapRelativeUrl);
+      } else {
+        logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
+      }
     }
-    if (magicExtensions && !entryPoints) {
-      logger.warn(
-        `"entryPoints" is required when "magicExtensions" is enabled`,
-      );
+    if (magicExtensions && entryPoints.length === 0) {
+      if (importmapRelativeUrl.endsWith(".html")) {
+        entryPoints.push(importmapRelativeUrl);
+      } else {
+        logger.warn(`"magicExtensions" requires "entryPoints"`);
+      }
     }
-    if (!entryPoints) {
+    if (removeUnusedMappings && entryPoints.length === 0) {
+      if (importmapRelativeUrl.endsWith(".html")) {
+        entryPoints.push(importmapRelativeUrl);
+      } else {
+        logger.warn(`"removeUnusedMappings" requires "entryPoints"`);
+      }
+    }
+    if (entryPoints.length === 0) {
       continue;
     }
     const importmapAfterEntryPointStep = await testImportmapOnEntryPoints(
@@ -162,13 +170,10 @@ export const writeImportmaps = async ({
   }
 
   if (writeFiles) {
-    for (const importmapRelativeUrl of importmapRelativeUrls) {
-      const importmapInfo = importmapInfos[importmapRelativeUrl];
-      const importmapUrl = new URL(importmapRelativeUrl, projectDirectoryUrl);
-      const importmap = importmapInfo.importmap;
-      writeFileSync(importmapUrl, JSON.stringify(importmap, null, "  "));
-      logger.info(`-> ${urlToFileSystemPath(importmapUrl)}`);
-    }
+    writeIntoFiles(importmapInfos, {
+      logger,
+      projectDirectoryUrl,
+    });
   }
 
   const importmapContents = {};
