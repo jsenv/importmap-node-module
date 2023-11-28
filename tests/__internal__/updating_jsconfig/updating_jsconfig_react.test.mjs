@@ -1,7 +1,7 @@
 import { takeFileSnapshot } from "@jsenv/snapshot";
 import { copyFileSync } from "@jsenv/filesystem";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./", import.meta.url);
 const jsConfigFileUrl = new URL("jsconfig.json", testDirectoryUrl);
@@ -12,12 +12,12 @@ copyFileSync({
   to: new URL("./jsconfig.json", import.meta.url),
   overwrite: true,
 });
-await writeImportMapFiles({
+await writeImportmaps({
   logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
-  importMapFiles: {
+  importmaps: {
     "test.importmap": {
-      manualImportMap: {
+      manualImportmap: {
         imports: { foo: "./bar.js" },
       },
       useForJsConfigJSON: true,

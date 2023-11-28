@@ -8,19 +8,19 @@
  * will be mapped to
  * "./node_modules/react-redux/es/index.js"
  *
- * see https://github.com/jsenv/importmap-node-module#writeimportmapfiles
+ * see https://github.com/jsenv/importmap-node-module#writeImportmaps
  *
  */
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./project.importmap": {
       runtime: "browser",
       mappingsForNodeResolution: true,
-      manualImportMap: {
+      manualImportmap: {
         scopes: {
           "./node_modules/react-redux/": {
             "react": "./node_modules/preact/compat/dist/compat.module.js",
@@ -28,8 +28,9 @@ await writeImportMapFiles({
           },
         },
       },
-      entryPointsToCheck: ["./main.html"],
+      entryPoints: ["./main.html"],
       magicExtensions: ["inherit"],
+
       removeUnusedMappings: true,
     },
   },

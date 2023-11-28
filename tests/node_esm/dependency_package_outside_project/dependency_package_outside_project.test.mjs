@@ -2,18 +2,18 @@ import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 
 const test = async ({ name, runtime, expectedWarnings }) => {
   const importmapFileUrl = new URL(`./root/${name}`, import.meta.url);
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
-  await writeImportMapFiles({
+  await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       [name]: {
         mappingsForNodeResolution: true,
         runtime,
@@ -23,7 +23,7 @@ const test = async ({ name, runtime, expectedWarnings }) => {
       warnings.push(warning);
     },
   });
-  importmapFileSnapshot.compare();
+  importmapsnapshot.compare();
   const actual = warnings;
   const expected = expectedWarnings;
   assert({ actual, expected });

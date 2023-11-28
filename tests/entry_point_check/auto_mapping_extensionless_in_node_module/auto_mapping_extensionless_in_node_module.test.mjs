@@ -2,7 +2,7 @@ import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 
@@ -14,13 +14,14 @@ const test = async ({ name, magicExtensions, expectedWarnings }) => {
   );
   const importmapSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
-  await writeImportMapFiles({
+  await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       [importmapRelativeUrl]: {
         mappingsForNodeResolution: true,
-        entryPointsToCheck: ["./main.js"],
+        entryPoints: ["./main.js"],
+
         removeUnusedMappings: true,
         magicExtensions,
       },
@@ -54,7 +55,7 @@ update import specifier to "./file.js"
 --- suggestion 2 ---
 use magicExtensions: ["inherit"]
 --- suggestion 3 ---
-add mapping to "manualImportMap"
+add mapping to "manualImportmap"
 {
   "scopes": {
     "./node_modules/leftpad/": {

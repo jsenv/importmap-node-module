@@ -20,13 +20,13 @@ It will update a file used by VSCode to resolve import: [jsconfig.json](https://
 _jsConfigFile code example_
 
 ```diff
-import { writeImportMapFiles } from "@jsenv/importmap-node-module"
+import { writeImportmaps } from "@jsenv/importmap-node-module"
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./project.importmap": {
-      manualImportMap: {
+      manualImportmap: {
         imports: {
           "src/": "./src/",
         }

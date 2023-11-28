@@ -3,21 +3,21 @@ import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-await writeImportMapFiles({
+const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportmaps({
   logLevel: "warn",
   projectDirectoryUrl: testDirectoryUrl,
-  importMapFiles: {
+  importmaps: {
     "test.importmap": {
       mappingsForNodeResolution: true,
     },
   },
 });
-importmapFileSnapshot.compare();
+importmapsnapshot.compare();
 
 const importmap = JSON.parse(readFileSync(importmapFileUrl, "utf8"));
 const importMapNormalized = normalizeImportMap(importmap, "http://example.com");

@@ -34,7 +34,7 @@ export const testImportmapOnEntryPoints = async (
     logger,
     warn,
     projectDirectoryUrl,
-    entryPointsToCheck,
+    entryPoints,
     bareSpecifierAutomapping,
     magicExtensions, // [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
     removeUnusedMappings,
@@ -180,13 +180,13 @@ export const testImportmapOnEntryPoints = async (
     },
   );
 
-  for (const entryPointToCheck of entryPointsToCheck) {
+  for (const entryPoint of entryPoints) {
     // normalize the entry point specifier
-    const entryPointUrl = resolveUrl(entryPointToCheck, baseUrl);
+    const entryPointUrl = resolveUrl(entryPoint, baseUrl);
     const entryPointRelativeUrl = urlToRelativeUrl(entryPointUrl, baseUrl);
     const entryPointSpecifier = `./${entryPointRelativeUrl}`;
     await visitSpecifier(entryPointSpecifier, baseUrl, {
-      importTrace: "entryPointsToCheck parameter",
+      importTrace: "entryPoints parameter",
     });
   }
 

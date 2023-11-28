@@ -1,9 +1,5 @@
 import { createLogger } from "@jsenv/logger";
-import {
-  assertAndNormalizeDirectoryUrl,
-  writeFileSync,
-} from "@jsenv/filesystem";
-import { urlToFileSystemPath } from "@jsenv/urls";
+import { assertAndNormalizeDirectoryUrl } from "@jsenv/filesystem";
 import {
   composeTwoImportMaps,
   sortImportMap,
@@ -13,15 +9,16 @@ import {
 import { generateImportmapForNodeESMResolution } from "./step_node_esm/importmap_for_node_esm.js";
 import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on_entry_points.js";
 import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
+import { writeIntoFiles } from "./step_write_into_files/write_into_files.js";
 
-export const writeImportMapFiles = async ({
+export const writeImportmaps = async ({
   logLevel,
   onWarn = (warning, warn) => {
     warn(warning);
   },
 
   projectDirectoryUrl,
-  importMapFiles,
+  importmaps,
   writeFiles = true,
   packagesManualOverrides,
   exportsFieldWarningConfig,
@@ -38,22 +35,20 @@ export const writeImportMapFiles = async ({
 
   projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
 
-  if (typeof importMapFiles !== "object" || importMapFiles === null) {
-    throw new TypeError(
-      `importMapFiles must be an object, received ${importMapFiles}`,
-    );
+  if (typeof importmaps !== "object" || importmaps === null) {
+    throw new TypeError(`importmaps must be an object, received ${importmaps}`);
   }
 
-  const importmapRelativeUrls = Object.keys(importMapFiles);
+  const importmapRelativeUrls = Object.keys(importmaps);
   const importmapCount = importmapRelativeUrls.length;
   if (importmapCount.length) {
-    throw new Error(`importMapFiles object is empty`);
+    throw new Error(`importmaps object is empty`);
   }
 
   // prepare importmapInfos
   const importmapInfos = {};
   for (const importmapRelativeUrl of importmapRelativeUrls) {
-    const options = importMapFiles[importmapRelativeUrl];
+    const options = importmaps[importmapRelativeUrl];
     const topLevelMappings = {};
     const scopedMappings = {};
     const importmap = {
@@ -81,14 +76,14 @@ export const writeImportMapFiles = async ({
   // augment with manual importmap (if specified)
   for (const importmapRelativeUrl of importmapRelativeUrls) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
-    const { manualImportMap } = importmapInfo.options;
-    if (!manualImportMap) {
+    const { manualImportmap } = importmapInfo.options;
+    if (!manualImportmap) {
       continue;
     }
-    assertManualImportMap(manualImportMap);
+    assertmanualImportmap(manualImportmap);
     const importmapAugmentedWithManualOne = composeTwoImportMaps(
       importmapInfo.importmap,
-      manualImportMap,
+      manualImportmap,
     );
     importmapInfo.importmap = importmapAugmentedWithManualOne;
   }
@@ -106,7 +101,7 @@ export const writeImportMapFiles = async ({
       // 3. it's kinda possible to assume an export from "exports" field is the main entry point
       //    but for project with many entry points they cannot be distinguised from
       //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
-      entryPointsToCheck,
+      entryPoints = [],
       // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
       // of files. Not that hard to do, especially using @jsenv/url-meta
       // but that's super extra fine tuning that I don't have time/energy to do for now
@@ -115,17 +110,28 @@ export const writeImportMapFiles = async ({
       removeUnusedMappings,
       runtime = "browser",
     } = importmapInfo.options;
-    if (removeUnusedMappings && !entryPointsToCheck) {
-      logger.warn(
-        `"entryPointsToCheck" is required when "removeUnusedMappings" is enabled`,
-      );
+    if (bareSpecifierAutomapping && entryPoints.length === 0) {
+      if (importmapRelativeUrl.endsWith(".html")) {
+        entryPoints.push(importmapRelativeUrl);
+      } else {
+        logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
+      }
     }
-    if (magicExtensions && !entryPointsToCheck) {
-      logger.warn(
-        `"entryPointsToCheck" is required when "magicExtensions" is enabled`,
-      );
+    if (magicExtensions && entryPoints.length === 0) {
+      if (importmapRelativeUrl.endsWith(".html")) {
+        entryPoints.push(importmapRelativeUrl);
+      } else {
+        logger.warn(`"magicExtensions" requires "entryPoints"`);
+      }
     }
-    if (!entryPointsToCheck) {
+    if (removeUnusedMappings && entryPoints.length === 0) {
+      if (importmapRelativeUrl.endsWith(".html")) {
+        entryPoints.push(importmapRelativeUrl);
+      } else {
+        logger.warn(`"removeUnusedMappings" requires "entryPoints"`);
+      }
+    }
+    if (entryPoints.length === 0) {
       continue;
     }
     const importmapAfterEntryPointStep = await testImportmapOnEntryPoints(
@@ -134,7 +140,7 @@ export const writeImportMapFiles = async ({
         logger,
         warn,
         projectDirectoryUrl,
-        entryPointsToCheck,
+        entryPoints,
         bareSpecifierAutomapping,
         magicExtensions,
         removeUnusedMappings,
@@ -164,21 +170,18 @@ export const writeImportMapFiles = async ({
   }
 
   if (writeFiles) {
-    for (const importmapRelativeUrl of importmapRelativeUrls) {
-      const importmapInfo = importmapInfos[importmapRelativeUrl];
-      const importmapUrl = new URL(importmapRelativeUrl, projectDirectoryUrl);
-      const importmap = importmapInfo.importmap;
-      writeFileSync(importmapUrl, JSON.stringify(importmap, null, "  "));
-      logger.info(`-> ${urlToFileSystemPath(importmapUrl)}`);
-    }
+    writeIntoFiles(importmapInfos, {
+      logger,
+      projectDirectoryUrl,
+    });
   }
 
-  const importmaps = {};
+  const importmapContents = {};
   for (const importmapRelativeUrl of importmapRelativeUrls) {
-    importmaps[importmapRelativeUrl] =
+    importmapContents[importmapRelativeUrl] =
       importmapInfos[importmapRelativeUrl].importmap;
   }
-  return importmaps;
+  return importmapContents;
 };
 
 const wrapWarnToWarnOnce = (warn) => {
@@ -199,33 +202,33 @@ const wrapWarnToWarnOnce = (warn) => {
   };
 };
 
-const assertManualImportMap = (value) => {
+const assertmanualImportmap = (value) => {
   if (value === null) {
-    throw new TypeError(`manualImportMap must be an object, got null`);
+    throw new TypeError(`manualImportmap must be an object, got null`);
   }
 
   const type = typeof value;
   if (type !== "object") {
-    throw new TypeError(`manualImportMap must be an object, received ${value}`);
+    throw new TypeError(`manualImportmap must be an object, received ${value}`);
   }
 
   const { imports = {}, scopes = {}, ...rest } = value;
   const extraKeys = Object.keys(rest);
   if (extraKeys.length > 0) {
     throw new TypeError(
-      `manualImportMap can have "imports" and "scopes", found unexpected keys: "${extraKeys}"`,
+      `manualImportmap can have "imports" and "scopes", found unexpected keys: "${extraKeys}"`,
     );
   }
 
   if (typeof imports !== "object") {
     throw new TypeError(
-      `manualImportMap.imports must be an object, found ${imports}`,
+      `manualImportmap.imports must be an object, found ${imports}`,
     );
   }
 
   if (typeof scopes !== "object") {
     throw new TypeError(
-      `manualImportMap.scopes must be an object, found ${imports}`,
+      `manualImportmap.scopes must be an object, found ${imports}`,
     );
   }
 };

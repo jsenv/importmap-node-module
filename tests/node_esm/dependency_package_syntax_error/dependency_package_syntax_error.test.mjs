@@ -1,7 +1,7 @@
 import { assert } from "@jsenv/assert";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const errorCalls = [];
@@ -10,13 +10,14 @@ console.error = (message) => {
   errorCalls.push(message);
 };
 try {
-  await writeImportMapFiles({
+  await writeImportmaps({
     logLevel: "off",
     projectDirectoryUrl: testDirectoryUrl,
-    importMapFiles: {
+    importmaps: {
       "test.importmap": {
         mappingsForNodeResolution: true,
-        entryPointsToCheck: ["./index.js"],
+        entryPoints: ["./index.js"],
+
         removeUnusedMappings: true,
       },
     },

@@ -1,13 +1,14 @@
 // eslint-disable-next-line import/no-unresolved
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-await writeImportMapFiles({
+await writeImportmaps({
   projectDirectoryUrl: new URL("./dist/", import.meta.url),
-  importMapFiles: {
+  importmaps: {
     "./project.importmap": {
       mappingsForNodeResolution: true,
-      entryPointsToCheck: ["./index.js"],
+      entryPoints: ["./index.js"],
       magicExtensions: ["inherit"],
+
       removeUnusedMappings: true,
     },
   },

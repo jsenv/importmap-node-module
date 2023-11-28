@@ -1,17 +1,17 @@
 import { takeFileSnapshot } from "@jsenv/snapshot";
 
-import { writeImportMapFiles } from "@jsenv/importmap-node-module";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL(`./root/test.importmap`, import.meta.url);
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-await writeImportMapFiles({
+const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+await writeImportmaps({
   projectDirectoryUrl: testDirectoryUrl,
-  importMapFiles: {
+  importmaps: {
     "test.importmap": {
       mappingsForNodeResolution: true,
-      // manualImportMap allows to override the mapping found in package.json
-      manualImportMap: {
+      // manualImportmap allows to override the mapping found in package.json
+      manualImportmap: {
         scopes: {
           "./node_modules/react-redux/": {
             react: "./node_modules/preact/compat/src/index.js",
@@ -21,4 +21,4 @@ await writeImportMapFiles({
     },
   },
 });
-importmapFileSnapshot.compare();
+importmapsnapshot.compare();

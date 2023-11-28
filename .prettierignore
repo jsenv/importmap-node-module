@@ -3,4 +3,6 @@
 /node_modules/
 /jsconfig.json
 /package-lock.json
-/package.json
+
+/tests/**/*.importmap
+/tests/**/jsconfig.json
