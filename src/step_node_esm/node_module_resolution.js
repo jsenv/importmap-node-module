@@ -16,7 +16,7 @@ export const createFindNodeModulePackage = () => {
     },
   );
   return ({
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     nodeModulesOutsideProjectAllowed,
     packagesManualOverrides = {},
     packageFileUrl,
@@ -24,12 +24,12 @@ export const createFindNodeModulePackage = () => {
   }) => {
     const nodeModuleCandidates = [
       ...getNodeModuleCandidatesInsideProject({
-        projectDirectoryUrl,
+        rootDirectoryUrl,
         packageFileUrl,
       }),
       ...(nodeModulesOutsideProjectAllowed
         ? getNodeModuleCandidatesOutsideProject({
-            projectDirectoryUrl,
+            rootDirectoryUrl,
           })
         : []),
     ];
@@ -84,22 +84,22 @@ const getNodeModuleCandidatesInsideProject = ({
   return [...candidates, `${projectDirectoryUrl}node_modules/`];
 };
 
-const getNodeModuleCandidatesOutsideProject = ({ projectDirectoryUrl }) => {
+const getNodeModuleCandidatesOutsideProject = ({ rootDirectoryUrl }) => {
   const candidates = [];
-  const parentDirectoryUrl = urlToParentUrl(projectDirectoryUrl);
+  const parentDirectoryUrl = urlToParentUrl(rootDirectoryUrl);
   const { pathname } = new URL(parentDirectoryUrl);
   const directories = pathname.slice(1, -1).split("/");
   let i = directories.length;
   while (i--) {
     const nodeModulesDirectoryUrl = ensureWindowsDriveLetter(
       `file:///${directories.slice(0, i + 1).join("/")}/node_modules/`,
-      projectDirectoryUrl,
+      rootDirectoryUrl,
     );
     candidates.push(nodeModulesDirectoryUrl);
   }
   return [
     ...candidates,
-    ensureWindowsDriveLetter(`file:///node_modules`, projectDirectoryUrl),
+    ensureWindowsDriveLetter(`file:///node_modules`, rootDirectoryUrl),
   ];
 };
 

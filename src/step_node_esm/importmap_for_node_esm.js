@@ -5,7 +5,7 @@ export const generateImportmapForNodeESMResolution = async (
   {
     logger,
     warn,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     packagesManualOverrides,
     exportsFieldWarningConfig,
     onImportmapGenerated,
@@ -14,27 +14,21 @@ export const generateImportmapForNodeESMResolution = async (
   const nodeResolutionVisitors = [];
   for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
-    const {
-      mappingsForNodeResolution,
-      mappingsForDevDependencies,
-      packageUserConditions,
-      packageIncludedPredicate,
-      runtime = "browser",
-    } = importmapInfo.options;
-    if (!mappingsForNodeResolution) {
+    const { node_esm = {} } = importmapInfo.options;
+    if (node_esm === false) {
       continue;
     }
+    const { devDependencies, packageUserConditions, packageIncludedPredicate } =
+      node_esm;
     const importsMappings = {};
     const scopesMappings = {};
     const mappingsToPutTopLevel = {};
 
     nodeResolutionVisitors.push({
-      mappingsForDevDependencies,
-      runtime,
-      packageConditions: packageConditionsFromPackageUserConditions({
-        runtime,
+      includeDevDependencies: devDependencies,
+      packageConditions: packageConditionsFromPackageUserConditions(
         packageUserConditions,
-      }),
+      ),
       packageIncludedPredicate,
       onMapping: ({ scope, from, to }) => {
         if (scope) {
@@ -68,12 +62,14 @@ export const generateImportmapForNodeESMResolution = async (
     return;
   }
   const nodeModulesOutsideProjectAllowed = nodeResolutionVisitors.every(
-    (visitor) => visitor.runtime === "node",
+    (visitor) => {
+      return visitor.packageConditions.includes("node");
+    },
   );
   await visitNodeModuleResolution(nodeResolutionVisitors, {
     logger,
     warn,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     nodeModulesOutsideProjectAllowed,
     packagesManualOverrides,
     exportsFieldWarningConfig,
@@ -83,20 +79,15 @@ export const generateImportmapForNodeESMResolution = async (
   }
 };
 
-const packageConditionsFromPackageUserConditions = ({
-  runtime,
-  packageUserConditions,
-}) => {
+const packageConditionsFromPackageUserConditions = (packageUserConditions) => {
   if (typeof packageUserConditions === "undefined") {
-    return ["import", runtime, "default"];
+    return ["import", "browser", "default"];
   }
-
   if (!Array.isArray(packageUserConditions)) {
     throw new TypeError(
       `packageUserConditions must be an array, got ${packageUserConditions}`,
     );
   }
-
   packageUserConditions.forEach((userCondition) => {
     if (typeof userCondition !== "string") {
       throw new TypeError(
@@ -104,6 +95,5 @@ const packageConditionsFromPackageUserConditions = ({
       );
     }
   });
-
-  return [...packageUserConditions, "import", runtime, "default"];
+  return [...packageUserConditions, "import", "browser", "default"];
 };

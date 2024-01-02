@@ -33,7 +33,7 @@ export const writeImportmaps = async ({
     });
   });
 
-  directoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl);
+  const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl);
 
   if (typeof importmaps !== "object" || importmaps === null) {
     throw new TypeError(`importmaps must be an object, received ${importmaps}`);
@@ -65,7 +65,7 @@ export const writeImportmaps = async ({
   await generateImportmapForNodeESMResolution(importmapInfos, {
     logger,
     warn,
-    directoryUrl,
+    rootDirectoryUrl,
     packagesManualOverrides,
     exportsFieldWarningConfig,
     onImportmapGenerated: (importmap, importmapRelativeUrl) => {
@@ -94,6 +94,10 @@ export const writeImportmaps = async ({
   // - remove unused mappings
   for (const importmapRelativeUrl of importmapRelativeUrls) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
+    const { import_resolution } = importmapInfo.options;
+    if (import_resolution === false) {
+      continue;
+    }
     const {
       // we could deduce it from the package.json but:
       // 1. project might not use package.json
@@ -107,29 +111,22 @@ export const writeImportmaps = async ({
       // but that's super extra fine tuning that I don't have time/energy to do for now
       bareSpecifierAutomapping,
       magicExtensions,
-      removeUnusedMappings,
+      keepUnusedMappings,
       runtime = "browser",
-    } = importmapInfo.options;
+    } = import_resolution;
+
+    if (
+      !entryPoints.includes(importmapRelativeUrl) &&
+      importmapRelativeUrl.endsWith(".html")
+    ) {
+      entryPoints.push(importmapRelativeUrl);
+    }
+
     if (bareSpecifierAutomapping && entryPoints.length === 0) {
-      if (importmapRelativeUrl.endsWith(".html")) {
-        entryPoints.push(importmapRelativeUrl);
-      } else {
-        logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
-      }
+      logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
     }
     if (magicExtensions && entryPoints.length === 0) {
-      if (importmapRelativeUrl.endsWith(".html")) {
-        entryPoints.push(importmapRelativeUrl);
-      } else {
-        logger.warn(`"magicExtensions" requires "entryPoints"`);
-      }
-    }
-    if (removeUnusedMappings && entryPoints.length === 0) {
-      if (importmapRelativeUrl.endsWith(".html")) {
-        entryPoints.push(importmapRelativeUrl);
-      } else {
-        logger.warn(`"removeUnusedMappings" requires "entryPoints"`);
-      }
+      logger.warn(`"magicExtensions" requires "entryPoints"`);
     }
     if (entryPoints.length === 0) {
       continue;
@@ -139,11 +136,11 @@ export const writeImportmaps = async ({
       {
         logger,
         warn,
-        directoryUrl,
+        rootDirectoryUrl,
         entryPoints,
         bareSpecifierAutomapping,
         magicExtensions,
-        removeUnusedMappings,
+        keepUnusedMappings,
         runtime,
         babelConfigFileUrl,
       },
@@ -153,7 +150,7 @@ export const writeImportmaps = async ({
 
   updateJsConfigForVsCode(importmapInfos, {
     logger,
-    directoryUrl,
+    rootDirectoryUrl,
     jsConfigFileUrl,
     jsConfigDefault,
   });
@@ -162,17 +159,15 @@ export const writeImportmaps = async ({
     const importmapInfo = importmapInfos[importmapRelativeUrl];
     let importmap = importmapInfo.importmap;
     importmap = optimizeImportmap(importmap);
-    const importmapFileUrl = new URL(importmapRelativeUrl, directoryUrl).href;
-    importmap = moveImportMap(importmap, directoryUrl, importmapFileUrl);
+    const importmapFileUrl = new URL(importmapRelativeUrl, rootDirectoryUrl)
+      .href;
+    importmap = moveImportMap(importmap, rootDirectoryUrl, importmapFileUrl);
     importmap = sortImportMap(importmap);
     importmapInfo.importmap = importmap;
   }
 
   if (writeFiles) {
-    writeIntoFiles(importmapInfos, {
-      logger,
-      directoryUrl,
-    });
+    writeIntoFiles(importmapInfos, { logger, rootDirectoryUrl });
   }
 
   const importmapContents = {};
