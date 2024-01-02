@@ -12,25 +12,24 @@ const test = async ({ name, magicExtensions, expectedWarnings }) => {
     `./root/${importmapRelativeUrl}`,
     import.meta.url,
   );
-  const importmapSnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       [importmapRelativeUrl]: {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./main.js"],
-
-        removeUnusedMappings: true,
-        magicExtensions,
+        import_resolution: {
+          entryPoints: ["./main.js"],
+          magicExtensions,
+        },
       },
     },
     onWarn: (warning) => {
       warnings.push(warning);
     },
   });
-  importmapSnapshot.compare();
+  importmapFileSnapshot.compare();
   const actual = warnings;
   const expected = expectedWarnings;
   assert({ actual, expected });

@@ -57,16 +57,16 @@ export const createFindNodeModulePackage = () => {
 };
 
 const getNodeModuleCandidatesInsideProject = ({
-  projectDirectoryUrl,
+  rootDirectoryUrl,
   packageFileUrl,
 }) => {
   const packageDirectoryUrl = resolveUrl("./", packageFileUrl);
-  if (packageDirectoryUrl === projectDirectoryUrl) {
-    return [`${projectDirectoryUrl}node_modules/`];
+  if (packageDirectoryUrl === rootDirectoryUrl) {
+    return [`${rootDirectoryUrl}node_modules/`];
   }
   const packageDirectoryRelativeUrl = urlToRelativeUrl(
     packageDirectoryUrl,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
   );
   const candidates = [];
   const relativeNodeModuleDirectoryArray =
@@ -76,12 +76,12 @@ const getNodeModuleCandidatesInsideProject = ({
   let i = relativeNodeModuleDirectoryArray.length;
   while (i--) {
     candidates.push(
-      `${projectDirectoryUrl}node_modules/${relativeNodeModuleDirectoryArray
+      `${rootDirectoryUrl}node_modules/${relativeNodeModuleDirectoryArray
         .slice(0, i + 1)
         .join("node_modules/")}node_modules/`,
     );
   }
-  return [...candidates, `${projectDirectoryUrl}node_modules/`];
+  return [...candidates, `${rootDirectoryUrl}node_modules/`];
 };
 
 const getNodeModuleCandidatesOutsideProject = ({ rootDirectoryUrl }) => {
