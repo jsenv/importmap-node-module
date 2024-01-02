@@ -17,7 +17,7 @@ export const writeImportmaps = async ({
     warn(warning);
   },
 
-  projectDirectoryUrl,
+  directoryUrl,
   importmaps,
   writeFiles = true,
   packagesManualOverrides,
@@ -33,7 +33,7 @@ export const writeImportmaps = async ({
     });
   });
 
-  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
+  directoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl);
 
   if (typeof importmaps !== "object" || importmaps === null) {
     throw new TypeError(`importmaps must be an object, received ${importmaps}`);
@@ -65,7 +65,7 @@ export const writeImportmaps = async ({
   await generateImportmapForNodeESMResolution(importmapInfos, {
     logger,
     warn,
-    projectDirectoryUrl,
+    directoryUrl,
     packagesManualOverrides,
     exportsFieldWarningConfig,
     onImportmapGenerated: (importmap, importmapRelativeUrl) => {
@@ -139,7 +139,7 @@ export const writeImportmaps = async ({
       {
         logger,
         warn,
-        projectDirectoryUrl,
+        directoryUrl,
         entryPoints,
         bareSpecifierAutomapping,
         magicExtensions,
@@ -153,7 +153,7 @@ export const writeImportmaps = async ({
 
   updateJsConfigForVsCode(importmapInfos, {
     logger,
-    projectDirectoryUrl,
+    directoryUrl,
     jsConfigFileUrl,
     jsConfigDefault,
   });
@@ -162,9 +162,8 @@ export const writeImportmaps = async ({
     const importmapInfo = importmapInfos[importmapRelativeUrl];
     let importmap = importmapInfo.importmap;
     importmap = optimizeImportmap(importmap);
-    const importmapFileUrl = new URL(importmapRelativeUrl, projectDirectoryUrl)
-      .href;
-    importmap = moveImportMap(importmap, projectDirectoryUrl, importmapFileUrl);
+    const importmapFileUrl = new URL(importmapRelativeUrl, directoryUrl).href;
+    importmap = moveImportMap(importmap, directoryUrl, importmapFileUrl);
     importmap = sortImportMap(importmap);
     importmapInfo.importmap = importmap;
   }
@@ -172,7 +171,7 @@ export const writeImportmaps = async ({
   if (writeFiles) {
     writeIntoFiles(importmapInfos, {
       logger,
-      projectDirectoryUrl,
+      directoryUrl,
     });
   }
 

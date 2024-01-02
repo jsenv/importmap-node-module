@@ -11,14 +11,10 @@ const options = {
   "dir": {
     type: "string",
   },
-  "include-dev": {
+  "dev": {
     type: "boolean",
   },
-  "entrypoint": {
-    type: "string",
-    multiple: true,
-  },
-  "remove-unused": {
+  "keep-unused": {
     type: "boolean",
   },
 };
@@ -36,24 +32,21 @@ if (positionals.length > 1) {
   process.exit(1);
 }
 
-if (values["remove-unused"] && values.entrypoint.length === 0) {
-  if (outfile.endsWith(".html")) {
-    values.entrypoint.push(outfile);
-  } else {
-    console.error("Error: --remove-unused requires at least one --entrypoint.");
-    process.exit(1);
-  }
+if (!outfile.endsWith(".html")) {
+  console.error("Error: outfile must end with .html");
+  process.exit(1);
 }
 
 const currentDirectoryUrl = pathToFileURL(`${process.cwd()}/`);
 await writeImportmaps({
-  projectDirectoryUrl: new URL(values.dir || ".", currentDirectoryUrl),
+  directoryUrl: new URL(values.dir || ".", currentDirectoryUrl),
   importmaps: {
     [outfile]: {
-      mappingsForNodeResolution: true,
-      mappingsForDevDependencies: values["include-dev"],
-      entryPoints: values.entrypoint,
-      removeUnusedMappings: values["remove-unused"],
+      node_esm: {
+        devDependencies: values.dev,
+        packageUserConditions: values.dev ? ["development"] : [],
+      },
+      keepUnusedMappings: values["keep-unused"],
     },
   },
 });
@@ -61,16 +54,15 @@ await writeImportmaps({
 function usage() {
   console.log(`importmap-node-module: Generate import maps for node's esm resolution algorithm.
 
-Usage: npx @jsenv/importmap-node-module output.importmap [options]
+Usage: npx @jsenv/importmap-node-module file.html [options]
 
 https://github.com/jsenv/importmap-node-module
 
 Options:
-  --help                  Display this message.
-  --dir                   Files will be resolved against this directory. Defaults to process.cwd()
-  --include-dev           Include devDependencies from package.json.
-  --entrypoint file.js    Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
-  --remove-unused         Remove mappings not used by any entrypoint or their transitive dependencies. Requires --entrypoint.
+  --help        Display this message.
+  --dir         Files will be resolved against this directory. Defaults to process.cwd()
+  --dev         Include devDependencies from package.json and pick "developement" in package conditions.
+  --keep-unused Remove mappings not used by any entrypoint or their transitive dependencies. Requires --entrypoint.
 
 For more advanced options, see the API.`);
 }
