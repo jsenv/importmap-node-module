@@ -4,10 +4,10 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
-const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
       manualImportmap: {
@@ -20,10 +20,10 @@ await writeImportmaps({
           c_everything: "./everything.js",
         },
       },
-      entryPoints: ["./main.html"],
-
-      removeUnusedMappings: true,
+      import_resolution: {
+        entryPoints: ["./main.html"],
+      },
     },
   },
 });
-importmapsnapshot.compare();
+importmapFileSnapshot.compare();

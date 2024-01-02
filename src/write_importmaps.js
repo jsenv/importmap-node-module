@@ -94,7 +94,7 @@ export const writeImportmaps = async ({
   // - remove unused mappings
   for (const importmapRelativeUrl of importmapRelativeUrls) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
-    const { import_resolution } = importmapInfo.options;
+    const { import_resolution = {} } = importmapInfo.options;
     if (import_resolution === false) {
       continue;
     }

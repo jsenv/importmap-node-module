@@ -23,18 +23,10 @@ const directorySnapshot = takeDirectorySnapshot(snapshotDirectoryUrl);
 restoreFixtures();
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
-    "index.html": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./index.html"],
-      removeUnusedMappings: true,
-    },
-    "about.html": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./about.html"],
-      removeUnusedMappings: true,
-    },
+    "index.html": {},
+    "about.html": {},
   },
 });
 copyFileSync({
