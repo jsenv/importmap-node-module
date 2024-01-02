@@ -5,11 +5,11 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const devImportmapFileUrl = new URL("./root/dev.importmap", import.meta.url);
 const prodImportmapFileUrl = new URL("./root/prod.importmap", import.meta.url);
-const devimportmapsnapshot = takeFileSnapshot(devImportmapFileUrl);
-const prodimportmapsnapshot = takeFileSnapshot(prodImportmapFileUrl);
+const devimportmapFileSnapshot = takeFileSnapshot(devImportmapFileUrl);
+const prodimportmapFileSnapshot = takeFileSnapshot(prodImportmapFileUrl);
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "dev.importmap": {
       mappingsForNodeResolution: true,
@@ -20,5 +20,5 @@ await writeImportmaps({
     },
   },
 });
-devimportmapsnapshot.compare();
-prodimportmapsnapshot.compare();
+devimportmapFileSnapshot.compare();
+prodimportmapFileSnapshot.compare();

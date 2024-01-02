@@ -14,7 +14,7 @@ copyFileSync({
 });
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
       manualImportmap: {

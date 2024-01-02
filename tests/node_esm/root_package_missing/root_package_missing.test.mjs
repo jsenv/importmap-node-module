@@ -7,7 +7,7 @@ const packageFileUrl = new URL("./package.json", testDirectoryUrl);
 
 try {
   await writeImportmaps({
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       "test.importmap": {
         mappingsForNodeResolution: true,

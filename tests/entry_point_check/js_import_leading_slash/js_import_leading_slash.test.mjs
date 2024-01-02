@@ -13,11 +13,11 @@ const testDirectoryUrl = new URL("./root/", import.meta.url);
 const test = async ({ name, runtime, expectedWarnings }) => {
   const importmapFileRelativeUrl = `${name}.importmap`;
   const importmapFileUrl = new URL(importmapFileRelativeUrl, testDirectoryUrl);
-  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       [importmapFileRelativeUrl]: {
         runtime,
@@ -30,7 +30,7 @@ const test = async ({ name, runtime, expectedWarnings }) => {
       warnings.push(warning);
     },
   });
-  importmapsnapshot.compare();
+  importmapFileSnapshot.compare();
   const actual = warnings;
   const expected = expectedWarnings;
   assert({ actual, expected });

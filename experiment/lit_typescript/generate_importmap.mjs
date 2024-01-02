@@ -2,7 +2,7 @@
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./dist/", import.meta.url),
+  directoryUrl: new URL("./dist/", import.meta.url),
   importmaps: {
     "./project.importmap": {
       mappingsForNodeResolution: true,

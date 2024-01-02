@@ -4,7 +4,7 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const test = async ({ projectDirectoryUrl, runtime }) => {
   const importmapFileUrl = new URL("./test.importmap", projectDirectoryUrl);
-  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   await writeImportmaps({
     logLevel: "warn",
     projectDirectoryUrl,
@@ -18,14 +18,14 @@ const test = async ({ projectDirectoryUrl, runtime }) => {
       },
     },
   });
-  importmapsnapshot.compare();
+  importmapFileSnapshot.compare();
 };
 
 await test({
-  projectDirectoryUrl: new URL("./import_first/", import.meta.url),
+  directoryUrl: new URL("./import_first/", import.meta.url),
   runtime: "node",
 });
 await test({
-  projectDirectoryUrl: new URL("./node_first/", import.meta.url),
+  directoryUrl: new URL("./node_first/", import.meta.url),
   runtime: "node",
 });
