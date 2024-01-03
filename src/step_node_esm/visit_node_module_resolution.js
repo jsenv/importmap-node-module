@@ -473,7 +473,7 @@ export const visitNodeModuleResolution = async (
     if (e.code === "ENOENT") {
       const error = new Error(
         createDetailedMessage(`Cannot find root package.json file.`, {
-          "package.json url": rootPackageObject,
+          "package.json url": rootPackageFileUrl,
         }),
       );
       error.code = "PROJECT_PACKAGE_FILE_NOT_FOUND";

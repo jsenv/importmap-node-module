@@ -23,7 +23,7 @@ const importResolution_default = {
   // of files. Not that hard to do, especially using @jsenv/url-meta
   // but that's super extra fine tuning that I don't have time/energy to do for now
   bareSpecifierAutomapping: false,
-  magicExtensions: [],
+  magicExtensions: undefined,
   keepUnusedMappings: false,
   runtime: "browser",
 };
@@ -141,7 +141,7 @@ export const writeImportmaps = async ({
     const {
       entryPoints = [],
       bareSpecifierAutomapping,
-      magicExtensions,
+      magicExtensions = [],
       keepUnusedMappings,
       runtime,
     } = importResolution;
@@ -156,7 +156,7 @@ export const writeImportmaps = async ({
     if (bareSpecifierAutomapping && entryPoints.length === 0) {
       logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
     }
-    if (magicExtensions && entryPoints.length === 0) {
+    if (magicExtensions.length && entryPoints.length === 0) {
       logger.warn(`"magicExtensions" requires "entryPoints"`);
     }
     if (entryPoints.length === 0) {
