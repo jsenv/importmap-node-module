@@ -33,21 +33,20 @@ export const testImportmapOnEntryPoints = async (
   {
     logger,
     warn,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     entryPoints,
     bareSpecifierAutomapping,
     magicExtensions, // [".js", ".jsx", ".ts", ".tsx", ".node", ".json"],
-    removeUnusedMappings,
+    keepUnusedMappings,
     runtime,
     babelConfigFileUrl,
   },
 ) => {
-  const baseUrl =
-    runtime === "browser" ? "http://jsenv.com" : projectDirectoryUrl;
+  const baseUrl = runtime === "browser" ? "http://jsenv.com" : rootDirectoryUrl;
   const asFileUrl = (url) =>
-    moveUrl({ url, from: baseUrl, to: projectDirectoryUrl });
+    moveUrl({ url, from: baseUrl, to: rootDirectoryUrl });
   const asHttpUrl = (url) =>
-    moveUrl({ url, from: projectDirectoryUrl, to: baseUrl });
+    moveUrl({ url, from: rootDirectoryUrl, to: baseUrl });
 
   const imports = {};
   const scopes = {};
@@ -81,7 +80,7 @@ export const testImportmapOnEntryPoints = async (
     warn,
     runtime,
     importmap,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     baseUrl,
     asFileUrl,
     asHttpUrl,
@@ -115,7 +114,7 @@ export const testImportmapOnEntryPoints = async (
         configFile: urlToFileSystemPath(babelConfigFileUrl),
       })
     : await loadOptionsAsync({
-        root: urlToFileSystemPath(projectDirectoryUrl),
+        root: urlToFileSystemPath(rootDirectoryUrl),
       });
 
   const visitSpecifier = memoizeAsyncFunctionBySpecifierAndImporter(
@@ -190,27 +189,27 @@ export const testImportmapOnEntryPoints = async (
     });
   }
 
-  if (removeUnusedMappings) {
-    const importsUsed = {};
-    topLevelMappingsUsed.forEach(({ from, to }) => {
-      importsUsed[from] = to;
-    });
-    const scopesUsed = {};
-    Object.keys(scopedMappingsUsed).forEach((scope) => {
-      const mappingsUsed = scopedMappingsUsed[scope];
-      const scopedMappings = {};
-      mappingsUsed.forEach(({ from, to }) => {
-        scopedMappings[from] = to;
-      });
-      scopesUsed[scope] = scopedMappings;
-    });
-    return {
-      imports: importsUsed,
-      scopes: scopesUsed,
-    };
+  if (keepUnusedMappings) {
+    return composeTwoImportMaps(importmap, { imports, scopes });
   }
 
-  return composeTwoImportMaps(importmap, { imports, scopes });
+  const importsUsed = {};
+  topLevelMappingsUsed.forEach(({ from, to }) => {
+    importsUsed[from] = to;
+  });
+  const scopesUsed = {};
+  Object.keys(scopedMappingsUsed).forEach((scope) => {
+    const mappingsUsed = scopedMappingsUsed[scope];
+    const scopedMappings = {};
+    mappingsUsed.forEach(({ from, to }) => {
+      scopedMappings[from] = to;
+    });
+    scopesUsed[scope] = scopedMappings;
+  });
+  return {
+    imports: importsUsed,
+    scopes: scopesUsed,
+  };
 };
 
 const createImportResolver = ({
@@ -221,7 +220,7 @@ const createImportResolver = ({
   asFileUrl,
   asHttpUrl,
   baseUrl,
-  projectDirectoryUrl,
+  rootDirectoryUrl,
   bareSpecifierAutomapping,
   magicExtensions,
   onImportMapping,
@@ -376,19 +375,19 @@ const createImportResolver = ({
     const importerUrl = asFileUrl(importer);
     const importerPackageDirectoryUrl = packageDirectoryUrlFromUrl(
       importerUrl,
-      projectDirectoryUrl,
+      rootDirectoryUrl,
     );
     const scope =
-      importerPackageDirectoryUrl === projectDirectoryUrl
+      importerPackageDirectoryUrl === rootDirectoryUrl
         ? undefined
         : `./${urlToRelativeUrl(
             importerPackageDirectoryUrl,
-            projectDirectoryUrl,
+            rootDirectoryUrl,
           )}`;
     const automapping = getAutomapping({
       specifier,
       scope,
-      projectDirectoryUrl,
+      rootDirectoryUrl,
       importerUrl,
       url,
     });
@@ -440,7 +439,7 @@ const createImportResolver = ({
       if (!magicExtensions) {
         const packageDirectoryUrl = packageDirectoryUrlFromUrl(
           url,
-          projectDirectoryUrl,
+          rootDirectoryUrl,
         );
         const packageFileUrl = resolveUrl("package.json", packageDirectoryUrl);
         const mappingFoundInPackageExports =
@@ -487,7 +486,7 @@ const createImportResolver = ({
 const getAutomapping = ({
   specifier,
   scope,
-  projectDirectoryUrl,
+  rootDirectoryUrl,
   importerUrl,
   url,
 }) => {
@@ -495,15 +494,15 @@ const getAutomapping = ({
     const specifierUrl = resolveUrl(specifier, importerUrl);
     return {
       scope,
-      from: `./${urlToRelativeUrl(specifierUrl, projectDirectoryUrl)}`,
-      to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
+      from: `./${urlToRelativeUrl(specifierUrl, rootDirectoryUrl)}`,
+      to: `./${urlToRelativeUrl(url, rootDirectoryUrl)}`,
     };
   }
 
   return {
     scope,
     from: specifier,
-    to: `./${urlToRelativeUrl(url, projectDirectoryUrl)}`,
+    to: `./${urlToRelativeUrl(url, rootDirectoryUrl)}`,
   };
 };
 

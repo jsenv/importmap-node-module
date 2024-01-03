@@ -18,20 +18,19 @@ try {
     "./fixtures/dir/test.importmap",
     import.meta.url,
   );
-  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       "test.importmap": {
-        mappingsForNodeResolution: true,
-        mappingsForDevDependencies: true,
-        removeUnusedMappings: false,
-        ignoreJsFiles: true,
+        nodeMappings: {
+          devDependencies: true,
+        },
       },
     },
   });
-  importmapsnapshot.compare();
+  importmapFileSnapshot.compare();
 } finally {
   removeEntrySync(`${testDirectoryUrl}/node_modules/siesta`);
 }

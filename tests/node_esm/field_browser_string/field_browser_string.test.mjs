@@ -22,13 +22,16 @@ const test = async ({ name, runtime, expectedWarnings }) => {
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./main.mjs"],
-
-        runtime,
+        nodeMappings: {
+          packageUserConditions: [runtime],
+        },
+        importResolution: {
+          entryPoints: ["./main.mjs"],
+          keepUnusedMappings: true,
+        },
       },
     },
     onWarn: (warning) => {

@@ -4,12 +4,11 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL(`./root/test.importmap`, import.meta.url);
-const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
 await writeImportmaps({
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
       // manualImportmap allows to override the mapping found in package.json
       manualImportmap: {
         scopes: {
@@ -21,4 +20,4 @@ await writeImportmaps({
     },
   },
 });
-importmapsnapshot.compare();
+importmapFileSnapshot.compare();

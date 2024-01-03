@@ -1,0 +1,8 @@
+{
+  "name": "root",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "foo": "./node_modules/foo/"
+  }
+}

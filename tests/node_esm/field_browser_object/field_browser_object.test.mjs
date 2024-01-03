@@ -6,15 +6,17 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
-const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
 const warnings = [];
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./main.mjs"],
+      importResolution: {
+        entryPoints: ["./main.mjs"],
+        keepUnusedMappings: true,
+      },
     },
   },
   onWarn: (warning) => {
@@ -22,7 +24,7 @@ await writeImportmaps({
   },
   exportsFieldWarningConfig: { dependencies: true },
 });
-importmapsnapshot.compare();
+importmapFileSnapshot.compare();
 
 const fooPackageJsonFileUrl = new URL(
   "./node_modules/foo/package.json",

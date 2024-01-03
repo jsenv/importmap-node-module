@@ -24,11 +24,18 @@ The simplest way to use this project is with `npx`:
 npx @jsenv/importmap-node-module index.html
 ```
 
+It will write mappings in _index.html_, inside a `<script type="importmap">`.  
+It is also possible to write mappings into a separate file as follow:
+
+```console
+npx @jsenv/importmap-node-module demo.importmap --entrypoint index.html
+```
+
 The CLI supports the following options:
 
-- `--include-dev`: Include devDependencies from package.json.
 - `--entrypoint`: Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
-- `--remove-unused`: Remove mappings not used by any entrypoint or their transitive dependencies. Requires `--entrypoint`.
+- `--dev`: Include devDependencies from package.json. Also favor `"development"` in [package exports](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions)</a><sup>↗</sup>.
+- `--keep-unused`: Keep all mappings, even if they are not currently used by entry file or its transitive dependencies.
 
 ## API
 
@@ -40,11 +47,9 @@ The API supports a few more options than the CLI.
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
-    "./index.html": {
-      mappingsForNodeResolution: true,
-    },
+    "./index.html": {},
   },
 });
 ```
@@ -70,14 +75,17 @@ _writeImportmaps_ is an async function generating one or many importmap and writ
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
-    "./importmap_for_dev.importmap": {
-      mappingsForNodeResolution: true,
-      mappingsForDevDependencies: true,
+    "./dev.importmap": {
+      nodeMappings: {
+        devDependencies: true,
+      },
     },
-    "./importmap_for_prod.importmap": {
-      mappingsForNodeResolution: true,
+    "./prod.importmap": {
+      nodeMappings: {
+        devDependencies: false,
+      },
     },
   },
 });
@@ -85,11 +93,11 @@ await writeImportmaps({
 
 It supports the following options:
 
-### projectDirectoryUrl
+### directoryUrl
 
-_projectDirectoryUrl_ is a string/url leading to a folder with a _package.json_.
+_directoryUrl_ is a string/url leading to a folder with a _package.json_.
 
-_projectDirectoryUrl_ is **required**.
+_directoryUrl_ is **required**.
 
 ### importmaps
 
@@ -97,106 +105,135 @@ _importmaps_ is an object where keys are file relative urls and value are object
 
 _importmaps_ is **required**.
 
-#### mappingsForNodeResolution
+#### nodeMappings
 
-_mappingsForNodeResolution_ is a boolean. When enabled mappings required to implement node module resolution are generated.
+_nodeMappings_ is an object configuring the mappings generated to implement node module resolution.
 
-_mappingsForNodeResolution_ is optional.
+_nodeMappings_ is optional.
 
 > Be sure node modules are on your filesystem because we'll use the filesystem structure to generate the importmap. For that reason, you must use it after `npm install` or anything that is responsible to generate the node_modules folder and its content on your filesystem.
 
-#### mappingsForDevDependencies
-
-_mappingsForDevDependencies_ is a boolean. When enabled, `"devDependencies"` declared in your _package.json_ are included in the generated importMap.
-
-_mappingsForDevDependencies_ is optional.
-
-#### runtime
-
-_runtime_ is a string used to determine what to pick in [package.json conditions](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions).
-
-_runtime_ is optional and defaults to `"browser"`.
-
 ```js
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importmaps: {
-    "./browser.importmap": {
-      mappingsForNodeResolution: true,
-      runtime: "browser",
-    },
-    "./node.importmap": {
-      mappingsForNodeResolution: true,
-      runtime: "node",
-    },
-  },
-});
-```
-
-#### packageUserConditions
-
-_packageUserConditions_ is an array controlling which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
-
-_packageUserConditions_ is optional.
-
-```js
-import { writeImportmaps } from "@jsenv/importmap-node-module";
-
-await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
     "./dev.importmap": {
-      mappingsForNodeResolution: true,
-      packageUserConditions: ["development"],
+      nodeMappings: {
+        devDependencies: true,
+        packageUserConditions: ["development"],
+      },
     },
     "./prod.importmap": {
-      mappingsForNodeResolution: true,
-      packageUserConditions: ["production"],
+      nodeMappings: {
+        devDependencies: false,
+        packageUserConditions: ["production"],
+      },
     },
   },
 });
 ```
 
-#### entryPoints
+In case you don't need to mappings corresponding to node resolution, they can be disabled:
 
-_entryPoints_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings. For each entry point, _writeImportMapFiles_ will check if import can be resolved and repeat this process for every static and dynamic import.
+```js
+import { writeImportmaps } from "@jsenv/importmap-node-module";
+
+await writeImportmaps({
+  directoryUrl: new URL("./", import.meta.url),
+  importmaps: {
+    "./demo.importmap": {
+      nodeMappings: false,
+    },
+  },
+});
+```
+
+##### nodeMappings.devDependencies
+
+_nodeMappings.devDependencies_ is a boolean. When enabled, mappings for `"devDependencies"` declared in your _package.json_ are generated.
+
+_nodeMappings.devDependencies_ is optional.
+
+##### nodeMappings.packageUserConditions
+
+_nodeMappings.packageUserConditions_ is an array controlling which conditions are favored in [package.json conditions](https://nodejs.org/dist/latest-v15.x/docs/api/packages.html#packages_conditions_definitions).
+
+_nodeMappings.packageUserConditions_ is optional.
+
+The following conditions will be picked:
+
+1. conditions passed in _nodeMappings.packageUserConditions_
+2. `"import"`
+3. `"browser"`
+4. `"default"`
+
+> Be sure to use `packageUserConditions: ["node"]` if the importmap is generated for node and not for the browser.
+
+#### importResolution
+
+_importResolution_ is an object. When passed the generated mappings will be used to resolve js imports found in entryPoints and their transitive dependencies. When a js import cannot be resolved a warning is logged.
+
+```js
+import { writeImportmaps } from "@jsenv/importmap-node-module";
+
+await writeImportmaps({
+  directoryUrl: new URL("./", import.meta.url),
+  importmaps: {
+    "./demo.importmap": {
+      importResolution: {
+        entryPoints: ["./main.js"],
+        magicExtensions: false,
+        runtime: "browser",
+      },
+    },
+  },
+});
+```
+
+_importResolution_ is optional. When the importmap file is written inside a file ending with `.html` the import resolution starts from the `.html` file. Otherwise `entryPoints` must be used.
+
+It is possible to disable importResolution entirely:
+
+```js
+import { writeImportmaps } from "@jsenv/importmap-node-module";
+
+await writeImportmaps({
+  directoryUrl: new URL("./", import.meta.url),
+  importmaps: {
+    "./index.html": {
+      importResolution: false,
+    },
+  },
+});
+```
+
+##### importResolution.entryPoints
+
+_importResolution.entryPoints_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings.
 
 _entryPoints_ is optional.
 
-```js
-import { writeImportmaps } from "@jsenv/importmap-node-module";
+It is recommended to use _entryPoints_ as it gives confidence in the generated importmap.
 
-await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
-  importmaps: {
-    "./project.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./main.js"],
-    },
-  },
-});
-```
+##### importResolution.magicExtensions
 
-It is recommended to use _entryPoints_ as it gives confidence in the generated importmap. When an import cannot be resolved, a warning is logged.
+_importResolution.magicExtensions_ is an array of strings. Each string represent an extension that will be tried when an import cannot be resolved to a file.
 
-#### magicExtensions
-
-_magicExtensions_ is an array of strings. Each string represent an extension that will be tried when an import cannot be resolved to a file.
-
-_magicExtensions_ is optional. It must be used with _entryPoints_.
+_importResolution.magicExtensions_ is optional.
 
 ```js
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./main.js"],
-      magicExtensions: ["inherit", ".js"],
+    "./demo.importmap": {
+      importResolution: {
+        entryPoints: ["./demo.js"],
+        magicExtensions: ["inherit", ".js"],
+      },
     },
   },
 });
@@ -215,22 +252,34 @@ import "./helper";
 
 All other values in _magicExtensions_ are file extensions that will be tried one after an other.
 
-#### removeUnusedMappings
+##### importResolution.runtime
 
-_removeUnusedMappings_ is a boolean. When enabled mappings will be treeshaked according to the import found in js files.
+_importResolution.runtime_ is a string used to know how to resolve js imports.
 
-_removeUnusedMappings_ is optional. It must be used with _entryPoints_.
+For example the following import is correct when runtime is `"node"` but would log a warning when runtime is `"browser"`.
+
+```js
+import { writeFile } from "node:fs";
+```
+
+_importResolution.runtime_ is optional and defaults to `"browser"`.
+
+#### importResolution.keepUnusedMappings
+
+_importResolution.keepUnusedMappings_ is a boolean. When enabled mappings will be kept even if not currently used by import found in js files.
+
+_importResolution.keepUnusedMappings_ is optional.
 
 ```js
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./main.js"],
-      removeUnusedMappings: true,
+    "./demo.html": {
+      importResolution: {
+        keepUnusedMappings: true,
+      },
     },
   },
 });
@@ -248,10 +297,9 @@ _manualImportmap_ is optional.
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
+    "./demo.importmap": {
       manualImportmap: {
         imports: {
           "#env": "./env.js",
@@ -274,11 +322,9 @@ _packagesManualOverrides_ exists in case some of your dependencies use non stand
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
-    "./test.importmap": {
-      mappingsForNodeResolution: true,
-    },
+    "./demo.importmap": {},
   },
   // overrides "react-redux" package because it uses a non-standard "module" field
   // to expose "es/index.js" entry point
@@ -301,7 +347,7 @@ At the time of writing this documentation external importmap are not supported b
 External import maps are not yet supported
 ```
 
-If you plan to use importmap in a web browser you need to tell `@jsenv/importmap-node-module` to inline importmap into the HTML file as show in [API](#API).
+If you plan to use importmap in a web browser you need to tell `@jsenv/importmap-node-module` to inline importmap into the HTML file as shown in [API](#API).
 
 # TypeScript
 
@@ -326,13 +372,12 @@ Then you can use the script below to produce the importmap.
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./dist/", import.meta.url),
+  directoryUrl: new URL("./dist/", import.meta.url),
   importmaps: {
-    "./project.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./index.js"],
-      magicExtensions: ["inherit"],
-      removeUnusedMappings: true,
+    "./demo.html": {
+      importResolution: {
+        magicExtensions: ["inherit"],
+      },
     },
   },
 });

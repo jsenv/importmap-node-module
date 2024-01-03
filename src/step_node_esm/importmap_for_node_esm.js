@@ -1,11 +1,17 @@
 import { visitNodeModuleResolution } from "./visit_node_module_resolution.js";
 
+const nodeMappingsDefault = {
+  devDependencies: false,
+  packageUserConditions: undefined,
+  packageIncludedPredicate: undefined,
+};
+
 export const generateImportmapForNodeESMResolution = async (
   importmapInfos,
   {
     logger,
     warn,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     packagesManualOverrides,
     exportsFieldWarningConfig,
     onImportmapGenerated,
@@ -14,27 +20,30 @@ export const generateImportmapForNodeESMResolution = async (
   const nodeResolutionVisitors = [];
   for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
-    const {
-      mappingsForNodeResolution,
-      mappingsForDevDependencies,
-      packageUserConditions,
-      packageIncludedPredicate,
-      runtime = "browser",
-    } = importmapInfo.options;
-    if (!mappingsForNodeResolution) {
+    let { nodeMappings = {} } = importmapInfo.options;
+    if (!nodeMappings) {
       continue;
     }
+    const unexpectedKeys = Object.keys(nodeMappings).filter(
+      (key) => !Object.hasOwn(nodeMappingsDefault, key),
+    );
+    if (unexpectedKeys.length > 0) {
+      throw new TypeError(
+        `${unexpectedKeys.join(",")}: no such key on "nodeMappings"`,
+      );
+    }
+    nodeMappings = { ...nodeMappingsDefault, ...nodeMappings };
+    const { devDependencies, packageUserConditions, packageIncludedPredicate } =
+      nodeMappings;
     const importsMappings = {};
     const scopesMappings = {};
     const mappingsToPutTopLevel = {};
 
     nodeResolutionVisitors.push({
-      mappingsForDevDependencies,
-      runtime,
-      packageConditions: packageConditionsFromPackageUserConditions({
-        runtime,
+      includeDevDependencies: devDependencies,
+      packageConditions: packageConditionsFromPackageUserConditions(
         packageUserConditions,
-      }),
+      ),
       packageIncludedPredicate,
       onMapping: ({ scope, from, to }) => {
         if (scope) {
@@ -68,12 +77,14 @@ export const generateImportmapForNodeESMResolution = async (
     return;
   }
   const nodeModulesOutsideProjectAllowed = nodeResolutionVisitors.every(
-    (visitor) => visitor.runtime === "node",
+    (visitor) => {
+      return visitor.packageConditions.includes("node");
+    },
   );
   await visitNodeModuleResolution(nodeResolutionVisitors, {
     logger,
     warn,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     nodeModulesOutsideProjectAllowed,
     packagesManualOverrides,
     exportsFieldWarningConfig,
@@ -83,27 +94,36 @@ export const generateImportmapForNodeESMResolution = async (
   }
 };
 
-const packageConditionsFromPackageUserConditions = ({
-  runtime,
-  packageUserConditions,
-}) => {
+const packageConditionsFromPackageUserConditions = (packageUserConditions) => {
   if (typeof packageUserConditions === "undefined") {
-    return ["import", runtime, "default"];
+    return ["import", "browser", "default"];
   }
-
   if (!Array.isArray(packageUserConditions)) {
     throw new TypeError(
       `packageUserConditions must be an array, got ${packageUserConditions}`,
     );
   }
 
-  packageUserConditions.forEach((userCondition) => {
-    if (typeof userCondition !== "string") {
+  const packageConditions = [];
+  for (const packageUserCondition of packageUserConditions) {
+    if (typeof packageUserCondition !== "string") {
       throw new TypeError(
-        `user condition must be a string, got ${userCondition}`,
+        `package user condition must be a string, got ${packageUserCondition}`,
       );
     }
-  });
-
-  return [...packageUserConditions, "import", runtime, "default"];
+    packageConditions.push(packageUserCondition);
+  }
+  if (!packageConditions.includes("import")) {
+    packageConditions.push("import");
+  }
+  if (
+    !packageConditions.includes("browser") &&
+    !packageConditions.includes("node")
+  ) {
+    packageConditions.push("browser");
+  }
+  if (!packageConditions.includes("default")) {
+    packageConditions.push("default");
+  }
+  return packageConditions;
 };

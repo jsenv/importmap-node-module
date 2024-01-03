@@ -13,12 +13,12 @@ import {
 
 export const writeIntoFiles = (
   importmapInfos,
-  { logger, projectDirectoryUrl },
+  { logger, rootDirectoryUrl },
 ) => {
   for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
     const importmap = importmapInfo.importmap;
-    const fileUrl = new URL(importmapRelativeUrl, projectDirectoryUrl).href;
+    const fileUrl = new URL(importmapRelativeUrl, rootDirectoryUrl).href;
     const importmapAsJson = JSON.stringify(importmap, null, "  ");
     if (fileUrl.endsWith(".html")) {
       writeIntoHtmlFile(fileUrl, importmapAsJson, { logger });

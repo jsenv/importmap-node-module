@@ -12,13 +12,12 @@ console.error = (message) => {
 try {
   await writeImportmaps({
     logLevel: "off",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       "test.importmap": {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./index.js"],
-
-        removeUnusedMappings: true,
+        importResolution: {
+          entryPoints: ["./index.js"],
+        },
       },
     },
   });

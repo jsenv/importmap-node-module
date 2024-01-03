@@ -15,11 +15,9 @@
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 await writeImportmaps({
-  projectDirectoryUrl: new URL("./", import.meta.url),
+  directoryUrl: new URL("./", import.meta.url),
   importmaps: {
     "./project.importmap": {
-      runtime: "browser",
-      mappingsForNodeResolution: true,
       manualImportmap: {
         scopes: {
           "./node_modules/react-redux/": {
@@ -28,10 +26,10 @@ await writeImportmaps({
           },
         },
       },
-      entryPoints: ["./main.html"],
-      magicExtensions: ["inherit"],
-
-      removeUnusedMappings: true,
+      importResolution: {
+        entryPoints: ["./main.html"],
+        magicExtensions: ["inherit"],
+      },
     },
   },
   packagesManualOverrides: {

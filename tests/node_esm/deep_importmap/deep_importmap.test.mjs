@@ -7,23 +7,22 @@ const importmapFileUrl = new URL(
   "./root/src/directory/test.importmap",
   import.meta.url,
 );
-const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "./src/directory/test.importmap": {
-      mappingsForNodeResolution: true,
       manualImportmap: {
         imports: {
           "directory/": "./src/directory/",
         },
       },
-      entryPoints: ["./src/directory/main.js"],
-      magicExtensions: [".js"],
-
-      removeUnusedMappings: true,
+      importResolution: {
+        entryPoints: ["./src/directory/main.js"],
+        magicExtensions: [".js"],
+      },
     },
   },
 });
-importmapsnapshot.compare();
+importmapFileSnapshot.compare();

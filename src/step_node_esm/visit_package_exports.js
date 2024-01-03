@@ -10,7 +10,7 @@ import { createDetailedMessage } from "@jsenv/logger";
 import { specifierIsRelative } from "./specifier_is_relative.js";
 
 export const visitPackageExports = ({
-  projectDirectoryUrl,
+  rootDirectoryUrl,
   warn,
   packageInfo,
   packageExports = packageInfo.object.exports,
@@ -21,7 +21,7 @@ export const visitPackageExports = ({
   const packageDirectoryUrl = resolveUrl("./", packageInfo.url);
   const packageDirectoryRelativeUrl = urlToRelativeUrl(
     packageDirectoryUrl,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
   );
   const onExportsSubpath = ({ key, value, trace }) => {
     if (!specifierIsRelative(value)) {

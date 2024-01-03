@@ -4,18 +4,17 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
-const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./index.js"],
-
-      removeUnusedMappings: true,
-      runtime: "node",
+      importResolution: {
+        runtime: "node",
+        entryPoints: ["./index.js"],
+      },
     },
   },
 });
-importmapsnapshot.compare();
+importmapFileSnapshot.compare();

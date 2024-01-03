@@ -8,22 +8,23 @@ const testDirectoryUrl = new URL("./root/", import.meta.url);
 
 const test = async ({ name, runtime, expectedWarnings }) => {
   const importmapFileUrl = new URL(`./root/${name}`, import.meta.url);
-  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        mappingsForNodeResolution: true,
-        runtime,
+        nodeMappings: {
+          packageUserConditions: [runtime],
+        },
       },
     },
     onWarn: (warning) => {
       warnings.push(warning);
     },
   });
-  importmapsnapshot.compare();
+  importmapFileSnapshot.compare();
   const actual = warnings;
   const expected = expectedWarnings;
   assert({ actual, expected });

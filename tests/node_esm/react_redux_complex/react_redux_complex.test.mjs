@@ -8,19 +8,21 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
 
-const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: testDirectoryUrl,
+  directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./index.js"],
-      magicExtensions: [".js"],
+      importResolution: {
+        entryPoints: ["./index.js"],
+        magicExtensions: [".js"],
+        keepUnusedMappings: true,
+      },
     },
   },
 });
-importmapsnapshot.compare();
+importmapFileSnapshot.compare();
 
 const importmap = JSON.parse(readFileSync(importmapFileUrl, "utf8"));
 const importMapNormalized = normalizeImportMap(importmap, "http://example.com");

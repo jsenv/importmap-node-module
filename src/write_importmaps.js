@@ -11,13 +11,30 @@ import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on
 import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
 import { writeIntoFiles } from "./step_write_into_files/write_into_files.js";
 
+const importResolutionDefault = {
+  // we could deduce it from the package.json but:
+  // 1. project might not use package.json
+  // 2. it's a bit magic
+  // 3. it's kinda possible to assume an export from "exports" field is the main entry point
+  //    but for project with many entry points they cannot be distinguised from
+  //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
+  entryPoints: undefined,
+  // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
+  // of files. Not that hard to do, especially using @jsenv/url-meta
+  // but that's super extra fine tuning that I don't have time/energy to do for now
+  bareSpecifierAutomapping: false,
+  magicExtensions: undefined,
+  keepUnusedMappings: false,
+  runtime: "browser",
+};
+
 export const writeImportmaps = async ({
   logLevel,
   onWarn = (warning, warn) => {
     warn(warning);
   },
 
-  projectDirectoryUrl,
+  directoryUrl,
   importmaps,
   writeFiles = true,
   packagesManualOverrides,
@@ -25,7 +42,15 @@ export const writeImportmaps = async ({
   babelConfigFileUrl,
   // for unit test
   jsConfigFileUrl,
+  ...rest
 }) => {
+  const unexpectedParamNames = Object.keys(rest);
+  if (unexpectedParamNames.length > 0) {
+    throw new TypeError(
+      `${unexpectedParamNames.join(",")}: there is no such param`,
+    );
+  }
+
   const logger = createLogger({ logLevel });
   const warn = wrapWarnToWarnOnce((warning) => {
     onWarn(warning, () => {
@@ -33,7 +58,7 @@ export const writeImportmaps = async ({
     });
   });
 
-  projectDirectoryUrl = assertAndNormalizeDirectoryUrl(projectDirectoryUrl);
+  const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl);
 
   if (typeof importmaps !== "object" || importmaps === null) {
     throw new TypeError(`importmaps must be an object, received ${importmaps}`);
@@ -65,7 +90,7 @@ export const writeImportmaps = async ({
   await generateImportmapForNodeESMResolution(importmapInfos, {
     logger,
     warn,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     packagesManualOverrides,
     exportsFieldWarningConfig,
     onImportmapGenerated: (importmap, importmapRelativeUrl) => {
@@ -94,42 +119,45 @@ export const writeImportmaps = async ({
   // - remove unused mappings
   for (const importmapRelativeUrl of importmapRelativeUrls) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
+    let { importResolution = {} } = importmapInfo.options;
+    if (!importResolution) {
+      continue;
+    }
+    if (typeof importResolution !== "object") {
+      throw new TypeError(
+        `importResolution must be an object, got ${importResolution}`,
+      );
+    }
+
+    const unexpectedKeys = Object.keys(importResolution).filter(
+      (key) => !Object.hasOwn(importResolutionDefault, key),
+    );
+    if (unexpectedKeys.length > 0) {
+      throw new TypeError(
+        `${unexpectedKeys.join(",")}: no such key on "importResolution"`,
+      );
+    }
+    importResolution = { ...importResolutionDefault, ...importResolution };
     const {
-      // we could deduce it from the package.json but:
-      // 1. project might not use package.json
-      // 2. it's a bit magic
-      // 3. it's kinda possible to assume an export from "exports" field is the main entry point
-      //    but for project with many entry points they cannot be distinguised from
-      //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
       entryPoints = [],
-      // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
-      // of files. Not that hard to do, especially using @jsenv/url-meta
-      // but that's super extra fine tuning that I don't have time/energy to do for now
       bareSpecifierAutomapping,
       magicExtensions,
-      removeUnusedMappings,
-      runtime = "browser",
-    } = importmapInfo.options;
+      keepUnusedMappings,
+      runtime,
+    } = importResolution;
+
+    if (
+      !entryPoints.includes(importmapRelativeUrl) &&
+      importmapRelativeUrl.endsWith(".html")
+    ) {
+      entryPoints.push(importmapRelativeUrl);
+    }
+
     if (bareSpecifierAutomapping && entryPoints.length === 0) {
-      if (importmapRelativeUrl.endsWith(".html")) {
-        entryPoints.push(importmapRelativeUrl);
-      } else {
-        logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
-      }
+      logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
     }
     if (magicExtensions && entryPoints.length === 0) {
-      if (importmapRelativeUrl.endsWith(".html")) {
-        entryPoints.push(importmapRelativeUrl);
-      } else {
-        logger.warn(`"magicExtensions" requires "entryPoints"`);
-      }
-    }
-    if (removeUnusedMappings && entryPoints.length === 0) {
-      if (importmapRelativeUrl.endsWith(".html")) {
-        entryPoints.push(importmapRelativeUrl);
-      } else {
-        logger.warn(`"removeUnusedMappings" requires "entryPoints"`);
-      }
+      logger.warn(`"magicExtensions" requires "entryPoints"`);
     }
     if (entryPoints.length === 0) {
       continue;
@@ -139,11 +167,11 @@ export const writeImportmaps = async ({
       {
         logger,
         warn,
-        projectDirectoryUrl,
+        rootDirectoryUrl,
         entryPoints,
         bareSpecifierAutomapping,
         magicExtensions,
-        removeUnusedMappings,
+        keepUnusedMappings,
         runtime,
         babelConfigFileUrl,
       },
@@ -153,7 +181,7 @@ export const writeImportmaps = async ({
 
   updateJsConfigForVsCode(importmapInfos, {
     logger,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     jsConfigFileUrl,
     jsConfigDefault,
   });
@@ -162,18 +190,15 @@ export const writeImportmaps = async ({
     const importmapInfo = importmapInfos[importmapRelativeUrl];
     let importmap = importmapInfo.importmap;
     importmap = optimizeImportmap(importmap);
-    const importmapFileUrl = new URL(importmapRelativeUrl, projectDirectoryUrl)
+    const importmapFileUrl = new URL(importmapRelativeUrl, rootDirectoryUrl)
       .href;
-    importmap = moveImportMap(importmap, projectDirectoryUrl, importmapFileUrl);
+    importmap = moveImportMap(importmap, rootDirectoryUrl, importmapFileUrl);
     importmap = sortImportMap(importmap);
     importmapInfo.importmap = importmap;
   }
 
   if (writeFiles) {
-    writeIntoFiles(importmapInfos, {
-      logger,
-      projectDirectoryUrl,
-    });
+    writeIntoFiles(importmapInfos, { logger, rootDirectoryUrl });
   }
 
   const importmapContents = {};

@@ -1,6 +1,6 @@
+import { readFileSync } from "node:fs";
 import { createDetailedMessage } from "@jsenv/logger";
-import { readFile } from "@jsenv/filesystem";
-import { resolveUrl, urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/urls";
+import { urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/urls";
 
 import { resolvePackageMain } from "./resolve_package_main.js";
 import { visitPackageImportmap } from "./visit_package_importmap.js";
@@ -13,16 +13,13 @@ export const visitNodeModuleResolution = async (
   {
     logger,
     warn,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
     nodeModulesOutsideProjectAllowed,
     packagesManualOverrides,
     exportsFieldWarningConfig,
   },
 ) => {
-  const projectPackageFileUrl = resolveUrl(
-    "./package.json",
-    projectDirectoryUrl,
-  );
+  const rootPackageFileUrl = new URL("./package.json", rootDirectoryUrl).href;
   const findNodeModulePackage = createFindNodeModulePackage();
 
   const seen = {};
@@ -83,12 +80,12 @@ export const visitNodeModuleResolution = async (
       Object.keys(dependencyMap).map(async (dependencyName) => {
         const dependencyInfo = dependencyMap[dependencyName];
         if (dependencyInfo.type === "devDependency") {
-          if (packageInfo.url !== projectPackageFileUrl) {
+          if (packageInfo.url !== rootPackageFileUrl) {
             return;
           }
           const visitorsForDevDependencies = packageVisitors.filter(
             (visitor) => {
-              return visitor.mappingsForDevDependencies;
+              return visitor.includeDevDependencies;
             },
           );
           if (visitorsForDevDependencies.length === 0) {
@@ -172,7 +169,7 @@ export const visitNodeModuleResolution = async (
     isDevDependency,
   }) => {
     const packageDerivedInfo = computePackageDerivedInfo({
-      projectDirectoryUrl,
+      rootDirectoryUrl,
       packageInfo,
       packageImporterInfo,
     });
@@ -203,11 +200,7 @@ export const visitNodeModuleResolution = async (
       const scope = `./${packageDerivedInfo.packageDirectoryRelativeUrl}`;
       Object.keys(imports).forEach((from) => {
         const to = imports[from];
-        const toMoved = moveMappingValue(
-          to,
-          packageInfo.url,
-          projectDirectoryUrl,
-        );
+        const toMoved = moveMappingValue(to, packageInfo.url, rootDirectoryUrl);
         triggerVisitorOnMapping(visitor, {
           scope,
           from,
@@ -219,14 +212,14 @@ export const visitNodeModuleResolution = async (
         const scopeMoved = moveMappingValue(
           scope,
           packageInfo.url,
-          projectDirectoryUrl,
+          rootDirectoryUrl,
         );
         Object.keys(scopeMappings).forEach((key) => {
           const to = scopeMappings[key];
           const toMoved = moveMappingValue(
             to,
             packageInfo.url,
-            projectDirectoryUrl,
+            rootDirectoryUrl,
           );
           triggerVisitorOnMapping(visitor, {
             scope: scopeMoved,
@@ -288,7 +281,7 @@ export const visitNodeModuleResolution = async (
     const importsFromPackageField = await visitPackageImportmap({
       warn,
       packageInfo,
-      projectDirectoryUrl,
+      rootDirectoryUrl,
     });
     packageVisitors.forEach((visitor) => {
       addImportMapForPackage(visitor, importsFromPackageField);
@@ -299,7 +292,6 @@ export const visitNodeModuleResolution = async (
         const packageImports = visitPackageImports({
           warn,
           packageInfo,
-          projectDirectoryUrl,
           packageConditions: visitor.packageConditions,
         });
 
@@ -317,7 +309,7 @@ export const visitNodeModuleResolution = async (
     if ("exports" in packageInfo.object) {
       packageVisitors.forEach((visitor) => {
         const packageExports = visitPackageExports({
-          projectDirectoryUrl,
+          rootDirectoryUrl,
           warn,
           packageInfo,
           packageConditions: visitor.packageConditions,
@@ -358,8 +350,8 @@ export const visitNodeModuleResolution = async (
       // -> generate a mapping to allow this
       // https://nodejs.org/docs/latest-v15.x/api/packages.html#packages_name
       const packageDirectoryRelativeUrl = urlToRelativeUrl(
-        resolveUrl("./", packageInfo.url),
-        projectDirectoryUrl,
+        new URL("./", packageInfo.url).href,
+        rootDirectoryUrl,
       );
       packageVisitors.forEach((visitor) => {
         addMappingsForPackageAndImporter(visitor, {
@@ -392,8 +384,7 @@ export const visitNodeModuleResolution = async (
       packageDirectoryUrlExpected,
     } = packageDerivedInfo;
 
-    await packageVisitors.reduce(async (previous, visitor) => {
-      await previous;
+    for (const visitor of packageVisitors) {
       const exportsFieldSeverity = shouldWarnAboutExportsField({
         exportsFieldWarningConfig,
         isDevDependency,
@@ -429,8 +420,8 @@ export const visitNodeModuleResolution = async (
       }
 
       const mainFileRelativeUrl = urlToRelativeUrl(
-        resolveUrl(mainResolutionInfo.relativeUrl, packageInfo.url),
-        projectDirectoryUrl,
+        new URL(mainResolutionInfo.relativeUrl, packageInfo.url),
+        rootDirectoryUrl,
       );
       const scope =
         packageIsRoot || importerIsRoot ? null : `./${importerRelativeUrl}`;
@@ -450,7 +441,7 @@ export const visitNodeModuleResolution = async (
           to,
         });
       }
-    }, Promise.resolve());
+    }
   };
 
   const dependenciesCache = {};
@@ -462,7 +453,7 @@ export const visitNodeModuleResolution = async (
       return dependenciesCache[packageFileUrl][dependencyName];
     }
     const dependencyPromise = findNodeModulePackage({
-      projectDirectoryUrl,
+      rootDirectoryUrl,
       nodeModulesOutsideProjectAllowed,
       packageFileUrl,
       dependencyName,
@@ -472,16 +463,17 @@ export const visitNodeModuleResolution = async (
     return dependencyPromise;
   };
 
-  let projectPackageObject;
+  let rootPackageObject;
   try {
-    projectPackageObject = await readFile(projectPackageFileUrl, {
-      as: "json",
-    });
+    rootPackageObject = JSON.parse(
+      readFileSync(new URL(rootPackageFileUrl)),
+      "utf8",
+    );
   } catch (e) {
     if (e.code === "ENOENT") {
       const error = new Error(
-        createDetailedMessage(`Cannot find project package.json file.`, {
-          "package.json url": projectPackageFileUrl,
+        createDetailedMessage(`Cannot find root package.json file.`, {
+          "package.json url": rootPackageFileUrl,
         }),
       );
       error.code = "PROJECT_PACKAGE_FILE_NOT_FOUND";
@@ -490,13 +482,13 @@ export const visitNodeModuleResolution = async (
     throw e;
   }
 
-  const importerPackageFileUrl = projectPackageFileUrl;
-  markPackageAsSeen(projectPackageFileUrl, importerPackageFileUrl);
+  const importerPackageFileUrl = rootPackageFileUrl;
+  markPackageAsSeen(rootPackageFileUrl, importerPackageFileUrl);
   await visit({
     packageInfo: {
-      url: projectPackageFileUrl,
-      name: projectPackageObject.name,
-      object: projectPackageObject,
+      url: rootPackageFileUrl,
+      name: rootPackageObject.name,
+      object: rootPackageObject,
     },
     packageImporterInfo: null,
     packageVisitors: visitors,
@@ -592,7 +584,7 @@ const packageDependenciesFromPackageObject = (packageObject) => {
 };
 
 const moveMappingValue = (address, from, to) => {
-  const url = resolveUrl(address, from);
+  const url = new URL(address, from).href;
   const relativeUrl = urlToRelativeUrl(url, to);
   if (relativeUrl.startsWith("../")) {
     return relativeUrl;
@@ -608,13 +600,13 @@ const moveMappingValue = (address, from, to) => {
 };
 
 const computePackageDerivedInfo = ({
-  projectDirectoryUrl,
+  rootDirectoryUrl,
   packageInfo,
   packageImporterInfo,
 }) => {
   if (!packageImporterInfo) {
-    const packageDirectoryUrl = resolveUrl("./", packageInfo.url);
-    urlToRelativeUrl(packageDirectoryUrl, projectDirectoryUrl);
+    const packageDirectoryUrl = new URL("./", packageInfo.url).href;
+    urlToRelativeUrl(packageDirectoryUrl, rootDirectoryUrl);
 
     return {
       importerIsRoot: false,
@@ -624,34 +616,32 @@ const computePackageDerivedInfo = ({
       packageDirectoryUrlExpected: packageDirectoryUrl,
       packageDirectoryRelativeUrl: urlToRelativeUrl(
         packageDirectoryUrl,
-        projectDirectoryUrl,
+        rootDirectoryUrl,
       ),
     };
   }
 
-  const projectPackageFileUrl = resolveUrl(
-    "./package.json",
-    projectDirectoryUrl,
-  );
+  const rootPackageFileUrl = new URL("./package.json", rootDirectoryUrl).href;
 
-  const importerIsRoot = packageImporterInfo.url === projectPackageFileUrl;
+  const importerIsRoot = packageImporterInfo.url === rootPackageFileUrl;
 
-  const importerPackageDirectoryUrl = resolveUrl("./", packageImporterInfo.url);
+  const importerPackageDirectoryUrl = new URL("./", packageImporterInfo.url)
+    .href;
 
   const importerRelativeUrl = urlToRelativeUrl(
     importerPackageDirectoryUrl,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
   );
 
-  const packageIsRoot = packageInfo.url === projectPackageFileUrl;
+  const packageIsRoot = packageInfo.url === rootPackageFileUrl;
 
-  const packageDirectoryUrl = resolveUrl("./", packageInfo.url);
+  const packageDirectoryUrl = new URL("./", packageInfo.url).href;
 
   const packageDirectoryUrlExpected = `${importerPackageDirectoryUrl}node_modules/${packageInfo.name}/`;
 
   const packageDirectoryRelativeUrl = urlToRelativeUrl(
     packageDirectoryUrl,
-    projectDirectoryUrl,
+    rootDirectoryUrl,
   );
 
   return {

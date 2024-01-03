@@ -6,14 +6,16 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const mainJsFileUrl = new URL("./main.js", testDirectoryUrl);
-const getWarnings = async (params) => {
+const getWarnings = async () => {
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       "test.importmap": {
-        ...params,
+        importResolution: {
+          entryPoints: ["./main.js"],
+        },
       },
     },
     onWarn: (warning) => {
@@ -25,9 +27,7 @@ const getWarnings = async (params) => {
 
 removeFileSync(mainJsFileUrl, { allowUseless: true });
 {
-  const actual = await getWarnings({
-    entryPoints: ["./main.js"],
-  });
+  const actual = await getWarnings();
   const expected = [
     {
       code: "IMPORT_RESOLUTION_FAILED",
@@ -45,9 +45,7 @@ file not found on filesystem at ${urlToFileSystemPath(
 
 writeFileSync(mainJsFileUrl);
 {
-  const actual = await getWarnings({
-    entryPoints: ["./main.js"],
-  });
+  const actual = await getWarnings();
   const expected = [];
   assert({ actual, expected });
 }

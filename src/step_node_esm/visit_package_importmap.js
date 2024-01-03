@@ -6,7 +6,7 @@ export const visitPackageImportmap = async ({
   warn,
   packageInfo,
   packageImportmap = packageInfo.object.importmap,
-  projectDirectoryUrl,
+  rootDirectoryUrl,
 }) => {
   if (typeof packageImportmap === "undefined") {
     return {};
@@ -16,7 +16,7 @@ export const visitPackageImportmap = async ({
     const importmapFileUrl = resolveUrl(packageImportmap, packageInfo.url);
     try {
       const importmap = await readFile(importmapFileUrl, { as: "json" });
-      return moveImportMap(importmap, importmapFileUrl, projectDirectoryUrl);
+      return moveImportMap(importmap, importmapFileUrl, rootDirectoryUrl);
     } catch (e) {
       if (e.code === "ENOENT") {
         warn(

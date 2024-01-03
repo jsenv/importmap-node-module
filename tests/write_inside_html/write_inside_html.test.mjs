@@ -14,12 +14,9 @@ const test = async (fixtureName, options) => {
   });
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
-      "./index.html": {
-        mappingsForNodeResolution: true,
-        removeUnusedMappings: true,
-      },
+      "./index.html": {},
     },
     ...options,
   });

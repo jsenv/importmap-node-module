@@ -12,25 +12,24 @@ const test = async ({ bareSpecifierAutomapping }) => {
     `./root/${importmapRelativeUrl}`,
     import.meta.url,
   );
-  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       [importmapRelativeUrl]: {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./index.js"],
-
-        removeUnusedMappings: true,
-        bareSpecifierAutomapping,
+        importResolution: {
+          entryPoints: ["./index.js"],
+          bareSpecifierAutomapping,
+        },
       },
     },
     onWarn: (warning) => {
       warnings.push(warning);
     },
   });
-  importmapsnapshot.compare();
+  importmapFileSnapshot.compare();
   const actual = warnings;
   const expected = bareSpecifierAutomapping
     ? []
@@ -64,5 +63,5 @@ add mapping to "manualImportmap"
   return { warnings };
 };
 
-// await test({});
+await test({});
 await test({ bareSpecifierAutomapping: true });

@@ -3,7 +3,7 @@ import { urlToFileSystemPath } from "@jsenv/urls";
 
 export const updateJsConfigForVsCode = (
   importmapInfos,
-  { logger, projectDirectoryUrl, jsConfigFileUrl, jsConfigDefault },
+  { logger, rootDirectoryUrl, jsConfigFileUrl, jsConfigDefault },
 ) => {
   for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
@@ -12,7 +12,7 @@ export const updateJsConfigForVsCode = (
       continue;
     }
     jsConfigFileUrl =
-      jsConfigFileUrl || new URL("./jsconfig.json", projectDirectoryUrl);
+      jsConfigFileUrl || new URL("./jsconfig.json", rootDirectoryUrl);
     let jsConfigCurrent;
     try {
       jsConfigCurrent = readFileSync(jsConfigFileUrl, { as: "json" });

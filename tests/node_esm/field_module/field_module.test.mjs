@@ -18,15 +18,17 @@ const fooModuleJsFileUrl = new URL(
 
 const test = async ({ name, expectedWarnings }) => {
   const importmapFileUrl = new URL(`./root/${name}`, import.meta.url);
-  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./main.mjs"],
+        importResolution: {
+          entryPoints: ["./main.mjs"],
+          keepUnusedMappings: true,
+        },
       },
     },
     onWarn: (warning) => {
@@ -34,7 +36,7 @@ const test = async ({ name, expectedWarnings }) => {
     },
     exportsFieldWarningConfig: { dependencies: true },
   });
-  importmapsnapshot.compare();
+  importmapFileSnapshot.compare();
   const actual = warnings;
   const expected = expectedWarnings;
   assert({ actual, expected });

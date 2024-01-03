@@ -9,11 +9,12 @@ const measures = startMeasures({
 const { writeImportmaps } = await import("@jsenv/importmap-node-module");
 await writeImportmaps({
   logLevel: "warn",
-  projectDirectoryUrl: new URL("./fake_project/", import.meta.url),
+  directoryUrl: new URL("./fake_project/", import.meta.url),
   importmaps: {
     "./node_resolution.importmap": {
-      mappingsForNodeResolution: true,
-      mappingsForDevDependencies: true,
+      nodeMappings: {
+        devDependencies: true,
+      },
     },
   },
 });

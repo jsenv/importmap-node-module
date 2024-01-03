@@ -3,38 +3,36 @@ import { takeFileSnapshot } from "@jsenv/snapshot";
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
-const test = async ({ name, runtime, packageUserConditions }) => {
+const test = async ({ name, packageUserConditions }) => {
   const importmapFileUrl = new URL(`./root/${name}`, import.meta.url);
-  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   await writeImportmaps({
     logLevel: "warn",
-    projectDirectoryUrl: testDirectoryUrl,
+    directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        mappingsForNodeResolution: true,
-        runtime,
-        packageUserConditions,
+        nodeMappings: {
+          packageUserConditions,
+        },
       },
     },
   });
-  importmapsnapshot.compare();
+  importmapFileSnapshot.compare();
 };
 
 await test({
   name: "node.importmap",
-  runtime: "node",
+  packageUserConditions: ["node"],
 });
 await test({
   name: "node_prefer_require.importmap",
-  runtime: "node",
-  packageUserConditions: ["require"],
+  packageUserConditions: ["require", "node"],
 });
 await test({
   name: "browser.importmap",
-  runtime: "browser",
+  packageUserConditions: ["browser"],
 });
 await test({
   name: "browser_prefer_electron.importmap",
-  runtime: "browser",
-  packageUserConditions: ["electron"],
+  packageUserConditions: ["electron", "browser"],
 });
