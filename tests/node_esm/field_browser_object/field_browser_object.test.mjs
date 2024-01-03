@@ -13,8 +13,9 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./main.mjs"],
+      import_resolution: {
+        entryPoints: ["./main.mjs"],
+      },
     },
   },
   onWarn: (warning) => {

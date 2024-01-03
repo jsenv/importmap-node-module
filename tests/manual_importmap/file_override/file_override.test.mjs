@@ -10,7 +10,6 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
       // manualImportmap allows to override the mapping found in package.json
       manualImportmap: {
         imports: {

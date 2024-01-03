@@ -5,11 +5,10 @@ await writeImportmaps({
   directoryUrl: new URL("./dist/", import.meta.url),
   importmaps: {
     "./project.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./index.js"],
-      magicExtensions: ["inherit"],
-
-      removeUnusedMappings: true,
+      import_resolution: {
+        entryPoints: ["./index.js"],
+        magicExtensions: ["inherit"],
+      },
     },
   },
 });

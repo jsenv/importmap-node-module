@@ -13,16 +13,15 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "./src/directory/test.importmap": {
-      mappingsForNodeResolution: true,
       manualImportmap: {
         imports: {
           "directory/": "./src/directory/",
         },
       },
-      entryPoints: ["./src/directory/main.js"],
-      magicExtensions: [".js"],
-
-      removeUnusedMappings: true,
+      import_resolution: {
+        entryPoints: ["./src/directory/main.js"],
+        magicExtensions: [".js"],
+      },
     },
   },
 });

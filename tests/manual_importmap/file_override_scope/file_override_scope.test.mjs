@@ -9,7 +9,6 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
       manualImportmap: {
         scopes: {
           "./node_modules/foo/": {
@@ -17,9 +16,9 @@ await writeImportmaps({
           },
         },
       },
-      entryPoints: ["./index.mjs"],
-
-      removeUnusedMappings: true,
+      import_resolution: {
+        entryPoints: ["./index.mjs"],
+      },
     },
   },
 });

@@ -9,9 +9,7 @@ await writeImportmaps({
   logLevel: "warn",
   directoryUrl: testDirectoryUrl,
   importmaps: {
-    "test.importmap": {
-      mappingsForNodeResolution: true,
-    },
+    "test.importmap": {},
   },
   packagesManualOverrides: {
     bar: {

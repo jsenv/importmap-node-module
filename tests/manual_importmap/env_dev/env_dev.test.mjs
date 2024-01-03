@@ -10,15 +10,14 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
       manualImportmap: {
         imports: {
           "#env": "./env.dev.js",
         },
       },
-      entryPoints: ["./index.js"],
-
-      removeUnusedMappings: true,
+      import_resolution: {
+        entryPoints: ["./index.js"],
+      },
     },
   },
 });

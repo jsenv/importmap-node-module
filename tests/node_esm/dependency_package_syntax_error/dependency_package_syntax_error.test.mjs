@@ -15,10 +15,9 @@ try {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       "test.importmap": {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./index.js"],
-
-        removeUnusedMappings: true,
+        import_resolution: {
+          entryPoints: ["./index.js"],
+        },
       },
     },
   });

@@ -9,10 +9,7 @@ await writeImportmaps({
   logLevel: "warn",
   directoryUrl: testDirectoryUrl,
   importmaps: {
-    "test.importmap": {
-      mappingsForNodeResolution: true,
-      // removeUnusedMappings: true,
-    },
+    "test.importmap": {},
   },
 });
 importmapFileSnapshot.compare();

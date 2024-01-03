@@ -18,8 +18,6 @@ await writeImportmaps({
   directoryUrl: new URL("./", import.meta.url),
   importmaps: {
     "./project.importmap": {
-      runtime: "browser",
-      mappingsForNodeResolution: true,
       manualImportmap: {
         scopes: {
           "./node_modules/react-redux/": {
@@ -28,10 +26,10 @@ await writeImportmaps({
           },
         },
       },
-      entryPoints: ["./main.html"],
-      magicExtensions: ["inherit"],
-
-      removeUnusedMappings: true,
+      import_resolution: {
+        entryPoints: ["./main.html"],
+        magicExtensions: ["inherit"],
+      },
     },
   },
   packagesManualOverrides: {

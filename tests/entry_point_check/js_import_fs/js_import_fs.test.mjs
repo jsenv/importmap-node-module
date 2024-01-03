@@ -14,11 +14,10 @@ const test = async ({ name, runtime, expectedWarnings }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [importmapFileRelativeUrl]: {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./index.js"],
-
-        removeUnusedMappings: true,
-        runtime,
+        import_resolution: {
+          entryPoints: ["./index.js"],
+          runtime,
+        },
       },
     },
     onWarn: (warning) => {

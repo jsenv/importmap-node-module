@@ -3,7 +3,7 @@ import { takeFileSnapshot } from "@jsenv/snapshot";
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
-const test = async ({ name, runtime }) => {
+const test = async ({ name, packageUserConditions }) => {
   const importmapFileUrl = new URL(`./root/${name}`, import.meta.url);
   const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
   await writeImportmaps({
@@ -11,8 +11,9 @@ const test = async ({ name, runtime }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        mappingsForNodeResolution: true,
-        runtime,
+        node_esm: {
+          packageUserConditions,
+        },
       },
     },
   });
@@ -21,10 +22,10 @@ const test = async ({ name, runtime }) => {
 
 await test({
   name: "browser.importmap",
-  runtime: "browser",
+  packageUserConditions: ["browser"],
 });
 
 await test({
   name: "node.importmap",
-  runtime: "node",
+  packageUserConditions: ["node"],
 });

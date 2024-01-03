@@ -10,10 +10,11 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      entryPoints: ["./index.js"],
-      bareSpecifierAutomapping: true,
-      // magicExtensions: [".js"],
+      import_resolution: {
+        entryPoints: ["./index.js"],
+        bareSpecifierAutomapping: true,
+        // magicExtensions: [".js"],
+      },
     },
   },
 });

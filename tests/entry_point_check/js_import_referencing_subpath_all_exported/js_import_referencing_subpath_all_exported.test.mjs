@@ -10,9 +10,12 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      mappingsForDevDependencies: true,
-      entryPoints: ["./index.js"],
+      node_esm: {
+        devDependencies: true,
+      },
+      import_resolution: {
+        entryPoints: ["./index.js"],
+      },
     },
   },
 });

@@ -13,9 +13,7 @@ await writeImportmaps({
   logLevel: "error",
   directoryUrl: testDirectoryUrl,
   importmaps: {
-    "test.importmap": {
-      mappingsForNodeResolution: true,
-    },
+    "test.importmap": {},
   },
   onWarn: (warning) => {
     warnings.push(warning);

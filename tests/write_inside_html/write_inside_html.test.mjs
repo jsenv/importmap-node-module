@@ -16,10 +16,7 @@ const test = async (fixtureName, options) => {
     logLevel: "warn",
     directoryUrl: testDirectoryUrl,
     importmaps: {
-      "./index.html": {
-        mappingsForNodeResolution: true,
-        removeUnusedMappings: true,
-      },
+      "./index.html": {},
     },
     ...options,
   });

@@ -11,6 +11,23 @@ import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on
 import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
 import { writeIntoFiles } from "./step_write_into_files/write_into_files.js";
 
+const import_resolution_default = {
+  // we could deduce it from the package.json but:
+  // 1. project might not use package.json
+  // 2. it's a bit magic
+  // 3. it's kinda possible to assume an export from "exports" field is the main entry point
+  //    but for project with many entry points they cannot be distinguised from
+  //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
+  entryPoints: undefined,
+  // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
+  // of files. Not that hard to do, especially using @jsenv/url-meta
+  // but that's super extra fine tuning that I don't have time/energy to do for now
+  bareSpecifierAutomapping: false,
+  magicExtensions: [],
+  keepUnusedMappings: false,
+  runtime: "browser",
+};
+
 export const writeImportmaps = async ({
   logLevel,
   onWarn = (warning, warn) => {
@@ -25,7 +42,15 @@ export const writeImportmaps = async ({
   babelConfigFileUrl,
   // for unit test
   jsConfigFileUrl,
+  ...rest
 }) => {
+  const unexpectedParamNames = Object.keys(rest);
+  if (unexpectedParamNames.length > 0) {
+    throw new TypeError(
+      `${unexpectedParamNames.join(",")}: there is no such param`,
+    );
+  }
+
   const logger = createLogger({ logLevel });
   const warn = wrapWarnToWarnOnce((warning) => {
     onWarn(warning, () => {
@@ -94,25 +119,31 @@ export const writeImportmaps = async ({
   // - remove unused mappings
   for (const importmapRelativeUrl of importmapRelativeUrls) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
-    const { import_resolution = {} } = importmapInfo.options;
-    if (import_resolution === false) {
+    let { import_resolution = {} } = importmapInfo.options;
+    if (!import_resolution) {
       continue;
     }
+    if (typeof import_resolution !== "object") {
+      throw new TypeError(
+        `import_resolution must be an object, got ${import_resolution}`,
+      );
+    }
+
+    const unexpectedKeys = Object.keys(import_resolution).filter(
+      (key) => !Object.hasOwn(import_resolution_default, key),
+    );
+    if (unexpectedKeys.length > 0) {
+      throw new TypeError(
+        `${unexpectedKeys.join(",")}: no such key on "import_resolution"`,
+      );
+    }
+    import_resolution = { ...import_resolution_default, ...import_resolution };
     const {
-      // we could deduce it from the package.json but:
-      // 1. project might not use package.json
-      // 2. it's a bit magic
-      // 3. it's kinda possible to assume an export from "exports" field is the main entry point
-      //    but for project with many entry points they cannot be distinguised from
-      //    "subpath exports" https://nodejs.org/api/packages.html#subpath-exports
       entryPoints = [],
-      // ideally we could enable magicExtensions and bareSpecifierAutomapping only for a subset
-      // of files. Not that hard to do, especially using @jsenv/url-meta
-      // but that's super extra fine tuning that I don't have time/energy to do for now
       bareSpecifierAutomapping,
       magicExtensions,
       keepUnusedMappings,
-      runtime = "browser",
+      runtime,
     } = import_resolution;
 
     if (

@@ -25,8 +25,9 @@ const test = async ({ name, expectedWarnings }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./main.mjs"],
+        import_resolution: {
+          entryPoints: ["./main.mjs"],
+        },
       },
     },
     onWarn: (warning) => {

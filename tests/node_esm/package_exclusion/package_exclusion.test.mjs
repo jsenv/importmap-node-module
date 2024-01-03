@@ -10,12 +10,12 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      // ignoreJsFiles: true,
-      packageIncludedPredicate: ({ name }) => name !== "foo",
-      entryPoints: ["./index.js"],
-
-      removeUnusedMappings: true,
+      node_esm: {
+        packageIncludedPredicate: ({ name }) => name !== "foo",
+      },
+      import_resolution: {
+        entryPoints: ["./index.js"],
+      },
     },
   },
 });

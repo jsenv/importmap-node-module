@@ -10,8 +10,9 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      mappingsForNodeResolution: true,
-      mappingsForDevDependencies: true,
+      node_esm: {
+        devDependencies: true,
+      },
     },
   },
 });

@@ -1,5 +1,11 @@
 import { visitNodeModuleResolution } from "./visit_node_module_resolution.js";
 
+const node_esm_default = {
+  devDependencies: false,
+  packageUserConditions: undefined,
+  packageIncludedPredicate: undefined,
+};
+
 export const generateImportmapForNodeESMResolution = async (
   importmapInfos,
   {
@@ -15,9 +21,18 @@ export const generateImportmapForNodeESMResolution = async (
   for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
     const { node_esm = {} } = importmapInfo.options;
-    if (node_esm === false) {
+    if (!node_esm) {
       continue;
     }
+    const unexpectedKeys = Object.keys(node_esm).filter(
+      (key) => !Object.hasOwn(node_esm_default, key),
+    );
+    if (unexpectedKeys.length > 0) {
+      throw new TypeError(
+        `${unexpectedKeys.join(",")}: no such key on "node_esm"`,
+      );
+    }
+
     const { devDependencies, packageUserConditions, packageIncludedPredicate } =
       node_esm;
     const importsMappings = {};
@@ -88,12 +103,27 @@ const packageConditionsFromPackageUserConditions = (packageUserConditions) => {
       `packageUserConditions must be an array, got ${packageUserConditions}`,
     );
   }
-  packageUserConditions.forEach((userCondition) => {
-    if (typeof userCondition !== "string") {
+
+  const packageConditions = [];
+  for (const packageUserCondition of packageUserConditions) {
+    if (typeof packageUserCondition !== "string") {
       throw new TypeError(
-        `user condition must be a string, got ${userCondition}`,
+        `package user condition must be a string, got ${packageUserCondition}`,
       );
     }
-  });
-  return [...packageUserConditions, "import", "browser", "default"];
+    packageConditions.push(packageUserCondition);
+  }
+  if (!packageConditions.includes("import")) {
+    packageConditions.push("import");
+  }
+  if (
+    !packageConditions.includes("browser") &&
+    !packageConditions.includes("node")
+  ) {
+    packageConditions.push("browser");
+  }
+  if (!packageConditions.includes("default")) {
+    packageConditions.push("default");
+  }
+  return packageConditions;
 };

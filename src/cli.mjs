@@ -11,6 +11,10 @@ const options = {
   "dir": {
     type: "string",
   },
+  "entrypoint": {
+    type: "string",
+    multiple: true,
+  },
   "dev": {
     type: "boolean",
   },
@@ -46,6 +50,9 @@ await writeImportmaps({
         devDependencies: values.dev,
         packageUserConditions: values.dev ? ["development"] : [],
       },
+      import_resolution: {
+        entryPoints: values.entryPoints,
+      },
       keepUnusedMappings: values["keep-unused"],
     },
   },
@@ -59,10 +66,11 @@ Usage: npx @jsenv/importmap-node-module file.html [options]
 https://github.com/jsenv/importmap-node-module
 
 Options:
-  --help        Display this message.
-  --dir         Files will be resolved against this directory. Defaults to process.cwd()
-  --dev         Include devDependencies from package.json and pick "developement" in package conditions.
-  --keep-unused Remove mappings not used by any entrypoint or their transitive dependencies. Requires --entrypoint.
+  --help               Display this message.
+  --dir                Files will be resolved against this directory. Defaults to process.cwd()
+  --entrypoint file.js Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
+  --dev                Include devDependencies from package.json and pick "developement" in package conditions.
+  --keep-unused        Remove mappings not used by any entrypoint or their transitive dependencies. Requires --entrypoint.
 
 For more advanced options, see the API.`);
 }

@@ -24,10 +24,16 @@ The simplest way to use this project is with `npx`:
 npx @jsenv/importmap-node-module index.html
 ```
 
-It will write mappings in _index.html_, inside a `<script type="importmap">`.
+It will write mappings in _index.html_, inside a `<script type="importmap">`.  
+It is also possible to write mappings into a separate file as follow:
+
+```console
+npx @jsenv/importmap-node-module demo.importmap --entrypoint index.html
+```
 
 The CLI supports the following options:
 
+- `--entrypoint`: Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
 - `--dev`: Include devDependencies from package.json. Also favor `"development"` in [package exports](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions)</a><sup>↗</sup>.
 - `--keep-unused`: Keep all mappings, even if they are not currently used by entry file or its transitive dependencies.
 

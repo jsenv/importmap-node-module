@@ -12,12 +12,11 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "dev.importmap": {
-      mappingsForNodeResolution: true,
-      mappingsForDevDependencies: true,
+      node_esm: {
+        devDependencies: true,
+      },
     },
-    "prod.importmap": {
-      mappingsForNodeResolution: true,
-    },
+    "prod.importmap": {},
   },
 });
 devimportmapFileSnapshot.compare();

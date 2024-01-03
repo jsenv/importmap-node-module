@@ -9,9 +9,7 @@ try {
   await writeImportmaps({
     directoryUrl: testDirectoryUrl,
     importmaps: {
-      "test.importmap": {
-        mappingsForNodeResolution: true,
-      },
+      "test.importmap": {},
     },
   });
   throw new Error("should throw");

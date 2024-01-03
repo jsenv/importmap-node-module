@@ -18,17 +18,19 @@ const fooBrowserJsFileUrl = new URL(
 
 const test = async ({ name, runtime, expectedWarnings }) => {
   const importmapFileUrl = new URL(`./root/${name}`, import.meta.url);
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
+  const importmapsnapshot = takeFileSnapshot(importmapFileUrl);
   const warnings = [];
   await writeImportmaps({
     logLevel: "warn",
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        mappingsForNodeResolution: true,
-        entryPoints: ["./main.mjs"],
-
-        runtime,
+        node_esm: {
+          packageUserConditions: [runtime],
+        },
+        import_resolution: {
+          entryPoints: ["./main.mjs"],
+        },
       },
     },
     onWarn: (warning) => {
@@ -36,7 +38,7 @@ const test = async ({ name, runtime, expectedWarnings }) => {
     },
     exportsFieldWarningConfig: { dependencies: true },
   });
-  importmapFileSnapshot.compare();
+  importmapsnapshot.compare();
   const actual = warnings;
   const expected = expectedWarnings;
   assert({ actual, expected });
