@@ -15,9 +15,9 @@ await writeImportmaps({
           "http://example.com/foo.js": "http://example.com/bar.js",
         },
       },
-      entryPoints: ["./index.js"],
-
-      removeUnusedMappings: true,
+      importResolution: {
+        entryPoints: ["./index.js"],
+      },
     },
   },
 });

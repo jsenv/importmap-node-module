@@ -47,7 +47,7 @@ await test({
   magicExtensions: [".ts"],
   expectedWarnings: [
     {
-      code: "importResolution_FAILED",
+      code: "IMPORT_RESOLUTION_FAILED",
       message: `Import resolution failed for "lodash/union"
 --- import trace ---
 ${testDirectoryUrl}main.js:2:22

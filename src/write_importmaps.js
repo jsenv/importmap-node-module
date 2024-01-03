@@ -141,7 +141,7 @@ export const writeImportmaps = async ({
     const {
       entryPoints = [],
       bareSpecifierAutomapping,
-      magicExtensions = [],
+      magicExtensions,
       keepUnusedMappings,
       runtime,
     } = importResolution;
@@ -156,7 +156,7 @@ export const writeImportmaps = async ({
     if (bareSpecifierAutomapping && entryPoints.length === 0) {
       logger.warn(`"bareSpecifierAutomapping" requires "entryPoints"`);
     }
-    if (magicExtensions.length && entryPoints.length === 0) {
+    if (magicExtensions && entryPoints.length === 0) {
       logger.warn(`"magicExtensions" requires "entryPoints"`);
     }
     if (entryPoints.length === 0) {

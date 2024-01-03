@@ -83,7 +83,7 @@ ${urlToFileSystemPath(fooBrowserJsFileUrl)}
 .js, .json, .node`,
     },
     {
-      code: "importResolution_FAILED",
+      code: "IMPORT_RESOLUTION_FAILED",
       message: `Import resolution failed for "foo"
 --- import trace ---
 ${rootMainJsFileUrl}:2:7

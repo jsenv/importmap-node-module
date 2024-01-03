@@ -30,7 +30,7 @@ removeFileSync(mainJsFileUrl, { allowUseless: true });
   const actual = await getWarnings();
   const expected = [
     {
-      code: "importResolution_FAILED",
+      code: "IMPORT_RESOLUTION_FAILED",
       message: `Import resolution failed for "./main.js"
 --- import trace ---
 entryPoints parameter

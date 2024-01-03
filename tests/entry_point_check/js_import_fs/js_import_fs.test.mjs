@@ -34,7 +34,7 @@ await test({
   name: "runtime_browser",
   expectedWarnings: [
     {
-      code: "importResolution_FAILED",
+      code: "IMPORT_RESOLUTION_FAILED",
       message: `Import resolution failed for "fs"
 --- import trace ---
 ${testDirectoryUrl}index.js:1:7

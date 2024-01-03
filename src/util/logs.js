@@ -92,7 +92,7 @@ export const createImportResolutionFailedWarning = ({
   automapping,
 }) => {
   return {
-    code: "importResolution_FAILED",
+    code: "IMPORT_RESOLUTION_FAILED",
     message: createDetailedMessage(
       `Import resolution failed for "${specifier}"`,
       {

@@ -35,7 +35,7 @@ const test = async ({ bareSpecifierAutomapping }) => {
     ? []
     : [
         {
-          code: "importResolution_FAILED",
+          code: "IMPORT_RESOLUTION_FAILED",
           message: `Import resolution failed for "file"
 --- import trace ---
 ${testDirectoryUrl}index.js:2:7

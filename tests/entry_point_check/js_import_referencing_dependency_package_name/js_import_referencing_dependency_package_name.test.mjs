@@ -13,6 +13,7 @@ await writeImportmaps({
       importResolution: {
         entryPoints: ["./index.js"],
       },
+      keepUnusedMappings: true,
     },
   },
 });
