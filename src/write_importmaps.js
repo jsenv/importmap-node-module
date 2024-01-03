@@ -11,7 +11,7 @@ import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on
 import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
 import { writeIntoFiles } from "./step_write_into_files/write_into_files.js";
 
-const importResolution_default = {
+const importResolutionDefault = {
   // we could deduce it from the package.json but:
   // 1. project might not use package.json
   // 2. it's a bit magic
@@ -130,14 +130,14 @@ export const writeImportmaps = async ({
     }
 
     const unexpectedKeys = Object.keys(importResolution).filter(
-      (key) => !Object.hasOwn(importResolution_default, key),
+      (key) => !Object.hasOwn(importResolutionDefault, key),
     );
     if (unexpectedKeys.length > 0) {
       throw new TypeError(
         `${unexpectedKeys.join(",")}: no such key on "importResolution"`,
       );
     }
-    importResolution = { ...importResolution_default, ...importResolution };
+    importResolution = { ...importResolutionDefault, ...importResolution };
     const {
       entryPoints = [],
       bareSpecifierAutomapping,
