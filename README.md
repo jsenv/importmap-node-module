@@ -159,7 +159,7 @@ The following conditions will be picked:
 
 #### importResolution
 
-_importResolution_ is an object. When passed the generated mappings will be used to resolve js imports found in entryPoints and their transitive dependencies. When a js import cannot be resolved a warning is logged.
+_importResolution_ is an object. When passed the generated mappings will be used to resolve js imports found in entryPoints and their transitive dependencies. When a js import cannot be resolved a warning is logged. It is recommended to use _importResolution_ as it gives confidence in the generated importmap.
 
 _importResolution_ is optional. When the importmap file is written inside a file ending with `.html` the import resolution starts from the `.html` file. Otherwise _importResolution.entryPoints_ must be configured.
 
@@ -183,8 +183,6 @@ await writeImportmaps({
 _importResolution.entryPoints_ is an array composed of string representing file relative urls. Each file is considered as an entry point using the import mappings.
 
 _importResolution.entryPoints_ is optional.
-
-It is recommended to use _importResolution.entryPoints_ as it gives confidence in the generated importmap.
 
 ##### importResolution.magicExtensions
 
@@ -233,7 +231,7 @@ import { writeFile } from "node:fs";
 
 _importResolution.runtime_ is optional and defaults to `"browser"`.
 
-#### importResolution.keepUnusedMappings
+##### importResolution.keepUnusedMappings
 
 _importResolution.keepUnusedMappings_ is a boolean. When enabled mappings will be kept even if not currently used by import found in js files.
 
@@ -253,8 +251,6 @@ await writeImportmaps({
   },
 });
 ```
-
-It is recommended to enable _removeUnusedMappings_ so that importmap contains only the mappings actually used by your codebase.
 
 #### manualImportmap
 
@@ -316,7 +312,7 @@ At the time of writing this documentation external importmap are not supported b
 External import maps are not yet supported
 ```
 
-If you plan to use importmap in a web browser you need to tell `@jsenv/importmap-node-module` to inline importmap into the HTML file as shown in [API](#API).
+If you plan to use importmap in a web browser you need to tell `@jsenv/importmap-node-module` to inline importmap into the HTML file as shown in [CLI](#CLI).
 
 # TypeScript
 
@@ -343,7 +339,7 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 await writeImportmaps({
   directoryUrl: new URL("./dist/", import.meta.url),
   importmaps: {
-    "./demo.html": {
+    "./index.html": {
       importResolution: {
         magicExtensions: ["inherit"],
       },
