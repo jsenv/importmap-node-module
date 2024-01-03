@@ -10,7 +10,7 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      node_esm: {
+      nodeMappings: {
         packageIncludedPredicate: ({ name }) => name !== "foo",
       },
       import_resolution: {

@@ -25,7 +25,7 @@ const test = async ({ name, runtime, expectedWarnings }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        node_esm: {
+        nodeMappings: {
           packageUserConditions: [runtime],
         },
         import_resolution: {

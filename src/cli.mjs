@@ -46,7 +46,7 @@ await writeImportmaps({
   directoryUrl: new URL(values.dir || ".", currentDirectoryUrl),
   importmaps: {
     [outfile]: {
-      node_esm: {
+      nodeMappings: {
         devDependencies: values.dev,
         packageUserConditions: values.dev ? ["development"] : [],
       },

@@ -10,7 +10,7 @@ const test = async ({ directoryUrl, packageUserConditions }) => {
     directoryUrl,
     importmaps: {
       "test.importmap": {
-        node_esm: {
+        nodeMappings: {
           packageUserConditions,
         },
         import_resolution: {

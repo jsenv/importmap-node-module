@@ -1,6 +1,6 @@
 import { visitNodeModuleResolution } from "./visit_node_module_resolution.js";
 
-const node_esm_default = {
+const nodeMappings_default = {
   devDependencies: false,
   packageUserConditions: undefined,
   packageIncludedPredicate: undefined,
@@ -20,21 +20,21 @@ export const generateImportmapForNodeESMResolution = async (
   const nodeResolutionVisitors = [];
   for (const importmapRelativeUrl of Object.keys(importmapInfos)) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
-    const { node_esm = {} } = importmapInfo.options;
-    if (!node_esm) {
+    const { nodeMappings = {} } = importmapInfo.options;
+    if (!nodeMappings) {
       continue;
     }
-    const unexpectedKeys = Object.keys(node_esm).filter(
-      (key) => !Object.hasOwn(node_esm_default, key),
+    const unexpectedKeys = Object.keys(nodeMappings).filter(
+      (key) => !Object.hasOwn(nodeMappings_default, key),
     );
     if (unexpectedKeys.length > 0) {
       throw new TypeError(
-        `${unexpectedKeys.join(",")}: no such key on "node_esm"`,
+        `${unexpectedKeys.join(",")}: no such key on "nodeMappings"`,
       );
     }
 
     const { devDependencies, packageUserConditions, packageIncludedPredicate } =
-      node_esm;
+      nodeMappings;
     const importsMappings = {};
     const scopesMappings = {};
     const mappingsToPutTopLevel = {};

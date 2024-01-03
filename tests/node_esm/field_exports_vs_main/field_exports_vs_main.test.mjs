@@ -11,7 +11,7 @@ const test = async ({ name, packageUserConditions }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        node_esm: {
+        nodeMappings: {
           packageUserConditions,
         },
       },

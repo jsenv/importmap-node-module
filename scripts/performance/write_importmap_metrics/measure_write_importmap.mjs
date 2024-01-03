@@ -12,7 +12,7 @@ await writeImportmaps({
   directoryUrl: new URL("./fake_project/", import.meta.url),
   importmaps: {
     "./node_resolution.importmap": {
-      node_esm: {
+      nodeMappings: {
         devDependencies: true,
       },
     },

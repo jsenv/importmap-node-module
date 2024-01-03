@@ -12,7 +12,7 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "dev.importmap": {
-      node_esm: {
+      nodeMappings: {
         devDependencies: true,
       },
     },
