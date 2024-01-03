@@ -18,7 +18,7 @@ await writeImportmaps({
           "directory/": "./src/directory/",
         },
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./src/directory/main.js"],
         magicExtensions: [".js"],
       },

@@ -18,7 +18,7 @@ await writeImportmaps({
   directoryUrl: new URL("./", import.meta.url),
   importmaps: {
     "./project.importmap": {
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./main.html"],
         magicExtensions: ["inherit"],
       },

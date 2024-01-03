@@ -14,7 +14,7 @@ const test = async ({ name, runtime, expectedWarnings }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [importmapFileRelativeUrl]: {
-        import_resolution: {
+        importResolution: {
           entryPoints: ["./index.js"],
           runtime,
         },
@@ -34,7 +34,7 @@ await test({
   name: "runtime_browser",
   expectedWarnings: [
     {
-      code: "IMPORT_RESOLUTION_FAILED",
+      code: "importResolution_FAILED",
       message: `Import resolution failed for "fs"
 --- import trace ---
 ${testDirectoryUrl}index.js:1:7

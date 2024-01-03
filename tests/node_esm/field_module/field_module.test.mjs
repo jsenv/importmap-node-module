@@ -25,7 +25,7 @@ const test = async ({ name, expectedWarnings }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [name]: {
-        import_resolution: {
+        importResolution: {
           entryPoints: ["./main.mjs"],
         },
       },
@@ -77,7 +77,7 @@ ${urlToFileSystemPath(fooModuleJsFileUrl)}
 .js, .json, .node`,
     },
     {
-      code: "IMPORT_RESOLUTION_FAILED",
+      code: "importResolution_FAILED",
       message: `Import resolution failed for "foo"
 --- import trace ---
 ${rootMainJsFileUrl}:2:7

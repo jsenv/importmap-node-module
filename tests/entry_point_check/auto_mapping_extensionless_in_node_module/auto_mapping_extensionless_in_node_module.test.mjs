@@ -19,7 +19,7 @@ const test = async ({ name, magicExtensions, expectedWarnings }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [importmapRelativeUrl]: {
-        import_resolution: {
+        importResolution: {
           entryPoints: ["./main.js"],
           magicExtensions,
         },
@@ -39,7 +39,7 @@ await test({
   name: "default",
   expectedWarnings: [
     {
-      code: "IMPORT_RESOLUTION_FAILED",
+      code: "importResolution_FAILED",
       message: `Import resolution failed for "./file"
 --- import trace ---
 ${testDirectoryUrl}node_modules/leftpad/index.js:1:7
@@ -71,7 +71,7 @@ await test({
   magicExtensions: [".js"],
   expectedWarnings: [
     {
-      code: "IMPORT_RESOLUTION_FAILED",
+      code: "importResolution_FAILED",
       message: `Import resolution failed for "./other-file"
 --- import trace ---
 ${testDirectoryUrl}node_modules/leftpad/file.js:1:7

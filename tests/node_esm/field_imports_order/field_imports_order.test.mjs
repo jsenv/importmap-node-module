@@ -13,7 +13,7 @@ const test = async ({ directoryUrl, packageUserConditions }) => {
         nodeMappings: {
           packageUserConditions,
         },
-        import_resolution: {
+        importResolution: {
           entryPoints: ["./index.js"],
         },
       },

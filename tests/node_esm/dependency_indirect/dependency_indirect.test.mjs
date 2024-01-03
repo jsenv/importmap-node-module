@@ -15,7 +15,7 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "./test.importmap": {
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./index.js"],
         // magicExtensions: [".js"],
       },

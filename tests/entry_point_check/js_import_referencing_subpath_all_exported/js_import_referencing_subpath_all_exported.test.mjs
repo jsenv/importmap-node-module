@@ -13,7 +13,7 @@ await writeImportmaps({
       nodeMappings: {
         devDependencies: true,
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./index.js"],
       },
     },

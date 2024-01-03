@@ -194,7 +194,7 @@ await writeImportmaps({
 
 _importResolution_ is optional. When the importmap file is written inside a file ending with `.html` the import resolution starts from the `.html` file. Otherwise `entryPoints` must be used.
 
-It is possible to disable import_resolution entirely:
+It is possible to disable importResolution entirely:
 
 ```js
 import { writeImportmaps } from "@jsenv/importmap-node-module";

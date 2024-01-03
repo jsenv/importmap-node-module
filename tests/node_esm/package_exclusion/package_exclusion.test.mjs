@@ -13,7 +13,7 @@ await writeImportmaps({
       nodeMappings: {
         packageIncludedPredicate: ({ name }) => name !== "foo",
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./index.js"],
       },
     },

@@ -25,7 +25,7 @@ const test = async ({ name, magicExtensions, expectedWarnings } = {}) => {
     },
     importmaps: {
       [importmapRelativeUrl]: {
-        import_resolution: {
+        importResolution: {
           entryPoints: ["./main.js"],
           magicExtensions,
         },
@@ -47,7 +47,7 @@ await test({
   magicExtensions: [".ts"],
   expectedWarnings: [
     {
-      code: "IMPORT_RESOLUTION_FAILED",
+      code: "importResolution_FAILED",
       message: `Import resolution failed for "lodash/union"
 --- import trace ---
 ${testDirectoryUrl}main.js:2:22

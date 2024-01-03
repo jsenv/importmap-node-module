@@ -26,7 +26,7 @@ await writeImportmaps({
           },
         },
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./main.html"],
         magicExtensions: ["inherit"],
       },

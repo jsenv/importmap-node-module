@@ -47,7 +47,7 @@ await test({
   runtime: "node",
   expectedWarnings: [
     {
-      code: "IMPORT_RESOLUTION_FAILED",
+      code: "importResolution_FAILED",
       message: `Import resolution failed for "/foo.js"
 --- import trace ---
 ${testDirectoryUrl}main.js:2:7

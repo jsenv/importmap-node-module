@@ -11,7 +11,7 @@ import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on
 import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
 import { writeIntoFiles } from "./step_write_into_files/write_into_files.js";
 
-const import_resolution_default = {
+const importResolution_default = {
   // we could deduce it from the package.json but:
   // 1. project might not use package.json
   // 2. it's a bit magic
@@ -119,32 +119,32 @@ export const writeImportmaps = async ({
   // - remove unused mappings
   for (const importmapRelativeUrl of importmapRelativeUrls) {
     const importmapInfo = importmapInfos[importmapRelativeUrl];
-    let { import_resolution = {} } = importmapInfo.options;
-    if (!import_resolution) {
+    let { importResolution = {} } = importmapInfo.options;
+    if (!importResolution) {
       continue;
     }
-    if (typeof import_resolution !== "object") {
+    if (typeof importResolution !== "object") {
       throw new TypeError(
-        `import_resolution must be an object, got ${import_resolution}`,
+        `importResolution must be an object, got ${importResolution}`,
       );
     }
 
-    const unexpectedKeys = Object.keys(import_resolution).filter(
-      (key) => !Object.hasOwn(import_resolution_default, key),
+    const unexpectedKeys = Object.keys(importResolution).filter(
+      (key) => !Object.hasOwn(importResolution_default, key),
     );
     if (unexpectedKeys.length > 0) {
       throw new TypeError(
-        `${unexpectedKeys.join(",")}: no such key on "import_resolution"`,
+        `${unexpectedKeys.join(",")}: no such key on "importResolution"`,
       );
     }
-    import_resolution = { ...import_resolution_default, ...import_resolution };
+    importResolution = { ...importResolution_default, ...importResolution };
     const {
       entryPoints = [],
       bareSpecifierAutomapping,
       magicExtensions,
       keepUnusedMappings,
       runtime,
-    } = import_resolution;
+    } = importResolution;
 
     if (
       !entryPoints.includes(importmapRelativeUrl) &&

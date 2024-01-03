@@ -16,7 +16,7 @@ await writeImportmaps({
           },
         },
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./index.mjs"],
       },
     },

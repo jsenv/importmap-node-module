@@ -13,7 +13,7 @@ const getWarnings = async () => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       "test.importmap": {
-        import_resolution: {
+        importResolution: {
           entryPoints: ["./main.js"],
         },
       },
@@ -30,7 +30,7 @@ removeFileSync(mainJsFileUrl, { allowUseless: true });
   const actual = await getWarnings();
   const expected = [
     {
-      code: "IMPORT_RESOLUTION_FAILED",
+      code: "importResolution_FAILED",
       message: `Import resolution failed for "./main.js"
 --- import trace ---
 entryPoints parameter

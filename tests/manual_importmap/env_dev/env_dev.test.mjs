@@ -15,7 +15,7 @@ await writeImportmaps({
           "#env": "./env.dev.js",
         },
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./index.js"],
       },
     },

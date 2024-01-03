@@ -50,7 +50,7 @@ await writeImportmaps({
         devDependencies: values.dev,
         packageUserConditions: values.dev ? ["development"] : [],
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: values.entryPoints,
       },
       keepUnusedMappings: values["keep-unused"],

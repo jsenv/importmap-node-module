@@ -15,7 +15,7 @@ await writeImportmaps({
           "root/": "./",
         },
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./first/first.js", "second/second.js"],
       },
     },

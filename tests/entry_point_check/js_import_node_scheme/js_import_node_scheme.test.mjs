@@ -10,7 +10,7 @@ await writeImportmaps({
   directoryUrl: testDirectoryUrl,
   importmaps: {
     "test.importmap": {
-      import_resolution: {
+      importResolution: {
         runtime: "node",
         entryPoints: ["./index.js"],
       },

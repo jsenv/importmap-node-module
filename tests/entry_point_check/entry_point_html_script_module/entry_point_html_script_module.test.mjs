@@ -20,7 +20,7 @@ await writeImportmaps({
           c_everything: "./everything.js",
         },
       },
-      import_resolution: {
+      importResolution: {
         entryPoints: ["./main.html"],
       },
     },

@@ -19,7 +19,7 @@ const test = async ({ bareSpecifierAutomapping }) => {
     directoryUrl: testDirectoryUrl,
     importmaps: {
       [importmapRelativeUrl]: {
-        import_resolution: {
+        importResolution: {
           entryPoints: ["./index.js"],
           bareSpecifierAutomapping,
         },
@@ -35,7 +35,7 @@ const test = async ({ bareSpecifierAutomapping }) => {
     ? []
     : [
         {
-          code: "IMPORT_RESOLUTION_FAILED",
+          code: "importResolution_FAILED",
           message: `Import resolution failed for "file"
 --- import trace ---
 ${testDirectoryUrl}index.js:2:7
