@@ -17,6 +17,7 @@ await writeImportmaps({
       importResolution: {
         entryPoints: ["./index.js"],
         magicExtensions: [".js"],
+        keepUnusedMappings: true,
       },
     },
   },

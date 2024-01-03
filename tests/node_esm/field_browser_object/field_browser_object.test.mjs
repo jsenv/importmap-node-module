@@ -15,6 +15,7 @@ await writeImportmaps({
     "test.importmap": {
       importResolution: {
         entryPoints: ["./main.mjs"],
+        keepUnusedMappings: true,
       },
     },
   },

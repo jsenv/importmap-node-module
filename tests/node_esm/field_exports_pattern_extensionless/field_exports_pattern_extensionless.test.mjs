@@ -14,6 +14,7 @@ await writeImportmaps({
         entryPoints: ["./index.js"],
         bareSpecifierAutomapping: true,
         // magicExtensions: [".js"],
+        keepUnusedMappings: true,
       },
     },
   },

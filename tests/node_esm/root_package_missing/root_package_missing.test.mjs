@@ -15,7 +15,7 @@ try {
   throw new Error("should throw");
 } catch (e) {
   const actual = e;
-  const expected = new Error(`Cannot find project package.json file.
+  const expected = new Error(`Cannot find root package.json file.
 --- package.json url ---
 ${packageFileUrl}`);
   expected.code = "PROJECT_PACKAGE_FILE_NOT_FOUND";

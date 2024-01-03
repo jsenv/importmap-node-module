@@ -30,6 +30,7 @@ const test = async ({ name, runtime, expectedWarnings }) => {
         },
         importResolution: {
           entryPoints: ["./main.mjs"],
+          keepUnusedMappings: true,
         },
       },
     },
