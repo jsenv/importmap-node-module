@@ -1,0 +1,8 @@
+1. write file "input/0_default.importmap"
+{
+  "imports": {},
+  "scopes": {}
+}
+
+2. return
+undefined
