@@ -1,9 +1,8 @@
-import { snapshotFunctionSideEffects } from "@jsenv/snapshot";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
 const test = async (scenario, { bareSpecifierAutomapping }) => {
-  await snapshotFunctionSideEffects(
+  await snapshotWriteImportsMapsSideEffects(
     () =>
       writeImportmaps({
         logLevel: "warn",
@@ -19,9 +18,6 @@ const test = async (scenario, { bareSpecifierAutomapping }) => {
       }),
     import.meta.url,
     `./output/${scenario}/`,
-    {
-      filesystemEffects: [`./input/${scenario}.importmap`],
-    },
   );
 };
 

@@ -1,8 +1,8 @@
 import { writeImportmaps } from "@jsenv/importmap-node-module";
-import { snapshotFunctionSideEffects } from "@jsenv/snapshot";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
 const test = async () => {
-  await snapshotFunctionSideEffects(
+  await snapshotWriteImportsMapsSideEffects(
     () =>
       writeImportmaps({
         logLevel: "warn",
@@ -18,9 +18,6 @@ const test = async () => {
       }),
     import.meta.url,
     `./output/`,
-    {
-      filesystemEffects: [`./input/test.importmap`],
-    },
   );
 };
 await test();
