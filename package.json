@@ -38,7 +38,7 @@
     "@babel/core": "7.24.9",
     "@babel/traverse": "7.24.8",
     "@jsenv/ast": "6.2.5",
-    "@jsenv/filesystem": "4.8.2",
+    "@jsenv/filesystem": "4.9.0",
     "@jsenv/importmap": "1.2.1",
     "@jsenv/logger": "4.1.1",
     "@jsenv/urls": "2.3.1"
