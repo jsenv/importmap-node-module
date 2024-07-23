@@ -31,7 +31,7 @@ const fooPackageJsonFileUrl = new URL(
   testDirectoryUrl,
 );
 const actual = warnings;
-const expected = [
+const expect = [
   {
     code: "BROWSER_FIELD_NOT_IMPLEMENTED",
     message: `Found an object "browser" field in a package.json, this is not supported.
@@ -51,4 +51,4 @@ Add the following into "packageManualOverrides"
 As explained in https://github.com/jsenv/importmap-node-module#packagesmanualoverrides`,
   },
 ];
-assert({ actual, expected });
+assert({ actual, expect });

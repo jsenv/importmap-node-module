@@ -31,6 +31,5 @@ const actual = resolveImport({
   importer: "http://example.com/node_modules/react-redux/es/index.js",
   importMap: importMapNormalized,
 });
-const expected =
-  "http://example.com/node_modules/react-redux/es/utils/answer.js";
-assert({ actual, expected });
+const expect = "http://example.com/node_modules/react-redux/es/utils/answer.js";
+assert({ actual, expect });

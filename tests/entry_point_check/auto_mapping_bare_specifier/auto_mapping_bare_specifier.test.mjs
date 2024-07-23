@@ -31,7 +31,7 @@ const test = async ({ bareSpecifierAutomapping }) => {
   });
   importmapFileSnapshot.compare();
   const actual = warnings;
-  const expected = bareSpecifierAutomapping
+  const expect = bareSpecifierAutomapping
     ? []
     : [
         {
@@ -58,7 +58,7 @@ add mapping to "manualImportmap"
 }`,
         },
       ];
-  assert({ actual, expected });
+  assert({ actual, expect });
 
   return { warnings };
 };

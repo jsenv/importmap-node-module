@@ -40,9 +40,9 @@ const actual = {
     importMap: importMapNormalized,
   }),
 };
-const expected = {
+const expect = {
   bar_inside_project: `http://example.com/node_modules/bar/bar.js`,
   bar_inside_foo: `http://example.com/node_modules/foo/node_modules/bar/bar.js`,
   bar_file_inside_bar: `http://example.com/node_modules/foo/node_modules/bar/file.js`,
 };
-assert({ actual, expected });
+assert({ actual, expect });

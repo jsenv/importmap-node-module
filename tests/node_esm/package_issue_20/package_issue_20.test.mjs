@@ -28,5 +28,5 @@ const actual = resolveImport({
   importer: `http://example.com/node_modules/lume-fake/index.js`,
   importMap: importMapNormalized,
 });
-const expected = `http://example.com/node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js`;
-assert({ actual, expected });
+const expect = `http://example.com/node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js`;
+assert({ actual, expect });

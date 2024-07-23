@@ -32,7 +32,7 @@ const test = async ({ name, runtime }) => {
   });
   importmapFileSnapshot.compare();
   const actual = warnings;
-  const expected =
+  const expect =
     runtime === "node"
       ? [
           {
@@ -49,7 +49,7 @@ file not found on filesystem at ${urlToFileSystemPath("file:///foo.js")}`,
           },
         ]
       : [];
-  assert({ actual, expected });
+  assert({ actual, expect });
 };
 
 await test({

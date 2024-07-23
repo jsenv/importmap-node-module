@@ -38,8 +38,8 @@ const test = async ({ name, expectedWarnings }) => {
   });
   importmapFileSnapshot.compare();
   const actual = warnings;
-  const expected = expectedWarnings;
-  assert({ actual, expected });
+  const expect = expectedWarnings;
+  assert({ actual, expect });
 };
 
 removeEntrySync(fooModuleJsFileUrl, { allowUseless: true });

@@ -38,7 +38,7 @@ const test = async ({ name, magicExtensions, expectedWarnings } = {}) => {
   importmapFileSnapshot.compare();
   assert({
     actual: warnings,
-    expected: expectedWarnings,
+    expect: expectedWarnings,
   });
 };
 

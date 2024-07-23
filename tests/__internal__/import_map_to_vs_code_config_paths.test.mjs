@@ -9,9 +9,9 @@ import { importmapToVsCodeConfigPaths } from "@jsenv/importmap-node-module/src/s
       "foo/": "./node_modules/foo/",
     },
   });
-  const expected = {
+  const expect = {
     "foo": ["./node_modules/foo/index.js"],
     "foo/*": ["./node_modules/foo/*"],
   };
-  assert({ actual, expected });
+  assert({ actual, expect });
 }

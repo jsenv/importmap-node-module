@@ -55,7 +55,7 @@ const actual = {
     importMap: importMapNormalized,
   }),
 };
-const expected = {
+const expect = {
   bar_inside_project: "http://example.com/node_modules/bar/bar.js",
   bar_inside_foo: "http://example.com/node_modules/bar/bar.js",
   node_modules_bar_inside_foo:
@@ -66,4 +66,4 @@ const expected = {
   node_modules_foo_inside_bar:
     "http://example.com/node_modules/bar/node_modules/foo/foo.js",
 };
-assert({ actual, expected });
+assert({ actual, expect });

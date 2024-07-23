@@ -28,7 +28,7 @@ const getWarnings = async () => {
 removeFileSync(mainJsFileUrl, { allowUseless: true });
 {
   const actual = await getWarnings();
-  const expected = [
+  const expect = [
     {
       code: "IMPORT_RESOLUTION_FAILED",
       message: `Import resolution failed for "./main.js"
@@ -40,12 +40,12 @@ file not found on filesystem at ${urlToFileSystemPath(
       )}`,
     },
   ];
-  assert({ actual, expected });
+  assert({ actual, expect });
 }
 
 writeFileSync(mainJsFileUrl);
 {
   const actual = await getWarnings();
-  const expected = [];
-  assert({ actual, expected });
+  const expect = [];
+  assert({ actual, expect });
 }

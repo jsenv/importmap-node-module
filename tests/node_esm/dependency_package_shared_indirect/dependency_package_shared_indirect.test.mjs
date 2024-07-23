@@ -26,6 +26,6 @@ importmapFileSnapshot.compare();
 //     importer: `http://example.com/node_modules/bar/bar.js`,
 //     importMap: importMapNormalized,
 //   })
-//   const expected = `http://example.com/node_modules/bar/file-inside-bar.js`
-//   assert({ actual, expected })
+//   const expect = `http://example.com/node_modules/bar/file-inside-bar.js`
+//   assert({ actual, expect })
 // }
