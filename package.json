@@ -59,7 +59,7 @@
     "@jsenv/performance-impact": "4.2.1",
     "@jsenv/server": "15.2.14",
     "@jsenv/snapshot": "2.1.1",
-    "@jsenv/test": "3.3.13",
+    "@jsenv/test": "3.3.14",
     "eslint": "8.57.0",
     "eslint-plugin-html": "8.1.1",
     "eslint-plugin-import": "2.29.1",

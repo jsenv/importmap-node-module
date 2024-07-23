@@ -64,7 +64,7 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
     const importmapNode = createHtmlNode({
       tagName: "script",
       type: "importmap",
-      textContent: importmapAsJson,
+      children: importmapAsJson,
     });
     injectHtmlNodeAsEarlyAsPossible(htmlAst, importmapNode);
     setHtmlNodeAttributes(importmapNode, {
