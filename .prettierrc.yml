@@ -1,2 +1,4 @@
 trailingComma: "all"
 quoteProps: "consistent"
+plugins: ["prettier-plugin-organize-imports"]
+organizeImportsSkipDestructiveCodeActions: true

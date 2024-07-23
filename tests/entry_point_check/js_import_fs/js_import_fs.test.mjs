@@ -1,5 +1,5 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 

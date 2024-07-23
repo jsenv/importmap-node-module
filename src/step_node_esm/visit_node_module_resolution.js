@@ -1,12 +1,12 @@
-import { readFileSync } from "node:fs";
 import { createDetailedMessage } from "@jsenv/logger";
-import { urlToRelativeUrl, urlToFileSystemPath } from "@jsenv/urls";
+import { urlToFileSystemPath, urlToRelativeUrl } from "@jsenv/urls";
+import { readFileSync } from "node:fs";
 
+import { createFindNodeModulePackage } from "./node_module_resolution.js";
 import { resolvePackageMain } from "./resolve_package_main.js";
+import { visitPackageExports } from "./visit_package_exports.js";
 import { visitPackageImportmap } from "./visit_package_importmap.js";
 import { visitPackageImports } from "./visit_package_imports.js";
-import { visitPackageExports } from "./visit_package_exports.js";
-import { createFindNodeModulePackage } from "./node_module_resolution.js";
 
 export const visitNodeModuleResolution = async (
   visitors,

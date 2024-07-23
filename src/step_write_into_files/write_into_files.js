@@ -1,15 +1,15 @@
-import { readFileSync, writeFileSync } from "@jsenv/filesystem";
-import { urlToFileSystemPath } from "@jsenv/urls";
 import {
-  parseHtml,
+  createHtmlNode,
   findHtmlNode,
   getHtmlNodeAttribute,
+  injectHtmlNodeAsEarlyAsPossible,
+  parseHtml,
   setHtmlNodeAttributes,
   setHtmlNodeText,
-  createHtmlNode,
-  injectHtmlNodeAsEarlyAsPossible,
   stringifyHtmlAst,
 } from "@jsenv/ast";
+import { readFileSync, writeFileSync } from "@jsenv/filesystem";
+import { urlToFileSystemPath } from "@jsenv/urls";
 
 export const writeIntoFiles = (
   importmapInfos,

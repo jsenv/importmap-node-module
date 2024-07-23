@@ -1,4 +1,4 @@
-import { startServer, fetchFileSystem } from "@jsenv/server";
+import { fetchFileSystem, startServer } from "@jsenv/server";
 
 await startServer({
   port: 5697,

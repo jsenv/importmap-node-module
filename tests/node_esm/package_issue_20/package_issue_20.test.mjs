@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
-import { takeFileSnapshot } from "@jsenv/snapshot";
-import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
 import { assert } from "@jsenv/assert";
+import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
+import { takeFileSnapshot } from "@jsenv/snapshot";
+import { readFileSync } from "node:fs";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 

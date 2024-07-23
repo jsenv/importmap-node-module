@@ -6,8 +6,8 @@
  */
 
 import {
-  reportPerformanceImpact,
   readGitHubWorkflowEnv,
+  reportPerformanceImpact,
 } from "@jsenv/performance-impact";
 
 await reportPerformanceImpact({

@@ -2,8 +2,8 @@ import { createDetailedMessage } from "@jsenv/logger";
 import { resolveUrl, urlToFileSystemPath, urlToRelativeUrl } from "@jsenv/urls";
 
 import {
-  createPreferExportsFieldWarning,
   createBrowserFieldNotImplementedWarning,
+  createPreferExportsFieldWarning,
 } from "../util/logs.js";
 import { resolveFile } from "../util/resolve_file.js";
 

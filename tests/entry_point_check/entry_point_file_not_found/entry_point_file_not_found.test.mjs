@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert";
-import { writeFileSync, removeFileSync } from "@jsenv/filesystem";
+import { removeFileSync, writeFileSync } from "@jsenv/filesystem";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";

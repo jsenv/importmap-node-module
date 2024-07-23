@@ -1,6 +1,6 @@
 /* eslint-disable import/no-unresolved */
 import "foo";
-import "foo/index";
 import "foo/bar";
-import "root/index.js";
+import "foo/index";
 import "root/boo";
+import "root/index.js";

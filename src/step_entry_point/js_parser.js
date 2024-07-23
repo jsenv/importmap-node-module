@@ -1,6 +1,6 @@
-import { createRequire } from "node:module";
 import { parseAsync } from "@babel/core";
 import { urlToFileSystemPath } from "@jsenv/urls";
+import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 
