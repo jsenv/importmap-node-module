@@ -4,8 +4,8 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const test = async (scenario, { bareSpecifierAutomapping }) => {
   await snapshotFunctionSideEffects(
-    async () => {
-      await writeImportmaps({
+    () =>
+      writeImportmaps({
         logLevel: "warn",
         directoryUrl: new URL("./input/", import.meta.url),
         importmaps: {
@@ -16,8 +16,7 @@ const test = async (scenario, { bareSpecifierAutomapping }) => {
             },
           },
         },
-      });
-    },
+      }),
     import.meta.url,
     `./output/${scenario}/`,
     {

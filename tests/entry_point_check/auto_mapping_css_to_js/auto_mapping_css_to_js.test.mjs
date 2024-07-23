@@ -1,20 +1,29 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
+import { snapshotFunctionSideEffects } from "@jsenv/snapshot";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const importmapFileUrl = new URL(`./root/test.importmap`, import.meta.url);
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-await writeImportmaps({
-  logLevel: "warn",
-  directoryUrl: testDirectoryUrl,
-  importmaps: {
-    "test.importmap": {
-      importResolution: {
-        entryPoints: ["./main.js"],
-        magicExtensions: ["inherit"],
-      },
+const test = async () => {
+  await snapshotFunctionSideEffects(
+    () =>
+      writeImportmaps({
+        logLevel: "warn",
+        directoryUrl: new URL("./input/", import.meta.url),
+        importmaps: {
+          "test.importmap": {
+            importResolution: {
+              entryPoints: ["./main.js"],
+              magicExtensions: ["inherit"],
+            },
+          },
+        },
+      }),
+    import.meta.url,
+    `./output/`,
+    {
+      filesystemEffects: [`./input/test.importmap`],
+      restoreFilesystem: true,
+      filesystemEffectsInline: true,
     },
-  },
-});
-importmapFileSnapshot.compare();
+  );
+};
+await test();

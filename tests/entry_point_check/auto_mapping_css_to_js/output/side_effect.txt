@@ -1,0 +1,17 @@
+1. write file "input/test.importmap"
+{
+  "imports": {
+    "./file.css": "./file.css.js"
+  },
+  "scopes": {}
+}
+
+2. return
+{
+  "test.importmap": {
+    "imports": {
+      "./file.css": "./file.css.js"
+    },
+    "scopes": {}
+  }
+}

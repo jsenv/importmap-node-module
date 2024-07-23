@@ -31,4 +31,11 @@ add mapping to "manualImportmap"
 }
 
 3. return
-undefined
+{
+  "1_bare_specifier_automapping.importmap": {
+    "imports": {
+      "file": "./file.js"
+    },
+    "scopes": {}
+  }
+}

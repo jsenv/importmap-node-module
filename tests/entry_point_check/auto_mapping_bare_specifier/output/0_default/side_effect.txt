@@ -5,4 +5,9 @@
 }
 
 2. return
-undefined
+{
+  "0_default.importmap": {
+    "imports": {},
+    "scopes": {}
+  }
+}
