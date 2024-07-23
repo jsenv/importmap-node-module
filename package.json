@@ -37,11 +37,11 @@
   "dependencies": {
     "@babel/core": "7.24.9",
     "@babel/traverse": "7.24.8",
-    "@jsenv/ast": "6.2.5",
-    "@jsenv/filesystem": "4.9.1",
+    "@jsenv/ast": "6.2.6",
+    "@jsenv/filesystem": "4.9.2",
     "@jsenv/importmap": "1.2.1",
     "@jsenv/logger": "4.1.1",
-    "@jsenv/urls": "2.3.1"
+    "@jsenv/urls": "2.3.2"
   },
   "devDependencies": {
     "@babel/eslint-parser": "7.24.8",
@@ -51,15 +51,15 @@
     "@babel/plugin-syntax-jsx": "7.24.7",
     "@jsenv/assert": "4.1.5",
     "@jsenv/babel-preset": "1.1.3",
-    "@jsenv/core": "39.2.5",
+    "@jsenv/core": "39.2.6",
     "@jsenv/eslint-config": "16.5.2",
     "@jsenv/github-release-package": "1.5.5",
     "@jsenv/importmap-eslint-resolver": "5.2.5",
     "@jsenv/package-publish": "1.10.5",
     "@jsenv/performance-impact": "4.2.1",
     "@jsenv/server": "15.2.14",
-    "@jsenv/snapshot": "2.2.5",
-    "@jsenv/test": "3.3.16",
+    "@jsenv/snapshot": "2.2.6",
+    "@jsenv/test": "3.3.17",
     "eslint": "8.57.0",
     "eslint-plugin-html": "8.1.1",
     "eslint-plugin-import": "2.29.1",

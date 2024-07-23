@@ -1,6 +1,5 @@
-import { snapshotFunctionSideEffects } from "@jsenv/snapshot";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotFunctionSideEffects } from "@jsenv/snapshot";
 
 const test = async () => {
   await snapshotFunctionSideEffects(
