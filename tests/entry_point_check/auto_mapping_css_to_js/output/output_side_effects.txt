@@ -6,7 +6,7 @@
   "scopes": {}
 }
 
-2. return
+2. resolve
 {
   "test.importmap": {
     "imports": {

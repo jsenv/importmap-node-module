@@ -28,7 +28,7 @@ add mapping to "manualImportmap"
   "scopes": {}
 }
 
-3. return
+3. resolve
 {
   "0_default.importmap": {
     "imports": {},

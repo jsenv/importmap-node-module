@@ -20,8 +20,6 @@ const test = async (scenario, { magicExtensions } = {}) => {
     `./output/${scenario}/`,
     {
       filesystemEffects: [`./input/test.importmap`],
-      restoreFilesystem: true,
-      filesystemEffectsInline: true,
     },
   );
 };

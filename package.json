@@ -58,7 +58,7 @@
     "@jsenv/package-publish": "1.10.5",
     "@jsenv/performance-impact": "4.2.1",
     "@jsenv/server": "15.2.14",
-    "@jsenv/snapshot": "2.2.7",
+    "@jsenv/snapshot": "2.2.8",
     "@jsenv/test": "3.3.17",
     "eslint": "8.57.0",
     "eslint-plugin-html": "8.1.1",

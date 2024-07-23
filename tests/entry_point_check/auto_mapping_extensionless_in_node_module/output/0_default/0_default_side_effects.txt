@@ -30,7 +30,7 @@ add mapping to "manualImportmap"
   "scopes": {}
 }
 
-3. return
+3. resolve
 {
   "test.importmap": {
     "imports": {

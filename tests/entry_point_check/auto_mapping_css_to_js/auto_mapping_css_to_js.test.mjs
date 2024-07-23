@@ -20,8 +20,6 @@ const test = async () => {
     `./output/`,
     {
       filesystemEffects: [`./input/test.importmap`],
-      restoreFilesystem: true,
-      filesystemEffectsInline: true,
     },
   );
 };

@@ -21,7 +21,7 @@ file not found on filesystem at cwd()/input/node_modules/leftpad/other-file
   }
 }
 
-3. return
+3. resolve
 {
   "test.importmap": {
     "imports": {

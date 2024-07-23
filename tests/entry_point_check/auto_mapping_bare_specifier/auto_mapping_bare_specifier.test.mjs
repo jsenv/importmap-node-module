@@ -21,7 +21,6 @@ const test = async (scenario, { bareSpecifierAutomapping }) => {
     `./output/${scenario}/`,
     {
       filesystemEffects: [`./input/${scenario}.importmap`],
-      filesystemEffectsInline: true,
     },
   );
 };
