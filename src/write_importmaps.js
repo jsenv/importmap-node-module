@@ -54,7 +54,7 @@ export const writeImportmaps = async ({
   const logger = createLogger({ logLevel });
   const warn = wrapWarnToWarnOnce((warning) => {
     onWarn(warning, () => {
-      logger.warn(`\n${warning.message}\n`);
+      console.warn(`\n${warning.message}\n`);
     });
   });
 

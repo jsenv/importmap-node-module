@@ -1,0 +1,17 @@
+1. write file "input/1_bare_specifier_automapping.importmap"
+{
+  "imports": {
+    "file": "./file.js"
+  },
+  "scopes": {}
+}
+
+2. return
+{
+  "1_bare_specifier_automapping.importmap": {
+    "imports": {
+      "file": "./file.js"
+    },
+    "scopes": {}
+  }
+}

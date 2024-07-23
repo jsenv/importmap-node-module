@@ -1,28 +1,4 @@
-1. console.warn
-
-Import resolution failed for "./file"
---- import trace ---
-file:///cwd()/input/node_modules/leftpad/index.js:1:7
-> 1 | import "./file"
-    |       ^
---- reason ---
-file not found on filesystem at cwd()/input/node_modules/leftpad/file
---- suggestion 1 ---
-update import specifier to "./file.js"
---- suggestion 2 ---
-use magicExtensions: ["inherit"]
---- suggestion 3 ---
-add mapping to "manualImportmap"
-{
-  "scopes": {
-    "./node_modules/leftpad/": {
-      "./node_modules/leftpad/file": "./node_modules/leftpad/file.js"
-    }
-  }
-}
-
-
-2. write file "input/test.importmap"
+1. write file "input/test.importmap"
 {
   "imports": {
     "leftpad": "./node_modules/leftpad/index.js"
@@ -35,7 +11,7 @@ add mapping to "manualImportmap"
   }
 }
 
-3. return
+2. return
 {
   "test.importmap": {
     "imports": {

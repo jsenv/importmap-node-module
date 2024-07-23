@@ -22,20 +22,16 @@ add mapping to "manualImportmap"
 }
 
 
-2. write file "input/1_bare_specifier_automapping.importmap"
+2. write file "input/0_default.importmap"
 {
-  "imports": {
-    "file": "./file.js"
-  },
+  "imports": {},
   "scopes": {}
 }
 
 3. return
 {
-  "1_bare_specifier_automapping.importmap": {
-    "imports": {
-      "file": "./file.js"
-    },
+  "0_default.importmap": {
+    "imports": {},
     "scopes": {}
   }
 }

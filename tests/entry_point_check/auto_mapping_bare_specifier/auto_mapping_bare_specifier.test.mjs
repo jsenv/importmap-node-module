@@ -21,11 +21,14 @@ const test = async (scenario, { bareSpecifierAutomapping }) => {
     `./output/${scenario}/`,
     {
       filesystemEffects: [`./input/${scenario}.importmap`],
-      restoreFilesystem: true,
       filesystemEffectsInline: true,
     },
   );
 };
 
-await test("0_default", {});
-await test("1_bare_specifier_automapping", { bareSpecifierAutomapping: true });
+await test("0_default", {
+  bareSpecifierAutomapping: undefined,
+});
+await test("1_bare_specifier_automapping", {
+  bareSpecifierAutomapping: true,
+});
