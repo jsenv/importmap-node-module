@@ -17,11 +17,11 @@ const test = async (scenario, { magicExtensions } = {}) => {
         },
       }),
     import.meta.url,
-    `./output/${scenario}/`,
+    `./output/${scenario}.md`,
   );
 };
 
-await test("0_default", {
+await test("0_magic_extensions_warning", {
   magicExtensions: undefined,
 });
 await test("1_magic_extensions_js", {

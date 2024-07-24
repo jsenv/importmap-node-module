@@ -26,7 +26,7 @@ add mapping to "manualImportmap"
 
 ```
 
-3. write file "input/0_default.importmap"
+3. write file "input/0_bare_specifier_warning.importmap"
 ```importmap
 {
   "imports": {},
@@ -37,7 +37,7 @@ add mapping to "manualImportmap"
 4. resolve
 ```js
 {
-  "0_default.importmap": {
+  "0_bare_specifier_warning.importmap": {
     "imports": {},
     "scopes": {}
   }

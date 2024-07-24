@@ -1,12 +1,17 @@
-1. write file "input/test.importmap"
+1. return promise
+
+2. write file "input/test.importmap"
+```importmap
 {
   "imports": {
     "./file.css": "./file.css.js"
   },
   "scopes": {}
 }
+```
 
-2. resolve
+3. resolve
+```js
 {
   "test.importmap": {
     "imports": {
@@ -15,3 +20,4 @@
     "scopes": {}
   }
 }
+```

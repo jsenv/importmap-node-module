@@ -17,7 +17,7 @@ const test = async () => {
         },
       }),
     import.meta.url,
-    `./output/`,
+    `./output/auto_mapping_css_to_js.md`,
   );
 };
 await test();

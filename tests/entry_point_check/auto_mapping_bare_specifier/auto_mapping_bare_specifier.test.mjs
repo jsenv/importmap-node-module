@@ -17,11 +17,11 @@ const test = async (scenario, { bareSpecifierAutomapping }) => {
         },
       }),
     import.meta.url,
-    `./output/${scenario}/`,
+    `./output/${scenario}.md`,
   );
 };
 
-await test("0_default", {
+await test("0_bare_specifier_warning", {
   bareSpecifierAutomapping: undefined,
 });
 await test("1_bare_specifier_automapping", {

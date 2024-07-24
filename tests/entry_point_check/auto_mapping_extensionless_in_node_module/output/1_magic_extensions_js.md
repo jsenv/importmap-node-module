@@ -1,4 +1,7 @@
-1. console.warn
+1. return promise
+
+2. console.warn
+```console
 
 Import resolution failed for "./other-file"
 --- import trace ---
@@ -8,8 +11,10 @@ file:///cwd()/input/node_modules/leftpad/file.js:1:7
 --- reason ---
 file not found on filesystem at cwd()/input/node_modules/leftpad/other-file
 
+```
 
-2. write file "input/test.importmap"
+3. write file "input/test.importmap"
+```importmap
 {
   "imports": {
     "leftpad": "./node_modules/leftpad/index.js"
@@ -20,8 +25,10 @@ file not found on filesystem at cwd()/input/node_modules/leftpad/other-file
     }
   }
 }
+```
 
-3. resolve
+4. resolve
+```js
 {
   "test.importmap": {
     "imports": {
@@ -34,3 +41,4 @@ file not found on filesystem at cwd()/input/node_modules/leftpad/other-file
     }
   }
 }
+```
