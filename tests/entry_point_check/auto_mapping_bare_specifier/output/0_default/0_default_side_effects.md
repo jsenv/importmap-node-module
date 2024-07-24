@@ -1,4 +1,7 @@
-1. console.warn
+1. return promise
+
+2. console.warn
+```console
 
 Import resolution failed for "file"
 --- import trace ---
@@ -21,17 +24,22 @@ add mapping to "manualImportmap"
   }
 }
 
+```
 
-2. write file "input/0_default.importmap"
+3. write file "input/0_default.importmap"
+```importmap
 {
   "imports": {},
   "scopes": {}
 }
+```
 
-3. resolve
+4. resolve
+```js
 {
   "0_default.importmap": {
     "imports": {},
     "scopes": {}
   }
 }
+```

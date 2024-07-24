@@ -1,12 +1,17 @@
-1. write file "input/1_bare_specifier_automapping.importmap"
+1. return promise
+
+2. write file "input/1_bare_specifier_automapping.importmap"
+```importmap
 {
   "imports": {
     "file": "./file.js"
   },
   "scopes": {}
 }
+```
 
-2. resolve
+3. resolve
+```js
 {
   "1_bare_specifier_automapping.importmap": {
     "imports": {
@@ -15,3 +20,4 @@
     "scopes": {}
   }
 }
+```
