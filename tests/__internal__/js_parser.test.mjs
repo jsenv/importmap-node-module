@@ -1,5 +1,5 @@
-import { writeFile, ensureEmptyDirectory, readFile } from "@jsenv/filesystem";
 import { assert } from "@jsenv/assert";
+import { ensureEmptyDirectory, readFile, writeFile } from "@jsenv/filesystem";
 
 import { parseSpecifiersFromJs } from "@jsenv/importmap-node-module/src/step_entry_point/js_parser.js";
 
@@ -19,7 +19,7 @@ import "./bar.js"
     url: fileUrl,
   });
   const actual = specifiers;
-  const expected = {
+  const expect = {
     "./foo": {
       line: 1,
       column: 7,
@@ -31,7 +31,7 @@ import "./bar.js"
       type: "import-static",
     },
   };
-  assert({ actual, expected });
+  assert({ actual, expect });
   await ensureEmptyDirectory(testDirectoryUrl);
 }
 
@@ -48,14 +48,14 @@ import(id)
     url: fileUrl,
   });
   const actual = specifiers;
-  const expected = {
+  const expect = {
     "./foo": {
       line: 1,
       column: 7,
       type: "import-dynamic",
     },
   };
-  assert({ actual, expected });
+  assert({ actual, expect });
   await ensureEmptyDirectory(testDirectoryUrl);
 }
 
@@ -67,14 +67,14 @@ import(id)
     url: fileUrl,
   });
   const actual = specifiers;
-  const expected = {
+  const expect = {
     "./foo": {
       line: 1,
       column: 19,
       type: "export-named",
     },
   };
-  assert({ actual, expected });
+  assert({ actual, expect });
   await ensureEmptyDirectory(testDirectoryUrl);
 }
 
@@ -86,13 +86,13 @@ import(id)
     url: fileUrl,
   });
   const actual = specifiers;
-  const expected = {
+  const expect = {
     "./foo": {
       line: 1,
       column: 14,
       type: "export-all",
     },
   };
-  assert({ actual, expected });
+  assert({ actual, expect });
   await ensureEmptyDirectory(testDirectoryUrl);
 }

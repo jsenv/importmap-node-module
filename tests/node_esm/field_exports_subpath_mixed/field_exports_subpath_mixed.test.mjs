@@ -1,5 +1,5 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
@@ -25,7 +25,7 @@ const fooPackageFileUrl = new URL(
   import.meta.url,
 );
 const actual = warnings;
-const expected = [
+const expect = [
   {
     code: "EXPORTS_SUBPATH_MIXED_KEYS",
     message: `unexpected keys in package.json exports: cannot mix relative and conditional keys
@@ -40,4 +40,4 @@ const expected = [
 ${urlToFileSystemPath(fooPackageFileUrl)}`,
   },
 ];
-assert({ actual, expected });
+assert({ actual, expect });

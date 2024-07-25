@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
-import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
+import { takeFileSnapshot } from "@jsenv/snapshot";
+import { readFileSync } from "node:fs";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
@@ -40,9 +40,9 @@ const actual = {
     importMap: importMapNormalized,
   }),
 };
-const expected = {
+const expect = {
   bar_inside_project: `http://example.com/node_modules/bar/bar.js`,
   bar_inside_foo: `http://example.com/node_modules/foo/node_modules/bar/bar.js`,
   bar_file_inside_bar: `http://example.com/node_modules/foo/node_modules/bar/file.js`,
 };
-assert({ actual, expected });
+assert({ actual, expect });

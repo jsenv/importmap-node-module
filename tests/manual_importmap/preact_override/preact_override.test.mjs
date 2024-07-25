@@ -1,23 +1,24 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const importmapFileUrl = new URL(`./root/test.importmap`, import.meta.url);
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-await writeImportmaps({
-  directoryUrl: testDirectoryUrl,
-  importmaps: {
-    "test.importmap": {
-      // manualImportmap allows to override the mapping found in package.json
-      manualImportmap: {
-        scopes: {
-          "./node_modules/react-redux/": {
-            react: "./node_modules/preact/compat/src/index.js",
+await snapshotWriteImportsMapsSideEffects(
+  () =>
+    writeImportmaps({
+      logLevel: "warn",
+      directoryUrl: new URL("./input/", import.meta.url),
+      importmaps: {
+        "test.importmap": {
+          // manualImportmap allows to override the mapping found in package.json
+          manualImportmap: {
+            scopes: {
+              "./node_modules/react-redux/": {
+                react: "./node_modules/preact/compat/src/index.js",
+              },
+            },
           },
         },
       },
-    },
-  },
-});
-importmapFileSnapshot.compare();
+    }),
+  import.meta.url,
+  `./output/preact_override.md`,
+);

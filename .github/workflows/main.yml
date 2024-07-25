@@ -29,7 +29,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, macos-12, windows-2022]
-        node: [20.8.0]
+        node: [22.3.0]
     runs-on: ${{ matrix.os }}
     name: test on ${{ matrix.os }} and node ${{ matrix.node }}
     env:
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: "20.8.0"
+          node-version: "22.3.0"
       - name: Install node modules
         run: npm install
       - name: Publish package

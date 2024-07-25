@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
+import { parseArgs } from "node:util";
 import { writeImportmaps } from "./main.js";
 
 const options = {

@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
-import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
+import { takeFileSnapshot } from "@jsenv/snapshot";
+import { readFileSync } from "node:fs";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
@@ -31,6 +31,5 @@ const actual = resolveImport({
   importer: "http://example.com/node_modules/react-redux/es/index.js",
   importMap: importMapNormalized,
 });
-const expected =
-  "http://example.com/node_modules/react-redux/es/utils/answer.js";
-assert({ actual, expected });
+const expect = "http://example.com/node_modules/react-redux/es/utils/answer.js";
+assert({ actual, expect });

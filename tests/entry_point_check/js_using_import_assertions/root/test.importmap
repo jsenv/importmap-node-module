@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "./file": "./file.js"
-  },
-  "scopes": {}
-}

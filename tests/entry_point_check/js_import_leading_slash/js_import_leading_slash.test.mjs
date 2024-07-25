@@ -1,63 +1,34 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
-import { assert } from "@jsenv/assert";
-import { urlToFileSystemPath } from "@jsenv/urls";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
 if (process.platform === "win32") {
   // TODO: make it work on windows
   process.exit(0);
 }
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const test = async ({ name, runtime }) => {
-  const importmapFileRelativeUrl = `${name}.importmap`;
-  const importmapFileUrl = new URL(importmapFileRelativeUrl, testDirectoryUrl);
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-  const warnings = [];
-  await writeImportmaps({
-    logLevel: "warn",
-    directoryUrl: testDirectoryUrl,
-    importmaps: {
-      [importmapFileRelativeUrl]: {
-        importResolution: {
-          runtime,
-          entryPoints: ["./main.js"],
-        },
-      },
-    },
-    onWarn: (warning) => {
-      warnings.push(warning);
-    },
-  });
-  importmapFileSnapshot.compare();
-  const actual = warnings;
-  const expected =
-    runtime === "node"
-      ? [
-          {
-            code: "IMPORT_RESOLUTION_FAILED",
-            message: `Import resolution failed for "/foo.js"
---- import trace ---
-${testDirectoryUrl}main.js:2:7
-  1 | // eslint-disable-next-line import/no-unresolved
-> 2 | import "/foo.js";
-    |       ^
-  3 |${" "}
---- reason ---
-file not found on filesystem at ${urlToFileSystemPath("file:///foo.js")}`,
+const test = async (scenario, { runtime }) => {
+  await snapshotWriteImportsMapsSideEffects(
+    () =>
+      writeImportmaps({
+        logLevel: "warn",
+        directoryUrl: new URL("./input/", import.meta.url),
+        importmaps: {
+          [`${scenario}.importmap`]: {
+            importResolution: {
+              entryPoints: ["./main.js"],
+              runtime,
+            },
           },
-        ]
-      : [];
-  assert({ actual, expected });
+        },
+      }),
+    import.meta.url,
+    `./output/${scenario}.md`,
+  );
 };
 
-await test({
-  name: "runtime_browser",
+await test("0_leading_slash_browser", {
   runtime: "browser",
 });
-
-await test({
-  name: "runtime_node",
+await test("1_leading_slash_node", {
   runtime: "node",
 });

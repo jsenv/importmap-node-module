@@ -1,70 +1,29 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
-import { assert } from "@jsenv/assert";
-import { urlToFileSystemPath } from "@jsenv/urls";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const test = async ({ name, magicExtensions, expectedWarnings } = {}) => {
-  const importmapRelativeUrl = `${name}.importmap`;
-  const importmapFileUrl = new URL(
-    `./root/${importmapRelativeUrl}`,
+const test = async (scenario, { magicExtensions }) => {
+  await snapshotWriteImportsMapsSideEffects(
+    () =>
+      writeImportmaps({
+        logLevel: "warn",
+        directoryUrl: new URL("./input/", import.meta.url),
+        importmaps: {
+          "test.importmap": {
+            importResolution: {
+              entryPoints: ["./main.js"],
+              magicExtensions,
+            },
+          },
+        },
+      }),
     import.meta.url,
+    `./output/${scenario}.md`,
   );
-  const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-  const warnings = [];
-  await writeImportmaps({
-    logLevel: "warn",
-    directoryUrl: testDirectoryUrl,
-    packagesManualOverrides: {
-      lodash: {
-        exports: {
-          "./*": "./*",
-        },
-      },
-    },
-    importmaps: {
-      [importmapRelativeUrl]: {
-        importResolution: {
-          entryPoints: ["./main.js"],
-          magicExtensions,
-        },
-      },
-    },
-    onWarn: (warning) => {
-      warnings.push(warning);
-    },
-  });
-  importmapFileSnapshot.compare();
-  assert({
-    actual: warnings,
-    expected: expectedWarnings,
-  });
 };
 
-await test({
-  name: "magic_extensions_ts",
+await test("0_magic_extensions_ts", {
   magicExtensions: [".ts"],
-  expectedWarnings: [
-    {
-      code: "IMPORT_RESOLUTION_FAILED",
-      message: `Import resolution failed for "lodash/union"
---- import trace ---
-${testDirectoryUrl}main.js:2:22
-  1 | // eslint-disable-next-line import/no-unresolved
-> 2 | import { union } from "lodash/union";
-    |                      ^
-  3 | 
---- reason ---
-file not found on filesystem at ${urlToFileSystemPath(
-        `${testDirectoryUrl}node_modules/lodash/union`,
-      )}`,
-    },
-  ],
 });
-
-await test({
-  name: "magic_extensions_js",
+await test("1_magic_extensions_js", {
   magicExtensions: [".js"],
-  expectedWarnings: [],
 });

@@ -49,3 +49,6 @@
 
 .DS_Store
 
+**/git_ignored/
+/todo.txt
+

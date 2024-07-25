@@ -1,6 +1,6 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
 import { removeEntrySync, writeFileSync } from "@jsenv/filesystem";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
@@ -38,8 +38,8 @@ const test = async ({ name, expectedWarnings }) => {
   });
   importmapFileSnapshot.compare();
   const actual = warnings;
-  const expected = expectedWarnings;
-  assert({ actual, expected });
+  const expect = expectedWarnings;
+  assert({ actual, expect });
 };
 
 removeEntrySync(fooModuleJsFileUrl, { allowUseless: true });

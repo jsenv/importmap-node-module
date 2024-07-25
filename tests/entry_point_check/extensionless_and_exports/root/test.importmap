@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "foo/file.js": "./node_modules/foo/file.js"
-  },
-  "scopes": {}
-}

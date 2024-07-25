@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
-import { takeFileSnapshot } from "@jsenv/snapshot";
-import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
 import { assert } from "@jsenv/assert";
+import { normalizeImportMap, resolveImport } from "@jsenv/importmap";
+import { takeFileSnapshot } from "@jsenv/snapshot";
+import { readFileSync } from "node:fs";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
@@ -28,5 +28,5 @@ const actual = resolveImport({
   importer: `http://example.com/node_modules/lume-fake/index.js`,
   importMap: importMapNormalized,
 });
-const expected = `http://example.com/node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js`;
-assert({ actual, expected });
+const expect = `http://example.com/node_modules/lume-fake/node_modules/lowclass-fake/dist/index.js`;
+assert({ actual, expect });

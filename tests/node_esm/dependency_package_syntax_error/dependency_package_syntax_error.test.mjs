@@ -22,7 +22,7 @@ try {
     },
   });
   const actual = errorCalls;
-  const expected = [
+  const expect = [
     `error while parsing package.json.
 --- syntax error message ---
 Unexpected end of JSON input
@@ -32,7 +32,7 @@ ${urlToFileSystemPath(
 )}
 `,
   ];
-  assert({ actual, expected });
+  assert({ actual, expect });
 } finally {
   console.error = consoleError;
 }

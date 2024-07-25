@@ -50,7 +50,7 @@ export const memoizeAsyncFunctionBySpecifierAndImporter = (fn) => {
 };
 
 const memoizeAsyncFunction = (fn, { getMemoryEntryFromArguments }) => {
-  const memoized = async (...args) => {
+  const memoized = (...args) => {
     const memoryEntry = getMemoryEntryFromArguments(args);
     const promiseFromMemory = memoryEntry.get();
     if (promiseFromMemory) {

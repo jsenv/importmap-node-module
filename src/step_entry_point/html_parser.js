@@ -1,13 +1,13 @@
-import { readFile } from "@jsenv/filesystem";
 import {
-  parseHtml,
-  visitHtmlNodes,
-  getHtmlNodeAttribute,
-  getHtmlNodeText,
   generateUrlForInlineContent,
+  getHtmlNodeAttribute,
   getHtmlNodeAttributePosition,
   getHtmlNodePosition,
+  getHtmlNodeText,
+  parseHtml,
+  visitHtmlNodes,
 } from "@jsenv/ast";
+import { readFile } from "@jsenv/filesystem";
 
 export const parseHTMLRessources = async ({ code, url, asFileUrl }) => {
   const htmlAst = parseHtml({ html: code, url, storeOriginalPositions: false });

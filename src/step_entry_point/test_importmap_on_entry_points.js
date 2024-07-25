@@ -1,31 +1,31 @@
 import { loadOptionsAsync } from "@babel/core";
 import { readFile } from "@jsenv/filesystem";
 import {
-  resolveUrl,
-  urlToExtension,
-  urlToRelativeUrl,
-  urlIsInsideOf,
-  urlToFileSystemPath,
-} from "@jsenv/urls";
-import {
+  composeTwoImportMaps,
   normalizeImportMap,
   resolveImport,
-  composeTwoImportMaps,
 } from "@jsenv/importmap";
 import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js";
-
 import {
-  memoizeAsyncFunctionByUrl,
-  memoizeAsyncFunctionBySpecifierAndImporter,
-} from "../util/memoize_async_function.js";
-import { resolveFile } from "../util/resolve_file.js";
+  resolveUrl,
+  urlIsInsideOf,
+  urlToExtension,
+  urlToFileSystemPath,
+  urlToRelativeUrl,
+} from "@jsenv/urls";
+
 import {
   createBareSpecifierAutomappingMessage,
   createExtensionAutomappingMessage,
   createImportResolutionFailedWarning,
 } from "../util/logs.js";
-import { parseSpecifiersFromJs } from "./js_parser.js";
+import {
+  memoizeAsyncFunctionBySpecifierAndImporter,
+  memoizeAsyncFunctionByUrl,
+} from "../util/memoize_async_function.js";
+import { resolveFile } from "../util/resolve_file.js";
 import { parseHTMLRessources } from "./html_parser.js";
+import { parseSpecifiersFromJs } from "./js_parser.js";
 import { showSource } from "./show_source.js";
 
 export const testImportmapOnEntryPoints = async (

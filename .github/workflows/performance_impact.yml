@@ -28,7 +28,7 @@ jobs:
         # "setup-node@v3" documentation available at https://github.com/actions/setup-node
         uses: actions/setup-node@v3
         with:
-          node-version: "20.8.0"
+          node-version: "22.3.0"
       - name: Install node modules
         run: npm install
       - name: Report performance impact

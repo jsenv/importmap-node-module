@@ -1,5 +1,5 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
 import { assert } from "@jsenv/assert";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 import { urlToFileSystemPath } from "@jsenv/urls";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
@@ -26,8 +26,8 @@ const test = async ({ name, runtime, expectedWarnings }) => {
   });
   importmapFileSnapshot.compare();
   const actual = warnings;
-  const expected = expectedWarnings;
-  assert({ actual, expected });
+  const expect = expectedWarnings;
+  assert({ actual, expect });
 };
 
 // not found for browser runtime

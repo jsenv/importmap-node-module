@@ -1,5 +1,5 @@
 import { createDetailedMessage } from "@jsenv/logger";
-import { urlToFileSystemPath, urlToRelativeUrl, resolveUrl } from "@jsenv/urls";
+import { resolveUrl, urlToFileSystemPath, urlToRelativeUrl } from "@jsenv/urls";
 
 export const createPreferExportsFieldWarning = ({
   packageInfo,

@@ -1,5 +1,5 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
 import { copyFileSync } from "@jsenv/filesystem";
+import { takeFileSnapshot } from "@jsenv/snapshot";
 
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 
