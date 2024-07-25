@@ -1,51 +1,29 @@
-import { assert } from "@jsenv/assert";
-import { removeFileSync, writeFileSync } from "@jsenv/filesystem";
-import { urlToFileSystemPath } from "@jsenv/urls";
-
+import { writeFileStructureSync } from "@jsenv/filesystem";
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const mainJsFileUrl = new URL("./main.js", testDirectoryUrl);
-const getWarnings = async () => {
-  const warnings = [];
-  await writeImportmaps({
-    logLevel: "warn",
-    directoryUrl: testDirectoryUrl,
-    importmaps: {
-      "test.importmap": {
-        importResolution: {
-          entryPoints: ["./main.js"],
+const test = async (scenario) => {
+  writeFileStructureSync(
+    new URL("./git_ignored/", import.meta.url),
+    new URL(`./fixtures/${scenario}/`, import.meta.url),
+  );
+  await snapshotWriteImportsMapsSideEffects(
+    () =>
+      writeImportmaps({
+        logLevel: "warn",
+        directoryUrl: new URL("./git_ignored/", import.meta.url),
+        importmaps: {
+          "test.importmap": {
+            importResolution: {
+              entryPoints: ["./main.js"],
+            },
+          },
         },
-      },
-    },
-    onWarn: (warning) => {
-      warnings.push(warning);
-    },
-  });
-  return warnings;
+      }),
+    import.meta.url,
+    `./output/${scenario}.md`,
+  );
 };
 
-removeFileSync(mainJsFileUrl, { allowUseless: true });
-{
-  const actual = await getWarnings();
-  const expect = [
-    {
-      code: "IMPORT_RESOLUTION_FAILED",
-      message: `Import resolution failed for "./main.js"
---- import trace ---
-entryPoints parameter
---- reason ---
-file not found on filesystem at ${urlToFileSystemPath(
-        `${testDirectoryUrl}main.js`,
-      )}`,
-    },
-  ];
-  assert({ actual, expect });
-}
-
-writeFileSync(mainJsFileUrl);
-{
-  const actual = await getWarnings();
-  const expect = [];
-  assert({ actual, expect });
-}
+await test("0_not_found");
+await test("1_found");
