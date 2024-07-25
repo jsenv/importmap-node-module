@@ -1,25 +1,26 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const importmapFileUrl = new URL(`./root/test.importmap`, import.meta.url);
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-await writeImportmaps({
-  directoryUrl: testDirectoryUrl,
-  importmaps: {
-    "test.importmap": {
-      manualImportmap: {
-        scopes: {
-          "./node_modules/foo/": {
-            "bar/button.css": "./node_modules/bar/button.css.js",
+await snapshotWriteImportsMapsSideEffects(
+  () =>
+    writeImportmaps({
+      logLevel: "warn",
+      directoryUrl: new URL("./input/", import.meta.url),
+      importmaps: {
+        "test.importmap": {
+          manualImportmap: {
+            scopes: {
+              "./node_modules/foo/": {
+                "bar/button.css": "./node_modules/bar/button.css.js",
+              },
+            },
+          },
+          importResolution: {
+            entryPoints: ["./index.mjs"],
           },
         },
       },
-      importResolution: {
-        entryPoints: ["./index.mjs"],
-      },
-    },
-  },
-});
-importmapFileSnapshot.compare();
+    }),
+  import.meta.url,
+  `./output/file_override_scope.md`,
+);
