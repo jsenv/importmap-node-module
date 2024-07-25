@@ -1,39 +1,26 @@
-import { copyFileSync } from "@jsenv/filesystem";
-import { takeDirectorySnapshot } from "@jsenv/snapshot";
-
+import { writeFileStructureSync } from "@jsenv/filesystem";
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const snapshotDirectoryUrl = new URL("./snapshots/", import.meta.url);
-
-const test = async (fixtureName, options) => {
-  copyFileSync({
-    from: new URL(`./fixtures/${fixtureName}`, import.meta.url),
-    to: new URL("./root/index.html", import.meta.url),
-    overwrite: true,
-  });
-  await writeImportmaps({
-    logLevel: "warn",
-    directoryUrl: testDirectoryUrl,
-    importmaps: {
-      "./index.html": {},
-    },
-    ...options,
-  });
-  copyFileSync({
-    from: new URL("./root/index.html", import.meta.url),
-    to: new URL(`./snapshots/${fixtureName}`, import.meta.url),
-    overwrite: true,
-  });
-  copyFileSync({
-    from: new URL(`./fixtures/${fixtureName}`, import.meta.url),
-    to: new URL("./root/index.html", import.meta.url),
-    overwrite: true,
-  });
+const test = async (scenario, options) => {
+  writeFileStructureSync(
+    new URL("./git_ignored/", import.meta.url),
+    new URL(`./fixtures/${scenario}/`, import.meta.url),
+  );
+  await snapshotWriteImportsMapsSideEffects(
+    () =>
+      writeImportmaps({
+        logLevel: "warn",
+        directoryUrl: new URL("./git_ignored/", import.meta.url),
+        importmaps: {
+          "index.html": {},
+        },
+        ...options,
+      }),
+    import.meta.url,
+    `./output/${scenario}.md`,
+  );
 };
-
-const directorySnapshot = takeDirectorySnapshot(snapshotDirectoryUrl);
-await test("index_importmap_empty.html");
-await test("index_importmap_with_src.html", { logLevel: "error" });
-await test("index_without_importmap.html");
-directorySnapshot.compare();
+await test("0_html_no_importmap");
+await test("1_html_importmap_empty", { logLevel: "error" });
+await test("2_html_importmap_src");
