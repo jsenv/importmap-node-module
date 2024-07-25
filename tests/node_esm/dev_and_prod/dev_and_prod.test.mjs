@@ -1,23 +1,20 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const devImportmapFileUrl = new URL("./root/dev.importmap", import.meta.url);
-const prodImportmapFileUrl = new URL("./root/prod.importmap", import.meta.url);
-const devimportmapFileSnapshot = takeFileSnapshot(devImportmapFileUrl);
-const prodimportmapFileSnapshot = takeFileSnapshot(prodImportmapFileUrl);
-await writeImportmaps({
-  logLevel: "warn",
-  directoryUrl: testDirectoryUrl,
-  importmaps: {
-    "dev.importmap": {
-      nodeMappings: {
-        devDependencies: true,
+await snapshotWriteImportsMapsSideEffects(
+  () =>
+    writeImportmaps({
+      logLevel: "warn",
+      directoryUrl: new URL("./input/", import.meta.url),
+      importmaps: {
+        "dev.importmap": {
+          nodeMappings: {
+            devDependencies: true,
+          },
+        },
+        "prod.importmap": {},
       },
-    },
-    "prod.importmap": {},
-  },
-});
-devimportmapFileSnapshot.compare();
-prodimportmapFileSnapshot.compare();
+    }),
+  import.meta.url,
+  `./output/dev_and_prod.md`,
+);
