@@ -21,9 +21,9 @@ const test = async (scenario, { runtime }) => {
   );
 };
 
-await test("0_runtime_browser", {
-  runtime: undefined,
+await test("0_import_fs_browser", {
+  runtime: "browser",
 });
-await test("1_runtime_node", {
+await test("1_import_fs_node", {
   runtime: "node",
 });

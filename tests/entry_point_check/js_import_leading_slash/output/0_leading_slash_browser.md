@@ -1,6 +1,6 @@
 1. return promise
 
-2. write file "input/1_runtime_node.importmap"
+2. write file "input/0_leading_slash_browser.importmap"
 ```importmap
 {
   "imports": {},
@@ -11,7 +11,7 @@
 3. resolve
 ```js
 {
-  "1_runtime_node.importmap": {
+  "0_leading_slash_browser.importmap": {
     "imports": {},
     "scopes": {}
   }

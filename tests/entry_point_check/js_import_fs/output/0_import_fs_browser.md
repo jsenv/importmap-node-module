@@ -16,7 +16,7 @@ use runtime: "node"
 
 ```
 
-3. write file "input/0_runtime_browser.importmap"
+3. write file "input/0_import_fs_browser.importmap"
 ```importmap
 {
   "imports": {},
@@ -27,7 +27,7 @@ use runtime: "node"
 4. resolve
 ```js
 {
-  "0_runtime_browser.importmap": {
+  "0_import_fs_browser.importmap": {
     "imports": {},
     "scopes": {}
   }
