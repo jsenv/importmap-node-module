@@ -7,7 +7,7 @@ Import resolution failed for "./main.js"
 --- import trace ---
 entryPoints parameter
 --- reason ---
-file not found on filesystem at cwd()/git_ignored/main.js
+file not found on filesystem at <root>/git_ignored/main.js
 
 ```
 

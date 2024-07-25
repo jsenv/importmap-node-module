@@ -5,11 +5,11 @@
 
 Import resolution failed for "./other-file"
 --- import trace ---
-file:///cwd()/input/node_modules/leftpad/file.js:1:7
+file:///<root>/input/node_modules/leftpad/file.js:1:7
 > 1 | import "./other-file"
     |       ^
 --- reason ---
-file not found on filesystem at cwd()/input/node_modules/leftpad/other-file
+file not found on filesystem at <root>/input/node_modules/leftpad/other-file
 
 ```
 

@@ -5,7 +5,7 @@
 
 Import resolution failed for "file"
 --- import trace ---
-file:///cwd()/input/index.js:2:7
+file:///<root>/input/index.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
 > 2 | import "file";
     |       ^
