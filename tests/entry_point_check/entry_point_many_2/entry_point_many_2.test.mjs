@@ -3,8 +3,8 @@ import { writeImportmaps } from "@jsenv/importmap-node-module";
 import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
 
 writeFileStructureSync(
-  new URL("./fixtures/", import.meta.url),
   new URL("./git_ignored/", import.meta.url),
+  new URL("./fixtures/", import.meta.url),
 );
 await snapshotWriteImportsMapsSideEffects(
   () =>
