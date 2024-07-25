@@ -1,7 +1,0 @@
-{
-  "imports": {
-    "lodash/union": "./node_modules/lodash/union.js",
-    "lodash/": "./node_modules/lodash/"
-  },
-  "scopes": {}
-}
