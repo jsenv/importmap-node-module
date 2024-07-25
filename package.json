@@ -28,6 +28,9 @@
   "workspaces": [
     "./docs/demo"
   ],
+  "volta": {
+    "node": "22.3.0"
+  },
   "scripts": {
     "eslint": "npx eslint . --ext=.js,.mjs,.cjs,.html",
     "test": "node ./scripts/test.mjs",
