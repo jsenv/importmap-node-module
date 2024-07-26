@@ -1,6 +1,6 @@
 1. return promise
 
-2. write file "git_ignored/test.importmap"
+2. write file "./git_ignored/test.importmap"
 ```importmap
 {
   "imports": {},

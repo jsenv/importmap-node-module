@@ -3,13 +3,18 @@ import { snapshotFunctionSideEffects } from "@jsenv/snapshot";
 export const snapshotWriteImportsMapsSideEffects = async (
   fn,
   fnFileUrl,
-  sideEffectDirectoryRelativeUrl,
-  options,
+  sideEffectFileRelativeUrl,
+  options = {},
 ) => {
   await snapshotFunctionSideEffects(
     fn,
-    fnFileUrl,
-    sideEffectDirectoryRelativeUrl,
-    options,
+    new URL(sideEffectFileRelativeUrl, fnFileUrl),
+    {
+      ...options,
+      filesystemEffects: {
+        baseDirectory: new URL("./", fnFileUrl),
+        ...options.filesystemEffects,
+      },
+    },
   );
 };

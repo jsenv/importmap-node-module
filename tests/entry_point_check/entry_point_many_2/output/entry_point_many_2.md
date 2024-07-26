@@ -1,6 +1,6 @@
 1. return promise
 
-2. write file "git_ignored/index.html"
+2. write file "./git_ignored/index.html"
 ```html
 <!DOCTYPE html>
 <html>
@@ -25,7 +25,7 @@
 </html>
 ```
 
-3. write file "git_ignored/about.html"
+3. write file "./git_ignored/about.html"
 ```html
 <!DOCTYPE html>
 <html>

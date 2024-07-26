@@ -1,6 +1,6 @@
 1. return promise
 
-2. write file "input/src/directory/test.importmap"
+2. write file "./input/src/directory/test.importmap"
 ```importmap
 {
   "imports": {

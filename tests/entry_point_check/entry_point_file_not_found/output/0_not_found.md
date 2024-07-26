@@ -7,11 +7,11 @@ Import resolution failed for "./main.js"
 --- import trace ---
 entryPoints parameter
 --- reason ---
-file not found on filesystem at <root>/git_ignored/main.js
+file not found on filesystem at base/git_ignored/main.js
 
 ```
 
-3. write file "git_ignored/test.importmap"
+3. write file "./git_ignored/test.importmap"
 ```importmap
 {
   "imports": {},

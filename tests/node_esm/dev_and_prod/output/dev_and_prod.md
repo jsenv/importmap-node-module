@@ -1,6 +1,6 @@
 1. return promise
 
-2. write file "input/dev.importmap"
+2. write file "./input/dev.importmap"
 ```importmap
 {
   "imports": {
@@ -15,7 +15,7 @@
 }
 ```
 
-3. write file "input/prod.importmap"
+3. write file "./input/prod.importmap"
 ```importmap
 {
   "imports": {

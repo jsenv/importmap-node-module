@@ -5,7 +5,7 @@
 
 Import resolution failed for "/foo.js"
 --- import trace ---
-file:///<root>/input/main.js:2:7
+base/input/main.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
 > 2 | import "/foo.js";
     |       ^
@@ -15,7 +15,7 @@ file not found on filesystem at /foo.js
 
 ```
 
-3. write file "input/1_leading_slash_node.importmap"
+3. write file "./input/1_leading_slash_node.importmap"
 ```importmap
 {
   "imports": {},

@@ -1,6 +1,6 @@
 1. return promise
 
-2. write file "input/0_leading_slash_browser.importmap"
+2. write file "./input/0_leading_slash_browser.importmap"
 ```importmap
 {
   "imports": {},

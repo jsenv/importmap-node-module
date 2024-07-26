@@ -1,6 +1,6 @@
 1. return promise
 
-2. write file "input/1_bare_specifier_automapping.importmap"
+2. write file "./input/1_bare_specifier_automapping.importmap"
 ```importmap
 {
   "imports": {

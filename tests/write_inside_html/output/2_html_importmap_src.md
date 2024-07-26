@@ -5,7 +5,7 @@
 remove src=./project.importmap from <script type="module">
 ```
 
-3. write file "git_ignored/index.html"
+3. write file "./git_ignored/index.html"
 ```html
 <!DOCTYPE html>
 <html>

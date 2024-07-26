@@ -5,11 +5,11 @@
 
 Import resolution failed for "./file"
 --- import trace ---
-file:///<root>/input/node_modules/leftpad/index.js:1:7
+base/input/node_modules/leftpad/index.js:1:7
 > 1 | import "./file"
     |       ^
 --- reason ---
-file not found on filesystem at <root>/input/node_modules/leftpad/file
+file not found on filesystem at base/input/node_modules/leftpad/file
 --- suggestion 1 ---
 update import specifier to "./file.js"
 --- suggestion 2 ---
@@ -26,7 +26,7 @@ add mapping to "manualImportmap"
 
 ```
 
-3. write file "input/test.importmap"
+3. write file "./input/test.importmap"
 ```importmap
 {
   "imports": {

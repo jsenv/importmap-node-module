@@ -5,7 +5,7 @@
 
 Import resolution failed for "fs"
 --- import trace ---
-file:///<root>/input/index.js:1:7
+base/input/index.js:1:7
 > 1 | import "fs";
     |       ^
   2 | 
@@ -16,7 +16,7 @@ use runtime: "node"
 
 ```
 
-3. write file "input/0_import_fs_browser.importmap"
+3. write file "./input/0_import_fs_browser.importmap"
 ```importmap
 {
   "imports": {},

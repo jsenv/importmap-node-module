@@ -5,7 +5,7 @@
 
 Import resolution failed for "file"
 --- import trace ---
-file:///<root>/input/index.js:2:7
+base/input/index.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
 > 2 | import "file";
     |       ^
@@ -26,7 +26,7 @@ add mapping to "manualImportmap"
 
 ```
 
-3. write file "input/0_bare_specifier_warning.importmap"
+3. write file "./input/0_bare_specifier_warning.importmap"
 ```importmap
 {
   "imports": {},
