@@ -6,7 +6,6 @@ replaceFileStructureSync({
   from: new URL("./fixtures/", import.meta.url),
   to: new URL("./git_ignored/", import.meta.url),
 });
-
 const run = async () => {
   await writeImportmaps({
     logLevel: "warn",
