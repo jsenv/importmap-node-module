@@ -7,3 +7,4 @@
 /tests/**/*.importmap
 /tests/**/jsconfig.json
 /tests/**/snapshots/
+/tests/**/*.md

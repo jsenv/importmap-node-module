@@ -1,6 +1,5 @@
 # [auto_mapping_extensionless_in_node_module.test.mjs](../auto_mapping_extensionless_in_node_module.test.mjs)
 
-
 - [0_magic_extensions_warning](0_magic_extensions_warning/0_magic_extensions_warning.md)
 - [1_magic_extensions_js](1_magic_extensions_js/1_magic_extensions_js.md)
 - [2_magic_extensions_inherit](2_magic_extensions_inherit/2_magic_extensions_inherit.md)

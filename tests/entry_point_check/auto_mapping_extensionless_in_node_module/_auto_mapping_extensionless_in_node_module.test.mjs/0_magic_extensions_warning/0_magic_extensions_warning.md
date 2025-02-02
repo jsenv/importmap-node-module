@@ -3,7 +3,7 @@
 ```js
 run({
   magicExtensions: undefined,
-})
+});
 ```
 
 # 1/3 console.warn
@@ -47,7 +47,7 @@ add mapping to "manualImportmap"
 # 3/3 resolve
 
 ```js
-undefined
+undefined;
 ```
 
 ---

@@ -1,7 +1,7 @@
 # [0_basic](../../auto_mapping_css_to_js.test.mjs#L20)
 
 ```js
-run()
+run();
 ```
 
 # 1/2 write file "./input/test.importmap"
@@ -18,7 +18,7 @@ run()
 # 2/2 resolve
 
 ```js
-undefined
+undefined;
 ```
 
 ---
