@@ -1,32 +1,32 @@
 import { writeImportmaps } from "@jsenv/importmap-node-module";
-import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
+import { snapshotWriteImportmaps } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps.js";
 
-const test = async (scenario, { magicExtensions } = {}) => {
-  await snapshotWriteImportsMapsSideEffects(
-    () =>
-      writeImportmaps({
-        logLevel: "warn",
-        directoryUrl: new URL("./input/", import.meta.url),
-        importmaps: {
-          "test.importmap": {
-            importResolution: {
-              entryPoints: ["./main.js"],
-              magicExtensions,
-            },
-          },
+const run = async ({ magicExtensions } = {}) => {
+  await writeImportmaps({
+    logLevel: "warn",
+    directoryUrl: new URL("./input/", import.meta.url),
+    importmaps: {
+      "test.importmap": {
+        importResolution: {
+          entryPoints: ["./main.js"],
+          magicExtensions,
         },
-      }),
-    import.meta.url,
-    `./output/${scenario}.md`,
-  );
+      },
+    },
+  });
 };
 
-await test("0_magic_extensions_warning", {
-  magicExtensions: undefined,
-});
-await test("1_magic_extensions_js", {
-  magicExtensions: [".js"],
-});
-await test("2_magic_extensions_inherit", {
-  magicExtensions: ["inherit", ".ts"],
+await snapshotWriteImportmaps(import.meta.url, ({ test }) => {
+  test("0_magic_extensions_warning", () =>
+    run({
+      magicExtensions: undefined,
+    }));
+  test("1_magic_extensions_js", () =>
+    run({
+      magicExtensions: [".js"],
+    }));
+  test("2_magic_extensions_inherit", () =>
+    run({
+      magicExtensions: ["inherit", ".ts"],
+    }));
 });
