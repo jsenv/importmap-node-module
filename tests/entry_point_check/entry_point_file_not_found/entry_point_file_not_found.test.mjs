@@ -1,29 +1,26 @@
-import { writeFileStructureSync } from "@jsenv/filesystem";
+import { replaceFileStructureSync } from "@jsenv/filesystem";
 import { writeImportmaps } from "@jsenv/importmap-node-module";
-import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
+import { snapshotWriteImportmaps } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps.js";
 
-const test = async (scenario) => {
-  writeFileStructureSync(
-    new URL("./git_ignored/", import.meta.url),
-    new URL(`./fixtures/${scenario}/`, import.meta.url),
-  );
-  await snapshotWriteImportsMapsSideEffects(
-    () =>
-      writeImportmaps({
-        logLevel: "warn",
-        directoryUrl: new URL("./git_ignored/", import.meta.url),
-        importmaps: {
-          "test.importmap": {
-            importResolution: {
-              entryPoints: ["./main.js"],
-            },
-          },
+const run = async (scenario) => {
+  replaceFileStructureSync({
+    from: new URL(`./fixtures/${scenario}/`, import.meta.url),
+    to: new URL("./git_ignored/", import.meta.url),
+  });
+  await writeImportmaps({
+    logLevel: "warn",
+    directoryUrl: new URL("./git_ignored/", import.meta.url),
+    importmaps: {
+      "test.importmap": {
+        importResolution: {
+          entryPoints: ["./main.js"],
         },
-      }),
-    import.meta.url,
-    `./output/${scenario}.md`,
-  );
+      },
+    },
+  });
 };
 
-await test("0_not_found");
-await test("1_found");
+await snapshotWriteImportmaps(import.meta.url, ({ test }) => {
+  test("0_not_found", () => run("0_not_found"));
+  test("1_found", () => run("1_found"));
+});
