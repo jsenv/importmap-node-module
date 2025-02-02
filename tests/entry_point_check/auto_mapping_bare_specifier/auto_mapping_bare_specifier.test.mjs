@@ -1,5 +1,5 @@
 import { writeImportmaps } from "@jsenv/importmap-node-module";
-import { snapshotTests } from "@jsenv/snapshot";
+import { snapshotWriteImportmaps } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps.js";
 
 const run = async ({ bareSpecifierAutomapping }) => {
   await writeImportmaps({
@@ -16,7 +16,7 @@ const run = async ({ bareSpecifierAutomapping }) => {
   });
 };
 
-await snapshotTests(import.meta.url, ({ test }) => {
+await snapshotWriteImportmaps(import.meta.url, ({ test }) => {
   test("0_bare_specifier_warning", () =>
     run({
       bareSpecifierAutomapping: undefined,
