@@ -3,7 +3,7 @@
 ```js
 run({
   magicExtensions: ["inherit", ".ts"],
-});
+})
 ```
 
 # 1/2 write file "./input/test.importmap"
@@ -25,7 +25,7 @@ run({
 # 2/2 resolve
 
 ```js
-undefined;
+undefined
 ```
 
 ---

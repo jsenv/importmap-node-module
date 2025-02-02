@@ -3,7 +3,7 @@
 ```js
 run({
   bareSpecifierAutomapping: undefined,
-});
+})
 ```
 
 # 1/3 console.warn
@@ -16,7 +16,7 @@ base/input/index.js:2:7
   1 | // eslint-disable-next-line import/no-unresolved
 > 2 | import "file";
     |       ^
-  3 |
+  3 | 
 --- reason ---
 there is no mapping for this bare specifier
 --- suggestion 1 ---
@@ -45,7 +45,7 @@ add mapping to "manualImportmap"
 # 3/3 resolve
 
 ```js
-undefined;
+undefined
 ```
 
 ---

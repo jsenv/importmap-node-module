@@ -3,7 +3,7 @@
 ```js
 run({
   magicExtensions: [".js"],
-});
+})
 ```
 
 # 1/3 console.warn
@@ -38,7 +38,7 @@ file not found on filesystem at base/input/node_modules/leftpad/other-file
 # 3/3 resolve
 
 ```js
-undefined;
+undefined
 ```
 
 ---

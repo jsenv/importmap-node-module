@@ -1,7 +1,7 @@
 # [0_not_found](../../entry_point_file_not_found.test.mjs#L24)
 
 ```js
-run("0_not_found");
+run("0_not_found")
 ```
 
 # 1/4 write file "./git_ignored/package.json"
@@ -42,7 +42,7 @@ file not found on filesystem at base/git_ignored/main.js
 # 4/4 resolve
 
 ```js
-undefined;
+undefined
 ```
 
 ---

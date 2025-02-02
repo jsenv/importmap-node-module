@@ -1,19 +1,17 @@
 # [1_found](../../entry_point_file_not_found.test.mjs#L25)
 
 ```js
-run("1_found");
+run("1_found")
 ```
 
 # 1/2 write 3 files into "./git_ignored/"
 
 ## main.js
-
 ```js
 
 ```
 
 ## package.json
-
 ```json
 {
   "name": "root",
@@ -27,7 +25,6 @@ run("1_found");
 ```
 
 ## test.importmap
-
 ```importmap
 {
   "imports": {},
@@ -38,7 +35,7 @@ run("1_found");
 # 2/2 resolve
 
 ```js
-undefined;
+undefined
 ```
 
 ---
