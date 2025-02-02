@@ -1,8 +1,7 @@
 import { assert } from "@jsenv/assert";
+import { writeImportmaps } from "@jsenv/importmap-node-module";
 import { takeFileSnapshot } from "@jsenv/snapshot";
 import { urlToFileSystemPath } from "@jsenv/urls";
-
-import { writeImportmaps } from "@jsenv/importmap-node-module";
 
 const testDirectoryUrl = new URL("./root/", import.meta.url);
 const rootPackageFileUrl = new URL("./package.json", testDirectoryUrl);

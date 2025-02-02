@@ -1,15 +1,16 @@
-import { takeFileSnapshot } from "@jsenv/snapshot";
-
 import { writeImportmaps } from "@jsenv/importmap-node-module";
+import { snapshotWriteImportmaps } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps.js";
 
-const testDirectoryUrl = new URL("./root/", import.meta.url);
-const importmapFileUrl = new URL("./root/test.importmap", import.meta.url);
-const importmapFileSnapshot = takeFileSnapshot(importmapFileUrl);
-await writeImportmaps({
-  logLevel: "warn",
-  directoryUrl: testDirectoryUrl,
-  importmaps: {
-    "test.importmap": {},
-  },
+const run = async () => {
+  await writeImportmaps({
+    logLevel: "warn",
+    directoryUrl: new URL("./root/", import.meta.url),
+    importmaps: {
+      "test.importmap": {},
+    },
+  });
+};
+
+await snapshotWriteImportmaps(import.meta.url, ({ test }) => {
+  test("0_basic", () => run());
 });
-importmapFileSnapshot.compare();

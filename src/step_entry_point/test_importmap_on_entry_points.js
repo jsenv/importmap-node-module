@@ -309,7 +309,7 @@ const createImportResolver = ({
         gotBareSpecifierError: false,
         url,
       };
-    } catch (e) {
+    } catch {
       return {
         gotBareSpecifierError: true,
         url: resolveUrl(specifier, importer),
