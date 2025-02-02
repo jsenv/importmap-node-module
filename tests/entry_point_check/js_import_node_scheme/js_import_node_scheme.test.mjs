@@ -1,20 +1,21 @@
 import { writeImportmaps } from "@jsenv/importmap-node-module";
-import { snapshotWriteImportsMapsSideEffects } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps_side_effects.js";
+import { snapshotWriteImportmaps } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps.js";
 
-await snapshotWriteImportsMapsSideEffects(
-  () =>
-    writeImportmaps({
-      logLevel: "warn",
-      directoryUrl: new URL("./input/", import.meta.url),
-      importmaps: {
-        "test.importmap": {
-          importResolution: {
-            runtime: "node",
-            entryPoints: ["./index.js"],
-          },
+const run = async () => {
+  await writeImportmaps({
+    logLevel: "warn",
+    directoryUrl: new URL("./input/", import.meta.url),
+    importmaps: {
+      "test.importmap": {
+        importResolution: {
+          runtime: "node",
+          entryPoints: ["./index.js"],
         },
       },
-    }),
-  import.meta.url,
-  `./output/js_import_node_scheme.md`,
-);
+    },
+  });
+};
+
+await snapshotWriteImportmaps(import.meta.url, ({ test }) => {
+  test("0_basic", () => run());
+});
