@@ -1,8 +1,0 @@
-!/.github/
-/.jsenv/
-/coverage/
-/scripts/performance/**/fake_project/
-/experiment/**/dist/
-/tests/**/root/
-/tests/**/input/
-/node_modules/

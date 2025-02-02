@@ -16,7 +16,7 @@ export const updateJsConfigForVsCode = (
     let jsConfigCurrent;
     try {
       jsConfigCurrent = readFileSync(jsConfigFileUrl, { as: "json" });
-    } catch (e) {
+    } catch {
       jsConfigCurrent = null;
     }
     jsConfigCurrent = jsConfigCurrent || { compilerOptions: {} };

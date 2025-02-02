@@ -5,7 +5,7 @@ import { resolveUrl, urlToFileSystemPath } from "@jsenv/urls";
 
 const require = createRequire(import.meta.url);
 
-// eslint-disable-next-line import/no-unresolved
+// eslint-disable-next-line import-x/no-unresolved
 const parser = require("@babel/parser");
 const { loadOptionsAsync } = require("@babel/core");
 

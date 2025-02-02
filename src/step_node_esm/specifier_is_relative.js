@@ -6,7 +6,7 @@ export const specifierIsRelative = (specifier) => {
     return false;
   }
   // starts with http:// or file:// or ftp: for instance
-  if (/^[a-zA-Z]+\:/.test(specifier)) {
+  if (/^[a-zA-Z]+:/.test(specifier)) {
     return false;
   }
   return true;
