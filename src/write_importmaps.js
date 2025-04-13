@@ -5,7 +5,6 @@ import {
   sortImportMap,
 } from "@jsenv/importmap";
 import { createLogger } from "@jsenv/logger";
-
 import { testImportmapOnEntryPoints } from "./step_entry_point/test_importmap_on_entry_points.js";
 import { updateJsConfigForVsCode } from "./step_jsconfig/update_js_config_for_vscode.js";
 import { generateImportmapForNodeESMResolution } from "./step_node_esm/importmap_for_node_esm.js";

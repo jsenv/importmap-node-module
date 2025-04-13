@@ -1,6 +1,5 @@
 import { assert } from "@jsenv/assert";
 import { ensureEmptyDirectory, readFile, writeFile } from "@jsenv/filesystem";
-
 import { parseSpecifiersFromJs } from "@jsenv/importmap-node-module/src/step_entry_point/js_parser.js";
 
 const testDirectoryUrl = new URL("./fixtures/", import.meta.url);
