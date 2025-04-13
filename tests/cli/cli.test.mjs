@@ -1,9 +1,19 @@
-import { execSync } from 'node:child_process'
-import { takeFileSnapshot } from '@jsenv/snapshot'
+import { copyFileSync, replaceFileStructureSync } from "@jsenv/filesystem";
+import { takeFileSnapshot } from "@jsenv/snapshot";
+import { execSync } from "node:child_process";
 
-const indexHtmlFileUrl = import.meta.resolve('./client/index.html')
-const indexHtmlFileSnapshot = takeFileSnapshot(indexHtmlFileUrl)
-
-execSync('node ../../../src/cli.mjs ./index.html', { cwd: new URL(import.meta.resolve('./client/')) })
-
-indexHtmlFileSnapshot.compare()
+const indexHtmlFileSnapshot = takeFileSnapshot(
+  import.meta.resolve("./snapshots/index.html"),
+);
+replaceFileStructureSync({
+  from: import.meta.resolve("./fixtures/"),
+  to: import.meta.resolve("./git_ignored/"),
+});
+execSync("node ../../../src/cli.mjs ./index.html", {
+  cwd: new URL(import.meta.resolve("./git_ignored/")),
+});
+copyFileSync({
+  from: import.meta.resolve("./git_ignored/index.html"),
+  to: import.meta.resolve("./snapshots/index.html"),
+});
+indexHtmlFileSnapshot.compare();

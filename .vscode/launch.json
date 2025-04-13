@@ -9,7 +9,7 @@
       "program": "${file}",
       // "runtimeVersion": "14.5.0",
       "runtimeArgs": [
-        "--conditions=development",
+        // "--conditions=development",
         "--unhandled-rejections=strict",
         "--experimental-json-modules",
         "--experimental-top-level-await"
