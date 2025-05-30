@@ -39,9 +39,10 @@ if (positionals.length > 1) {
 if (
   !outfile.endsWith(".html") &&
   !outfile.endsWith(".importmap") &&
-  !outfile.endsWith(".json")
+  !outfile.endsWith(".json") &&
+  !outfile.endsWith(".js")
 ) {
-  console.error("Error: outfile must end with .html, .importmap or .json");
+  console.error("Error: outfile must end with .html, .importmap, .json or .js");
   process.exit(1);
 }
 
