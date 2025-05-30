@@ -144,9 +144,7 @@ Configuration for mappings generated to implement Node.js module resolution. Set
 
 ##### `nodeMappings.devDependencies` (boolean)
 
-_nodeMappings.devDependencies_ is a boolean. When enabled, mappings for `"devDependencies"` declared in your _package.json_ are generated.
-
-_nodeMappings.devDependencies_ is optional.
+When `true`, mappings for `devDependencies `declared in your `package.json` are generated.
 
 ##### `nodeMappings.packageUserConditions` (string[])
 
