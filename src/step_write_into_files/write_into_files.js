@@ -22,11 +22,17 @@ export const writeIntoFiles = (
     const importmapAsJson = JSON.stringify(importmap, null, "  ");
     if (fileUrl.endsWith(".html")) {
       writeIntoHtmlFile(fileUrl, importmapAsJson, { logger });
+    } else if (fileUrl.endsWith(".js")) {
+      writeInfoJsFile(fileUrl, importmapAsJson, { logger });
     } else {
-      writeFileSync(fileUrl, importmapAsJson);
-      logger.info(`-> ${urlToFileSystemPath(fileUrl)}`);
+      writeIntoJsonFile(fileUrl, importmapAsJson, { logger });
     }
   }
+};
+
+const writeIntoJsonFile = (jsonFileUrl, importmapAsJson, { logger }) => {
+  writeFileSync(jsonFileUrl, importmapAsJson);
+  logger.info(`-> ${urlToFileSystemPath(jsonFileUrl)}`);
 };
 
 const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
@@ -79,4 +85,39 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
   }
   const html = stringifyHtmlAst(htmlAst);
   writeFileSync(new URL(htmlFileUrl), html);
+};
+
+const writeInfoJsFile = (jsFileUrl, importmapAsJson, { logger }) => {
+  const jsFileContent = `
+const currentScript = document.currentScript;
+if (!currentScript) {
+  throw new Error(
+    "document.currentScript is not available, cannot inject importmap"
+  );
+}
+const baseUrl = new URL(".", currentScript.src).href;
+const importmap = ${importmapAsJson};
+const topLevelMappings = importmap.imports;
+const scopedMappings = importmap.scopes;
+const makeMappingsAbsolute = () => {
+  for (const key of Object.keys(mappings)) {
+    mappings[key] = baseUrl + mappings[key];
+  }
+}
+if (topLevelMappings) {
+  makeMappingsAbsolute(topLevelMappings);
+}
+if (scopedMappings) {
+  for (const scope of Object.keys(scopedMappings)) {
+    const mappings = scopedMappings[scope];
+    makeMappingsAbsolute(mappings);
+  }
+}
+const importmapScript = document.createElement("script");
+importmapScript.type = "importmap";
+importmapScript.textContent = importmap;
+currentScript.after(importmapScript);
+`;
+  writeFileSync(jsFileUrl, jsFileContent);
+  logger.info(`-> ${urlToFileSystemPath(jsFileUrl)}`);
 };
