@@ -1,6 +1,8 @@
+import { startBuildServer } from "@jsenv/core";
 import { replaceFileStructureSync } from "@jsenv/filesystem";
 import { writeImportmaps } from "@jsenv/importmap-node-module";
 import { snapshotWriteImportmaps } from "@jsenv/importmap-node-module/tests/snapshot_write_importmaps.js";
+import { executeHtml } from "../execute_html.js";
 
 const run = async (scenario, options) => {
   replaceFileStructureSync({
@@ -9,12 +11,18 @@ const run = async (scenario, options) => {
   });
   await writeImportmaps({
     logLevel: "warn",
-    directoryUrl: new URL("./git_ignored/", import.meta.url),
+    directoryUrl: import.meta.resolve("./git_ignored/"),
     importmaps: {
       "index.js": {},
     },
     ...options,
   });
+  const buildServer = await startBuildServer({
+    buildDirectoryUrl: import.meta.resolve("./git_ignored/"),
+    keepProcessAlive: false,
+    port: 0,
+  });
+  return executeHtml(`${buildServer.origin}/index.html`);
 };
 
 await snapshotWriteImportmaps(import.meta.url, ({ test }) => {
