@@ -88,7 +88,7 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
 };
 
 const writeInfoJsFile = (jsFileUrl, importmapAsJson, { logger }) => {
-  const jsFileContent = `
+  const jsFileContent = /* js */ `
 const currentScript = document.currentScript;
 if (!currentScript) {
   throw new Error(
@@ -99,7 +99,7 @@ const baseUrl = new URL(".", currentScript.src).href;
 const importmap = ${importmapAsJson};
 const topLevelMappings = importmap.imports;
 const scopedMappings = importmap.scopes;
-const makeMappingsAbsolute = () => {
+const makeMappingsAbsolute = (mappings) => {
   for (const key of Object.keys(mappings)) {
     mappings[key] = baseUrl + mappings[key];
   }
@@ -115,7 +115,7 @@ if (scopedMappings) {
 }
 const importmapScript = document.createElement("script");
 importmapScript.type = "importmap";
-importmapScript.textContent = importmap;
+importmapScript.textContent = JSON.stringify(importmap, null, '  ');
 currentScript.after(importmapScript);
 `;
   writeFileSync(jsFileUrl, jsFileContent);

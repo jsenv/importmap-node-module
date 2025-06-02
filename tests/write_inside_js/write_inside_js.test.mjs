@@ -21,6 +21,7 @@ const run = async (scenario, options) => {
     buildDirectoryUrl: import.meta.resolve("./git_ignored/"),
     keepProcessAlive: false,
     port: 0,
+    logLevel: "warn",
   });
   return executeHtml(`${buildServer.origin}/index.html`);
 };
@@ -30,5 +31,5 @@ await snapshotWriteImportmaps(
   ({ test }) => {
     test("0_basic", () => run("0_basic"));
   },
-  { filesystemEffects: { textualFilesInline: false } },
+  { filesystemEffects: false },
 );
