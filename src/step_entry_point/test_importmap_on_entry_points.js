@@ -8,7 +8,7 @@ import {
 import { isSpecifierForNodeCoreModule } from "@jsenv/importmap/src/isSpecifierForNodeCoreModule.js";
 import {
   resolveUrl,
-  urlIsInsideOf,
+  urlIsOrIsInsideOf,
   urlToExtension,
   urlToFileSystemPath,
   urlToRelativeUrl,
@@ -507,12 +507,9 @@ const getAutomapping = ({
 };
 
 const moveUrl = ({ url, from, to }) => {
-  if (urlIsInsideOf(url, from)) {
+  if (urlIsOrIsInsideOf(url, from)) {
     const relativeUrl = urlToRelativeUrl(url, from);
     return resolveUrl(relativeUrl, to);
-  }
-  if (url === from) {
-    return to;
   }
   return null;
 };

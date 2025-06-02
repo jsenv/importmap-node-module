@@ -7,6 +7,12 @@
   </head>
 
   <body>
+    <script>
+      window.resultPromise = new Promise((resolve) => {
+        window.resolveResultPromise = resolve;
+      });
+    </script>
+    <script src="./importmap.js"></script>
     <script type="module" src="./main.js"></script>
   </body>
 </html>

@@ -6,14 +6,14 @@ import { executeHtml } from "../execute_html.js";
 
 const run = async (scenario, options) => {
   replaceFileStructureSync({
-    from: new URL(`./fixtures/${scenario}/`, import.meta.url),
-    to: new URL("./git_ignored/", import.meta.url),
+    from: import.meta.resolve(`./fixtures/${scenario}/`),
+    to: import.meta.resolve("./git_ignored/"),
   });
   await writeImportmaps({
     logLevel: "warn",
     directoryUrl: import.meta.resolve("./git_ignored/"),
     importmaps: {
-      "index.js": {},
+      "importmap.js": {},
     },
     ...options,
   });
@@ -25,6 +25,10 @@ const run = async (scenario, options) => {
   return executeHtml(`${buildServer.origin}/index.html`);
 };
 
-await snapshotWriteImportmaps(import.meta.url, ({ test }) => {
-  test("0_basic", () => run("0_basic"));
-});
+await snapshotWriteImportmaps(
+  import.meta.url,
+  ({ test }) => {
+    test("0_basic", () => run("0_basic"));
+  },
+  { filesystemEffects: { textualFilesInline: false } },
+);
