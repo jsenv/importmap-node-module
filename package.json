@@ -52,6 +52,8 @@
     "@babel/plugin-proposal-decorators": "7.27.1",
     "@babel/plugin-syntax-import-attributes": "7.27.1",
     "@babel/plugin-syntax-jsx": "7.27.1",
+    "@babel/parser": "7.27.4",
+    "@jsenv/exception": "1.2.1",
     "@jsenv/assert": "4.5.3",
     "@jsenv/core": "40.8.0",
     "@jsenv/eslint-config-relax": "1.6.6",
@@ -61,7 +63,8 @@
     "@jsenv/server": "16.1.2",
     "@jsenv/snapshot": "2.15.12",
     "@jsenv/test": "3.7.7",
-    "eslint": "9.28.0",
+    "playwright": "1.52.0",
+    "eslint": "9.26.0",
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0"
   }
