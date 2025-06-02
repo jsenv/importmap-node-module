@@ -89,34 +89,36 @@ const writeIntoHtmlFile = (htmlFileUrl, importmapAsJson, { logger }) => {
 
 const writeInfoJsFile = (jsFileUrl, importmapAsJson, { logger }) => {
   const jsFileContent = /* js */ `
-const currentScript = document.currentScript;
-if (!currentScript) {
-  throw new Error(
-    "document.currentScript is not available, cannot inject importmap"
-  );
-}
-const baseUrl = new URL(".", currentScript.src).href;
-const importmap = ${importmapAsJson};
-const topLevelMappings = importmap.imports;
-const scopedMappings = importmap.scopes;
-const makeMappingsAbsolute = (mappings) => {
-  for (const key of Object.keys(mappings)) {
-    mappings[key] = baseUrl + mappings[key];
+{
+  const currentScript = document.currentScript;
+  if (!currentScript) {
+    throw new Error(
+      "document.currentScript is not available, cannot inject importmap"
+    );
   }
-}
-if (topLevelMappings) {
-  makeMappingsAbsolute(topLevelMappings);
-}
-if (scopedMappings) {
-  for (const scope of Object.keys(scopedMappings)) {
-    const mappings = scopedMappings[scope];
-    makeMappingsAbsolute(mappings);
+  const baseUrl = new URL(".", currentScript.src).href;
+  const importmap = ${importmapAsJson};
+  const topLevelMappings = importmap.imports;
+  const scopedMappings = importmap.scopes;
+  const makeMappingsAbsolute = (mappings) => {
+    for (const key of Object.keys(mappings)) {
+      mappings[key] = baseUrl + mappings[key];
+    }
   }
+  if (topLevelMappings) {
+    makeMappingsAbsolute(topLevelMappings);
+  }
+  if (scopedMappings) {
+    for (const scope of Object.keys(scopedMappings)) {
+      const mappings = scopedMappings[scope];
+      makeMappingsAbsolute(mappings);
+    }
+  }
+  const importmapScript = document.createElement("script");
+  importmapScript.type = "importmap";
+  importmapScript.textContent = JSON.stringify(importmap, null, '  ');
+  currentScript.after(importmapScript);
 }
-const importmapScript = document.createElement("script");
-importmapScript.type = "importmap";
-importmapScript.textContent = JSON.stringify(importmap, null, '  ');
-currentScript.after(importmapScript);
 `;
   writeFileSync(jsFileUrl, jsFileContent);
   logger.info(`-> ${urlToFileSystemPath(jsFileUrl)}`);
