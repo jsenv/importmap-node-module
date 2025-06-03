@@ -55,6 +55,24 @@ The CLI supports the following options:
 - `--entrypoint <file>`: Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Auto-enabled when importmap is written into an HTML file. Can be specified multiple times.
 - `--dev`: Include devDependencies from `package.json`. Also favor `"development"` in [package exports](https://nodejs.org/docs/latest-v16.x/api/packages.html#packages_conditions_definitions)</a><sup>↗</sup>.
 - `--keep-unused`: Keep all mappings, even if they are not currently used by entry file or its transitive dependencies.
+- `--config <file>`: Read additional settings from the given JSON configuration file.
+
+#### Configuration file
+
+A configuration file in JSON format can be specified with the `--config` CLI option. The following example shows such a JSON file with all supported properties set to their default values:
+
+```json
+{
+  "dir": ".",
+  "dev": false,
+  "keepUnused": false,
+  "entryPoints": [],
+  "manualImportmap": {},
+  "packagesManualOverrides": {}
+}
+```
+
+All properties are optional and CLI options like `--dev`, `--entrypoint` and `--keep-unused` will override the values read from the config. The objects `manualImportmap` and `packagesManualOverrides` have the same format as the corresponding objects in the API.
 
 ### API
 

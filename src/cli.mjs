@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { writeImportmaps } from "./main.js";
@@ -21,10 +22,12 @@ const options = {
   "keep-unused": {
     type: "boolean",
   },
+  "config": {
+    type: "string",
+  },
 };
 const { values, positionals } = parseArgs({ options, allowPositionals: true });
 const outfile = positionals[0];
-values.entrypoint ??= [];
 
 if (values.help || positionals.length === 0) {
   usage();
@@ -46,21 +49,26 @@ if (
   process.exit(1);
 }
 
+const config = values.config ? JSON.parse(await readFile(values.config)) : {};
+const dev = values.dev ?? config.dev;
+
 const currentDirectoryUrl = pathToFileURL(`${process.cwd()}/`);
 await writeImportmaps({
-  directoryUrl: new URL(values.dir || ".", currentDirectoryUrl),
+  directoryUrl: new URL(values.dir ?? config.dir ?? ".", currentDirectoryUrl),
   importmaps: {
     [outfile]: {
       nodeMappings: {
-        devDependencies: values.dev,
-        packageUserConditions: values.dev ? ["development"] : [],
+        devDependencies: dev,
+        packageUserConditions: dev ? ["development"] : [],
       },
       importResolution: {
-        entryPoints: values.entryPoints,
+        entryPoints: values.entrypoint ?? config.entryPoints ?? [],
       },
-      keepUnusedMappings: values["keep-unused"],
+      keepUnusedMappings: values["keep-unused"] ?? config.keepUnused,
+      manualImportmap: config.manualImportmap,
     },
   },
+  packagesManualOverrides: config.packagesManualOverrides,
 });
 
 function usage() {
@@ -76,6 +84,7 @@ Options:
   --entrypoint file.js Confirm the specified file and its transitive dependencies can be resolved using the generated import map. Can be specified multiple times.
   --dev                Include devDependencies from package.json and pick "developement" in package conditions.
   --keep-unused        Remove mappings not used by any entrypoint or their transitive dependencies. Requires --entrypoint.
+  --config config.json Read additional settings from the given JSON configuration file.
 
 For more advanced options, see the API.`);
 }
