@@ -49,7 +49,7 @@ if (
   process.exit(1);
 }
 
-const config = values.config ? JSON.parse(await readFile(values.config)) : {};
+const config = values.config ? JSON.parse(await readFile(values.config, "utf-8")) : {};
 const dev = values.dev ?? config.dev;
 
 const currentDirectoryUrl = pathToFileURL(`${process.cwd()}/`);
