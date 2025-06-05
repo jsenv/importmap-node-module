@@ -1,0 +1,7 @@
+{
+  "packagesManualOverrides": {
+    "axios": {
+      "exports": "./dist/esm/axios.js"
+    }
+  }
+}
