@@ -9,7 +9,7 @@ replaceFileStructureSync({
   from: import.meta.resolve("./fixtures/"),
   to: import.meta.resolve("./git_ignored/"),
 });
-execSync("node ../../../src/cli.mjs ./index.html", {
+execSync("node ../../../../src/cli.mjs ./index.html", {
   cwd: new URL(import.meta.resolve("./git_ignored/")),
 });
 copyFileSync({
