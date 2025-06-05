@@ -1,6 +1,9 @@
+import { assert } from "@jsenv/assert";
+import { startBuildServer } from "@jsenv/core";
 import { copyFileSync, replaceFileStructureSync } from "@jsenv/filesystem";
 import { takeFileSnapshot } from "@jsenv/snapshot";
 import { execSync } from "node:child_process";
+import { executeHtml } from "../../execute_html.js";
 
 const indexHtmlFileSnapshot = takeFileSnapshot(
   import.meta.resolve("./snapshots/index.html"),
@@ -20,3 +23,13 @@ copyFileSync({
   to: import.meta.resolve("./snapshots/index.html"),
 });
 indexHtmlFileSnapshot.compare();
+
+const buildServer = await startBuildServer({
+  buildDirectoryUrl: import.meta.resolve("./git_ignored/"),
+  keepProcessAlive: false,
+  port: 0,
+  logLevel: "warn",
+});
+const actual = await executeHtml(`${buildServer.origin}/index.html`);
+const expect = "axios";
+assert({ actual, expect });

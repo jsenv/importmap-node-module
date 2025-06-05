@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <link rel="icon" href="data:,">
+    <script type="importmap" jsenv-injected-by="@jsenv/importmap-node-module">
+      {
+        "imports": {
+          "axios": "./node_modules/axios/dist/esm/axios.js"
+        },
+        "scopes": {}
+      }
+    </script>
+  </head>
+
+  <body>
+    <script>
+      window.resultPromise = new Promise((resolve) => {
+        window.resolveResultPromise = resolve;
+      });
+    </script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

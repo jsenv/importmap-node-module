@@ -7,6 +7,11 @@
   </head>
 
   <body>
+    <script>
+      window.resultPromise = new Promise((resolve) => {
+        window.resolveResultPromise = resolve;
+      });
+    </script>
     <script type="module" src="./main.js"></script>
   </body>
 </html>
